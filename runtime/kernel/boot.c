@@ -43,6 +43,19 @@ typedef struct {
     size_t size;
 } sect_desc_t;
 
+/* section tags */
+#if defined(BYTE_ORDER_BIG)
+#  define BF_TAG(s)	(((s)[0] << 24) | ((s)[1] << 16) | ((s)[2] << 8) | ((s)[3]))
+#else
+#  define BF_TAG(s)	(((s)[3] << 24) | ((s)[2] << 16) | ((s)[1] << 8) | ((s)[0]))
+#endif
+
+#define BF_IMPT	BF_TAG("IMPT")
+#define BF_EXPT BF_TAG("EXPT")
+#define BF_LITS BF_TAG("LITS")
+#define BF_CODE BF_TAG("CODE")
+#define BF_CFGP BF_TAG("CFGP")
+
 /* the useful information contained in the header */
 typedef struct {
     Unsigned32_t version;       /* binfile version; will be 0 for old format files */
@@ -393,18 +406,89 @@ PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname, int *nb)
 PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *fname)
 {
   /* a buffer that is large enough to hold either form of header */
-    Byte_t buf[sizeof(new_binfile_hdr_t)];
+    Byte_t buf[256];
 
   /* we read the first 8 bytes to see if this is a old-style or new-style header */
     ReadBinFile (file, buf, 8, fname);
     if (memcmp(buf, "BinFile ", 8) == 0) {
       /* check the version number */
         Unsigned32_t bfVersion;
-        ReadBinFile (file, &bfVersion, sizeof(bfVersion), fname);
+        ReadBinFile (file, &bfVersion, 4, fname);
         if (LITTLE_TO_HOST32(bfVersion) == 0x20250801) {
           /* this is the new, container-style, binfile format */
+            new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
+            p->version = bfVersion;
             info->version = LITTLE_TO_HOST32(bfVersion);
-            Die ("new binfile format not supported yet");
+            /* read the rest of the header */
+            ReadBinFile (file, &(buf[12]), sizeof(binfile_hdr_t) - 12, fname);
+            int nSects = LITTLE_TO_HOST32(p->numSects);
+            /* flags to track which sections have been seen */
+            bool_t seenImports = FALSE;
+            bool_t seenExports = FALSE;
+            bool_t seenLits = FALSE;
+            bool_t seenCodeOrCFG = FALSE;
+            /* process the sections to get the header info */
+            for (int i = 0;  i < nSects;  ++i) {
+                binfile_sect_desc_t sd;
+                ReadBinFile (file, &sd, sizeof(binfile_sect_desc_t), fname);
+                switch (LITTLE_TO_HOST32(sd.id)) {
+                case BF_IMPT:
+                    if (seenImports) {
+                        Die("multiple 'IMPT' sections");
+                    } else {
+                        seenImports = TRUE;
+                        info->importSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
+                        info->importSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->nImports = ??; /* TODO: read from section */
+                    }
+                    break;
+                case BF_EXPT:
+                    if (seenExports) {
+                        Die("multiple 'EXPT' sections");
+                    } else {
+                        seenExports = TRUE;
+                        info->exportSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
+                        info->exportSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                    }
+                    break;
+                case BF_LITS:
+                    if (seenLits) {
+                        Die("multiple 'LITS' sections");
+                    } else {
+                        seenLits = TRUE;
+                        info->litsSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
+                        info->litsSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                    }
+                    break;
+                case BF_CODE:
+                    if (seenCodeOrCFG) {
+                        Die("multiple 'CODE' / 'CFGP' sections");
+                    } else {
+                        seenCodeOrCFG = TRUE;
+                        info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
+                        info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->isNative = TRUE;
+                        info->entry = ??; /* TODO: read from section */
+                    }
+                    break;
+                case BF_CFGP:
+                    if (seenCodeOrCFG) {
+                        Die("multiple 'CODE' / 'CFGP' sections");
+                    } else {
+                        seenCodeOrCFG = TRUE;
+                        info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
+                        info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->isNative = FALSE;
+                    }
+                    break;
+                default: /* ignore other sections */
+                    break;
+                }
+            }
+            /* check that we have seen all of the necessary sections */
+            if (!seenImports || !seenExports || !seenLits || !seenCodeOrCFG) {
+                Die("missing sections");
+            }
         } else if (BIG_TO_HOST32(bfVersion) == BINFILE_VERSION) {
           /* this is the old (but not original) binfile format */
             new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
