@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * The word to string conversion for the native word and int types
+ * The word to string conversion for the 32-bit word and int types
  * on 64-bit machines.
  *)
 
