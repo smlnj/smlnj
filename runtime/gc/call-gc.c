@@ -56,7 +56,6 @@ void InvokeGC (ml_state_t *msp, int level)
     heap_t	*heap;
     int		i;
 
-/*DEBUG*/Say("# InvokeGC\n");
     ASSIGN(ProfCurrent, PROF_MINOR_GC);
 
     START_GC_PAUSE(msp->ml_heap);
@@ -149,15 +148,12 @@ void InvokeGCWithRoots (ml_state_t *msp, int level, ...)
     *rootsPtr++ = &CInterfaceRootList;
 #endif
 
-/*DEBUG*/Say("# InvokeGCWithRoots:");
   /* record extra roots from param list */
     va_start (ap, level);
     while ((p = va_arg(ap, ml_val_t *)) != NIL(ml_val_t *)) {
 	*rootsPtr++ = p;
-/*DEBUG*/Say(" %p", p);
     }
     va_end(ap);
-/*DEBUG*/Say("\n", p);
 
   /* Gather the roots */
     for (i = 0;  i < NumCRoots;  i++)
