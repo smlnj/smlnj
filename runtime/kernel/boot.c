@@ -507,6 +507,11 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             }
             /* check that we have seen all of the necessary sections */
             if (!seenImports || !seenExports || !seenLits || !seenCodeOrCFG) {
+                char msg[64] = "missing sections:";
+                if (!seenImports) { strcat (msg, " IMPT"); }
+                if (!seenExports) { strcat (msg, " EXPT"); }
+                if (!seenLits) { strcat (msg, " LITS"); }
+                if (!seenCodeOrCFG) { strcat (msg, " CODE/CFGP"); }
                 Die("missing sections");
             }
         } else if (BIG_TO_HOST32(bfVersion) == BINFILE_VERSION) {
