@@ -428,6 +428,9 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             /* read the rest of the header */
             ReadBinFile (file, &(buf[12]), sizeof(binfile_hdr_t) - 12, fname);
             int nSects = LITTLE_TO_HOST32(p->numSects);
+Say("# ReadHeader: new-style\n");
+Say("## version = %08x\n", info->version);
+Say("## nSects = %d\n", nSects);
             /* flags to track which sections have been seen */
             bool_t seenImports = FALSE;
             bool_t seenExports = FALSE;
@@ -445,14 +448,6 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                         seenImports = TRUE;
                         info->importSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
                         info->importSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
-                        ReadBinFileAt(
-                            file,
-                            &info->nImports, sizeof(Int32_t),
-                            base + info->importSect.offset,
-                            fname);
-                        info->nImports = LITTLE_TO_HOST32(info->nImports);
-                        info->importSect.offset += sizeof(Int32_t);
-                        info->importSect.size -= sizeof(Int32_t);
                     }
                     break;
                 case BF_EXPT:
@@ -481,14 +476,6 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                         info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
                         info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
                         info->isNative = TRUE;
-                        ReadBinFileAt(
-                            file,
-                            &info->entry, sizeof(Int32_t),
-                            base + info->codeSect.offset,
-                            fname);
-                        info->entry = LITTLE_TO_HOST32(info->entry);
-                        info->codeSect.offset += sizeof(Int32_t);
-                        info->codeSect.size -= sizeof(Int32_t);
                     }
                     break;
                 case BF_CFGP:
@@ -502,6 +489,10 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                     }
                     break;
                 default: /* ignore other sections */
+/*DEBUG*/
+{Unsigned32_t id = LITTLE_TO_HOST32(sd.id); Say("# [%d] ignore ID '%c%c%c%c'\n",
+i, (char)id, (char)(id >> 8), (char)(id >> 16), (char)(id >> 24));}
+/*DEBUG*/
                     break;
                 }
             }
@@ -512,8 +503,31 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
                 if (!seenExports) { strcat (msg, " EXPT"); }
                 if (!seenLits) { strcat (msg, " LITS"); }
                 if (!seenCodeOrCFG) { strcat (msg, " CODE/CFGP"); }
-                Die("missing sections");
+                Die(msg);
             }
+            /* get additional info for 'IMPT' and 'CODE' sections */
+            {
+                int nb;
+                Seek(file, base + info->importSect.offset, fname);
+                info->nImports = ReadLEB128Unsigned(file, fname, &nb);
+                info->importSect.offset += nb;
+                info->importSect.size -= nb;
+            }
+            if (info->isNative) {
+                int nb;
+                Seek(file, base + info->codeSect.offset, fname);
+                info->entry = ReadLEB128Unsigned(file, fname, &nb);
+                info->codeSect.offset += nb;
+                info->codeSect.size -= nb;
+            }
+Say("## imports: cnt = %d, offset = %d, size = %d\n",
+info->nImports, (int)info->importSect.offset, (int)info->importSect.size);
+Say("## exports: offset = %d, size = %d\n",
+(int)info->exportSect.offset, (int)info->exportSect.size);
+Say("## literals: offset = %d, size = %d\n",
+(int)info->litsSect.offset, (int)info->litsSect.size);
+Say("## code: offset = %d, size = %d\n",
+(int)info->codeSect.offset, (int)info->codeSect.size);
         } else if (BIG_TO_HOST32(bfVersion) == BINFILE_VERSION) {
           /* this is the old (but not original) binfile format */
             new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
@@ -606,14 +620,16 @@ Say("## code: offset = %d, size = %d\n",
 
 } /* end of ReadHeader */
 
-/* ImportSelection:
+/* OldImportSelection:
  *
  * Select out the interesting bits from the imported object.
+ * This is the "old" version that uses the old packed-int encoding.
  */
-PVT void ImportSelection (ml_state_t *msp, FILE *file, const char *fname,
-                          int *importVecPos, ml_val_t tree)
+PVT void OldImportSelection (
+    ml_state_t *msp, FILE *file, const char *fname,
+    int *importVecPos, ml_val_t tree)
 {
-Say("### ImportSelection: tree = %p\n", tree);
+Say("### OldImportSelection: tree = %p\n", tree);
     Int32_t cnt = ReadPackedInt32 (file, fname, NIL(int *));
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
@@ -622,8 +638,35 @@ Say("### ImportSelection: tree = %p\n", tree);
     else {
         while (cnt-- > 0) {
             Int32_t selector = ReadPackedInt32 (file, fname, NIL(int *));
-            ImportSelection (msp, file, fname, importVecPos,
-                             REC_SEL(tree, selector));
+            OldImportSelection (
+                msp, file, fname, importVecPos,
+                REC_SEL(tree, selector));
+        }
+    }
+
+} /* end of OldImportSelection */
+
+/* ImportSelection:
+ *
+ * Select out the interesting bits from the imported object.
+ * This is the "new" version that uses the LEB128 packed-int encoding.
+ */
+PVT void ImportSelection (
+    ml_state_t *msp, FILE *file, const char *fname,
+    int *importVecPos, ml_val_t tree)
+{
+Say("### ImportSelection: tree = %p\n", tree);
+    Int32_t cnt = ReadLEB128Signed (file, fname, NIL(int *));
+    if (cnt == 0) {
+        ML_AllocWrite (msp, *importVecPos, tree);
+        (*importVecPos)++;
+    }
+    else {
+        while (cnt-- > 0) {
+            Int32_t selector = ReadLEB128Signed (file, fname, NIL(int *));
+            ImportSelection (
+                msp, file, fname, importVecPos,
+                REC_SEL(tree, selector));
         }
     }
 
@@ -710,7 +753,11 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
   Say("### import PID[%d]: %s\n", importVecPos, buf);
 }
 /*DEBUG*/
-            ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            if (hdr.version == 0x20250801) {
+                ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            } else {
+                OldImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            }
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
