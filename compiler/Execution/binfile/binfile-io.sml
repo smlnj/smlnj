@@ -218,7 +218,7 @@ structure BinfileIO :> BINFILE_IO =
                 create (SOME file, inS, 0)
               end
 
-        fun openStream inS = create (NONE, inS, 0)
+        fun openStream (inS, offset) = create (NONE, inS, offset)
 
         fun header (IN{hdr, ...}) = hdr
 
@@ -231,10 +231,15 @@ structure BinfileIO :> BINFILE_IO =
         (* seek to the specified file position, which is relative to the start of
          * the binfile
          *)
-        fun seek (IN{inS, base, ...}, pos) = let
+        fun seek (IN{inS, base, file, ...}, pos) = let
               val newPos = base + pos
               val inS' = BIO.getInstream inS
               in
+(* +DEBUG *)
+Control_Print.say(concat[
+"## seek ", Option.getOpt(file, "<file>"), "@", Position.toString newPos, "\n"
+]);
+(* -DEBUG *)
                 if SIO.filePosIn inS' = newPos
                   then () (* the input stream is at the correct position *)
                   else (case (SIO.getReader inS')
@@ -278,6 +283,8 @@ raise ex)
 
         fun inStrm (SECT{bf=IN{inS, ...}, ...}) = inS
 
+        fun sectName (SECT{desc, ...}) = SectId.toString(#kind desc)
+
         fun bytes (_, 0) = Byte.stringToBytes ""
           | bytes (sect, n) = let
               val bv = BIO.inputN (inStrm sect, n)
@@ -285,10 +292,11 @@ raise ex)
                 if n = W8V.length bv
                   then bv
                   else error (concat[
-                      "expected ", Int.toString n, " bytes, but found ",
-                      Int.toString(W8V.length bv)
+                      "[", sectName sect, "] expected ", Int.toString n,
+                      " bytes, but found ", Int.toString(W8V.length bv)
                     ])
               end
+(*DEBUG*)handle ex => raise ex
 
         fun string (sect, n) = Byte.bytesToString (bytes (sect, n))
 
@@ -304,14 +312,19 @@ raise ex)
                  of SOME(n, inS') => (
                       BIO.setInstream (inS, inS');
                       n)
-                  | NONE => error "unable to read a packed int"
+                  | NONE => error (concat[
+                        "[", sectName sect, "] unable to read a packed int"
+                      ])
                 (* end case *)
               end
+(*DEBUG*)handle ex => raise ex
 
         fun pid sect = Pid.fromBytes (bytes (sect, Pid.persStampSize))
+(*DEBUG*)handle ex => raise ex
 
 (* NOTE: we are assuming an entry-point of 0, since that is always the value *)
         fun codeObject (sect, sz) = CodeObj.input(inStrm sect, sz, 0)
+(*DEBUG*)handle ex => raise ex
 
       end
 

@@ -59,7 +59,7 @@ signature BINFILE_IO =
         type sect
 
         val openFile : string -> t
-        val openStream : BinIO.instream -> t
+        val openStream : BinIO.instream * Position.int -> t
 
         (* the header info for the binfile *)
         val header : t -> Hdr.t

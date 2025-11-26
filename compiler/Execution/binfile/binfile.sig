@@ -67,8 +67,9 @@ signature BINFILE = sig
 
   (* read binfile contents from an IO stream *)
     val read : {
-            version : version_info,                     (* expected binfile version *)
-	    stream : BinIO.instream
+            version : version_info,             (* expected binfile version *)
+	    stream : BinIO.instream,            (* input stream for binfile *)
+            offset : Position.int               (* archive file offset or zero *)
 	  } -> { contents: bfContents, stats: stats }
 
   (* write binfile contents to an IO stream *)

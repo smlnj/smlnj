@@ -398,8 +398,9 @@ in
 				    fun reader s = let
 					val mm0 = StabModmap.get ()
 					val m = GenModIdMap.mkMap' (stat, mm0)
-					val { contents, stats } =
-					    BF.read { stream = s, version = version }
+					val { contents, stats } = BF.read {
+                                                stream = s, offset = 0, version = version
+                                              }
 				    in
 					SmlInfo.setguid (i, BF.guidOf contents);
 					(contents, ts, stats)

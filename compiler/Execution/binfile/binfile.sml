@@ -142,7 +142,7 @@ structure Binfile :> BINFILE =
     fun getGuidSection (sect, sz) = BFIO.In.string (sect, sz)
 
     fun readGUid s = let
-          val bf = BFIO.In.openStream s
+          val bf = BFIO.In.openStream (s, 0)
           in
             case BFIO.In.section (bf, BFIO.SectId.guid, getGuidSection)
              of SOME guid => guid
@@ -173,9 +173,9 @@ structure Binfile :> BINFILE =
 (* FIXME: instead of passing the `version_info`, we should just pass the expected
  * SML/NJ version and architecture.
  *)
-    fun read { version : version_info, stream } = let
+    fun read { version : version_info, stream, offset } = let
 (* DEBUG *)val () = Control_Print.say "**** read new-format binfile\n"
-          val bf = BFIO.In.openStream stream
+          val bf = BFIO.In.openStream (stream, offset)
           val hdr = BFIO.In.header bf
           (* check that we have a Binfile and not an archive *)
           val _ = if (BFIO.Hdr.isArchive hdr)
@@ -265,9 +265,10 @@ structure Binfile :> BINFILE =
           then readGUid inS
           else OldBinfile.readGUid inS
 
-    val read = fn (arg as {stream, version}) => if isNewFormat(BinIO.getInstream stream)
-          then read arg
-          else OldBinfile.read arg
+    val read = fn (arg as {stream, version, offset}) =>
+          if isNewFormat(BinIO.getInstream stream)
+            then read arg
+            else OldBinfile.read {stream=stream, version=version}
 
     (***** OUTPUT OPERATIONS *****)
 
