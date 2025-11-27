@@ -28,8 +28,12 @@ structure BinfileIO :> BINFILE_IO =
     fun toPaddedSzb i = 8 * i
 
     (* convert a size in bytes to a padded size in 8-byte words *)
-    fun padSize' szb = W.>>(W.fromInt szb + 0w7, 0w3)
-    fun padSize szb = W.toInt(padSize' szb)
+    fun toWordSz szb = W.>>(W.fromInt szb + 0w7, 0w3)
+
+    (* convert a size in bytes to its padded size in bytes *)
+    fun padSize szb = W.toIntX(W.andb(W.fromInt szb + 0w7, W.notb 0w7))
+
+    fun sizeOfPackedInt n = LEB128.sizeOfWord(Word.fromInt n)
 
     (* section IDs are represented as words internally and as four-character
      * little-endian codes externally.
@@ -285,6 +289,8 @@ raise ex)
 
         fun sectName (SECT{desc, ...}) = SectId.toString(#kind desc)
 
+        fun skip (sect, n) = ignore (BIO.inputN (inStrm sect, n))
+
         fun bytes (_, 0) = Byte.stringToBytes ""
           | bytes (sect, n) = let
               val bv = BIO.inputN (inStrm sect, n)
@@ -303,15 +309,15 @@ raise ex)
         fun int32 sect = getInt32 (bytes(sect, 4), 0)
         fun word32 sect = getUInt32 (bytes(sect, 4), 0)
 
-        val decodePackedInt = LEB128.decodeInt SIO.input1
+        val decodeWord = LEB128.decodeWord SIO.input1
 
         fun packedInt sect = let
               val inS = inStrm sect
               in
-                case decodePackedInt (BIO.getInstream inS)
+                case decodeWord (BIO.getInstream inS)
                  of SOME(n, inS') => (
                       BIO.setInstream (inS, inS');
-                      n)
+                      Word.toIntX n)
                   | NONE => error (concat[
                         "[", sectName sect, "] unable to read a packed int"
                       ])
@@ -322,8 +328,10 @@ raise ex)
         fun pid sect = Pid.fromBytes (bytes (sect, Pid.persStampSize))
 (*DEBUG*)handle ex => raise ex
 
-(* NOTE: we are assuming an entry-point of 0, since that is always the value *)
-        fun codeObject (sect, sz) = CodeObj.input(inStrm sect, sz, 0)
+        fun codeObject (sect, sz, entry) = let
+              in
+                CodeObj.input(inStrm sect, sz, entry)
+              end
 (*DEBUG*)handle ex => raise ex
 
       end
@@ -340,7 +348,7 @@ raise ex)
 
         and sect_data = SD of {
             kind : SectId.t,            (* the section kind *)
-            szW : word,                 (* size of the section in 8-byte words *)
+            szB : int,                  (* size of the section in bytes *)
             outFn : sect -> unit        (* output function *)
           }
 
@@ -348,6 +356,12 @@ raise ex)
          * the binfile.
          *)
         and sect =  SECT of BIO.outstream
+
+(*DEBUG*)
+fun sd2s (SD{kind, szB, ...}) = concat[
+"[", SectId.toString kind, ":", Int.toString szB, "]"
+]
+(*DEBUG*)
 
         fun outputW32 (outS, w) = let
               fun outB w = BIO.output1 (outS, Word8.fromLarge(Word.toLarge w))
@@ -380,33 +394,43 @@ raise ex)
         fun openStream (outS, isArchive, smlnjVers) =
               create (isArchive, smlnjVers, NONE, outS)
 
+        fun emitPad (outS, n) = let
+(*DEBUG*)val _ = print(concat["### emitPad (-, ", Word.fmt StringCvt.DEC n, ")\n"])
+              fun lp n = if (n > 0w0)
+                    then (BIO.output1(outS, 0w0); lp(n - 0w1))
+                    else ()
+              in
+                lp n
+              end
+
         fun finish (OUT{hdr, outS, sects, ...}) = let
+(*DEBUG*)val _ = print "# Out.finish\n"
               (* reverse the list of sections and count them *)
               val (nSects, sections) = List.foldl
                     (fn (sect, (n, sects)) => (n+1, sect::sects))
                       (0, [])
                         (!sects)
               (* size of header including the section table in 8-byte words *)
-              val hdrSzW = padSize'(Hdr.sizeOfHdr nSects)
+              val hdrSzW = toWordSz(Hdr.sizeOfHdr nSects)
               (* output a section descriptor *)
-              fun outputSectDesc (SD{kind, szW, ...}, offsetW) = (
-                    outputW32 (outS, kind);
-                    outputW32 (outS, 0w0); (* reserved for future use *)
-                    outputW32 (outS, offsetW);
-                    outputW32 (outS, szW);
-                    offsetW + szW)
+              fun outputSectDesc (SD{kind, szB, ...}, offsetW) = let
+                    val szW = toWordSz szB
+                    in
+                      outputW32 (outS, kind);
+                      outputW32 (outS, 0w0); (* reserved for future use *)
+                      outputW32 (outS, offsetW);
+                      outputW32 (outS, szW);
+                      offsetW + szW
+                    end
               (* output the contents of a section *)
-              fun outSect (sect as SD{outFn, ...}) = let
+              fun outSect (sect as SD{outFn, szB, ...}) = let
+(*DEBUG*)val _ = print(concat["## outSect ", sd2s sect, "\n"])
                     val () = outFn (SECT outS);
-                    val curPos = SIO.filePosOut(BIO.getPosOut outS)
-                    val pos = W.fromLargeInt(Position.toLarge curPos)
-                    val excess = W.andb(pos, 0w7)
-                    fun pad 0w0 = ()
-                      | pad p = (BIO.output1 (outS, 0w0); pad (p - 0w1))
+                    val excess = W.andb(Word.fromInt szB, 0w7)
                     in
                       (* add padding (if necessary) to ensure 8-byte alignment *)
                       if excess <> 0w0
-                        then pad (0w8 - excess)
+                        then emitPad (outS, 0w8 - excess)
                         else ()
                     end
               (* the SML/NJ version field is trimmed/padded to 16 characters *)
@@ -431,6 +455,7 @@ raise ex)
                 List.app outSect sections;
                 (* discard the sections *)
                 sects := []
+(*DEBUG*); print "## Out.finish done\n"
               end
 
         (* `section (bf, id, szb, outFn)` adds a section with the given `id`
@@ -438,23 +463,16 @@ raise ex)
          * of the section using the functions below.
          *)
         fun section (OUT{sects, ...}, sectId, szb, outFn) =
-              sects := SD{kind = sectId, szW = padSize' szb, outFn = outFn} :: !sects
+              sects := SD{kind = sectId, szB = szb, outFn = outFn} :: !sects
 
-        fun pad (SECT outS, n) = let
-              fun lp n = if (n <= 0) then () else (BIO.output1(outS, 0w0); lp(n-1))
-              in
-                lp n
-              end
+        fun pad (SECT outS, n) = emitPad (outS, Word.fromInt n)
 
         fun bytes (SECT outS, v) = BIO.output (outS, v)
 
         fun string (SECT outS, s) = outputString (outS, s)
 
-        fun packedInt (SECT outS, n) = BIO.output (outS, LEB128.intToBytes n)
-
-        fun word32 (SECT outS, w) = outputW32 (outS, w)
-
-        fun int32 (SECT outS, n) = outputI32 (outS, n)
+        fun packedInt (SECT outS, n) =
+              BIO.output (outS, LEB128.wordToBytes(Word.fromInt n))
 
         fun pid (SECT outS, pid) = outputPid (outS, pid)
 

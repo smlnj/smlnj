@@ -37,8 +37,8 @@ signature BINFILE = sig
     exception FormatError
 
     type pid = PersStamps.persstamp
-    type stats = { env: int, data: int, code: int }
-    type pickle = { pid: pid, pickle: Word8Vector.vector }
+    type stats = { env : int, data : int, code : int }
+    type pickle = { pid : pid, pickle : Word8Vector.vector }
 
     val staticPidOf    : bfContents -> pid
     val exportPidOf    : bfContents -> pid option
@@ -49,7 +49,7 @@ signature BINFILE = sig
     val guidOf         : bfContents -> string
 
   (* calculate the size in bytes occupied by some binfile contents *)
-    val size : { contents: bfContents, nopickle: bool } -> int
+    val size : { contents : bfContents, nopickle: bool } -> int
 
   (* create the abstract binfile contents *)
     val create : {
@@ -70,7 +70,7 @@ signature BINFILE = sig
             version : version_info,             (* expected binfile version *)
 	    stream : BinIO.instream,            (* input stream for binfile *)
             offset : Position.int               (* archive file offset or zero *)
-	  } -> { contents: bfContents, stats: stats }
+	  } -> { contents : bfContents, stats : stats }
 
   (* write binfile contents to an IO stream *)
     val write : {

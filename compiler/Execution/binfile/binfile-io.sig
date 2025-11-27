@@ -77,14 +77,12 @@ signature BINFILE_IO =
         val string : sect * int -> string
         (* read a packed integer from the section using the LEB128 encoding *)
         val packedInt : sect -> int
-        (* read a 32-bit signed integer from the section *)
-        val int32 : sect -> int
-        (* read a 32-bit unsigned integer from the section *)
-        val word32 : sect -> word
         (* read a PID from the section *)
         val pid : sect -> PersStamps.persstamp
-        (* read a code object from the section *)
-        val codeObject : sect * int -> CodeObj.t
+        (* `codeObject (sect, szb, entry)` reads a code object from the section *)
+        val codeObject : sect * int * int -> CodeObj.t
+        (* skip over padding bytes *)
+        val skip : sect * int -> unit
 
       end
 
@@ -113,14 +111,15 @@ signature BINFILE_IO =
         val string : sect * string -> unit
         (* write a packed integer to the section using the LEB128 encoding *)
         val packedInt : sect * int -> unit
-        val int32 : sect * int -> unit
-        val word32 : sect * word -> unit
         val pid : sect * PersStamps.persstamp -> unit
         val codeObject : sect * CodeObj.t -> unit
 
       end
 
-    (* given the number of bytes in a section, return it padded size.  Currently
+    (* return the size in bytes of a packed int *)
+    val sizeOfPackedInt : int -> int
+
+    (* given the number of bytes in a section, return its padded size.  Currently
      * sections are padded to a multiple of 8 bytes.
      *)
     val padSize : int -> int

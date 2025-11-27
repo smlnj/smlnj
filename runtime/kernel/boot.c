@@ -312,43 +312,6 @@ PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 
 } /* end of ReadBinFile */
 
-/* ReadLEB128Signed:
- *
- * Read a signed packed integer in LEB128 format.
- */
-PVT Int32_t ReadLEB128Signed (FILE *file, const char *fname, int *nb)
-{
-    Int32_t n = 0;
-    Unsigned32_t shift = 0;
-    Unsigned32_t slice;
-    Byte_t c;
-
-    int i = 0;
-    do {
-        ReadBinFile (file, &c, sizeof(c), fname);
-        slice = c & 0x7f;
-        if ((shift >= 31)
-        && ((shift == 31 && slice != 0 && slice != 0x7f)
-           || (shift > 31 && slice != (n < 0 ? 0x7f : 0x00))))
-        {
-/* TODO: overflow */
-        }
-        n |= slice << shift;
-        shift += 7;
-        i++;
-    } while ((c & 0x80) != 0);
-
-    // sign extend negative numbers
-    if (shift < 32 && ((c & 0x40) != 0)) {
-        n |= (0xffffffff << shift);
-    }
-
-    if (nb != NIL(int *)) { *nb = i; }
-
-    return n;
-
-} /* end of ReadLEB128Signed */
-
 /* ReadLEB128Unsigned:
  *
  * Read an unsigned packed integer in LEB128 format.
@@ -515,10 +478,13 @@ i, (char)id, (char)(id >> 8), (char)(id >> 16), (char)(id >> 24));}
             }
             if (info->isNative) {
                 int nb;
+Say("## code: initial offset = %d, size = %d\n",
+(int)info->codeSect.offset, (int)info->codeSect.size);
                 Seek(file, base + info->codeSect.offset, fname);
                 info->entry = ReadLEB128Unsigned(file, fname, &nb);
                 info->codeSect.offset += nb;
-                info->codeSect.size -= nb;
+                info->codeSect.size = ReadLEB128Unsigned(file, fname, &nb);
+                info->codeSect.offset += nb;
             }
 Say("## imports: cnt = %d, offset = %d, size = %d\n",
 info->nImports, (int)info->importSect.offset, (int)info->importSect.size);
@@ -656,14 +622,14 @@ PVT void ImportSelection (
     int *importVecPos, ml_val_t tree)
 {
 Say("### ImportSelection: tree = %p\n", tree);
-    Int32_t cnt = ReadLEB128Signed (file, fname, NIL(int *));
+    Int32_t cnt = ReadLEB128Unsigned (file, fname, NIL(int *));
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;
     }
     else {
         while (cnt-- > 0) {
-            Int32_t selector = ReadLEB128Signed (file, fname, NIL(int *));
+            Int32_t selector = ReadLEB128Unsigned (file, fname, NIL(int *));
             ImportSelection (
                 msp, file, fname, importVecPos,
                 REC_SEL(tree, selector));
@@ -812,7 +778,7 @@ Say(" }\n");
   /* read the code */
     if (hdr.codeSect.size > 0) {
         Int32_t thisSzB, thisEntryPoint;
-/*DEBUG*/Say("## read code\n");
+/*DEBUG*/Say("## read code @ %d\n", (int)(archiveOffset + hdr.codeSect.offset));
         Seek (file, archiveOffset + hdr.codeSect.offset, fname);
         if (hdr.isNative) {
             thisSzB = hdr.codeSect.size;
