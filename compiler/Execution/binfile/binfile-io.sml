@@ -116,10 +116,10 @@ structure BinfileIO :> BINFILE_IO =
         fun sizeOfHdr nSects = fixedSize + sectDescSize * nSects
 
         type sect_desc = {
-            kind : SectId.t,            (* 4-byte section ID *)
-            flags : word,               (* flags (for future use) *)
-            offsetW : int,              (* 8-byte word offset from start of binfile *)
-            szW : int                   (* size in 8-byte words *)
+            kind : SectId.t,    (* 4-byte section ID *)
+            flags : word,       (* flags (for future use) *)
+            offsetW : int,      (* 8-byte word offset from start of binfile *)
+            szW : int           (* size in 8-byte words *)
           }
 
         type sect_tbl = sect_desc Vector.vector
@@ -134,8 +134,10 @@ structure BinfileIO :> BINFILE_IO =
         datatype t = IN of {
             hdr : Hdr.t,
             file : string option,
-            inS : BIO.instream,       (* the original input stream for the binfile *)
-            base : Position.int,
+            inS : BIO.instream,         (* the original input stream for the binfile *)
+            base : Position.int,        (* base offset of binfile in its containing
+                                         * archive file (or zero).
+                                         *)
             sects : Hdr.sect_tbl
           }
 
@@ -426,12 +428,9 @@ fun sd2s (SD{kind, szB, ...}) = concat[
               fun outSect (sect as SD{outFn, szB, ...}) = let
 (*DEBUG*)val _ = print(concat["## outSect ", sd2s sect, "\n"])
                     val () = outFn (SECT outS);
-                    val excess = W.andb(Word.fromInt szB, 0w7)
                     in
                       (* add padding (if necessary) to ensure 8-byte alignment *)
-                      if excess <> 0w0
-                        then emitPad (outS, 0w8 - excess)
-                        else ()
+                      emitPad (outS, padSize sz - sz)
                     end
               (* the SML/NJ version field is trimmed/padded to 16 characters *)
               val smlnjVersion = let

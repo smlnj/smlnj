@@ -119,7 +119,7 @@ signature BINFILE_IO =
     (* return the size in bytes of a packed int *)
     val sizeOfPackedInt : int -> int
 
-    (* given the number of bytes in a section, return its padded size.  Currently
+    (* given the number of bytes in a section, return it padded size.  Currently
      * sections are padded to a multiple of 8 bytes.
      *)
     val padSize : int -> int
