@@ -88,6 +88,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/137[Typechecker hangs with a large number of curried arguments]
 | [.bugid]#262#
 | {issue-base}/262[Compiler bug in type checker: unexpected pattern]
+| [.bugid]#313#
+| {issue-base}/313[Remove unnecessary LLVM executables from `runtime/bin`]
 | [.bugid]#314#
 | {issue-base}/314[LLVM fails to build using the `build.sh` script]
 | [.bugid]#315#
