@@ -595,8 +595,8 @@ PVT void OldImportSelection (
     ml_state_t *msp, FILE *file, const char *fname,
     int *importVecPos, ml_val_t tree)
 {
-Say("### OldImportSelection: tree = %p\n", tree);
     Int32_t cnt = ReadPackedInt32 (file, fname, NIL(int *));
+Say("### OldImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;
@@ -621,8 +621,8 @@ PVT void ImportSelection (
     ml_state_t *msp, FILE *file, const char *fname,
     int *importVecPos, ml_val_t tree)
 {
-Say("### ImportSelection: tree = %p\n", tree);
     Int32_t cnt = ReadLEB128Unsigned (file, fname, NIL(int *));
+Say("### ImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;

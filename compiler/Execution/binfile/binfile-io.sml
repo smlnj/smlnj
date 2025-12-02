@@ -397,9 +397,9 @@ fun sd2s (SD{kind, szB, ...}) = concat[
               create (isArchive, smlnjVers, NONE, outS)
 
         fun emitPad (outS, n) = let
-(*DEBUG*)val _ = print(concat["### emitPad (-, ", Word.fmt StringCvt.DEC n, ")\n"])
-              fun lp n = if (n > 0w0)
-                    then (BIO.output1(outS, 0w0); lp(n - 0w1))
+(*DEBUG*)val _ = print(concat["### emitPad (-, ", Int.toString n, ")\n"])
+              fun lp n = if (n > 0)
+                    then (BIO.output1(outS, 0w0); lp(n - 1))
                     else ()
               in
                 lp n
@@ -430,7 +430,7 @@ fun sd2s (SD{kind, szB, ...}) = concat[
                     val () = outFn (SECT outS);
                     in
                       (* add padding (if necessary) to ensure 8-byte alignment *)
-                      emitPad (outS, padSize sz - sz)
+                      emitPad (outS, padSize szB - szB)
                     end
               (* the SML/NJ version field is trimmed/padded to 16 characters *)
               val smlnjVersion = let
@@ -464,7 +464,7 @@ fun sd2s (SD{kind, szB, ...}) = concat[
         fun section (OUT{sects, ...}, sectId, szb, outFn) =
               sects := SD{kind = sectId, szB = szb, outFn = outFn} :: !sects
 
-        fun pad (SECT outS, n) = emitPad (outS, Word.fromInt n)
+        fun pad (SECT outS, n) = emitPad (outS, n)
 
         fun bytes (SECT outS, v) = BIO.output (outS, v)
 
