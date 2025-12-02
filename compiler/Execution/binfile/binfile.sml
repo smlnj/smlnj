@@ -3,8 +3,6 @@
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * author: Matthias Blume and John Reppy
- *
  * This file is an implementation of the old `BINFILE` signature using the new
  * binfile format, which is described in
  *
@@ -152,30 +150,21 @@ structure Binfile :> BINFILE =
 
     fun getLiteralsSection (sect, sz) = BFIO.In.bytes (sect, sz)
 
-    fun getCodeSection (sect, totSz) = let
+    fun getCodeSection (sect, sz) = let
           val entryPt = BFIO.In.packedInt sect
-          val totSz = totSz - BFIO.sizeOfPackedInt entryPt
-          val sz = BFIO.In.packedInt sect
-          val totSz = totSz - BFIO.sizeOfPackedInt sz
-          val _ = if (sz > totSz)
-                then raise Fail "code-object size is too large"
-                else ()
-          val code = BFIO.In.codeObject (sect, sz, entryPt)
+          val codeSz = sz - BFIO.sizeOfPackedInt entryPt
+          val code = BFIO.In.codeObject (sect, codeSz, entryPt)
           in
-            (* read and discard the padding *)
-            BFIO.In.skip (sect, totSz - sz);
             code
           end
 
     fun getStaticEnvSection (sect, sz) = let
           val staticPid = BFIO.In.pid sect
           val pklSz = if (sz > bytesPerPid)
-                then BFIO.In.packedInt sect
+                then sz - bytesPerPid
                 else 0
           val pkl = BFIO.In.bytes (sect, pklSz)
           in
-            (* read and discard the padding *)
-            BFIO.In.skip (sect, sz - pklSz - bytesPerPid);
             { pid = staticPid, pickle = pkl }
           end
 
@@ -386,16 +375,13 @@ structure Binfile :> BINFILE =
           val codeSz = CodeObj.size code
           in
 (* TODO: the entrypoint is redundant, since it is always zero! *)
-            BFIO.sizeOfPackedInt(CodeObj.entrypoint code)
-                + BFIO.sizeOfPackedInt codeSz
-                + codeSz
+            BFIO.sizeOfPackedInt(CodeObj.entrypoint code) + codeSz
           end
     fun addCodeSection (bf, code) = let
           val sz = codeSize code
           fun outFn sect = (
 (* TODO: the entrypoint is redundant, since it is always zero! *)
                 BFIO.Out.packedInt(sect, CodeObj.entrypoint code);
-                BFIO.Out.packedInt(sect, CodeObj.size code);
                 BFIO.Out.codeObject(sect, code))
           in
             BFIO.Out.section (bf, BFIO.SectId.code, sz, outFn)
@@ -403,20 +389,14 @@ structure Binfile :> BINFILE =
 
     (** static environment ('SENV') section **)
     fun staticEnvSize (_, _, true) = bytesPerPid
-      | staticEnvSize (_, pkl, false) = let
-          val n = W8V.length pkl
-          in
-            bytesPerPid + BFIO.sizeOfPackedInt n + n
-          end
+      | staticEnvSize (_, pkl, false) = bytesPerPid + W8V.length pkl
     fun addStaticEnvSection (bf, pid, pkl, nopickle) = let
           val sz = staticEnvSize (pid, pkl, nopickle)
           fun outFn sect = (
                 BFIO.Out.pid (sect, pid);
                 if nopickle
                   then ()
-                  else (
-                    BFIO.Out.packedInt (sect, W8V.length pkl);
-                    BFIO.Out.bytes (sect, pkl)))
+                  else BFIO.Out.bytes (sect, pkl))
           in
             BFIO.Out.section (bf, BFIO.SectId.staticEnv, sz, outFn)
           end

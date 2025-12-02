@@ -34,8 +34,8 @@ typedef struct {
 typedef struct {
     Unsigned32_t id;
     Unsigned32_t flags;
-    Unsigned32_t offsetW;
-    Unsigned32_t szW;
+    Unsigned32_t offsetB;
+    Unsigned32_t szB;
 } binfile_sect_desc_t;
 
 typedef struct {
@@ -409,8 +409,8 @@ Say("## nSects = %d\n", nSects);
                         Die("multiple 'IMPT' sections");
                     } else {
                         seenImports = TRUE;
-                        info->importSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
-                        info->importSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->importSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->importSect.size = LITTLE_TO_HOST32(sd.szB);
                     }
                     break;
                 case BF_EXPT:
@@ -418,8 +418,8 @@ Say("## nSects = %d\n", nSects);
                         Die("multiple 'EXPT' sections");
                     } else {
                         seenExports = TRUE;
-                        info->exportSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
-                        info->exportSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->exportSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->exportSect.size = LITTLE_TO_HOST32(sd.szB);
                     }
                     break;
                 case BF_LITS:
@@ -427,8 +427,8 @@ Say("## nSects = %d\n", nSects);
                         Die("multiple 'LITS' sections");
                     } else {
                         seenLits = TRUE;
-                        info->litsSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
-                        info->litsSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->litsSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->litsSect.size = LITTLE_TO_HOST32(sd.szB);
                     }
                     break;
                 case BF_CODE:
@@ -436,8 +436,8 @@ Say("## nSects = %d\n", nSects);
                         Die("multiple 'CODE' / 'CFGP' sections");
                     } else {
                         seenCodeOrCFG = TRUE;
-                        info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
-                        info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->codeSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->codeSect.size = LITTLE_TO_HOST32(sd.szB);
                         info->isNative = TRUE;
                     }
                     break;
@@ -446,8 +446,8 @@ Say("## nSects = %d\n", nSects);
                         Die("multiple 'CODE' / 'CFGP' sections");
                     } else {
                         seenCodeOrCFG = TRUE;
-                        info->codeSect.offset = 8 * LITTLE_TO_HOST32(sd.offsetW);
-                        info->codeSect.size = 8 * LITTLE_TO_HOST32(sd.szW);
+                        info->codeSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->codeSect.size = LITTLE_TO_HOST32(sd.szB);
                         info->isNative = FALSE;
                     }
                     break;
@@ -483,8 +483,7 @@ Say("## code: initial offset = %d, size = %d\n",
                 Seek(file, base + info->codeSect.offset, fname);
                 info->entry = ReadLEB128Unsigned(file, fname, &nb);
                 info->codeSect.offset += nb;
-                info->codeSect.size = ReadLEB128Unsigned(file, fname, &nb);
-                info->codeSect.offset += nb;
+                info->codeSect.size -= nb);
             }
 Say("## imports: cnt = %d, offset = %d, size = %d\n",
 info->nImports, (int)info->importSect.offset, (int)info->importSect.size);

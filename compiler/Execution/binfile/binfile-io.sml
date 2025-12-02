@@ -21,18 +21,6 @@ structure BinfileIO :> BINFILE_IO =
 	  Control_Print.say (concat ["binfile format error: ", msg, "\n"]);
 	  raise CodeObj.FormatError)
 
-    (* convert a 8-byte-word offset to a byte file position *)
-    fun toAlignedPos i = 8 * Position.fromInt i
-
-    (* convert a 8-byte-word size to a byte size *)
-    fun toPaddedSzb i = 8 * i
-
-    (* convert a size in bytes to a padded size in 8-byte words *)
-    fun toWordSz szb = W.>>(W.fromInt szb + 0w7, 0w3)
-
-    (* convert a size in bytes to its padded size in bytes *)
-    fun padSize szb = W.toIntX(W.andb(W.fromInt szb + 0w7, W.notb 0w7))
-
     fun sizeOfPackedInt n = LEB128.sizeOfWord(Word.fromInt n)
 
     (* section IDs are represented as words internally and as four-character
@@ -118,8 +106,8 @@ structure BinfileIO :> BINFILE_IO =
         type sect_desc = {
             kind : SectId.t,    (* 4-byte section ID *)
             flags : word,       (* flags (for future use) *)
-            offsetW : int,      (* 8-byte word offset from start of binfile *)
-            szW : int           (* size in 8-byte words *)
+            offsetB : int,      (* byte offset from the start of binfile *)
+            szB : int           (* size in bytes *)
           }
 
         type sect_tbl = sect_desc Vector.vector
@@ -208,8 +196,8 @@ structure BinfileIO :> BINFILE_IO =
                     in {
                       kind = kind,
                       flags = flags,
-                      offsetW = offset,
-                      szW = sz
+                      offsetB = offset,
+                      szB = sz
                     } end
 (* TODO: validate the table *)
               val sects = Vector.tabulate (nSects, fn _ => getSectDesc())
@@ -267,17 +255,17 @@ Control_Print.say(concat[
         fun section (bf, sectId, inFn) = (
             case findSection (bf, sectId)
                of SOME desc => let
-                    val () = seek (bf, toAlignedPos(#offsetW desc))
+                    val () = seek (bf, #offsetB desc)
                     val sect = SECT{bf = bf, desc = desc}
                     in
 (* +DEBUG *)
 Control_Print.say(concat[
 "# section (-, '", String.toString(SectId.toString sectId), "', -): pos = 0x",
-Position.fmt StringCvt.HEX (toAlignedPos(#offsetW desc)), "; szb = ",
-Int.toString(toPaddedSzb(#szW desc)), "\n"
+Position.fmt StringCvt.HEX (#offsetB desc), "; szb = ",
+Int.toString(#szB desc), "\n"
 ]);
 (* -DEBUG *)
-                      SOME(inFn (sect, toPaddedSzb(#szW desc)))
+                      SOME(inFn (sect, #szB desc))
 (* +DEBUG *)
 handle ex => (
 Control_Print.say(concat["## Exception: ", General.exnMessage ex, "\n"]);
@@ -412,26 +400,19 @@ fun sd2s (SD{kind, szB, ...}) = concat[
                     (fn (sect, (n, sects)) => (n+1, sect::sects))
                       (0, [])
                         (!sects)
-              (* size of header including the section table in 8-byte words *)
-              val hdrSzW = toWordSz(Hdr.sizeOfHdr nSects)
+              (* size of header including the section table in bytes *)
+              val hdrSzB = Hdr.sizeOfHdr nSects
               (* output a section descriptor *)
-              fun outputSectDesc (SD{kind, szB, ...}, offsetW) = let
-                    val szW = toWordSz szB
-                    in
-                      outputW32 (outS, kind);
-                      outputW32 (outS, 0w0); (* reserved for future use *)
-                      outputW32 (outS, offsetW);
-                      outputW32 (outS, szW);
-                      offsetW + szW
-                    end
+              fun outputSectDesc (SD{kind, szB, ...}, offset) = (
+                    outputW32 (outS, kind);
+                    outputW32 (outS, 0w0); (* reserved for future use *)
+                    outputW32 (outS, offset);
+                    outputW32 (outS, szB);
+                    offset + szB)
               (* output the contents of a section *)
-              fun outSect (sect as SD{outFn, szB, ...}) = let
-(*DEBUG*)val _ = print(concat["## outSect ", sd2s sect, "\n"])
-                    val () = outFn (SECT outS);
-                    in
-                      (* add padding (if necessary) to ensure 8-byte alignment *)
-                      emitPad (outS, padSize szB - szB)
-                    end
+              fun outSect (sect as SD{outFn, szB, ...}) = (
+(*DEBUG*)print(concat["## outSect ", sd2s sect, "\n"]);
+                    outFn (SECT outS))
               (* the SML/NJ version field is trimmed/padded to 16 characters *)
               val smlnjVersion = let
                     val s = SMLNJVersion.toString(#smlnjVersion hdr)
@@ -449,7 +430,7 @@ fun sd2s (SD{kind, szB, ...}) = concat[
                 outputString (outS, smlnjVersion);
                 outputI32 (outS, nSects);
                 (* output the section table *)
-                ignore (List.foldl outputSectDesc hdrSzW sections);
+                ignore (List.foldl outputSectDesc hdrSzB sections);
                 (* output the sections *)
                 List.app outSect sections;
                 (* discard the sections *)

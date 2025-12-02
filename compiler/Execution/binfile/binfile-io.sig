@@ -104,8 +104,6 @@ signature BINFILE_IO =
          *)
         val section : t * SectId.t * int * (sect -> unit) -> unit
 
-        (* write the specified number of padding bytes (0w0) to the section *)
-        val pad : sect * int -> unit
         (* write a vector of bytes to the section *)
         val bytes : sect * Word8Vector.vector -> unit
         val string : sect * string -> unit
@@ -113,16 +111,13 @@ signature BINFILE_IO =
         val packedInt : sect * int -> unit
         val pid : sect * PersStamps.persstamp -> unit
         val codeObject : sect * CodeObj.t -> unit
+        (* write the specified number of padding bytes (0w0) to the section *)
+        val pad : sect * int -> unit
 
       end
 
     (* return the size in bytes of a packed int *)
     val sizeOfPackedInt : int -> int
-
-    (* given the number of bytes in a section, return it padded size.  Currently
-     * sections are padded to a multiple of 8 bytes.
-     *)
-    val padSize : int -> int
 
     (* error messages for Binfile I/O *)
     val error : string -> 'a
