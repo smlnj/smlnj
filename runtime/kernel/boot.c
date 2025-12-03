@@ -629,6 +629,7 @@ Say("### ImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     else {
         while (cnt-- > 0) {
             Int32_t selector = ReadLEB128Unsigned (file, fname, NIL(int *));
+Say("#### select %p[%d]\n", tree, selector);
             ImportSelection (
                 msp, file, fname, importVecPos,
                 REC_SEL(tree, selector));

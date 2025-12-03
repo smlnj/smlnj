@@ -104,10 +104,10 @@ structure BinfileIO :> BINFILE_IO =
         fun sizeOfHdr nSects = fixedSize + sectDescSize * nSects
 
         type sect_desc = {
-            kind : SectId.t,    (* 4-byte section ID *)
-            flags : word,       (* flags (for future use) *)
-            offsetB : int,      (* byte offset from the start of binfile *)
-            szB : int           (* size in bytes *)
+            kind : SectId.t,            (* 4-byte section ID *)
+            flags : word,               (* flags (for future use) *)
+            offset : Position.int,      (* offset from the start of binfile *)
+            szB : int                   (* size in bytes *)
           }
 
         type sect_tbl = sect_desc Vector.vector
@@ -191,12 +191,12 @@ structure BinfileIO :> BINFILE_IO =
                           else ()
                     val kind = SectId.fromWord(getUInt32(descData, 0))
                     val flags = getUInt32(descData, 4)
-                    val offset = Word.toInt(getUInt32(descData, 8))
+                    val offset = Position.fromLarge(Word.toLargeInt(getUInt32(descData, 8)))
                     val sz = Word.toInt(getUInt32(descData, 12))
                     in {
                       kind = kind,
                       flags = flags,
-                      offsetB = offset,
+                      offset = offset,
                       szB = sz
                     } end
 (* TODO: validate the table *)
@@ -229,11 +229,6 @@ structure BinfileIO :> BINFILE_IO =
               val newPos = base + pos
               val inS' = BIO.getInstream inS
               in
-(* +DEBUG *)
-Control_Print.say(concat[
-"## seek ", Option.getOpt(file, "<file>"), "@", Position.toString newPos, "\n"
-]);
-(* -DEBUG *)
                 if SIO.filePosIn inS' = newPos
                   then () (* the input stream is at the correct position *)
                   else (case (SIO.getReader inS')
@@ -249,28 +244,16 @@ Control_Print.say(concat[
 
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
-         * the section is missing and `SOME contents` when the section is present
-         * and `inFn` returns `contents`.
+         * the section is missing or is empty, and `SOME contents` when the
+         * section is present and `inFn` returns `contents`.
          *)
         fun section (bf, sectId, inFn) = (
             case findSection (bf, sectId)
                of SOME desc => let
-                    val () = seek (bf, #offsetB desc)
+                    val () = seek (bf, #offset desc)
                     val sect = SECT{bf = bf, desc = desc}
                     in
-(* +DEBUG *)
-Control_Print.say(concat[
-"# section (-, '", String.toString(SectId.toString sectId), "', -): pos = 0x",
-Position.fmt StringCvt.HEX (#offsetB desc), "; szb = ",
-Int.toString(#szB desc), "\n"
-]);
-(* -DEBUG *)
                       SOME(inFn (sect, #szB desc))
-(* +DEBUG *)
-handle ex => (
-Control_Print.say(concat["## Exception: ", General.exnMessage ex, "\n"]);
-raise ex)
-(* -DEBUG *)
                     end
                 | NONE => NONE
               (* end case *))
@@ -292,7 +275,6 @@ raise ex)
                       " bytes, but found ", Int.toString(W8V.length bv)
                     ])
               end
-(*DEBUG*)handle ex => raise ex
 
         fun string (sect, n) = Byte.bytesToString (bytes (sect, n))
 
@@ -313,16 +295,13 @@ raise ex)
                       ])
                 (* end case *)
               end
-(*DEBUG*)handle ex => raise ex
 
         fun pid sect = Pid.fromBytes (bytes (sect, Pid.persStampSize))
-(*DEBUG*)handle ex => raise ex
 
         fun codeObject (sect, sz, entry) = let
               in
                 CodeObj.input(inStrm sect, sz, entry)
               end
-(*DEBUG*)handle ex => raise ex
 
       end
 
@@ -346,12 +325,6 @@ raise ex)
          * the binfile.
          *)
         and sect =  SECT of BIO.outstream
-
-(*DEBUG*)
-fun sd2s (SD{kind, szB, ...}) = concat[
-"[", SectId.toString kind, ":", Int.toString szB, "]"
-]
-(*DEBUG*)
 
         fun outputW32 (outS, w) = let
               fun outB w = BIO.output1 (outS, Word8.fromLarge(Word.toLarge w))
@@ -385,7 +358,6 @@ fun sd2s (SD{kind, szB, ...}) = concat[
               create (isArchive, smlnjVers, NONE, outS)
 
         fun emitPad (outS, n) = let
-(*DEBUG*)val _ = print(concat["### emitPad (-, ", Int.toString n, ")\n"])
               fun lp n = if (n > 0)
                     then (BIO.output1(outS, 0w0); lp(n - 1))
                     else ()
@@ -393,8 +365,7 @@ fun sd2s (SD{kind, szB, ...}) = concat[
                 lp n
               end
 
-        fun finish (OUT{hdr, outS, sects, ...}) = let
-(*DEBUG*)val _ = print "# Out.finish\n"
+        fun finish (OUT{file, hdr, outS, sects, ...}) = let
               (* reverse the list of sections and count them *)
               val (nSects, sections) = List.foldl
                     (fn (sect, (n, sects)) => (n+1, sect::sects))
@@ -403,15 +374,14 @@ fun sd2s (SD{kind, szB, ...}) = concat[
               (* size of header including the section table in bytes *)
               val hdrSzB = Hdr.sizeOfHdr nSects
               (* output a section descriptor *)
-              fun outputSectDesc (SD{kind, szB, ...}, offset) = (
+              fun outputSectDesc (sect as SD{kind, szB, ...}, offset) = (
                     outputW32 (outS, kind);
                     outputW32 (outS, 0w0); (* reserved for future use *)
                     outputW32 (outS, offset);
-                    outputW32 (outS, szB);
-                    offset + szB)
+                    outputW32 (outS, Word.fromInt szB);
+                    offset + Word.fromInt szB)
               (* output the contents of a section *)
-              fun outSect (sect as SD{outFn, szB, ...}) = (
-(*DEBUG*)print(concat["## outSect ", sd2s sect, "\n"]);
+              fun outSect (SD{outFn, szB, ...}) = (
                     outFn (SECT outS))
               (* the SML/NJ version field is trimmed/padded to 16 characters *)
               val smlnjVersion = let
@@ -430,12 +400,11 @@ fun sd2s (SD{kind, szB, ...}) = concat[
                 outputString (outS, smlnjVersion);
                 outputI32 (outS, nSects);
                 (* output the section table *)
-                ignore (List.foldl outputSectDesc hdrSzB sections);
+                ignore (List.foldl outputSectDesc (Word.fromInt hdrSzB) sections);
                 (* output the sections *)
                 List.app outSect sections;
                 (* discard the sections *)
                 sects := []
-(*DEBUG*); print "## Out.finish done\n"
               end
 
         (* `section (bf, id, szb, outFn)` adds a section with the given `id`

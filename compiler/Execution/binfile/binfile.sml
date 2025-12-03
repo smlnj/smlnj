@@ -129,7 +129,9 @@ structure Binfile :> BINFILE =
             getImports nLeaves
           end
 
-    fun getPidSection (sect, sz) = BFIO.In.pid sect
+    fun getExportPidSection (sect, 0) = NONE
+      | getExportPidSection (sect, 16) = SOME(BFIO.In.pid sect)
+      | getExportPidSection _ = BFIO.error "invalid size for 'EXPT' section"
 
     fun getPidsSection (sect, sz) = let
           val nPids = sz div bytesPerPid
@@ -172,7 +174,6 @@ structure Binfile :> BINFILE =
  * SML/NJ version and architecture.
  *)
     fun read { version : version_info, stream, offset } = let
-(* DEBUG *)val () = Control_Print.say "**** read new-format binfile\n"
           val bf = BFIO.In.openStream (stream, offset)
           val hdr = BFIO.In.header bf
           (* check that we have a Binfile and not an archive *)
@@ -222,7 +223,7 @@ structure Binfile :> BINFILE =
 (* TODO: check version *)
           val imports = readSection (BFIO.SectId.import, getImportSection)
           (* get the optional export Pid *)
-          val exportPid = BFIO.In.section (bf, BFIO.SectId.export, getPidSection)
+          val exportPid = readSection (BFIO.SectId.export, getExportPidSection)
           val cmData = readSection (BFIO.SectId.pids, getPidsSection)
           val guid = readSection (BFIO.SectId.guid, getGuidSection)
           val literals = readSection (BFIO.SectId.literals, getLiteralsSection)
@@ -410,13 +411,13 @@ structure Binfile :> BINFILE =
           in
             BFIO.Hdr.sizeOfHdr 8 (* there are eight sections *)
               + infoSize
-              + BFIO.padSize (#sz (importTreeSize imports))
-              + BFIO.padSize (exportSize exportPid)
-              + BFIO.padSize (pidsSize cmData)
-              + BFIO.padSize (String.size guid)
-              + BFIO.padSize (literalSize lits)
-              + BFIO.padSize (codeSize code)
-              + BFIO.padSize (staticEnvSize (staticPid, senvPkl, nopickle))
+              + #sz (importTreeSize imports)
+              + exportSize exportPid
+              + pidsSize cmData
+              + String.size guid
+              + literalSize lits
+              + codeSize code
+              + staticEnvSize (staticPid, senvPkl, nopickle)
           end
 
     fun write { stream, contents, nopickle } = let
