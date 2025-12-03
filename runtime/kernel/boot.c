@@ -483,7 +483,7 @@ Say("## code: initial offset = %d, size = %d\n",
                 Seek(file, base + info->codeSect.offset, fname);
                 info->entry = ReadLEB128Unsigned(file, fname, &nb);
                 info->codeSect.offset += nb;
-                info->codeSect.size -= nb);
+                info->codeSect.size -= nb;
             }
 Say("## imports: cnt = %d, offset = %d, size = %d\n",
 info->nImports, (int)info->importSect.offset, (int)info->importSect.size);
