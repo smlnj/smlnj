@@ -116,7 +116,6 @@ static int HEX(int c)
 
 static void Seek (FILE *file, off_t offset, const char *fname)
 {
-/*DEBUG*/Say("## Seek (-, %0#x, \"%s\")\n", (int)offset, fname);
     if (fseeko(file, offset, SEEK_SET) == -1) {
         Die ("cannot seek to \"%s@%ul\"", fname, (unsigned long)offset);
     }
@@ -140,9 +139,6 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
-Say("# BootML: new-boot.c\n");
-
-/*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
@@ -305,7 +301,6 @@ PVT FILE *OpenBinFile (const char *fname, bool_t isBinary)
  */
 PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 {
-/*DEBUGSay("## ReadBinFile (-, -, %d, \"%s\")\n", nbytes, fname);*/
     if (fread(buf, nbytes, 1, file) == -1) {
         Die ("cannot read file \"%s\"", fname);
     }
@@ -363,7 +358,6 @@ PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname, int *nb)
 
     if (nb != NIL(int *)) { *nb = i; }
 
-/*DEBUG*/Say("#### ReadPackedInt32: %d\n", n);
     return ((Int32_t)n);
 
 } /* end of ReadPackedInt32 */
@@ -391,9 +385,6 @@ PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *f
             /* read the rest of the header */
             ReadBinFile (file, &(buf[12]), sizeof(binfile_hdr_t) - 12, fname);
             int nSects = LITTLE_TO_HOST32(p->numSects);
-Say("# ReadHeader: new-style\n");
-Say("## version = %08x\n", info->version);
-Say("## nSects = %d\n", nSects);
             /* flags to track which sections have been seen */
             bool_t seenImports = FALSE;
             bool_t seenExports = FALSE;
@@ -452,10 +443,6 @@ Say("## nSects = %d\n", nSects);
                     }
                     break;
                 default: /* ignore other sections */
-/*DEBUG*/
-{Unsigned32_t id = LITTLE_TO_HOST32(sd.id); Say("# [%d] ignore ID '%c%c%c%c'\n",
-i, (char)id, (char)(id >> 8), (char)(id >> 16), (char)(id >> 24));}
-/*DEBUG*/
                     break;
                 }
             }
@@ -478,21 +465,11 @@ i, (char)id, (char)(id >> 8), (char)(id >> 16), (char)(id >> 24));}
             }
             if (info->isNative) {
                 int nb;
-Say("## code: initial offset = %d, size = %d\n",
-(int)info->codeSect.offset, (int)info->codeSect.size);
                 Seek(file, base + info->codeSect.offset, fname);
                 info->entry = ReadLEB128Unsigned(file, fname, &nb);
                 info->codeSect.offset += nb;
                 info->codeSect.size -= nb;
             }
-Say("## imports: cnt = %d, offset = %d, size = %d\n",
-info->nImports, (int)info->importSect.offset, (int)info->importSect.size);
-Say("## exports: offset = %d, size = %d\n",
-(int)info->exportSect.offset, (int)info->exportSect.size);
-Say("## literals: offset = %d, size = %d\n",
-(int)info->litsSect.offset, (int)info->litsSect.size);
-Say("## code: offset = %d, size = %d\n",
-(int)info->codeSect.offset, (int)info->codeSect.size);
         } else if (BIG_TO_HOST32(bfVersion) == BINFILE_VERSION) {
           /* this is the old (but not original) binfile format */
             new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
@@ -567,20 +544,6 @@ Say("## code: offset = %d, size = %d\n",
             info->codeSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
             info->isNative = TRUE;
         }
-/*DEBUG*/
-Say("# ReadHeader: old-style\n");
-Say("## imports: cnt = %d, offset = %d, size = %d\n",
-info->nImports, (int)info->importSect.offset, (int)info->importSect.size);
-Say("## exports: cnt = %d, offset = %d, size = %d\n",
-BIG_TO_HOST32(p->exportCnt), (int)info->exportSect.offset, (int)info->exportSect.size);
-Say("## cmInfo: size = %d\n", BIG_TO_HOST32(p->cmInfoSzB));
-Say("## GUID: size = %d\n", BIG_TO_HOST32(p->guidSzB));
-Say("## pad: size = %d\n", BIG_TO_HOST32(p->pad));
-Say("## literals: offset = %d, size = %d\n",
-(int)info->litsSect.offset, (int)info->litsSect.size);
-Say("## code: offset = %d, size = %d\n",
-(int)info->codeSect.offset, (int)info->codeSect.size);
-/*DEBUG*/
     }
 
 } /* end of ReadHeader */
@@ -595,7 +558,6 @@ PVT void OldImportSelection (
     int *importVecPos, ml_val_t tree)
 {
     Int32_t cnt = ReadPackedInt32 (file, fname, NIL(int *));
-Say("### OldImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;
@@ -621,7 +583,6 @@ PVT void ImportSelection (
     int *importVecPos, ml_val_t tree)
 {
     Int32_t cnt = ReadLEB128Unsigned (file, fname, NIL(int *));
-Say("### ImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;
@@ -629,7 +590,6 @@ Say("### ImportSelection: tree = %p; cnt = %d\n", tree, cnt);
     else {
         while (cnt-- > 0) {
             Int32_t selector = ReadLEB128Unsigned (file, fname, NIL(int *));
-Say("#### select %p[%d]\n", tree, selector);
             ImportSelection (
                 msp, file, fname, importVecPos,
                 REC_SEL(tree, selector));
@@ -652,7 +612,6 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     char            *atptr, *colonptr;
     char            *objname = fname;
 
-/*DEBUG*/Say("# LoadBinFile: fname = \"%s\"\n", fname);
     /* an entry in the boot-file list should have the following syntax:
      *
      *  <filename> [ '@' <offset> [ ':' <objname> ] ]
@@ -708,17 +667,10 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
             InvokeGCWithRoots (msp, 0, &BinFileList, NIL(ml_val_t *));
         }
 
-/*DEBUG*/Say("## read %d import PIDS\n", importRecLen-1);
         ML_AllocWrite (msp, 0, MAKE_DESC(importRecLen, DTAG_record));
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
-/*DEBUG*/
-{ char    buf[64];
-  ShowPerID (buf, &importPid);
-  Say("### import PID[%d]: %s\n", importVecPos, buf);
-}
-/*DEBUG*/
             if (hdr.version == 0x20250801) {
                 ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
             } else {
@@ -731,14 +683,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the export PerID */
     if (hdr.exportSect.size == sizeof(pers_id_t)) {
-/*DEBUG*/Say("## read export PID\n");
         ReadBinFileAt (file, &exportPerID, sizeof(pers_id_t), archiveOffset + hdr.exportSect.offset, fname);
-/*DEBUG*/
-{ char    buf[64];
-  ShowPerID (buf, &exportPerID);
-  Say("### export PID: %s\n", buf);
-}
-/*DEBUG*/
     }
     else if (hdr.exportSect.size != 0) {
         Die ("# size of export pids is %d (should be 0 or %d)",
@@ -747,7 +692,6 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
 
   /* read the literals */
     if (hdr.litsSect.size > 0) {
-/*DEBUG*/Say("## read literals (%d bytes)\n", (int)hdr.litsSect.size);
         Byte_t *dataObj = NEW_VEC(Byte_t, hdr.litsSect.size);
         ReadBinFileAt (file, dataObj, hdr.litsSect.size, archiveOffset + hdr.litsSect.offset, fname);
         SaveCState (msp, &BinFileList, &importRec, NIL(ml_val_t *));
@@ -757,7 +701,6 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     } else {
         val = ML_unit;
     }
-/*DEBUG*/Say("### literal vec = %p\n", val);
 
   /* do a functional update of the last element of the importRec. */
     for (i = 0;  i < importRecLen;  i++) {
@@ -769,16 +712,10 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {
         InvokeGCWithRoots (msp, 0, &BinFileList, &val, NIL(ml_val_t *));
     }
-/*DEBUG*/
-Say("## import record = {");
-for (i = 0;  i < importRecLen;  i++) { Say(" %p", PTR_MLtoC(ml_val_t, val)[i]); }
-Say(" }\n");
-/*DEBUG*/
 
   /* read the code */
     if (hdr.codeSect.size > 0) {
         Int32_t thisSzB, thisEntryPoint;
-/*DEBUG*/Say("## read code @ %d\n", (int)(archiveOffset + hdr.codeSect.offset));
         Seek (file, archiveOffset + hdr.codeSect.offset, fname);
         if (hdr.isNative) {
             thisSzB = hdr.codeSect.size;
@@ -823,11 +760,9 @@ Say(" }\n");
         REC_ALLOC1 (msp, closure, PTR_CtoML (PTR_MLtoC(char, codeObj) + thisEntryPoint));
 
       /* apply the closure to the import PerID vector */
-/*DEBUG*/Say("## >>> Run ML %p (%p)\n", PTR_MLtoC(char, codeObj) + thisEntryPoint, val);
         SaveCState (msp, &BinFileList, NIL(ml_val_t *));
         val = ApplyMLFn (msp, closure, val, TRUE);
         RestoreCState (msp, &BinFileList, NIL(ml_val_t *));
-/*DEBUG*/Say("## <<< val = %p\n", val);
 
       /* do a GC, if necessary */
         if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {

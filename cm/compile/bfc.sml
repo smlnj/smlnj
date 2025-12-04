@@ -68,9 +68,6 @@ functor BfcFn (val arch: string) :> BFC
 	  fun work s = let
                 val offset = Position.fromInt offset
                 in
-(*DEBUG*)print(concat[
-"# getStable {stable = \"", stable, "\", offset = ", Position.toString offset,
-", descr = \"", descr, "\"}\n"]);
                   Seek.seek (s, offset);
                   (* We can use an empty static env because no
                    * unpickling will be done.
