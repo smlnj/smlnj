@@ -105,6 +105,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/12/07]::
+Added support for normalizing the CFG before export (normalization
+means alpha-renaming the lambda variables to canonical names).
+There is a new control (-Ccg.normalize-cfg or `CG.normalizeCFG`) for
+enabling this feature.  It affects code generation, dumping of CFG
+pickles, and printing of the CFG.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/08/19]::
 Remove `preserveLvarNames` control from `Control` structure, since it
 is not used and can be confused with `Control.ElabData.saveLvarNames`.

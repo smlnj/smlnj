@@ -23,9 +23,10 @@ signature CPS_COMP =
 
   (* translate CPS to CFG *)
     val toCFG : {
-            source : string,
-            clusters : Cluster.cluster list,
-            maxAlloc : CPS.lvar -> int
+	    source : string,                    (* name of source file *)
+	    clusters : Cluster.cluster list,    (* 1st-order CPS *)
+	    maxAlloc : CPS.lvar -> int,         (* per-function alloc info *)
+            normalize : bool                    (* should CFG be normalized? *)
           } -> CFG.comp_unit
 
   end
@@ -145,7 +146,8 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
           val _ = if !Control.CG.dumpCFG orelse !Control.CG.printCFG
                   then let
                     val cfg = toCFG {
-                            source = source, clusters = clusters, maxAlloc = maxAlloc
+                            source = source, clusters = clusters, maxAlloc = maxAlloc,
+                            normalize = !Control.CG.normalizeCFG
                           }
                     in
                       printCFG cfg;

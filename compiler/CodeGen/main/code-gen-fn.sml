@@ -23,7 +23,8 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
 	  val {clusters, maxAlloc, data} = CPSGen.compile {source=source, prog=prog}
         (* convert to CFG IR *)
           val cfg = CPSGen.toCFG {
-                  source = source, clusters = clusters, maxAlloc = maxAlloc
+                  source = source, clusters = clusters, maxAlloc = maxAlloc,
+                  normalize = !Control.CG.normalizeCFG
                 }
         (* pickle the IR into a vector *)
           val pkl = CFGPickler.toBytes cfg

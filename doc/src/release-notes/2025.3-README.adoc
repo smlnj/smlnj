@@ -43,6 +43,11 @@ Linux Arm support (thanks poz)
 
 === Compiler
 
+* Added support for normalizing the CFG before export.  There is a
+  new control (`-Ccg.normalize-cfg` or `Control.CG.normalizeCFG`) for
+  enabling this feature.  It affects code generation, dumping of CFG
+  pickles, and printing of the CFG.
+
 === CM
 
 * We are now using **ASDL** to implement the pickling/unpickling of skeleton files.
