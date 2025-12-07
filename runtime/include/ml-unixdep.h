@@ -29,11 +29,10 @@
  *				argument.
  *   INCLUDE_SIGINFO_H		include file that contains siginfo (if needed).
  *   HAVE_STRUCT_UCONTEXT       if signal handlers have a ucontext_t argument.
- *   HAS_STRERROR		if the system provides the ISO C strerror function.
- *   INT_GIDLIST		if the second argument to getgroups is int[].
+ *   HAVE_STRERROR		if the system provides the ISO C strerror function.
  *   STAT_HAS_TIMESPEC		if the time fields in the "struct stat" type have
  *				type "struct timespec".
- *   HAS_NANOSLEEP              if the system provides the nanosleep(2) function.
+ *   HAVE_NANOSLEEP              if the system provides the nanosleep(2) function.
  *
  * Note that only one of the following sets of symbols should be defined:
  *   { HAVE_MMAP, HAVE_ANON_MMAP }
@@ -69,7 +68,7 @@
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_POLL
 #  define HAVE_STRUCT_SIGCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 
 /* These declarations are not in <errno.h> */
 extern int	sys_nerr;
@@ -82,7 +81,7 @@ extern char	*sys_errlist[];
 #  define HAVE_SETITIMER
 #  define HAVE_ANON_MMAP
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAVE_SELECT
 #  define MAP_ANONYMOUS MAP_ANON
 #  define HAS_MKSTEMP
@@ -90,7 +89,7 @@ extern char	*sys_errlist[];
 /* NOTE: macOS added clock_getres in 10.12 (Sierra).  For now, we do not
  * enable it, since we are supporting backward compatability to 10.6 (Snow Leopard).
  */
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #elif defined(OPSYS_SOLARIS) /** SunOS 5.x **/
 #  define OS_NAME	"Solaris"
@@ -101,7 +100,7 @@ extern char	*sys_errlist[];
 #  define HAVE_POLL
 #  define HAVE_STRUCT_UCONTEXT
 #  define INCLUDE_SIGINFO_H <siginfo.h>
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 
 /* These declarations are not in <errno.h> */
@@ -118,13 +117,13 @@ extern char	*sys_errlist[];
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  ifndef __USE_GNU
 #    define __USE_GNU
 #  endif
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #include <features.h>
 
@@ -138,12 +137,12 @@ extern char	*sys_errlist[];
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  define STAT_HAS_TIMESPEC
 #  define _FILE_OFFSET_BITS 64
 #  if _POSIX_C_SOURCE >= 199309L
-#    define HAS_NANOSLEEP
+#    define HAVE_NANOSLEEP
 #  endif
 
 #include <features.h>
@@ -156,14 +155,14 @@ extern char	*sys_errlist[];
 #  define HAVE_ANON_MMAP
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  ifndef __USE_GNU
 #    define __USE_GNU
 #  endif
 #  define STAT_HAS_TIMESPEC
 #  if _POSIX_C_SOURCE >= 199309L
-#    define HAS_NANOSLEEP
+#    define HAVE_NANOSLEEP
 #  endif
 
 #include <features.h>
@@ -178,13 +177,13 @@ extern char	*sys_errlist[];
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  ifndef __USE_GNU
 #    define __USE_GNU
 #  endif
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #include <features.h>
 
@@ -198,9 +197,9 @@ extern char	*sys_errlist[];
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #elif defined(OPSYS_NETBSD) /* version 3.x */
 #  define OS_NAME	"BSD"
@@ -210,10 +209,10 @@ extern char	*sys_errlist[];
 #  define HAVE_MMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_UCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #elif defined(OPSYS_OPENBSD)
 #  define OS_NAME	"BSD"
@@ -223,10 +222,10 @@ extern char	*sys_errlist[];
 #  define HAVE_MMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_SIGCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define HAS_MKSTEMP
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #elif defined(OPSYS_CYGWIN)
 #  define OS_NAME	"Cygwin"
@@ -238,9 +237,9 @@ extern char	*sys_errlist[];
 #  define HAVE_PARTIAL_MUNMAP
 #  define HAVE_SELECT
 #  define HAVE_STRUCT_SIGCONTEXT
-#  define HAS_STRERROR
+#  define HAVE_STRERROR
 #  define STAT_HAS_TIMESPEC
-#  define HAS_NANOSLEEP
+#  define HAVE_NANOSLEEP
 
 #include <features.h>
 

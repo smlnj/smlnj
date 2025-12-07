@@ -13,21 +13,11 @@
 #include "ml-c.h"
 #include "cfun-proto-list.h"
 
-/* some OSs use int[] as the second argument to getgroups(), when gid_t
- * is not int.
- */
-#ifdef INT_GIDLIST
-typedef int  gid;
-#else
-typedef gid_t gid;
-#endif
-
-
 /* mkList:
  *
  * Convert array of gid_t into a list of gid_t
  */
-PVT ml_val_t mkList (ml_state_t *msp, int ngrps, gid gidset[])
+PVT ml_val_t mkList (ml_state_t *msp, int ngrps, gid_t gidset[])
 {
     ml_val_t    p, w;
 
@@ -48,14 +38,14 @@ PVT ml_val_t mkList (ml_state_t *msp, int ngrps, gid gidset[])
  */
 ml_val_t _ml_P_ProcEnv_getgroups (ml_state_t *msp, ml_val_t arg)
 {
-    gid		gidset[NGROUPS_MAX];
+    gid_t       gidset[NGROUPS_MAX];
     int		ngrps;
     ml_val_t	p;
 
     ngrps = getgroups (NGROUPS_MAX, gidset);
 
     if (ngrps == -1) {
-	gid      *gp;
+	gid_t *gp;
 
       /* If the error was not due to too small buffer size,
        * raise exception.
@@ -65,7 +55,7 @@ ml_val_t _ml_P_ProcEnv_getgroups (ml_state_t *msp, ml_val_t arg)
 
       /* Find out how many groups there are and allocate enough space. */
 	ngrps = getgroups (0, gidset);
-	gp = (gid *)MALLOC(ngrps * (sizeof (gid)));
+	gp = (gid_t *)MALLOC(ngrps * (sizeof (gid_t)));
 	if (gp == 0) {
 	    errno = ENOMEM;
 	    return RAISE_SYSERR(msp, -1);
@@ -77,12 +67,12 @@ ml_val_t _ml_P_ProcEnv_getgroups (ml_state_t *msp, ml_val_t arg)
 	    p = RAISE_SYSERR(msp, -1);
 	else
 	    p = mkList (msp, ngrps, gp);
-        
+
 	FREE ((void *)gp);
     }
     else
 	p = mkList (msp, ngrps, gidset);
-    
+
     return p;
 
 } /* end of _ml_P_ProcEnv_getgroups */

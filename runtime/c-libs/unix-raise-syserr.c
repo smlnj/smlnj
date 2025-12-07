@@ -4,7 +4,7 @@
  */
 
 #include "ml-unixdep.h"
-#ifdef HAS_STRERROR
+#ifdef HAVE_STRERROR
 #  include <string.h>
 #endif
 #include <stdio.h>
@@ -16,7 +16,7 @@
 #include "ml-c.h"
 
 
-#ifndef HAS_STRERROR
+#ifndef HAVE_STRERROR
 /* strerror:
  * An implementation of strerror for those systems that do not provide it.
  */

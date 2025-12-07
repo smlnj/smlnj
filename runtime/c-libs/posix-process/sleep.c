@@ -29,7 +29,7 @@ ml_val_t _ml_P_Process_sleep (ml_state_t *msp, ml_val_t arg)
 {
     Unsigned64_t t = WORD64_MLtoC(arg);
 
-#if defined(HAS_NANOSLEEP)
+#if defined(HAVE_NANOSLEEP)
     struct timespec sleepTime, remainingTime;
     sleepTime.tv_sec = (time_t)(t / NS_PER_SEC);
     sleepTime.tv_nsec = (long)(t % NS_PER_SEC);
@@ -42,6 +42,7 @@ ml_val_t _ml_P_Process_sleep (ml_state_t *msp, ml_val_t arg)
 	t = NS_PER_SEC * (Unsigned64_t)remainingTime.tv_sec
 	    + (Unsigned64_t)remainingTime.tv_nsec;
     }
+/* TODO: HAVE_USLEEP */
 #else
     unsigned int sleepTime, remainingTime;
     sleepTime = (unsigned int)(t / NS_PER_SEC);

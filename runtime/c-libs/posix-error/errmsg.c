@@ -23,7 +23,7 @@ ml_val_t _ml_P_Error_errmsg (ml_state_t *msp, ml_val_t arg)
     int		    errnum = INT_MLtoC(arg);
     ml_val_t	    s;
 
-#if defined(HAS_STRERROR)
+#if defined(HAVE_STRERROR)
     char	    *msg = strerror(errnum);
     if (msg != 0)
 	s = ML_CString (msp, msg);
