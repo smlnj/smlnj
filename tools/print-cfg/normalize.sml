@@ -39,7 +39,6 @@ structure Normalize : sig
 	    | cvtExp (C.LOOKER{oper, args}) = C.LOOKER{oper = oper, args = cvtExps args}
 	    | cvtExp (C.PURE{oper, args}) = C.PURE{oper = oper, args = cvtExps args}
 	    | cvtExp (C.SELECT{idx, arg}) = C.SELECT{idx = idx, arg = cvtExp arg}
-	    | cvtExp (C.OFFSET{idx, arg}) = C.OFFSET{idx = idx, arg = cvtExp arg}
           and cvtExps args = List.map cvtExp args
           fun cvtParam {name, ty} = {name = rn name, ty = ty}
           fun cvtStm (C.LET(e, param, stm)) =
