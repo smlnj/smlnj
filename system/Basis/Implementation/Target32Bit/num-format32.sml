@@ -4,8 +4,7 @@
  * All rights reserved.
  *
  * The word to string conversion for the 32-bit word and int types
- * on 32-bit machines.  These are used for fixed-precision types that
- * have 32 or fewer bits.
+ * on 32-bit machines.
  *)
 
 structure NumFormat32 : sig

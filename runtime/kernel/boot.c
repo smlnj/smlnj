@@ -408,8 +408,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
-            ImportSelection (msp, file, fname, &importVecPos,
-                             LookupPerID(&importPid));
+            ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
@@ -467,6 +466,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     else {
         val = ML_unit;
     }
+
   /* do a functional update of the last element of the importRec. */
     for (i = 0;  i < importRecLen;  i++) {
         ML_AllocWrite(msp, i, PTR_MLtoC(ml_val_t, importRec)[i-1]);
@@ -544,8 +544,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         }
 
       /* create closure (taking entry point into account) */
-        REC_ALLOC1 (msp, closure,
-                    PTR_CtoML (PTR_MLtoC (char, codeObj) + thisEntryPoint));
+        REC_ALLOC1 (msp, closure, PTR_CtoML(PTR_MLtoC(char, codeObj) + thisEntryPoint));
 
       /* apply the closure to the import PerID vector */
         SaveCState (msp, &BinFileList, NIL(ml_val_t *));
@@ -553,13 +552,15 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         RestoreCState (msp, &BinFileList, NIL(ml_val_t *));
 
       /* do a GC, if necessary */
-        if (NeedGC (msp, PERID_LEN+REC_SZB(5)))
+        if (NeedGC (msp, PERID_LEN+REC_SZB(5))) {
             InvokeGCWithRoots (msp, 0, &BinFileList, &val, NIL(ml_val_t *));
+        }
     }
 
   /* record the resulting exported PerID */
-    if (exportSzB != 0)
+    if (exportSzB != 0) {
         EnterPerID (msp, &exportPerID, val);
+    }
 
     fclose (file);
 
@@ -590,8 +591,9 @@ PVT ml_val_t LookupPerID (pers_id_t *perID)
 
     for (p = PerIDList;  p != ML_unit;  p = REC_SEL(p, 2)) {
         id = REC_SEL(p, 0);
-        if (memcmp((char *)perID, STR_MLtoC(id), PERID_LEN) == 0)
+        if (memcmp((char *)perID, STR_MLtoC(id), PERID_LEN) == 0) {
             return (REC_SEL(p, 1));
+        }
     }
 
   /* here we were unable to find the PerID */
