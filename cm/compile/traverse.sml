@@ -1,10 +1,13 @@
-(*
- * Compilation traversals.
+(* traverse.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * Compilation traversals.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 local
     structure GP = GeneralParams
     structure DG = DependencyGraph
@@ -20,10 +23,10 @@ local
     type result = { stat: statenv }
     type ed = IInfo.info
 in
-    signature COMPILE = sig
+    signature TRAVERSE = sig
 
-	type bfc
-	type stats
+	type bfc = Binfile.bfContents
+	type stats = Binfile.stats
 
 	(* reset internal persistent state *)
 	val reset : unit -> unit
@@ -48,13 +51,14 @@ in
 	      exports: (GP.info -> result option) SymbolMap.map }
     end
 
-    functor CompileFn (structure Backend : BACKEND
-		       structure StabModmap : STAB_MODMAP
-		       val useStream : TextIO.instream -> unit
-		       val compile_there : SrcPath.file -> bool) :>
-	COMPILE where type bfc = Binfile.bfContents
-	        where type stats = Binfile.stats =
-    struct
+    functor CompilerTraverseFn (
+
+        structure Backend : BACKEND
+        structure StabModmap : STAB_MODMAP
+        val useStream : TextIO.instream -> unit
+        val compileThere : SrcPath.file -> bool
+
+      ) :> TRAVERSE = struct
 
 	type notifier = GP.info -> SmlInfo.info -> unit
 
@@ -434,9 +438,9 @@ in
 				fun compile_again () =
 				    (Say.vsay ["[compiling ", descr, "]\n"];
 				     compile_here (stat, pids))
-				fun compile_there' p =
+				fun compileThere' p =
 				    not (bottleneck ()) andalso
-				    compile_there p
+				    compileThere p
 				fun compile () = let
 				    val sp = SmlInfo.sourcepath i
 				    fun sy () = let
@@ -451,7 +455,7 @@ in
 				in
 				    OS.FileSys.remove binname handle _ => ();
 				    youngest := TStamp.NOTSTAMP;
-				    if compile_there' sp then
+				    if compileThere' sp then
 					tryload (sy, received, compile_again)
 				    else compile_again ()
 				end
