@@ -13,8 +13,8 @@ functor BackendFn (
   ) : BACKEND = struct
 
     structure Interact = Interact (
-        EvalLoopF (
-          CompileF (
+        EvalLoopFn (
+          CompileFn (
 	    val cproto_conv = cproto_conv
             structure M = M
             structure CC : CCONFIG = struct
@@ -47,7 +47,7 @@ functor BackendFn (
                 end (* local *)
             end)))
 
-    structure Compile = CompileF (
+    structure Compile = CompileFn (
         val cproto_conv = cproto_conv
         structure M = M
         structure CC : CCONFIG = struct

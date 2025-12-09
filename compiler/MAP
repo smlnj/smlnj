@@ -215,7 +215,7 @@ Basic datastructures used in elaboration (including type checking)
       special bindings (e.g Match and Bind exceptions)
       defs: CoreSym
     tkind.sml
-      TKind.tkind -- front-end version of PlambdaType tkinds (FLINT) 
+      TKind.tkind -- front-end version of PlambdaType tkinds (FLINT)
       defs: TKind
 
   ElabData/syntax/
@@ -648,7 +648,7 @@ TopLevel/
     compile.sig
       defs: COMPILE0, COMPILE, TOP_COMPILE
     compile.sml
-      defs: CompileF: CODEGENERATOR # CCONFIG # {cproto_conv : string} => COMPILE0
+      defs: CompileFn: CODEGENERATOR # CCONFIG # {cproto_conv : string} => COMPILE0
 
 
 

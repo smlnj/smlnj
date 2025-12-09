@@ -324,13 +324,14 @@ in
 				val cinfo = C.mkCompInfo { source = source,
 							   transform = fn x => x }
 				val guid = SmlInfo.guid i
-				val { csegments, newstatenv, exportPid,
+				val { lits, code, newstatenv, exportPid,
 				      staticPid, imports, pickle = senvP,
-				      ... } =
-				    C.compile { source = source, ast = ast,
-						statenv = stat,
-						compInfo = cinfo, checkErr = check,
-						guid = guid }
+				      ...
+                                    } = C.compile {
+                                      source = source, ast = ast, statenv = stat,
+                                      compInfo = cinfo, checkErr = check,
+                                      guid = guid, native = true
+                                    }
 				val bfc = BF.create {
                                         version = version,
 				        imports = imports,
@@ -338,16 +339,14 @@ in
                                         cmData = cmData,
                                         senv = { pickle = senvP, pid = staticPid },
                                         guid = guid,
-                                        lits = #lits csegments,
-                                        code = CodeObj.NativeCode(#code csegments)
+                                        lits = lits,
+                                        code = code
                                       }
 				val memo = bfc2memo (bfc, SmlInfo.lastseen i, stat)
                                 in
                                   perform_setup "post" post;
                                   reset ();
-                                  storeBFC' (gp, i,
-                                             { contents = bfc,
-                                               stats = save bfc });
+                                  storeBFC' (gp, i, { contents = bfc, stats = save bfc });
                                   SOME memo
                                 end
 			in

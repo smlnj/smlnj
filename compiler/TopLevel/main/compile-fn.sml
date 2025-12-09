@@ -1,10 +1,10 @@
-(* compile.sml
+(* compile-fn.sml
  *
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
-functor CompileF (
+functor CompileFn (
 
     structure M  : CODE_GENERATOR
     structure CC : CCONFIG
@@ -114,21 +114,17 @@ functor CompileF (
      *************************************************************************)
 
     (** take the flint code and generate the machine binary code *)
-    local
-      val addCode = Stats.addStat (Stats.makeStat "Code Size")
-    in
-    fun codegen { flint, imports, sourceName } = let
+    fun codegen { flint, imports, sourceName, native } = let
         (* optimized FLINT code *)
           val flint = FLINTOpt.optimize (flint, sourceName)
 	(* from optimized FLINT code, generate the CFG IR.  *)
 	  val {lits, code} = M.compileToCFG {prog = flint, source = sourceName}
-          val nativeCode = M.compileToNative code
-	  val codeSz = (CodeObj.sizeOfNativeCode nativeCode + Word8Vector.length lits)
+          val code = if native
+                then CodeObj.NativeCode(M.compileToNative code)
+                else CodeObj.CFGPickle(CFGPickler.toBytes code)
 	  in
-	    addCode codeSz;
-	    { lits = lits, code = nativeCode, imports = imports }
+	    { lits = lits, code = code, imports = imports }
 	  end
-    end (* local codegen *)
 
     (*
     val codegen =
@@ -141,7 +137,7 @@ functor CompileF (
      * used by interact/evalloop.sml, cm/compile/compile.sml only            *
      *************************************************************************)
     (** compiling the ast into the binary code = elab + translate + codegen *)
-    fun compile {source, ast, statenv, compInfo, checkErr=check, guid} = let
+    fun compile {source, ast, statenv, compInfo, checkErr=check, native, guid} = let
 	  val {absyn, newstatenv, exportLvars, exportPid, staticPid, pickle } =
 		elaborate {ast=ast, statenv=statenv, compInfo=compInfo, guid = guid}
 		before (check "elaborate")
@@ -157,7 +153,8 @@ functor CompileF (
 		before check "translate"
 	  val {lits, code, imports} = codegen {
 		    flint = flint, imports = imports,
-                    sourceName = #sourceName compInfo
+                    sourceName = #sourceName compInfo,
+                    native = native
 		  }
 		before (check "codegen")
 	(*
@@ -167,7 +164,8 @@ functor CompileF (
 	 *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo})
 	 *)
 	  in {
-	    csegments = {lits = lits, code = code},
+	    lits = lits,
+            code = code,
 	    newstatenv = newstatenv,
 	    absyn = absyn,
 	    exportPid = exportPid,

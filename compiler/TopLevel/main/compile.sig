@@ -21,36 +21,38 @@ signature COMPILE0 =
     (** take ast, do semantic checks,
      ** then output the new env, absyn and pickles *)
     val elaborate : {
-	    ast: Ast.dec,
-	    statenv: StaticEnv.staticEnv,
-	    compInfo: Absyn.dec CompInfo.compInfo,
-	    guid: guid
+	    ast : Ast.dec,
+	    statenv : StaticEnv.staticEnv,
+	    compInfo : Absyn.dec CompInfo.compInfo,
+	    guid : guid
 	  } -> {
-	    absyn: Absyn.dec,
-	    newstatenv: StaticEnv.staticEnv,
-	    exportLvars: LambdaVar.lvar list,
-	    exportPid: pid option,
-	    staticPid: hash,
-	    pickle: pickle
+	    absyn : Absyn.dec,
+	    newstatenv : StaticEnv.staticEnv,
+	    exportLvars : LambdaVar.lvar list,
+	    exportPid : pid option,
+	    staticPid : hash,
+	    pickle : pickle
 	  }
 
     (** elaborate as above, then keep on to compile to the binary code *)
     val compile : {
-	    source: Source.inputSource,
-	    ast: Ast.dec,
-	    statenv: StaticEnv.staticEnv,
-	    compInfo: Absyn.dec CompInfo.compInfo,
-	    guid: guid,
-	    checkErr: string -> unit
+	    source : Source.inputSource,
+	    ast : Ast.dec,
+	    statenv : StaticEnv.staticEnv,
+	    compInfo : Absyn.dec CompInfo.compInfo,
+	    guid : guid,
+            native : bool,
+	    checkErr : string -> unit
 	  } -> {
-	    csegments: {lits : CodeObj.literals, code : CodeObj.native_code},
-	    newstatenv: StaticEnv.staticEnv,
-	    absyn: Absyn.dec (* for pretty printing only *),
-	    exportPid: pid option,
-	    exportLvars: LambdaVar.lvar list,
-	    staticPid: hash,
-	    pickle: pickle,
-	    imports: ImportTree.import list
+            lits : CodeObj.literals,
+            code : CodeObj.t,  (* output is controlled by `native` param *)
+	    newstatenv : StaticEnv.staticEnv,
+	    absyn : Absyn.dec (* for pretty printing only *),
+	    exportPid : pid option,
+	    exportLvars : LambdaVar.lvar list,
+	    staticPid : hash,
+	    pickle : pickle,
+	    imports : ImportTree.import list
 	  }
 
   end (* signature COMPILE0 *)
