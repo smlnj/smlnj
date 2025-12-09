@@ -1,6 +1,6 @@
 (* evalloop.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -137,10 +137,11 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 			      in debugPrint debugging ("Absyn: ", ppAbsynDec, absyn)
 			      end
 
-		      val executable = Execute.mkExec
-					   { cs = csegments,
-					     exnWrapper = ExnDuringExecution }
-				       before checkErrors ("mkExec")
+		      val executable = Execute.mkExec {
+                              lits = #lits csegments,
+                              code = #code csegments,
+                              exnWrapper = ExnDuringExecution
+                            } before checkErrors ("mkExec")
 		      val executable = Isolate.isolate (interruptable executable)
 
 		      val _ = (PC.current := Profile.otherIndex)

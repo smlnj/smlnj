@@ -16,7 +16,7 @@
  *)
 
 signature BFC = sig
-    type bfc
+    type bfc = Binfile.t
     type stats = { env: int, data: int, code: int }
     val new : unit -> { store: SmlInfo.info * { contents: bfc, stats: stats }
 			       -> unit,
@@ -24,12 +24,11 @@ signature BFC = sig
     val getStable : { stable: string, offset: int, descr: string } -> bfc
   end
 
-functor BfcFn (val arch: string) :> BFC
-    where type bfc = Binfile.bfContents =
+functor BfcFn (val arch: string) :> BFC =
   struct
 
     structure BF = Binfile
-    type bfc = BF.bfContents
+    type bfc = BF.t
     type stats = { env: int, data: int, code: int }
 
     (* version info for binfiles *)

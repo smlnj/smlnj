@@ -7,6 +7,7 @@
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 local
     structure GP = GeneralParams
     structure DG = DependencyGraph
@@ -31,8 +32,8 @@ end
 
 functor AutoLoadFn (
 
-    structure L : LINK where type bfc = Binfile.bfContents
-    structure BFC : BFC where type bfc = Binfile.bfContents
+    structure L : LINK
+    structure BFC : BFC
     structure C : TRAVERSE
 
   ) :> AUTOLOAD = struct

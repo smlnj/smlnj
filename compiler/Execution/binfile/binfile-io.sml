@@ -222,6 +222,9 @@ structure BinfileIO :> BINFILE_IO =
         fun findSection (IN{sects, ...}, id : SectId.t) =
               Vector.find (fn {kind, ...} => id = kind) sects
 
+        fun hasSection (IN{sects, ...}, id : SectId.t) =
+              Vector.exists (fn {kind, ...} => id = kind) sects
+
         (* seek to the specified file position, which is relative to the start of
          * the binfile
          *)

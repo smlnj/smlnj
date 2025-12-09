@@ -1,6 +1,6 @@
 (* cm-boot.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the module that actually puts together the contents of the
@@ -35,7 +35,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
           val os = os
           val abi_variant = HostBackend.abi_variant)
 
-      val system_values : E.dynenv IntMap.map SrcPathMap.map ref = ref SrcPathMap.empty
+      val systemValues : E.dynenv IntMap.map SrcPathMap.map ref = ref SrcPathMap.empty
 
       structure StabModmap = StabModmapFn ()
 
@@ -52,7 +52,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
 
       structure Link = LinkFn (
           structure BFC = BFC
-          val system_values = system_values)
+          val systemValues = systemValues)
 
       structure AutoLoad = AutoLoadFn (
 	  structure C = Traverse
@@ -601,7 +601,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                           (* end case *)
                         end (* loop *)
                   in
-                    system_values := loop SrcPathMap.empty
+                    systemValues := loop SrcPathMap.empty
                   end (* readpidmap *)
 
             val _ = SafeIO.perform {
@@ -680,7 +680,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
 		      case er
                        of BARE => (
 			    bare_preload BtNames.bare_preloads;
-                            system_values := SrcPathMap.empty;
+                            systemValues := SrcPathMap.empty;
                             NONE)
 			| AUTOLOAD => (
 			    icm al_managers;

@@ -13,7 +13,9 @@ structure CodeObj :> CODE_OBJ =
     structure W8V = Word8Vector
     type object = Unsafe.Object.object
 
-    datatype t = C of {
+    type cfg_pickle = Word8Vector.vector
+
+    datatype native_code = C of {
 (* QUESTION: it appears that the entrypoint is always going to be zero, so we might not
  * need it!
  *)
@@ -22,24 +24,25 @@ structure CodeObj :> CODE_OBJ =
 	obj : W8V.vector ref
       }
 
-    type literals = Word8Vector.vector
+    (* the representations of the executable *)
+    datatype t
+      = NoCode
+      | CFGPickle of cfg_pickle
+      | NativeCode of native_code
 
-    type csegments = {
-        code : t,
-        lits : literals
-      }
+    type literals = Word8Vector.vector
 
     type executable = object -> object
 
-  (* raised by input when there are insufficient bytes *)
+    (* raised by input when there are insufficient bytes *)
     exception FormatError
 
     local
       structure CI = Unsafe.CInterface
     in
-  (* set the target architecture for the code generator *)
+    (* set the target architecture for the code generator *)
     val setTarget : string option -> bool = CI.c_function "CodeGen" "setTarget"
-  (* interface to the LLVM code generator *)
+    (* interface to the LLVM code generator *)
     val codegen : string * W8V.vector * bool -> W8V.vector * int
           = CI.c_function "CodeGen" "generate"
     (* build the in-heap literal data from a literal-byte-code program *)
@@ -63,9 +66,6 @@ structure CodeObj :> CODE_OBJ =
               ])
             else newObj (codegen (src, pkl, verifyLLVM))
 
-  (* Allocate a code object of the given size and initialize it
-   * from the input stream.
-   *)
     fun input (inStrm, sz, offset) = let
 	  val data = BinIO.inputN (inStrm, sz)
 	  in
@@ -80,14 +80,10 @@ structure CodeObj :> CODE_OBJ =
             newObj(data, offset)
 	  end
 
-  (* Output a code object to the given output stream *)
     fun output (outStrm, C{obj, ...}) = (
 	  BinIO.output(outStrm, !obj);
 	  BinIO.flushOut outStrm)
 
-  (* View the code object as an executable.  This has the side-effect
-   * of flushing the instruction cache.
-   *)
     fun exec (C{obj, isExec, entrypoint}) = (
           (* ensure that the code object is in executable memory *)
           if not(!isExec)
@@ -95,8 +91,11 @@ structure CodeObj :> CODE_OBJ =
             else ();
           mkExec (!obj, entrypoint))
 
-  (* return the size of the code object *)
-    fun size (C{obj, ...}) = W8V.length(!obj)
+    fun sizeOfNativeCode (C{obj, ...}) = W8V.length(!obj)
+
+    fun size NoCode = 0
+      | size (CFGPickle pkl) = Word8Vector.length pkl
+      | size (NativeCode cd) = sizeOfNativeCode cd
 
     fun entrypoint (C c) = (#entrypoint c)
 

@@ -16,8 +16,8 @@
 
 signature BINFILE = sig
 
-  (* the contents of a binfile *)
-    type bfContents
+    (* the contents of a binfile *)
+    type t
 
     type version_info = {
         bfVersion : word,       (* the binfile version; this will be 0w0 for
@@ -32,7 +32,7 @@ signature BINFILE = sig
     val mkVersion : {arch : string, smlnjVersion : string} -> version_info
 
   (* get the version info for the binfile *)
-    val version : bfContents -> version_info
+    val version : t -> version_info
 
     exception FormatError
 
@@ -40,16 +40,19 @@ signature BINFILE = sig
     type stats = { env : int, data : int, code : int }
     type pickle = { pid : pid, pickle : Word8Vector.vector }
 
-    val staticPidOf    : bfContents -> pid
-    val exportPidOf    : bfContents -> pid option
-    val cmDataOf       : bfContents -> pid list
+    val staticPidOf    : t -> pid
+    val exportPidOf    : t -> pid option
+    val cmDataOf       : t -> pid list
 
-    val senvPickleOf   : bfContents -> pickle
+    val literalsOf     : t -> CodeObj.literals
+    val codeOf         : t -> CodeObj.t
 
-    val guidOf         : bfContents -> string
+    val senvPickleOf   : t -> pickle
+
+    val guidOf         : t -> string
 
   (* calculate the size in bytes occupied by some binfile contents *)
-    val size : { contents : bfContents, nopickle: bool } -> int
+    val size : { contents : t, nopickle: bool } -> int
 
   (* create the abstract binfile contents *)
     val create : {
@@ -59,8 +62,9 @@ signature BINFILE = sig
 	    cmData : pid list,
 	    senv : pickle,
 	    guid : string,
-	    csegments : CodeObj.csegments
-	  } -> bfContents
+            lits : CodeObj.literals,
+            code : CodeObj.t
+	  } -> t
 
   (* read just the guid *)
     val readGUid : BinIO.instream -> string
@@ -70,19 +74,19 @@ signature BINFILE = sig
             version : version_info,             (* expected binfile version *)
 	    stream : BinIO.instream,            (* input stream for binfile *)
             offset : Position.int               (* archive file offset or zero *)
-	  } -> { contents : bfContents, stats : stats }
+	  } -> { contents : t, stats : stats }
 
   (* write binfile contents to an IO stream *)
     val write : {
 	    stream : BinIO.outstream,
-	    contents : bfContents,
+	    contents : t,
             nopickle: bool
 	  } -> stats
 
   (* Given a dynamic environment, link the code object contained in
-   * some given binfile contents. The result is the delta environment
+   * the given binfile contents. The result is the delta environment
    * containing the bindings (if any) resulting from this link operation.
    *)
-    val exec : bfContents * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
+    val exec : t * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
 
   end

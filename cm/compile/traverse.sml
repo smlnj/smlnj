@@ -25,7 +25,7 @@ local
 in
     signature TRAVERSE = sig
 
-	type bfc = Binfile.bfContents
+	type bfc = Binfile.t
 	type stats = Binfile.stats
 
 	(* reset internal persistent state *)
@@ -65,7 +65,7 @@ in
 	structure BF = Binfile
 	structure C = Backend.Compile
 
-	type bfc = BF.bfContents
+	type bfc = BF.t
 	type stats = BF.stats
 
 	type bfcReceiver =
@@ -338,7 +338,8 @@ in
                                         cmData = cmData,
                                         senv = { pickle = senvP, pid = staticPid },
                                         guid = guid,
-                                        csegments = csegments
+                                        lits = #lits csegments,
+                                        code = CodeObj.NativeCode(#code csegments)
                                       }
 				val memo = bfc2memo (bfc, SmlInfo.lastseen i, stat)
                                 in

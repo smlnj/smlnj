@@ -64,6 +64,9 @@ signature BINFILE_IO =
         (* the header info for the binfile *)
         val header : t -> Hdr.t
 
+        (* is the given section present in the binfile? *)
+        val hasSection : t * SectId.t -> bool
+
         (* `section (bf, id, inFn)` looks up the section with `id` in the binfile
          * `bf` and then uses `inFn` to read its contents.  Returns `NONE` when
          * the section is missing and `SOME contents` when the section is present
@@ -80,7 +83,7 @@ signature BINFILE_IO =
         (* read a PID from the section *)
         val pid : sect -> PersStamps.persstamp
         (* `codeObject (sect, szb, entry)` reads a code object from the section *)
-        val codeObject : sect * int * int -> CodeObj.t
+        val codeObject : sect * int * int -> CodeObj.native_code
         (* skip over padding bytes *)
         val skip : sect * int -> unit
 
@@ -110,7 +113,7 @@ signature BINFILE_IO =
         (* write a packed integer to the section using the LEB128 encoding *)
         val packedInt : sect * int -> unit
         val pid : sect * PersStamps.persstamp -> unit
-        val codeObject : sect * CodeObj.t -> unit
+        val codeObject : sect * CodeObj.native_code -> unit
         (* write the specified number of padding bytes (0w0) to the section *)
         val pad : sect * int -> unit
 

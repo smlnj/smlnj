@@ -1,6 +1,6 @@
 (* stabilize.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Reading, generating, and writing stable libraries.
@@ -43,9 +43,7 @@ end
 functor StabilizeFn (val arch : string
 		     structure StabModmap : STAB_MODMAP
 		     val recomp : GP.info -> GG.group ->
-			 (SmlInfo.info ->
-			  { contents: Binfile.bfContents,
-			    stats: Binfile.stats }) option
+			 (SmlInfo.info -> { contents: Binfile.t, stats: Binfile.stats }) option
 		     val getII : SmlInfo.info -> IInfo.info) :> STABILIZE =
 struct
     type groupgetter =

@@ -120,14 +120,13 @@ functor CompileF (
     fun codegen { flint, imports, sourceName } = let
         (* optimized FLINT code *)
           val flint = FLINTOpt.optimize (flint, sourceName)
-	(* from optimized FLINT code, generate the machine code.  *)
-	  val csegs = M.compile {prog = flint, source = sourceName}
-	(* Obey the nosplit directive used during bootstrapping.  *)
-	(* val inlineExp = if isSome splitting then inlineExp else NONE *)
-	  val codeSz = (CodeObj.size(#code csegs) + Word8Vector.length(#lits csegs))
+	(* from optimized FLINT code, generate the CFG IR.  *)
+	  val {lits, code} = M.compileToCFG {prog = flint, source = sourceName}
+          val nativeCode = M.compileToNative code
+	  val codeSz = (CodeObj.sizeOfNativeCode nativeCode + Word8Vector.length lits)
 	  in
 	    addCode codeSz;
-	    { csegments=csegs, imports = imports }
+	    { lits = lits, code = nativeCode, imports = imports }
 	  end
     end (* local codegen *)
 
@@ -156,7 +155,7 @@ functor CompileF (
 		    compInfo=compInfo
 		  }
 		before check "translate"
-	  val {csegments, imports} = codegen {
+	  val {lits, code, imports} = codegen {
 		    flint = flint, imports = imports,
                     sourceName = #sourceName compInfo
 		  }
@@ -168,7 +167,7 @@ functor CompileF (
 	 *  else codegen {flint=flint, splitting=splitting, compInfo=cinfo})
 	 *)
 	  in {
-	    csegments = csegments,
+	    csegments = {lits = lits, code = code},
 	    newstatenv = newstatenv,
 	    absyn = absyn,
 	    exportPid = exportPid,

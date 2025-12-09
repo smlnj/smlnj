@@ -21,7 +21,11 @@ structure Execute : sig
    * The resulting closure will wrap any uncaught exception raised by the code using
    * the `exnWrapper` function.
    *)
-    val mkExec : { cs : CodeObj.csegments, exnWrapper : exn -> exn } -> CodeObj.executable
+    val mkExec : {
+            lits : CodeObj.literals,
+            code : CodeObj.native_code,
+            exnWrapper : exn -> exn
+          } -> CodeObj.executable
 
     val execute : {
 	    executable: CodeObj.executable,
@@ -40,7 +44,7 @@ structure Execute : sig
     val say = Control_Print.say
     fun bug s = ErrorMsg.impossible ("Execute: " ^ s)
 
-    fun mkExec { cs = {code, lits}, exnWrapper } = let
+    fun mkExec { lits, code, exnWrapper } = let
 	  val exec = CodeObj.exec code
 	  val nex = if (Word8Vector.length lits > 0)
 		then (fn ivec => exec (Obj.mkTuple (Obj.toTuple ivec @ [CodeObj.mkLiterals lits])))

@@ -3,8 +3,7 @@
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * This file is an implementation of the old `BINFILE` signature using the new
- * binfile format, which is described in
+ * This is a wrapper around the binfile format, which is described in
  *
  *      https://github.com/smlnj/.github/wiki/New-Binfile-Format
  *)
@@ -33,19 +32,18 @@ structure Binfile :> BINFILE =
         smlnjVersion : string
       }
 
-    datatype bfContents = datatype OldBinfile.bfContents
-(*
-    datatype bfContents = BF of {
+    (* the contents of a binfile *)
+    datatype t = BF of {
         version : version_info,
-	imports: ImportTree.import list,
-	exportPid: pid option,
-	cmData: pid list,
-	senv: pickle,
-	guid: string,
-	csegments: csegments,
-	executable: executable option ref
+	imports : ImportTree.import list,
+	exportPid : pid option,
+	cmData : pid list,
+	senv : pickle,
+	guid : string,
+        lits : CodeObj.literals,
+        code : CodeObj.t,
+	exec : executable option ref
       }
-*)
 
     fun mkVersion {arch, smlnjVersion} = {
             bfVersion = BinfileIO.Hdr.version,
@@ -60,18 +58,21 @@ structure Binfile :> BINFILE =
     val staticPidOf = #pid o senvPickleOf
     val exportPidOf = #exportPid o unBF
     val cmDataOf = #cmData o unBF
+    val literalsOf = #lits o unBF
+    val codeOf = #code o unBF
     val senvPickleOf = #senv o unBF
     val guidOf = #guid o unBF
 
-    fun create { version, imports, exportPid, cmData, senv, csegments, guid } = BF{
+    fun create { version, imports, exportPid, cmData, senv, lits, code, guid } = BF{
             version = version,
 	    imports = imports,
 	    exportPid = exportPid,
 	    cmData = cmData,
 	    senv = senv,
 	    guid = guid,
-	    csegments = csegments,
-	    executable = ref NONE
+            lits = lits,
+	    code = code,
+	    exec = ref NONE
 	  }
 
     val bytesPerPid = Pid.persStampSize
@@ -83,7 +84,7 @@ structure Binfile :> BINFILE =
         static pid + environment pids           ==> "PIDS" (static pid is in "SENV")
         guid                                    ==> "GUID"
         literal data segment                    ==> "LITS"
-        code segments                           ==> "CODE"
+        code segments                           ==> "CODE" or "CFGP"
         static environment (conditional)        ==> "SENV" (includes pid)
  *)
 
@@ -157,8 +158,10 @@ structure Binfile :> BINFILE =
           val codeSz = sz - BFIO.sizeOfPackedInt entryPt
           val code = BFIO.In.codeObject (sect, codeSz, entryPt)
           in
-            code
+            CodeObj.NativeCode code
           end
+
+    fun getCFGSection (sect, sz) = CodeObj.CFGPickle(BFIO.In.bytes (sect, sz))
 
     fun getStaticEnvSection (sect, sz) = let
           val staticPid = BFIO.In.pid sect
@@ -227,7 +230,12 @@ structure Binfile :> BINFILE =
           val cmData = readSection (BFIO.SectId.pids, getPidsSection)
           val guid = readSection (BFIO.SectId.guid, getGuidSection)
           val literals = readSection (BFIO.SectId.literals, getLiteralsSection)
-          val code = readSection (BFIO.SectId.code, getCodeSection)
+(* FIXME: check if CODE or CFGP section is present *)
+          val code = if BFIO.In.hasSection(bf, BFIO.SectId.code)
+                  then readSection (BFIO.SectId.code, getCodeSection)
+                else if BFIO.In.hasSection(bf, BFIO.SectId.cfkPickle)
+                  then readSection (BFIO.SectId.cfkPickle, getCFGSection)
+                  else CodeObj.NoCode
           val senv = readSection (BFIO.SectId.staticEnv, getStaticEnvSection)
 	  in {
 	    contents = create {
@@ -237,7 +245,8 @@ structure Binfile :> BINFILE =
 		cmData = cmData,
 		senv = senv,
 		guid = guid,
-		csegments = {lits = literals, code = code}
+                lits = literals,
+                code = code
 	      },
 	    stats = {
 		env = W8V.length(#pickle senv),
@@ -262,12 +271,12 @@ structure Binfile :> BINFILE =
 
     val readGUid = fn inS => if isNewFormat(BinIO.getInstream inS)
           then readGUid inS
-          else OldBinfile.readGUid inS
+          else BFIO.error "Binfile.readGUid: old binfile format no longer supported"
 
     val read = fn (arg as {stream, version, offset}) =>
           if isNewFormat(BinIO.getInstream stream)
             then read arg
-            else OldBinfile.read {stream=stream, version=version}
+            else BFIO.error "Binfile.read: old binfile format no longer supported"
 
     (***** OUTPUT OPERATIONS *****)
 
@@ -372,14 +381,14 @@ structure Binfile :> BINFILE =
           end
 
     (** code ('CODE') section **)
-    fun codeSize code = let
-          val codeSz = CodeObj.size code
+    fun nativeCodeSize code = let
+          val codeSz = CodeObj.sizeOfNativeCode code
           in
 (* TODO: the entrypoint is redundant, since it is always zero! *)
             BFIO.sizeOfPackedInt(CodeObj.entrypoint code) + codeSz
           end
-    fun addCodeSection (bf, code) = let
-          val sz = codeSize code
+    fun addNativeCodeSection (bf, code) = let
+          val sz = nativeCodeSize code
           fun outFn sect = (
 (* TODO: the entrypoint is redundant, since it is always zero! *)
                 BFIO.Out.packedInt(sect, CodeObj.entrypoint code);
@@ -387,6 +396,21 @@ structure Binfile :> BINFILE =
           in
             BFIO.Out.section (bf, BFIO.SectId.code, sz, outFn)
           end
+
+    (** CFG Pickle ('CFGP') section **)
+    fun cfgPickleSize pkl = Word8Vector.length pkl
+    fun addCFGPickleSection (bf, code) = let
+          val sz = cfgPickleSize code
+          fun outFn sect = (
+                BFIO.Out.bytes(sect, code))
+          in
+            BFIO.Out.section (bf, BFIO.SectId.cfkPickle, sz, outFn)
+          end
+
+    (** generic code section operations *)
+    fun codeSize CodeObj.NoCode = 0
+      | codeSize (CodeObj.CFGPickle pkl) = cfgPickleSize pkl
+      | codeSize (CodeObj.NativeCode cd) = nativeCodeSize cd
 
     (** static environment ('SENV') section **)
     fun staticEnvSize (_, _, true) = bytesPerPid
@@ -403,11 +427,10 @@ structure Binfile :> BINFILE =
           end
 
     fun size { contents, nopickle } = let
-	  val BF{ version, imports, exportPid, cmData, senv, csegments, guid, ... } =
+	  val BF{ version, imports, exportPid, cmData, senv, lits, code, guid, ... } =
                 contents
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
-          val { code, lits } = csegments
           in
             BFIO.Hdr.sizeOfHdr 8 (* there are eight sections *)
               + infoSize
@@ -421,11 +444,10 @@ structure Binfile :> BINFILE =
           end
 
     fun write { stream, contents, nopickle } = let
-	  val BF{ version, imports, exportPid, cmData, senv, csegments, guid, ... } =
+	  val BF{ version, imports, exportPid, cmData, senv, lits, code, guid, ... } =
                 contents
           val { bfVersion, arch, smlnjVersion } = version
 	  val { pickle = senvPkl, pid = staticPid } = senv
-          val { code, lits } = csegments
           val smlnjVersion = (case SMLNJVersion.fromString smlnjVersion
                  of SOME vers => vers
                   | NONE => BFIO.error(concat[
@@ -445,23 +467,34 @@ structure Binfile :> BINFILE =
             addExportSection (bf, exportPid);
             addPidsSection (bf, cmData);
             addGuidSection (bf, guid);
-            addLiteralSection (bf, lits);
-            addCodeSection (bf, code);
+            case code
+             of CodeObj.NoCode => ()
+              | CodeObj.CFGPickle pkl => (
+                  addLiteralSection (bf, lits);
+                  addCFGPickleSection (bf, pkl))
+              | CodeObj.NativeCode cd => (
+                  addLiteralSection (bf, lits);
+                  addNativeCodeSection (bf, cd))
+            (* end case *);
             addStaticEnvSection (bf, staticPid, senvPkl, nopickle);
             BFIO.Out.finish bf;
 	    stats
           end
 
     fun exec (bf, dynEnv, exnWrapper) = let
-          val BF{ imports, exportPid, executable, csegments, ... } = bf
-	  val executable = (case !executable
+          val BF{ imports, exportPid, exec, lits, code, ... } = bf
+	  val executable = (case !exec
 		 of SOME e => e
-		  | NONE => let
-		      val e = Isolate.isolate (
-                            Execute.mkExec { cs = csegments, exnWrapper = exnWrapper })
-		      in
-			executable := SOME e; e
-		      end
+		  | NONE => (case code
+                       of CodeObj.NativeCode cd => let
+                            val e = Isolate.isolate (Execute.mkExec {
+                                    lits = lits, code = cd, exnWrapper = exnWrapper
+                                  })
+                            in
+                              exec := SOME e; e
+                            end
+                        | _ => BFIO.error "Binfile.exec: expected native code"
+                      (* end case *))
 		(* end case *))
 	  in
 	    Execute.execute {

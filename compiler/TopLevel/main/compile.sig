@@ -43,7 +43,7 @@ signature COMPILE0 =
 	    guid: guid,
 	    checkErr: string -> unit
 	  } -> {
-	    csegments: CodeObj.csegments,
+	    csegments: {lits : CodeObj.literals, code : CodeObj.native_code},
 	    newstatenv: StaticEnv.staticEnv,
 	    absyn: Absyn.dec (* for pretty printing only *),
 	    exportPid: pid option,

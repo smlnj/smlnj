@@ -13,6 +13,11 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
 
     structure CPSGen = CPSCompFn (MachSpec)
 
+    type 'a csegments = {
+        code : 'a,
+        lits : CodeObj.literals
+      }
+
     val architecture = MachSpec.architecture
     val abi_variant = NONE (* TODO: we should be able to get rid of this *)
 
@@ -31,21 +36,12 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
             {code = cfg, lits = data}
           end
 
-    (* compile CFG IR to native code *)
-    fun compileCFG {code, lits} = let
-          (* pickle the IR into a vector *)
-          val pkl = CFGPickler.toBytes code
-          (* invoke the LLVM code generator to generate machine code *)
-          val code = CodeObj.generate {
-                  target = MachSpec.llvmTargetName,
-                  src = #srcFile code,
-                  pkl = pkl,
-                  verifyLLVM = !Control.CG.verifyLLVM
-                }
-	  in
-	    {code = code, lits = lits}
-	  end
+    (* compile CFG IR to native code by first converting the *)
+    fun compileToNative code = CodeObj.generate {
+            target = MachSpec.llvmTargetName,
+            src = #srcFile code,
+            pkl = CFGPickler.toBytes code,
+            verifyLLVM = !Control.CG.verifyLLVM
+          }
 
-    val compile = compileCFG o compileToCFG
-
-  end
+  end (* functor CodeGeneratorFn *)
