@@ -56,6 +56,7 @@ signature CGCONTROL =
     val printit : bool ref
     val printClusters : bool ref
     val dumpClusters : bool ref
+    val normalizeCFG : bool ref
     val printCFG : bool ref
     val dumpCFG : bool ref
     val verifyLLVM : bool ref

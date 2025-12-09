@@ -42,11 +42,11 @@ functor LinkCM (structure HostBackend : BACKEND) =
       val useStreamHook : (TextIO.instream -> unit) ref =
 	    ref (fn _ => raise Fail "useStreamHook not initialized")
 
-      structure Compile = CompileFn (
+      structure Traverse = CompilerTraverseFn (
           structure Backend = HostBackend
           structure StabModmap = StabModmap
           fun useStream s = !useStreamHook s
-          val compile_there = Servers.compile o SrcPath.encode)
+          val compileThere = Servers.compile o SrcPath.encode)
 
       structure BFC = BfcFn (val arch = HostBackend.architecture)
 
@@ -55,7 +55,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
           val system_values = system_values)
 
       structure AutoLoad = AutoLoadFn (
-	  structure C = Compile
+	  structure C = Traverse
           structure L = Link
           structure BFC = BFC)
 
@@ -68,7 +68,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
       fun recomp_runner gp g = let
             val _ = init_servers g
             fun store _ = ()
-            val { group, ... } = Compile.newTraversal (Link.evict, store, g)
+            val { group, ... } = Traverse.newTraversal (Link.evict, store, g)
             in
               isSome (Servers.withServers (fn () => group gp))
                 before Link.cleanup gp
@@ -83,7 +83,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
             val { required = rq, ... } = grec
             val { store, get } = BFC.new ()
             val _ = init_servers g
-            val { group = c_group, ... } = Compile.newTraversal (Link.evict, store, g)
+            val { group = c_group, ... } = Traverse.newTraversal (Link.evict, store, g)
             val { group = l_group, ... } = Link.newTraversal (g, #contents o get)
 	    in
 	      case Servers.withServers (fn () => c_group gp)
@@ -124,14 +124,14 @@ functor LinkCM (structure HostBackend : BACKEND) =
           structure StabModmap = StabModmap
           fun recomp gp g = let
                 val { store, get } = BFC.new ()
-                val { group, ... } = Compile.newTraversal (Link.evict, store, g)
+                val { group, ... } = Traverse.newTraversal (Link.evict, store, g)
                 in
                   case group gp
                    of NONE => NONE
                     | SOME _ => SOME get
                   (* end case *)
                 end
-          val getII = Compile.getII)
+          val getII = Traverse.getII)
 
       (* Access to the stabilization mechanism is integrated into the
        * parser. I'm not sure if this is the cleanest way, but it works
@@ -140,7 +140,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
           structure Stabilize = Stabilize
           structure StabModmap = StabModmap
           fun evictStale () = (
-                Compile.evictStale ();
+                Traverse.evictStale ();
                 Link.evictStale ())
           val pending = AutoLoad.getPending)
 
@@ -296,14 +296,14 @@ functor LinkCM (structure HostBackend : BACKEND) =
             fun stabilize_recomp_runner gp g = let
                   val _ = init_servers g
                   val { allgroups, ... } =
-                        Compile.newTraversal (Link.evict, fn _ => (), g)
+                        Traverse.newTraversal (Link.evict, fn _ => (), g)
                   in
                     Servers.withServers (fn () => allgroups gp)
                   end
             fun stabilize_dummy_runner gp g = true
             fun phase1 () = run mkSrcPath NONE
                                 stabilize_recomp_runner root
-            fun phase2 () = (Compile.reset ();(* a bit too draconian? *)
+            fun phase2 () = (Traverse.reset ();(* a bit too draconian? *)
                              run mkSrcPath (SOME recursively)
                                  stabilize_dummy_runner root)
             in
@@ -457,7 +457,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
                   penv = penv,
                   parse = parse,
                   my_archos = my_archos,
-                  sbtrav = Compile.newSbnodeTraversal,
+                  sbtrav = Traverse.newSbnodeTraversal,
                   make = makeNative
                 }
             end
@@ -523,7 +523,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
       val al_managers = AutoLoad.mkManagers { get_ginfo = al_ginfo, dropPickles = dropPickles }
 
       fun reset () = (
-            Compile.reset ();
+            Traverse.reset ();
             Link.reset ();
             AutoLoad.reset ();
             Parse.reset ();
@@ -633,10 +633,10 @@ functor LinkCM (structure HostBackend : BACKEND) =
 	      case loadInitGroup ()
                of NONE => raise Fail "CMBoot: unable to load init group"
 		| SOME init_group => let
-                    val _ = Compile.reset ()
+                    val _ = Traverse.reset ()
                     val _ = Link.reset ()
 
-                    val { exports = ctm, ... } = Compile.newTraversal (
+                    val { exports = ctm, ... } = Traverse.newTraversal (
                           fn _ => fn _ => (),
                           fn _ => (),
                           init_group)

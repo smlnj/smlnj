@@ -87,7 +87,7 @@ is
 	concur/sources.cm
 
 	(* doing actual compilation work *)
-	compile/compile.sml
+	compile/traverse.sml
 	compile/corehack.sml
 	compile/link.sml
 	compile/bfc.sml

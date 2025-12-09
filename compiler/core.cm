@@ -274,6 +274,7 @@ CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
 CodeGen/cfg/cfg.sml
+CodeGen/cfg/normalize-cfg.sml
 CodeGen/cfg/ppcfg.sml
 CodeGen/cfg/cfg-util.sml
 CodeGen/cfg-pickle/cfg-pickle.sig

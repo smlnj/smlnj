@@ -9,9 +9,10 @@
 functor CPStoCFGFn (MS : MACH_SPEC) : sig
 
     val translate : {
-	    source : string,
-	    clusters : Cluster.cluster list,
-	    maxAlloc : CPS.lvar -> int
+	    source : string,                    (* name of source file *)
+	    clusters : Cluster.cluster list,    (* 1st-order CPS *)
+	    maxAlloc : CPS.lvar -> int,         (* per-function alloc info *)
+            normalize : bool                    (* should CFG be normalized? *)
 	  } -> CFG.comp_unit
 
   end = struct
@@ -821,7 +822,7 @@ C.NUMt{sz=sz}
 	  end
 
   (* translate a CPS compilation unit into the CFG IR *)
-    fun translate {source, clusters, maxAlloc} = let
+    fun translate {source, clusters, maxAlloc, normalize} = let
 	  val gInfo = CPSInfo.analyze clusters
 	(* convert a single cluster of CPS functions to a CFG cluster. *)
 	  fun doCluster (entry :: rest) = let
@@ -836,11 +837,10 @@ C.NUMt{sz=sz}
 	    | doCluster _ = error ["empty cluster"]
 	  val entry::rest = List.map doCluster clusters
 	  val gcClusters = CPSInfo.getGCCode gInfo
-	  in {
-	    srcFile = source,
-	    entry = entry,
-	    fns = rest @ gcClusters
-	  } end
+          val cu = { srcFile = source, entry = entry, fns = rest @ gcClusters }
+	  in
+            if normalize then NormalizeCFG.normalize cu else cu
+          end
 handle ex => (
 Control.Print.say "#### translate:\n";
 ignore (Cluster.print clusters);

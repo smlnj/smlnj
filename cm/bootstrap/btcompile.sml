@@ -1,8 +1,10 @@
-(*
+(* btcompile.sml
+ *
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
  * The bootstrap compiler.
  *   (Formerly known as "batch" compiler.)
- *
- * (C) 1999 Lucent Technologies, Bell Laboratories
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
@@ -13,15 +15,19 @@ local
     structure GG = GroupGraph
     structure DG = DependencyGraph
 in
-functor BootstrapCompileFn
-	    (structure Backend : BACKEND
-	     val useStream : TextIO.instream -> unit
-	     val os : SMLofNJ.SysInfo.os_kind
-	     val load_plugin : SrcPath.dir -> string -> bool) =
-struct
-    structure SSV = SpecificSymValFn (val arch = Backend.architecture
-				      val os = os
-				      val abi_variant = Backend.abi_variant)
+functor BootstrapCompileFn (
+
+    structure Backend : BACKEND
+    val useStream : TextIO.instream -> unit
+    val os : SMLofNJ.SysInfo.os_kind
+    val load_plugin : SrcPath.dir -> string -> bool
+
+  ) = struct
+
+    structure SSV = SpecificSymValFn (
+        val arch = Backend.architecture
+        val os = os
+        val abi_variant = Backend.abi_variant)
     structure P = OS.Path
     structure F = OS.FileSys
     structure BF = Binfile
@@ -33,11 +39,11 @@ struct
 
     structure StabModmap = StabModmapFn ()
 
-    structure Compile = CompileFn (structure Backend = Backend
-				   structure StabModmap = StabModmap
-				   val useStream = useStream
-				   val compile_there =
-				       Servers.compile o SrcPath.encode)
+    structure Traverse = CompilerTraverseFn (
+        structure Backend = Backend
+        structure StabModmap = StabModmap
+        val useStream = useStream
+        val compileThere = Servers.compile o SrcPath.encode)
 
     (* instantiate the binfile cache *)
     structure BFC = BfcFn (val arch = Backend.architecture)
@@ -50,20 +56,20 @@ struct
 			 val { store, get } = BFC.new ()
 			 fun dummy _ _ = ()
 			 val { group, ... } =
-			     Compile.newTraversal (dummy, store, g)
+			     Traverse.newTraversal (dummy, store, g)
 		     in
 			 case group gp of
 			     NONE => NONE
 			   | SOME _ => SOME get
 		     end
-		     val getII = Compile.getII)
+		     val getII = Traverse.getII)
 
     structure VerifyStable = VerStabFn (structure Stabilize = Stabilize)
 
     (* ... and Parse *)
     structure Parse = ParseFn (structure Stabilize = Stabilize
 			       structure StabModmap = StabModmap
-			       val evictStale = Compile.evictStale
+			       val evictStale = Traverse.evictStale
 			       fun pending () = SymbolMap.empty)
 
     fun mkBootList g = let
@@ -84,7 +90,7 @@ struct
     end
 
     fun internal_reset () =
-	(Compile.reset ();
+	(Traverse.reset ();
 	 Parse.reset ();
 	 StabModmap.reset ())
 
@@ -177,7 +183,7 @@ struct
 		val ovldR = Control.overloadKW
 		val savedOvld = !ovldR
 		val _ = ovldR := true
-		val sbnode = Compile.newSbnodeTraversal ()
+		val sbnode = Traverse.newSbnodeTraversal ()
 
 		val perv_fsbnode = (NONE, perv_n)
 
@@ -402,12 +408,12 @@ struct
 
 			(* make compilation traversal and execute it *)
 			val { allgroups, ... } =
-			    Compile.newTraversal (fn _ => fn _ => (),
+			    Traverse.newTraversal (fn _ => fn _ => (),
 						  fn _ => (),
 						  g)
 		    in
 			if Servers.withServers (fn () => allgroups gp) then
-			    (Compile.reset ();
+			    (Traverse.reset ();
 			     stabilize ())
 			else false
 		    end
@@ -416,7 +422,7 @@ struct
 			  if lonely_master then just_stabilize
 			  else compile_and_stabilize)
 		end
-	end handle Option => (Compile.reset (); NONE)
+	end handle Option => (Traverse.reset (); NONE)
 	    	   (* to catch valOf failures in "rt" or slave's failure
 		    * to load init group *)
     in
@@ -441,7 +447,7 @@ struct
 			       dirbase = SOME dirbase } of
 		 NONE => NONE
 	       | SOME ((g, gp, penv), _) => let
-		     val trav = Compile.newSbnodeTraversal ()
+		     val trav = Traverse.newSbnodeTraversal ()
 		     fun trav' sbn = isSome (trav sbn gp)
 		 in
 		     SOME (g, trav', penv)
