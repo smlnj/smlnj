@@ -105,6 +105,17 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2025/12/10]::
+Reorganized some of the **CM** internal library structure.  The file
+`system/smlnj/internal/cm-sig-lib.cm` has been deleted.  It just defined
+the `CM` and `CMB` signatures.  These definitions have been moved into
+the libraries where the corresponding structures are defined.  The `CM`
+signature is now defined in `system/smlnj/cm` and the `CMB` signature
+is defined in `cm/bootstrap`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2025/12/09]::
 Changed some names in *CM* to avoid confusion with modules of
 the same name in the compiler.  Specifically, the following

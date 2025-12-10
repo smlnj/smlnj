@@ -14,6 +14,13 @@ local
     structure PS = PersStamps
     structure GG = GroupGraph
     structure DG = DependencyGraph
+signature CMB = sig
+    val make' : string option -> bool
+    val make : unit -> bool
+    val reset : unit -> unit
+    val symval : string -> { get: unit -> int option, set: int option -> unit }
+end
+
 in
 functor BootstrapCompileFn (
 
@@ -22,7 +29,7 @@ functor BootstrapCompileFn (
     val os : SMLofNJ.SysInfo.os_kind
     val load_plugin : SrcPath.dir -> string -> bool
 
-  ) = struct
+  ) : CMB = struct
 
     structure SSV = SpecificSymValFn (
         val arch = Backend.architecture
