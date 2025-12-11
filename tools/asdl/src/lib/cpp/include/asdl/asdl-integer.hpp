@@ -19,6 +19,8 @@
 #  include <gmp.h>
 #endif
 
+#include <cstdint>
+
 namespace asdl {
 
   // multiprecision integers
