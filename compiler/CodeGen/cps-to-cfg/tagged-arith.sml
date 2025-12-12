@@ -136,6 +136,7 @@ structure TaggedArith : sig
 		in
 		  pureOp (P.XORB, ity, [comp v, num mask])
 		end
+(* FIXME: CNTPOP, CNTLZ, CNTTZ, ROTL, ROTR *)
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 

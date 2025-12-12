@@ -29,6 +29,8 @@ signature PRIMOP =
       = ADD | SUB | MUL | QUOT | REM | NEG
       | LSHIFT | RSHIFT | RSHIFTL
       | ORB | XORB | ANDB | NOTB
+      | CNTPOP | CNTLZ | CNTTZ
+      | ROTL | ROTR
       | FDIV | FABS | FSQRT
 
   (* comparison operators *)

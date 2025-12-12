@@ -242,6 +242,16 @@ in
 	  | arithopc P.XORB = "\010"
 	  | arithopc P.ANDB = "\011"
 	  | arithopc P.NOTB = "\012"
+(*
+          | arithopc P.CNTPOP = "\013"
+          | arithopc P.CNTLZ = "\014"
+          | arithopc P.CNTTZ = "\015"
+          | arithopc P.ROTL = "\0165"
+          | arithopc P.ROTR = "\017"
+	  | arithopc P.FDIV = "\018"
+	  | arithopc P.FABS = "\019"
+          | arithopc P.FSQRT = "\020"
+*)
 	  | arithopc P.FDIV = "\013"
 	  | arithopc P.FABS = "\014"
           | arithopc P.FSQRT = "\015"

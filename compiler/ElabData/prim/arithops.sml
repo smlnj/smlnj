@@ -25,6 +25,8 @@ structure ArithOps =
       = ADD | SUB | MUL | QUOT | REM | NEG
       | LSHIFT | RSHIFT | RSHIFTL
       | ORB | XORB | ANDB | NOTB
+      | CNTPOP | CNTLZ | CNTTZ
+      | ROTL | ROTR
       | FDIV | FABS | FSQRT
 
   (* comparison operators *)
@@ -49,10 +51,15 @@ structure ArithOps =
       | pureopToString LSHIFT = "lshift"
       | pureopToString RSHIFT = "rshift"
       | pureopToString RSHIFTL = "rshiftl"
-      | pureopToString ANDB = "andb"
       | pureopToString ORB = "orb"
       | pureopToString XORB = "xorb"
+      | pureopToString ANDB = "andb"
       | pureopToString NOTB = "notb"
+      | pureopToString CNTPOP = "cntpop"
+      | pureopToString CNTLZ = "cntlz"
+      | pureopToString CNTTZ = "cnttz"
+      | pureopToString ROTL = "rotl"
+      | pureopToString ROTR = "rotr"
       | pureopToString FDIV = "fdiv"
       | pureopToString FABS = "fabs"
       | pureopToString FSQRT = "fsqrt"

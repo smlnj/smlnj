@@ -132,6 +132,16 @@ structure ValueNumbering : sig
             | toCode P.XORB = 10
             | toCode P.ANDB = 11
             | toCode P.NOTB = 12
+(*
+            | toCode P.CNTPOP = 13
+            | toCode P.CNTLZ  = 14
+            | toCode P.CNTTZ = 15
+            | toCode P.ROTL = 16
+            | toCode P.ROTR = 17
+            | toCode P.FDIV = 18
+            | toCode P.FABS = 19
+            | toCode P.FSQRT = 20
+*)
             | toCode P.FDIV = 13
             | toCode P.FABS = 14
             | toCode P.FSQRT = 15
