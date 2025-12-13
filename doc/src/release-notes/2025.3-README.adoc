@@ -6,6 +6,7 @@
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
 :legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:wiki-base: https://github.com/smlnj/smlnj/.github/wiki
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -33,13 +34,12 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release implements a new {wiki-base}/New-Binfile-Format[containerized
+binfile format] that is more extensible that the previous format.  This
+release also contains a number of bug fixes and library enhancements.
+This release also supports Linux on {pull-base}/331[Arm64 processors].
 
 == Details
-
-// **** details: include those sections that are relevant
-
-Linux Arm support (thanks poz)
 
 === Compiler
 
@@ -52,34 +52,22 @@ Linux Arm support (thanks poz)
 
 * We are now using **ASDL** to implement the pickling/unpickling of skeleton files.
 
-=== MLRISC
-
 === Runtime System
 
 * fixed various space leaks in the runtime system
     - the ASDL generated code did not correctly free sequences
     - the heap-export code was failing to free some meta-data
 
-=== Basis Library
-
 === SML/NJ Library
 
 * Added `LEB128` module, which implements packed encoding and decoding
   of integer and word types using the _Little Endian Base 128_ encoding.
-
-=== Successor ML
-
-=== ML-LPT
 
 === ASDL
 
 * Added the `is_datatype` property
 
 * Fixed the generation of destructors for sequences
-
-=== Documentation
-
-=== Installation
 
 == Bugs
 
@@ -142,10 +130,11 @@ tested some of them:
 | Architecture | Operating System | Status
 | AMD64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) | Tested
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) |
 | | Ubuntu 20.04.6 LTS | Tested
 | | Ubuntu 22.04.2 LTS | Tested
 | {nbsp} | |
@@ -155,7 +144,7 @@ tested some of them:
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
-| | macOS 26 (Sequoia) | Tested
+| | macOS 26 (Tahoe) | Tested
 | | Linux |
 | {nbsp} | |
 |=======

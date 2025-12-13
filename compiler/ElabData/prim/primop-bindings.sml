@@ -1,6 +1,6 @@
 (* primop-bindings.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -143,6 +143,16 @@ structure PrimopBindings : sig
 	    shift("raw_rshiftl", P.PURE_ARITH{oper=P.RSHIFTL, kind=nk}) :-:
 	    shift("raw_lshift", P.PURE_ARITH{oper=P.LSHIFT, kind=nk}) :-:
 	    mk("notb", w_w, P.PURE_ARITH{oper=P.NOTB, kind=nk}) :-:
+	    mk("cnt_pop", w_w, P.PURE_ARITH{oper=P.CNTPOP, kind=nk}) :-:
+(* QUESTION: do we want separate "inline" versions of the bit counting operators
+ * that check for zero and a "raw" version that doesn't, or are we good with
+ * a single form?.  Also, we can implement "count leading ones" etc. as an inline
+ * primop that logically negates its argument.
+ *)
+	    mk("cnt_lz", w_w, P.PURE_ARITH{oper=P.CNTLZ, kind=nk}) :-:
+	    mk("cnt_tz", w_w, P.PURE_ARITH{oper=P.CNTTZ, kind=nk}) :-:
+	    shift("rotl", P.PURE_ARITH{oper=P.ROTL, kind=nk}) :-:
+	    shift("rotr", P.PURE_ARITH{oper=P.ROTR, kind=nk}) :-:
 	    cmp("lt", P.LT) :-:
 	    cmp("le", P.LTE) :-:
 	    cmp("gt", P.GT) :-:

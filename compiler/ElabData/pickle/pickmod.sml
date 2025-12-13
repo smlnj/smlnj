@@ -245,7 +245,7 @@ in
           | arithopc P.CNTPOP = "\013"
           | arithopc P.CNTLZ = "\014"
           | arithopc P.CNTTZ = "\015"
-          | arithopc P.ROTL = "\0165"
+          | arithopc P.ROTL = "\016"
           | arithopc P.ROTR = "\017"
 	  | arithopc P.FDIV = "\018"
 	  | arithopc P.FABS = "\019"
