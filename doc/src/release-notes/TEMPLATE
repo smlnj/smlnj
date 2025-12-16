@@ -7,7 +7,8 @@
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
-:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:wiki-base: https://github.com/smlnj/smlnj/.github/wiki
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -63,7 +64,7 @@ FILES::
 
 == Bugs
 
-Here is a list of the issues that are fixed (or closed) with this release.
+Here is a list of the issues and pull requests that are closed with this release.
 
 [.buglist,cols="^1,<15",strips="none",options="header"]
 |=======

@@ -1,11 +1,11 @@
-:version: 2025.3
-:date: @DATE@
+:version: 2025.3-rc1
+:date: December 16, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
-:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
 :wiki-base: https://github.com/smlnj/smlnj/.github/wiki
 :stem: latexmath
 :source-highlighter: pygments
@@ -71,7 +71,7 @@ This release also supports Linux on {pull-base}/331[Arm64 processors].
 
 == Bugs
 
-Here is a list of the issues that are fixed (or closed) with this release.
+Here is a list of the issues and pull requests that are closed with this release.
 
 [.buglist,cols="^1,<15",strips="none",options="header"]
 |=======
@@ -97,14 +97,12 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {pull-base}/322[Fix heap export inconsistency caused by pair arena offsets]
 | [.bugid]#323#
 | {pull-base}/323[Fix memory leaks in the runtime system]
-| {.bugid}#324#
+| [.bugid]#324#
 | {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
-| {.bugid}#325#
+| [.bugid]#325#
 | {pull-base}/325[`setPosOut` should return an `outstream`]
-| {.bugid}#331#
+| [.bugid]#331#
 | {pull-base}/331[AArch64 Linux support]
-//| [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
