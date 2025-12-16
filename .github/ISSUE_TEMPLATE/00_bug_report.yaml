@@ -32,6 +32,7 @@ body:
       label: Version
       description: What version of SML/NJ are you using?
       options:
+        - "2025.3-rc1"
         - "2025.2 (latest)"
         - "2025.1"
         - "2024.2"
@@ -50,7 +51,6 @@ body:
         - label: Any
         - label: Linux
         - label: macOS
-        - label: Windows
         - label: "Other Unix"
     validations:
       required: true
