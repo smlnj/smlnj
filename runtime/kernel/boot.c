@@ -45,16 +45,18 @@ typedef struct {
 
 /* section tags */
 #if defined(BYTE_ORDER_BIG)
-#  define BF_TAG(s)	(((s)[0] << 24) | ((s)[1] << 16) | ((s)[2] << 8) | ((s)[3]))
+#  define BF_TAG(c1,c2,c3,c4)	\
+    ((Unsigned32_t)(c1) << 24 | (Unsigned32_t)(c2) << 16 | (Unsigned32_t)(c3) << 8 | (Unsigned32_t)(c4))
 #else
-#  define BF_TAG(s)	(((s)[3] << 24) | ((s)[2] << 16) | ((s)[1] << 8) | ((s)[0]))
+#  define BF_TAG(c1,c2,c3,c4)	\
+    ((Unsigned32_t)(c4) << 24 | (Unsigned32_t)(c3) << 16 | (Unsigned32_t)(c2) << 8 | (Unsigned32_t)(c1))
 #endif
 
-#define BF_IMPT	BF_TAG("IMPT")
-#define BF_EXPT BF_TAG("EXPT")
-#define BF_LITS BF_TAG("LITS")
-#define BF_CODE BF_TAG("CODE")
-#define BF_CFGP BF_TAG("CFGP")
+#define BF_IMPT	BF_TAG('I','M','P','T')
+#define BF_EXPT BF_TAG('E','X','P','T')
+#define BF_LITS BF_TAG('L','I','T','S')
+#define BF_CODE BF_TAG('C','O','D','E')
+#define BF_CFGP BF_TAG('C','F','G','P')
 
 /* the useful information contained in the header */
 typedef struct {
