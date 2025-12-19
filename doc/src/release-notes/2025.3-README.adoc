@@ -1,5 +1,5 @@
-:version: 2025.3-rc1
-:date: December 16, 2025
+:version: 2025.3-rc2
+:date: December 18, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
