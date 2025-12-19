@@ -7,7 +7,7 @@
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
-:wiki-base: https://github.com/smlnj/smlnj/.github/wiki
+:wiki-base: https://github.com/smlnj/.github/wiki
 :legacy-pull-base: https://github.com/smlnj/legacy/pull
 :stem: latexmath
 :source-highlighter: pygments

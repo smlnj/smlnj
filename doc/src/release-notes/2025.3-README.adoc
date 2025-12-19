@@ -6,7 +6,7 @@
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
 :legacy-pull-base: https://github.com/smlnj/legacy/pull
-:wiki-base: https://github.com/smlnj/smlnj/.github/wiki
+:wiki-base: https://github.com/smlnj/.github/wiki
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
