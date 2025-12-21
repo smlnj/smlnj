@@ -141,10 +141,8 @@ structure UnpickMod : UNPICKMOD = struct
             P.ADD, P.SUB, P.MUL, P.QUOT, P.REM, P.NEG,
             P.LSHIFT, P.RSHIFT, P.RSHIFTL,
             P.ORB, P.XORB, P.ANDB, P.NOTB,
-(* _BITOPS_ *)
             P.CNTPOP, P.CNTLZ, P.CNTTZ,
             P.ROTL, P.ROTR,
-(* _BITOPS_ *)
             P.FDIV, P.FABS, P.FSQRT
           ]
 

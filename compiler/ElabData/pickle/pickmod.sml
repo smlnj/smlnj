@@ -250,11 +250,6 @@ in
 	  | arithopc P.FDIV = "\018"
 	  | arithopc P.FABS = "\019"
           | arithopc P.FSQRT = "\020"
-(* _BITOPS_
-	  | arithopc P.FDIV = "\013"
-	  | arithopc P.FABS = "\014"
-          | arithopc P.FSQRT = "\015"
-*)
 	in
 	  arithopc oper $ []
 	end

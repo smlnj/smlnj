@@ -140,11 +140,6 @@ structure ValueNumbering : sig
             | toCode P.FDIV = 18
             | toCode P.FABS = 19
             | toCode P.FSQRT = 20
-(* _BITOPS_
-            | toCode P.FDIV = 13
-            | toCode P.FABS = 14
-            | toCode P.FSQRT = 15
-_BITOPS_ *)
           in
             cmpCode(toCode op1, toCode op2)
           end
