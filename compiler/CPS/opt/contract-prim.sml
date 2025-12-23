@@ -398,6 +398,12 @@ structure ContractPrim : sig
             (***** NOTB *****)
             | (P.PURE_ARITH{oper=P.NOTB, kind}, [NUM i]) =>
                 Val(NUM{ival = CA.bNot(sizeOfKind kind, #ival i), ty = #ty i})
+            (***** ROTL *****)
+            | (P.PURE_ARITH{oper=P.ROTL, ...}, [i as NUM{ival=0, ...}, _]) => Val i
+            | (P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                if (ival mod IntInf.fromInt sz = 0)
+                  then Val i (* effectively no rotation *)
+                  else None
             (***** PURE_NUMSUBSCRIPT *****)
             | (P.PURE_NUMSUBSCRIPT{kind}, [STRING s, NUM i]) => let
                 val v = ord(String.sub(s, Int.fromLarge(#ival i)))

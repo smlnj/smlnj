@@ -102,7 +102,18 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-== Recent updates
+//== Recent updates
+
+//====================================================================
+== Version 2025.3; 2025/12/22
+
+//--------------------------------------------------------------------
+[2025/12/13]::
+Bind the bit-counting and rotation primops that were added in 2025.2
+in the `Inline` structure.  This change will allow them to be used in
+the Basis Library in 2026.1.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2025/12/10]::

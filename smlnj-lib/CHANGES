@@ -5,6 +5,14 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2025.3
 -------------------
 
+[2025-12-18]
+	Added experimental hashing infrastructure.  This includes the `HASHING`
+	signature that defines an interface to a mechanism for computing a
+	summary value by iterating over the bytes of a value, and a structure
+	`Hash` that computes hash keys.  This module is currently not described
+	in the library documentation, since it is still experimental and subject
+	to change.
+
 [2025-09-13]
         Added `LEB128` module, which implements packed encoding and decoding
         of integer and word types using the Little Endian Base 128 encoding.

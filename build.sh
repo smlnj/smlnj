@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Build and installation script for SML/NJ System.
@@ -195,10 +195,6 @@ vsay "$cmd: Installing version $VERSION."
 #
 SRCARCHIVEURL=https://smlnj.cs.uchicago.edu/dist/working/${VERSION}/
 vsay "$cmd: URL of source archive is $SRCARCHIVEURL."
-
-#
-# if necessary, fetch the boot files
-#
 
 ######################################################################
 ## UTILITY SCRIPTS

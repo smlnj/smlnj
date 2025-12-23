@@ -171,6 +171,7 @@ format-comb.sml
 graph-scc-sig.sml
 graph-scc-fn.sml
 hash.sml
+hashing-sig.sml
 hash-key-sig.sml
 hash-string.sml
 hash-set-fn.sml

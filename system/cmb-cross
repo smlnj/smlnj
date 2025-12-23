@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # usage: cmb-cross [ -z ] <TARGET>
@@ -34,11 +34,6 @@ TARGET=
 while [ "$#" != 0 ] ; do
   arg=$1; shift
   case $arg in
-  -32)
-    echo "$this: 32-bits not supported anymore"
-    usage
-    ;;
-  -64) ;;
   -z) MAKE_TARBALL=yes ;;
   -C*) CTL_FLAGS="$CTL_FLAGS $arg" ;;
   amd64-unix|arm64-unix)

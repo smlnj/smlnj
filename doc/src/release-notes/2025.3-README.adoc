@@ -1,11 +1,12 @@
 :version: 2025.3
-:date: @DATE@
+:date: December 22, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
-:legacy-pull-base: https://github.com/smlnj/legacy/pull/
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
+:wiki-base: https://github.com/smlnj/.github/wiki
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -33,13 +34,12 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release implements a new {wiki-base}/New-Binfile-Format[containerized
+binfile format] that is more extensible that the previous format.  This
+release also contains a number of bug fixes and library enhancements.
+This release also supports Linux on {pull-base}/331[Arm64 processors].
 
 == Details
-
-// **** details: include those sections that are relevant
-
-Linux Arm support (thanks poz)
 
 === Compiler
 
@@ -52,24 +52,16 @@ Linux Arm support (thanks poz)
 
 * We are now using **ASDL** to implement the pickling/unpickling of skeleton files.
 
-=== MLRISC
-
 === Runtime System
 
 * fixed various space leaks in the runtime system
     - the ASDL generated code did not correctly free sequences
     - the heap-export code was failing to free some meta-data
 
-=== Basis Library
-
 === SML/NJ Library
 
 * Added `LEB128` module, which implements packed encoding and decoding
   of integer and word types using the _Little Endian Base 128_ encoding.
-
-=== Successor ML
-
-=== ML-LPT
 
 === ASDL
 
@@ -77,13 +69,9 @@ Linux Arm support (thanks poz)
 
 * Fixed the generation of destructors for sequences
 
-=== Documentation
-
-=== Installation
-
 == Bugs
 
-Here is a list of the issues that are fixed (or closed) with this release.
+Here is a list of the issues and pull requests that are closed with this release.
 
 [.buglist,cols="^1,<15",strips="none",options="header"]
 |=======
@@ -101,7 +89,7 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/315[Run-time system fails to build using the `build.sh` script]
 | [.bugid]#316#
 | {issue-base}/316[asdlgen fails to build with gcc 15]
-| {.bugid}#317#
+| [.bugid]#317#
 | {issue-base}/317[Bug in type checking/inference with type abbreviations through transparent functor application]
 | [.bugid]#319#
 | {issue-base}/319[Nondeterministic import order]
@@ -109,14 +97,12 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {pull-base}/322[Fix heap export inconsistency caused by pair arena offsets]
 | [.bugid]#323#
 | {pull-base}/323[Fix memory leaks in the runtime system]
-| {.bugid}#324#
+| [.bugid]#324#
 | {issue-base}/324[The `Bind` exception is raised in the compiler when an undefined signature name is encountered]
-| {.bugid}#325#
+| [.bugid]#325#
 | {pull-base}/325[`setPosOut` should return an `outstream`]
-| {.bugid}#331#
+| [.bugid]#331#
 | {pull-base}/331[AArch64 Linux support]
-//| [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
@@ -142,10 +128,11 @@ tested some of them:
 | Architecture | Operating System | Status
 | AMD64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) | Tested
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) |
 | | Ubuntu 20.04.6 LTS | Tested
 | | Ubuntu 22.04.2 LTS | Tested
 | {nbsp} | |
@@ -155,7 +142,7 @@ tested some of them:
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
-| | macOS 26 (Sequoia) | Tested
+| | macOS 26 (Tahoe) | Tested
 | | Linux |
 | {nbsp} | |
 |=======
