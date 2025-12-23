@@ -42,7 +42,7 @@ legacy system.
 1. Set `VERSION` to the version of **SML/NJ** that you want to build;
    for example
    ``` bash
-   VERSION=2025.2
+   VERSION=2025.3
    ```
 
 2. Clone the repository
