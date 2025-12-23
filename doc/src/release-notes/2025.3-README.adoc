@@ -89,7 +89,7 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/315[Run-time system fails to build using the `build.sh` script]
 | [.bugid]#316#
 | {issue-base}/316[asdlgen fails to build with gcc 15]
-| {.bugid}#317#
+| [.bugid]#317#
 | {issue-base}/317[Bug in type checking/inference with type abbreviations through transparent functor application]
 | [.bugid]#319#
 | {issue-base}/319[Nondeterministic import order]
