@@ -5,9 +5,8 @@ currently reworking many components of the system, so it is not
 very stable.  For most uses, we recommend the
 [legacy version](https://github.com/smlnj/legacy) of the system.
 
-As of the 2025.1 release, this version is known to work on AMD64
-(a.k.a. x86-64) hardware running **Linux** or **macOS**, and on
-Arm64 (a.k.a. AArch64) hardware running **macOS**.
+As of the 2025.3 release, this version is known to work on AMD64
+(a.k.a. x86-64) or Arm64 (a.k.a. AArch64) hardware running **Linux** or **macOS**.
 
 ---
 
