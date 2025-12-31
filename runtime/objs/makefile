@@ -181,7 +181,7 @@ standalone.o:	$(KERN_DIR)/standalone.c \
 
 boot.o:		$(KERN_DIR)/boot.c \
 		$(INC_DIR)/ml-osdep.h $(INC_DIR)/cache-flush.h \
-		ml-sizes.h $(INC_DIR)/ml-base.h $(INC_DIR)/bin-file.h \
+		ml-sizes.h $(INC_DIR)/ml-base.h \
 		$(INC_DIR)/ml-objects.h $(INC_DIR)/ml-globals.h $(INC_DIR)/gc.h \
 		$(INC_DIR)/ml-limits.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) $(KERN_DIR)/boot.c
