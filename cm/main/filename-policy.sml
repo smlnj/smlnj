@@ -1,10 +1,13 @@
-(*
- * A type representing different choices for file naming conventions.
+(* filename-policy.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * A type representing different choices for file naming conventions.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 signature FILENAMEPOLICY = sig
 
     type policy
@@ -28,17 +31,23 @@ signature FILENAMEPOLICY = sig
     val cm_dir_arc : string
 end
 
-functor FilenamePolicyFn (val cmdir : string
-			  val versiondir: Version.t -> string
-			  val skeldir : string
-			  val guiddir : string
-			  val indexdir : string) :> FILENAMEPOLICY = struct
+functor FilenamePolicyFn (
 
-    type policy = { bin: SrcPath.file -> string,
-		    skel: SrcPath.file -> string,
-		    guid: SrcPath.file -> string,
-		    stable: SrcPath.file * Version.t option -> string,
-		    index: SrcPath.file -> string }
+    val cmdir : string
+    val versiondir: Version.t -> string
+    val skeldir : string
+    val guiddir : string
+    val indexdir : string
+
+  ) :> FILENAMEPOLICY = struct
+
+    type policy = {
+        bin: SrcPath.file -> string,
+        skel: SrcPath.file -> string,
+        guid: SrcPath.file -> string,
+        stable: SrcPath.file * Version.t option -> string,
+        index: SrcPath.file -> string
+      }
 
     type policyMaker = { arch: string, os: SMLofNJ.SysInfo.os_kind } -> policy
 
@@ -106,10 +115,9 @@ functor FilenamePolicyFn (val cmdir : string
     val cm_dir_arc = cmdir
 end
 
-structure FilenamePolicy =
-    FilenamePolicyFn (val cmdir = Option.getOpt
-				      (OS.Process.getEnv "CM_DIR_ARC", ".cm")
-		      val skeldir = "SKEL"
-		      val guiddir = "GUID"
-		      val indexdir = "INDEX"
-		      val versiondir = Version.toString)
+structure FilenamePolicy = FilenamePolicyFn (
+    val cmdir = Option.getOpt (OS.Process.getEnv "CM_DIR_ARC", ".cm")
+    val skeldir = "SKEL"
+    val guiddir = "GUID"
+    val indexdir = "INDEX"
+    val versiondir = Version.toString)

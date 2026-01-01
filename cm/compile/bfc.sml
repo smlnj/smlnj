@@ -17,11 +17,12 @@
 
 signature BFC = sig
     type bfc = Binfile.t
-    type stats = { env: int, data: int, code: int }
-    val new : unit -> { store: SmlInfo.info * { contents: bfc, stats: stats }
-			       -> unit,
-		        get: SmlInfo.info -> { contents: bfc, stats: stats } }
-    val getStable : { stable: string, offset: int, descr: string } -> bfc
+    type stats = { env : int, data : int, code : int }
+    val new : unit -> {
+            store : SmlInfo.info * { contents : bfc, stats : stats } -> unit,
+            get : SmlInfo.info -> { contents : bfc, stats : stats }
+          }
+    val getStable : { stable : string, offset : int, descr : string } -> bfc
   end
 
 functor BfcFn (val arch: string) :> BFC =
