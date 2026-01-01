@@ -32,23 +32,30 @@ signature STABILIZE = sig
 	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings ->
 	 GG.group option
 
-    val loadStable :
-	{ getGroup: groupgetter, anyerrors: bool ref } -> groupgetter
+    val loadStable : { getGroup: groupgetter, anyerrors: bool ref } -> groupgetter
 
     val stabilize : GP.info -> { group: GG.group, anyerrors: bool ref,
 				 rebindings: SrcPath.rebindings } ->
 		    GG.group option
-end
+  end
 
-functor StabilizeFn (val arch : string
-		     structure StabModmap : STAB_MODMAP
-		     val recomp : GP.info -> GG.group ->
-			 (SmlInfo.info -> { contents: Binfile.t, stats: Binfile.stats }) option
-		     val getII : SmlInfo.info -> IInfo.info) :> STABILIZE =
-struct
+functor StabilizeFn (
+
+    val arch : string
+
+    structure StabModmap : STAB_MODMAP
+
+    val recomp : GP.info
+        -> GG.group
+        -> (SmlInfo.info -> { contents: Binfile.t, stats: Binfile.stats }) option
+
+    val getII : SmlInfo.info -> IInfo.info
+
+  ) :> STABILIZE = struct
+
     type groupgetter =
-	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings ->
-	 GG.group option
+	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings
+	   -> GG.group option
 
     structure BF = Binfile
 

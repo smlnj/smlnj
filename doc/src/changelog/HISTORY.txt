@@ -102,7 +102,17 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2025/12/23]::
+Switch to using `Real.fmt StringCvt.EXACT` when printing real values
+in the REPL.  This change addresses Issue #335 (REPL should always
+print reals as valid SML real literals).  Note, we might want to
+eventually implement something more specialized, since values like
+`1.2` are rendered using scientific notation (_i.e._, `0.12E1`).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
 == Version 2025.3; 2025/12/22

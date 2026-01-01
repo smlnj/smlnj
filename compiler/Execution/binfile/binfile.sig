@@ -40,19 +40,19 @@ signature BINFILE = sig
     type stats = { env : int, data : int, code : int }
     type pickle = { pid : pid, pickle : Word8Vector.vector }
 
-    val staticPidOf    : t -> pid
-    val exportPidOf    : t -> pid option
-    val cmDataOf       : t -> pid list
+    val staticPidOf  : t -> pid
+    val exportPidOf  : t -> pid option
+    val cmDataOf     : t -> pid list
 
-    val literalsOf     : t -> CodeObj.literals
-    val codeOf         : t -> CodeObj.t
+    val literalsOf   : t -> CodeObj.literals
+    val codeOf       : t -> CodeObj.t
 
-    val senvPickleOf   : t -> pickle
+    val senvPickleOf : t -> pickle
 
-    val guidOf         : t -> string
+    val guidOf       : t -> string
 
   (* calculate the size in bytes occupied by some binfile contents *)
-    val size : { contents : t, nopickle: bool } -> int
+    val size : { contents : t, nopickle : bool } -> int
 
   (* create the abstract binfile contents *)
     val create : {
@@ -80,7 +80,7 @@ signature BINFILE = sig
     val write : {
 	    stream : BinIO.outstream,
 	    contents : t,
-            nopickle: bool
+            nopickle : bool
 	  } -> stats
 
   (* Given a dynamic environment, link the code object contained in

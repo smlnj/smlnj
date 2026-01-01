@@ -1,6 +1,6 @@
 (* names.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Some hard-wired file names used by the bootstrap compiler.
@@ -20,4 +20,4 @@ structure BtNames =
     val pidmap = "PIDMAP"
     val bin_infix = ".bin."
     val boot_infix = ".boot."
-end
+  end

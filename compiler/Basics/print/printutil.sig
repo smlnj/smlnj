@@ -28,7 +28,7 @@ sig
 
   val formatIntInf : IntInf.int -> string
       (* was "pr_intinf". Calls IntInf.toString but trims output according to
-       * Contro_Print.intinfDepth. *)
+       * Control_Print.intinfDepth. *)
 
   val listToString :  (string * string * string) -> ('a -> string)  -> 'a list -> string
       (* list (front,sep,back) prfn : formats a list as a string with froont and back

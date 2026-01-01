@@ -23,6 +23,7 @@ local
     type result = { stat: statenv }
     type ed = IInfo.info
 in
+
     signature TRAVERSE = sig
 
 	type bfc = Binfile.t
@@ -35,8 +36,7 @@ in
 	type notifier = GP.info -> SmlInfo.info -> unit
 
 	(* type of a function to store away the binfile contents *)
-	type bfcReceiver =
-	     SmlInfo.info * { contents: bfc, stats: stats } -> unit
+	type bfcReceiver = SmlInfo.info * { contents : bfc, stats : stats } -> unit
 
 	val getII : SmlInfo.info -> IInfo.info
 
@@ -45,10 +45,12 @@ in
 
 	val newSbnodeTraversal : unit -> DG.sbnode -> GP.info -> ed option
 
-	val newTraversal : notifier * bfcReceiver * GG.group ->
-	    { group: GP.info -> result option,
+	val newTraversal : notifier * bfcReceiver * GG.group -> {
+	      group: GP.info -> result option,
 	      allgroups: GP.info -> bool,
-	      exports: (GP.info -> result option) SymbolMap.map }
+	      exports: (GP.info -> result option) SymbolMap.map
+            }
+
     end
 
     functor CompilerTraverseFn (
@@ -253,7 +255,7 @@ in
 		fun fail () =
 		    if #keep_going (#param gp) then NONE else raise Abort
 
-		fun compile_here (stat, pids) = let
+		fun compileHere (stat, pids) = let
 		    fun perform_setup _ NONE = ()
 		      | perform_setup what (SOME code) =
 			(Say.vsay ["[setup (", what, "): ", code, "]\n"];
@@ -363,10 +365,9 @@ in
 				    * else "falls through" and will be
 				    * treated at top level. *)
 				   => fail ()
-		end (* compile_here *)
+		end (* compileHere *)
 		fun notlocal () = let
-		    val _ = youngest := TStamp.max (!youngest,
-						    SmlInfo.lastseen i)
+		    val _ = youngest := TStamp.max (!youngest, SmlInfo.lastseen i)
 		    val urgency = getUrgency i
 		    (* Ok, it is not in the local state, so we first have
 		     * to traverse all children before we can proceed... *)
@@ -438,7 +439,7 @@ in
 				    Concur.noTasks ()
 				fun compile_again () =
 				    (Say.vsay ["[compiling ", descr, "]\n"];
-				     compile_here (stat, pids))
+				     compileHere (stat, pids))
 				fun compileThere' p =
 				    not (bottleneck ()) andalso
 				    compileThere p
@@ -588,4 +589,5 @@ in
 
 	fun getII i = memo2ii (valOf (SmlInfoMap.find (!globalstate, i)))
     end
-end
+
+end (* local *)
