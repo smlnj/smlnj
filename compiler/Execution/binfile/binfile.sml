@@ -230,7 +230,6 @@ structure Binfile :> BINFILE =
           val cmData = readSection (BFIO.SectId.pids, getPidsSection)
           val guid = readSection (BFIO.SectId.guid, getGuidSection)
           val literals = readSection (BFIO.SectId.literals, getLiteralsSection)
-(* FIXME: check if CODE or CFGP section is present *)
           val code = if BFIO.In.hasSection(bf, BFIO.SectId.code)
                   then readSection (BFIO.SectId.code, getCodeSection)
                 else if BFIO.In.hasSection(bf, BFIO.SectId.cfkPickle)
@@ -255,7 +254,7 @@ structure Binfile :> BINFILE =
 	      }
 	  } end
 
-    (* determine if a binfile has the old format. *)
+    (* determine if a binfile is the new format. *)
     fun isNewFormat (inS : BinIO.StreamIO.instream) = let
           val (bv, _) = BinIO.StreamIO.inputN (inS, 12)
           in
