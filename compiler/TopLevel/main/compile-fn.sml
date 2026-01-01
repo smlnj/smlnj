@@ -115,10 +115,11 @@ functor CompileFn (
 
     (** take the flint code and generate the machine binary code *)
     fun codegen { flint, imports, sourceName, native } = let
-        (* optimized FLINT code *)
+          (* optimized FLINT code *)
           val flint = FLINTOpt.optimize (flint, sourceName)
-	(* from optimized FLINT code, generate the CFG IR.  *)
+	  (* from optimized FLINT code, generate the CFG IR.  *)
 	  val {lits, code} = M.compileToCFG {prog = flint, source = sourceName}
+          (* generate either native machine code or a CFG pickle *)
           val code = if native
                 then CodeObj.NativeCode(M.compileToNative code)
                 else CodeObj.CFGPickle(CFGPickler.toBytes code)

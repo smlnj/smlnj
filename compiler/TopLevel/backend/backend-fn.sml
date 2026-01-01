@@ -12,6 +12,7 @@ functor BackendFn (
 
   ) : BACKEND = struct
 
+    (* interactive compiler *)
     structure Interact = Interact (
         EvalLoopFn (
           CompileFn (
@@ -25,6 +26,7 @@ functor BackendFn (
                 type hash = unit
                 type pid = PersStamps.persstamp
                 type guid = unit
+
                 local
                   val topCount = ref 0
                 in
@@ -47,6 +49,7 @@ functor BackendFn (
                 end (* local *)
             end)))
 
+    (* batch (aka bootstrap) compiler *)
     structure Compile = CompileFn (
         val cproto_conv = cproto_conv
         structure M = M
