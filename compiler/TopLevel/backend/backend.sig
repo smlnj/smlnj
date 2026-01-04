@@ -1,6 +1,6 @@
 (* backend.sig
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -10,8 +10,7 @@ signature BACKEND =
     structure Compile : COMPILE
     structure Interact : INTERACT
 
-  (* the following are used by CM *)
+    (* the following is used by CM *)
     val architecture : string
-    val abi_variant : string option
 
   end

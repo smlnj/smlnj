@@ -20,8 +20,7 @@ functor BootstrapCompileFn (
 
     structure SSV = SpecificSymValFn (
         val arch = Backend.architecture
-        val os = os
-        val abi_variant = Backend.abi_variant)
+        val os = os)
     structure GG = GroupGraph
     structure P = OS.Path
     structure F = OS.FileSys

@@ -23,8 +23,7 @@ signature CODE_GENERATOR =
     (* compile CFG IR to native code *)
     val compileToNative : CFG.comp_unit -> CodeObj.native_code
 
-  (* the following are used by CM *)
+    (* the following is used by CM *)
     val architecture : string
-    val abi_variant : string option
 
   end (* CODE_GENERATOR *)

@@ -19,7 +19,6 @@ functor CodeGeneratorFn (MachSpec : MACH_SPEC) : CODE_GENERATOR =
       }
 
     val architecture = MachSpec.architecture
-    val abi_variant = NONE (* TODO: we should be able to get rid of this *)
 
     fun phase x = Stats.doPhase (Stats.makePhase x)
 

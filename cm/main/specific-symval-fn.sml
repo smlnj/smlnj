@@ -1,6 +1,6 @@
 (* specific-symval-fn.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Building a host/OS-specific environments for CM "preprocessor" variables.
@@ -10,9 +10,8 @@
 
 functor SpecificSymValFn (
 
-    val arch: string
-    val os: SMLofNJ.SysInfo.os_kind
-    val abi_variant: string option
+    val arch : string
+    val os : SMLofNJ.SysInfo.os_kind
 
   ) : sig
 
@@ -29,15 +28,10 @@ functor SpecificSymValFn (
              | arch => ErrorMsg.impossible ("unknown architecture: " ^ arch)
           (* end case *))
 
-    val extra_syms = (case abi_variant
-           of NONE => []
-            | SOME s => ["ABI_" ^ s]
-          (* end case *))
-
     val env0 = SymVal.default {
             arch = arch, big = big, size = size, os = os,
             version = #version_id SMLNJVersion.version,
-            extra_syms = extra_syms
+            extra_syms = []
           }
 
     val er = ref env0
