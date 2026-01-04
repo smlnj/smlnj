@@ -59,6 +59,8 @@ in
         structure StabModmap : STAB_MODMAP
         val useStream : TextIO.instream -> unit
         val compileThere : SrcPath.file -> bool
+        (* when true, generate native code into the binfiles (instead of CFG pickles) *)
+        val native : bool
 
       ) :> TRAVERSE = struct
 
@@ -332,7 +334,7 @@ in
                                     } = C.compile {
                                       source = source, ast = ast, statenv = stat,
                                       compInfo = cinfo, checkErr = check,
-                                      guid = guid, native = true
+                                      guid = guid, native = native
                                     }
 				val bfc = BF.create {
                                         version = version,

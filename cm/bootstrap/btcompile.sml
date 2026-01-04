@@ -37,7 +37,9 @@ functor BootstrapCompileFn (
         structure Backend = Backend
         structure StabModmap = StabModmap
         val useStream = useStream
-        val compileThere = Servers.compile o SrcPath.encode)
+        val compileThere = Servers.compile o SrcPath.encode
+        (* generate CFG pickles into binfile *)
+        val native = true) (* FIXME *)
 
     (* instantiate the binfile cache *)
     structure BFC = BfcFn (val arch = Backend.architecture)

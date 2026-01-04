@@ -46,7 +46,9 @@ functor LinkCM (structure HostBackend : BACKEND) =
           structure Backend = HostBackend
           structure StabModmap = StabModmap
           fun useStream s = !useStreamHook s
-          val compileThere = Servers.compile o SrcPath.encode)
+          val compileThere = Servers.compile o SrcPath.encode
+          (* generate native machine code into binfile *)
+          val native = true)
 
       structure BFC = BfcFn (val arch = HostBackend.architecture)
 
