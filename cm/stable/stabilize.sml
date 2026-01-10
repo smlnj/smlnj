@@ -603,7 +603,7 @@ functor StabilizeFn (
             List.app (fn s => error["    ", s, "\n"]) (SMLofNJ.exnHistory exn);
             NONE)
         | IO.Io _ => NONE
-    end
+    end (* loadStable *)
 
     fun stabilize _ { group = GG.ERRORGROUP, ... } = NONE
       | stabilize gp { group = g as GG.GROUP grec, anyerrors, rebindings } =

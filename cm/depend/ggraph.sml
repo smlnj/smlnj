@@ -1,36 +1,41 @@
-(*
+(* ggraph.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
  * Internal data structure representing a CM dependency graph.
  * (coarse-grain: groups)
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
- *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
-structure GroupGraph = struct
+
+structure GroupGraph =
+  struct
 
     type privileges = StringSet.set
 
-    datatype libkind =
-	STABLE of unit -> unit		(* pickle dropper *)
-      | DEVELOPED of { wrapped: privileges, subgroups: subgrouplist }
+    datatype libkind
+      = STABLE of unit -> unit		(* pickle dropper *)
+      | DEVELOPED of { wrapped : privileges, subgroups : subgrouplist }
 
-    and kind =
-	NOLIB of { owner: SrcPath.file option,
-		   subgroups: subgrouplist }
-      | LIB of { version: Version.t option, kind: libkind }
+    and kind
+      = NOLIB of { owner : SrcPath.file option, subgroups : subgrouplist }
+      | LIB of { version : Version.t option, kind : libkind }
 
     (* the "required" field includes everything:
      *   1. privileges required by subgroups
      *   2. newly required privileges
      *   3. privileges that would be wrapped once the group is stabilized
      *)
-    and group =
-	GROUP of { exports: DependencyGraph.impexp SymbolMap.map,
-		   kind: kind,
-		   required: privileges,
-		   grouppath: SrcPath.file,
-		   sources: { class: string, derived: bool } SrcPathMap.map,
-		   sublibs: subgrouplist }
+    and group
+      = GROUP of {
+          exports : DependencyGraph.impexp SymbolMap.map,
+          kind : kind,
+          required : privileges,
+          grouppath : SrcPath.file,
+          sources : { class: string, derived: bool } SrcPathMap.map,
+          sublibs : subgrouplist
+        }
       | ERRORGROUP
 
     withtype subgrouplist =
@@ -42,4 +47,5 @@ structure GroupGraph = struct
      * path that was used back *then* to refer to the group.  But for
      * the purpose of stabilization we must know the abstract path
      * that was used *this* time. *)
-end
+
+  end (* GroupGraph *)

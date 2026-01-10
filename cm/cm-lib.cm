@@ -52,7 +52,7 @@ is
 	semant/semant.sml
 
 	(* dependency graphs *)
-	depend/graph.sml
+	depend/dgraph.sml
 	depend/build.sml
 	depend/da-env.sml
 	depend/se2dae.sml
