@@ -106,6 +106,13 @@ Here is an update to the entry
 
 //--------------------------------------------------------------------
 [2025/12/23]::
+Added `Unsafe.Int` structure to provide typed access to integer addition
+and subtraction without overflow checking.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2025/12/23]::
 Switch to using `Real.fmt StringCvt.EXACT` when printing real values
 in the REPL.  This change addresses Issue #335 (REPL should always
 print reals as valid SML real literals).  Note, we might want to
