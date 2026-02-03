@@ -79,6 +79,8 @@ associated with them (or were bug fixes ported from the legacy
 repository):
 
 // ***** include a list of unnumbered/legacy bugs here *****
+* Merged {legacy-issue-base}/374[Legacy pull request 374 (`OS.FileSys.tmpName`
+  should support `TMPDIR`)].
 
 == Supported systems
 
@@ -90,10 +92,11 @@ tested some of them:
 | Architecture | Operating System | Status
 | AMD64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) | Tested
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) |
 | | Ubuntu 20.04.6 LTS | Tested
 | | Ubuntu 22.04.2 LTS | Tested
 | {nbsp} | |
@@ -103,5 +106,7 @@ tested some of them:
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) | Tested
+| | Linux |
 | {nbsp} | |
 |=======
