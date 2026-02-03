@@ -79,8 +79,8 @@ cd $DISTROOT
 
 # remove stuff that we do not need
 #
-rm -rf .gitignore .gitmodules .github package
-rm -rf runtime/llvm*/.gitignore runtime/llvm18/.github
+rm -rf .git .gitignore .gitmodules .github package
+rm -rf runtime/llvm*/.git runtime/llvm*/.gitignore runtime/llvm*/.github
 
 # get the version from the source code
 #
