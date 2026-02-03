@@ -58,6 +58,13 @@ to_upper() {
   echo $@ | tr "[:lower:]" "[:upper:]"
 }
 
+make_tarball() {
+  if [ x"$OPSYS" = xdarwin ] ; then
+     TARFLAGS="--no-mac-metadata $TARFLAGS"
+  fi
+  tar $TARFLAGS -czf "$1" "$2" || exit 1
+}
+
 # check linking command
 LINK=$ROOT/bin/.link-sml
 if [ ! -x $LINK ] ; then
@@ -168,5 +175,5 @@ else
 fi
 
 if [ $MAKE_TARBALL = "yes" ] ; then
-  tar -cf - sml.boot.${TARGET} | gzip > boot.$TARGET.tgz
+  make_tarball boot.$TARGET.tgz sml.boot.${TARGET}
 fi

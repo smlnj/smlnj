@@ -80,6 +80,13 @@ move() {
   fi
 }
 
+make_tarball() {
+  if [ x"$OPSYS" = xdarwin ] ; then
+     TARFLAGS="--no-mac-metadata $TARFLAGS"
+  fi
+  tar $TARFLAGS -czf "$1" "$2" || exit 1
+}
+
 if [ -f "$ROOT/bin/.arch-n-opsys" ]; then
   ARCH_N_OPSYS=`"$ROOT/bin/.arch-n-opsys"`
   if [ "$?" = "0" ]; then
@@ -98,7 +105,7 @@ if [ x"$INSTALL_BOOTFILES" = xyes ] ; then
       echo "$this: removing existing boot-file archive"
       rm -f "$BOOTARCHIVE"
     fi
-    tar -czf "$BOOTARCHIVE" $BOOTFILES
+    make_tarball "$BOOTARCHIVE" $BOOTFILES
   else
     echo "$this: The directory $BOOTFILES is missing."
     exit 1
