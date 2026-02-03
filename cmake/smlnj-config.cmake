@@ -120,6 +120,12 @@ block(SCOPE_FOR POLICIES)
       endif()
     endif()
 
+    # maximum path length
+    check_symbol_exists (PATH_MAX "limits.h" HAVE_PATH_MAX)
+    if ( NOT HAVE_PATH_MAX )
+      check_symbol_exists (_POSIX_PATH_MAX "limits.h" HAVE_POSIX_PATH_MAX)
+    endif()
+
     # different mechanisms for simple alarms
     check_symbol_exists (ualarm "unistd.h" HAVE_UALARM)
 
