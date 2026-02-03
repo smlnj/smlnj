@@ -1,6 +1,6 @@
 /*! \file ml-unixdep.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This file contains O.S. dependent paths, definitions and feature flags for
@@ -32,7 +32,7 @@
  *   HAVE_STRERROR		if the system provides the ISO C strerror function.
  *   STAT_HAS_TIMESPEC		if the time fields in the "struct stat" type have
  *				type "struct timespec".
- *   HAVE_NANOSLEEP              if the system provides the nanosleep(2) function.
+ *   HAVE_NANOSLEEP             if the system provides the nanosleep(2) function.
  *
  * Note that only one of the following sets of symbols should be defined:
  *   { HAVE_MMAP, HAVE_ANON_MMAP }
