@@ -24,10 +24,10 @@
 
 /* the new on-disk file header */
 typedef struct {
-    char        kind[8];        /* file kind (either "BinFile " or "StabArch" */
+    char        kind[8];        /* file kind (either "BinFile " or "StabArch") */
     Unsigned32_t version;       /* file version (little endian) */
     char        smlnjVersion[16]; /* SML/NJ compiler version */
-    Unsigned32_t numSects;      /* size of the section table */
+    Unsigned32_t numSects;      /* number of entries in the section table */
 } binfile_hdr_t;
 
 /* the on-disk section descriptor layout */
