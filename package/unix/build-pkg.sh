@@ -1,9 +1,13 @@
 #!/bin/sh
 #
-# Script to build a single tarball for Unix/Linux systems on x86-64
+# Script to build a single tarball for Unix/Linux systems
 #
 # usage:
-#	build-pkg.sh <version>
+#	build-pkg.sh [ options ] [ <version> ]
+#
+# This script builds a self-contained compressed tarfile that can be used
+# to build the development version of SML/NJ.  The tarfile contains the
+# boot files needed to bootstrap the compiler.
 #
 
 CMD="build-pkg.sh"
@@ -12,7 +16,7 @@ DISTROOT=smlnj
 ARCH=""
 VERSION=none
 VERBOSE=""
-CLEANUP=no
+CLEANUP=yes
 
 ROOT=$(pwd)
 
@@ -27,8 +31,9 @@ usage() {
   echo "usage: build-pkg.sh [ options ] [ <version> ]"
   echo "  options:"
   echo "    -h            -- print this message"
-  echo "    -verbose      -- enable messages that document the packaging process"
   echo "    -arch <arch>  -- specify architecture for boot files"
+  echo "    -verbose      -- enable messages that document the packaging process"
+  echo "    -no-clean     -- do not remove the source tree after packaging"
   exit $1
 }
 
@@ -48,6 +53,7 @@ make_tarball() {
   if [ x"$OPSYS" = xdarwin ] ; then
      TARFLAGS="--no-mac-metadata $TARFLAGS"
   fi
+  vsay "tar $TARFLAGS -czf \"$1\" \"$2\""
   tar $TARFLAGS -czf "$1" "$2" || exit 1
 }
 
@@ -57,7 +63,6 @@ while [ "$#" != "0" ] ; do
   arg=$1; shift
   case $arg in
     -h) usage 0 ;;
-    -verbose) VERBOSE="-verbose" ;;
     -arch)
       if [ "$#" = "0" ] ; then
         usage 1
@@ -69,6 +74,8 @@ while [ "$#" != "0" ] ; do
       esac
       shift
       ;;
+    -no-clean) CLEANUP="no" ;;
+    -verbose) VERBOSE="-verbose" ;;
     -*) usage 1 ;;
     *) VERSION=$arg ; break ;;
   esac
