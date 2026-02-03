@@ -1,5 +1,26 @@
 (* source.sig
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ
+ *
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * NOTES:
+ *
+ * The fileOpened field contains the name of the file that was opened to
+ * produce a particular inputSource.  It is used to derive related
+ * file names (for example, see CompileFn.codeopt and CompileFn.parse
+ * in build/compile.sml.). It is also used when we need to access the content
+ * of the sourcefile for error messages (getContent).  This assumes that the
+ * current directory remains fixed if the file name is a relative path.
+ *
+ * newSource takes as argument a file name, the corresponding instream of the
+ * opened file, a boolean flag indicating whether the source is interactive
+ * (i.e., stdIn), and a prettyPrint device. (Note: Formerly newSource also took
+ * an additional int argument representing the initial line number, but this
+ * argument was always 1).
+ *
+ * getContent only works if the source is a single file (no #line directives
+ * changing the source file), and it won't work for an interactive source.
+ * [This needs to be fixed.]
  *)
 
 signature SOURCE =
@@ -32,24 +53,3 @@ signature SOURCE =
     (* returns contents of fileOpened field *)
 
 end (* signature SOURCE *)
-
-(*
-The fileOpened field contains the name of the file that was opened to
-produce a particular inputSource.  It is used to derive related
-file names (for example, see CompileF.codeopt and CompileF.parse
-in build/compile.sml.). It is also used when we need to access the content
-of the sourcefile for error messages (getContent).  This assumes that the
-current directory remains fixed if the file name is a relative path.
-
-newSource takes as argument a file name, the corresponding instream of the
-opened file, a boolean flag indicating whether the source is interactive
-(i.e. stdIn), and a prettyPrint device. (Note: Formerly newSource also took
-an additional int argument representing the initial line number, but this
-argument was always 1).
-
-getContent only works if the source is a single file (no #line directives
-changing the source file), and it won't work for an interactive source.
-[This needs to be fixed.]
-
-*)
-

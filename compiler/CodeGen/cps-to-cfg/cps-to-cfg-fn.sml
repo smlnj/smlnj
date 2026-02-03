@@ -9,9 +9,10 @@
 functor CPStoCFGFn (MS : MACH_SPEC) : sig
 
     val translate : {
-	    source : string,
-	    clusters : Cluster.cluster list,
-	    maxAlloc : CPS.lvar -> int
+	    source : string,                    (* name of source file *)
+	    clusters : Cluster.cluster list,    (* 1st-order CPS *)
+	    maxAlloc : CPS.lvar -> int,         (* per-function alloc info *)
+            normalize : bool                    (* should CFG be normalized? *)
 	  } -> CFG.comp_unit
 
   end = struct
@@ -541,19 +542,24 @@ C.NUMt{sz=sz}
                                 pureOp (rator, sz, [genV a, untagUnsigned b])
                           in
                             case (oper, vs)
-                             of (P.NEG, [v]) => pureOp (TP.SUB, sz, [zero sz, genV v])
-                              | (P.NOTB, [v]) => pureOp (TP.XORB, sz, [genV v, allOnes sz])
-                              | (P.ADD, [v1, v2]) => binOp (TP.ADD, v1, v2)
+                             of (P.ADD, [v1, v2]) => binOp (TP.ADD, v1, v2)
                               | (P.SUB, [v1, v2]) => binOp (TP.SUB, v1, v2)
                               | (P.MUL, [v1, v2]) => binOp (TP.MUL, v1, v2)
                               | (P.QUOT, [v1, v2]) => binOp (TP.UDIV, v1, v2)
                               | (P.REM, [v1, v2]) => binOp (TP.UREM, v1, v2)
+                              | (P.NEG, [v]) => pureOp (TP.SUB, sz, [zero sz, genV v])
                               | (P.LSHIFT, [v1, v2]) => shiftOp (TP.SHL, v1, v2)
                               | (P.RSHIFT, [v1, v2]) => shiftOp (TP.ASHR, v1, v2)
                               | (P.RSHIFTL, [v1, v2]) => shiftOp (TP.LSHR, v1, v2)
                               | (P.ORB, [v1, v2]) => binOp (TP.ORB, v1, v2)
                               | (P.XORB, [v1, v2]) => binOp (TP.XORB, v1, v2)
                               | (P.ANDB, [v1, v2]) => binOp (TP.ANDB, v1, v2)
+                              | (P.NOTB, [v]) => pureOp (TP.XORB, sz, [genV v, allOnes sz])
+                              | (P.CNTPOP, [v]) => pureOp (TP.CNTPOP, sz, [genV v])
+                              | (P.CNTLZ, [v]) => pureOp (TP.CNTLZ, sz, [genV v])
+                              | (P.CNTTZ, [v]) => pureOp (TP.CNTTZ, sz, [genV v])
+                              | (P.ROTL, [v1, v2]) => shiftOp (TP.ROTL, v1, v2)
+                              | (P.ROTR, [v1, v2]) => shiftOp (TP.ROTR, v1, v2)
                               | _ => error ["genPure: ", PPCps.pureToString p]
                             (* end case *)
                           end
@@ -821,7 +827,7 @@ C.NUMt{sz=sz}
 	  end
 
   (* translate a CPS compilation unit into the CFG IR *)
-    fun translate {source, clusters, maxAlloc} = let
+    fun translate {source, clusters, maxAlloc, normalize} = let
 	  val gInfo = CPSInfo.analyze clusters
 	(* convert a single cluster of CPS functions to a CFG cluster. *)
 	  fun doCluster (entry :: rest) = let
@@ -836,11 +842,10 @@ C.NUMt{sz=sz}
 	    | doCluster _ = error ["empty cluster"]
 	  val entry::rest = List.map doCluster clusters
 	  val gcClusters = CPSInfo.getGCCode gInfo
-	  in {
-	    srcFile = source,
-	    entry = entry,
-	    fns = rest @ gcClusters
-	  } end
+          val cu = { srcFile = source, entry = entry, fns = rest @ gcClusters }
+	  in
+            if normalize then NormalizeCFG.normalize cu else cu
+          end
 handle ex => (
 Control.Print.say "#### translate:\n";
 ignore (Cluster.print clusters);

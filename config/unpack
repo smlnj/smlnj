@@ -2,7 +2,7 @@
 #
 # NOTE: this script is not really necessary anymore, since the sources are
 # fetched by cloning the GitHub repository.  We are keeping it for now because
-# the SML installer (`system/smlnj/installer`) in 2021.1 uses it.
+# several scripts use it to fetch the boot files.
 #
 # This script was extracted from install.sh and deals with the fetching
 # and unpacking of source/bootfile trees.  The first argument must be
@@ -204,6 +204,7 @@ fetch_n_unpack() {
     fi
 }
 
+# unpack <name> <dir> <component> <tarfile>
 #
 # The main "unpack" driver function that invokes the above helper.
 #
@@ -230,9 +231,11 @@ do
 #       runtime)
 #         unpack run-time "$ROOT"/base runtime runtime
 # 	;;
-#       boot.*)
-#         unpack bootfiles "$ROOT" sml.$i $i
-# 	;;
+      boot.*)
+        # for the boot files, we just fetch the tarball
+        urlgetter
+        $URLGETTER bootfiles $i "$SRCARCHIVEURL"
+ 	;;
       compiler)
 	unpack compiler "$ROOT" compiler compiler
 	;;

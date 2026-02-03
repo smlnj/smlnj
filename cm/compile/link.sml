@@ -1,11 +1,14 @@
-(*
+(* link.sml
+ *
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
  * Link traversals.
  *   - manages shared state
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
- *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 local
     structure GP = GeneralParams
     structure DG = DependencyGraph
@@ -19,7 +22,7 @@ local
 in
     signature LINK = sig
 
-	type bfc
+	type bfc = Binfile.t
 	type bfcGetter = SmlInfo.info -> bfc
 
 	(* Evict value from cache if it exists *)
@@ -42,17 +45,19 @@ in
 	val unshare : SrcPath.file -> unit
     end
 
-    functor LinkFn (structure BFC : BFC where type bfc = Binfile.bfContents
-		    val system_values : posmap SrcPathMap.map ref) :>
-	    LINK where type bfc = BFC.bfc =
-    struct
+    functor LinkFn (
+
+        structure BFC : BFC
+        val systemValues : posmap SrcPathMap.map ref
+
+      ) :> LINK = struct
 
 	exception Link of exn
 
 	structure BF = Binfile
 	structure EX = Execute
 
-	type bfc = BF.bfContents
+	type bfc = BF.t
 	type bfcGetter = SmlInfo.info -> bfc
 
 	type bfun = GP.info -> env -> env
@@ -187,8 +192,8 @@ in
 			    val { exports, grouppath = sgp, ... } = sg
 			    val posmap =
 				let val (m', pm) =
-					SrcPathMap.remove (!system_values, sgp)
-				in system_values := m'; pm
+					SrcPathMap.remove (!systemValues, sgp)
+				in systemValues := m'; pm
 				end handle LibBase.NotFound => IntMap.empty
 
 			    val localmap = ref StableMap.empty
@@ -390,7 +395,7 @@ in
 	fun unshare group =
 	    let fun other (i, _) =
 		    SrcPath.compare (BinInfo.group i, group) <> EQUAL
-		val sv = system_values
+		val sv = systemValues
 	    in
 		stablemap := StableMap.filteri other (!stablemap);
 		(sv := #1 (SrcPathMap.remove (!sv, group)))

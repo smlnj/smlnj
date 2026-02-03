@@ -136,6 +136,26 @@ structure TaggedArith : sig
 		in
 		  pureOp (P.XORB, ity, [comp v, num mask])
 		end
+            | (CNTPOP, [v]) =>
+                (* untag argument and then count ones *)
+                pureOp (P.CNTPOP, ity, [untagUInt (comp v)])
+            | (CNTLZ, [v]) =>
+                (* the tagging does not affect the leading-zero count; plus,
+                 * we know that the argument is not zero!
+                 *)
+                pureOp (P.CNTLZ, ity, [comp v])
+            | (CNTTZ, [v]) =>
+                (* rotate the argument right by one; this puts the tag bit into
+                 * the high-order bit, so the count for zero will return the correct
+                 * answer (e.g., Word63.countLeadingZeros 0w0 = 0w63
+                 *)
+                pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])])
+            | (ROTL, [v1, v2]) =>
+                (* untag the operands, do the rotations, and tag the result *)
+                tag(pureOp(P.ROTL, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
+            | (ROTR, [v1, v2]) =>
+                (* untag the operands, do the rotations, and tag the result *)
+                tag(pureOp(P.ROTR, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 

@@ -1,10 +1,13 @@
-(*
- * Compilation traversals.
+(* traverse.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * Compilation traversals.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 local
     structure GP = GeneralParams
     structure DG = DependencyGraph
@@ -20,10 +23,11 @@ local
     type result = { stat: statenv }
     type ed = IInfo.info
 in
-    signature COMPILE = sig
 
-	type bfc
-	type stats
+    signature TRAVERSE = sig
+
+	type bfc = Binfile.t
+	type stats = Binfile.stats
 
 	(* reset internal persistent state *)
 	val reset : unit -> unit
@@ -32,8 +36,7 @@ in
 	type notifier = GP.info -> SmlInfo.info -> unit
 
 	(* type of a function to store away the binfile contents *)
-	type bfcReceiver =
-	     SmlInfo.info * { contents: bfc, stats: stats } -> unit
+	type bfcReceiver = SmlInfo.info * { contents : bfc, stats : stats } -> unit
 
 	val getII : SmlInfo.info -> IInfo.info
 
@@ -42,26 +45,29 @@ in
 
 	val newSbnodeTraversal : unit -> DG.sbnode -> GP.info -> ed option
 
-	val newTraversal : notifier * bfcReceiver * GG.group ->
-	    { group: GP.info -> result option,
+	val newTraversal : notifier * bfcReceiver * GG.group -> {
+	      group: GP.info -> result option,
 	      allgroups: GP.info -> bool,
-	      exports: (GP.info -> result option) SymbolMap.map }
+	      exports: (GP.info -> result option) SymbolMap.map
+            }
+
     end
 
-    functor CompileFn (structure Backend : BACKEND
-		       structure StabModmap : STAB_MODMAP
-		       val useStream : TextIO.instream -> unit
-		       val compile_there : SrcPath.file -> bool) :>
-	COMPILE where type bfc = Binfile.bfContents
-	        where type stats = Binfile.stats =
-    struct
+    functor CompilerTraverseFn (
+
+        structure Backend : BACKEND
+        structure StabModmap : STAB_MODMAP
+        val useStream : TextIO.instream -> unit
+        val compileThere : SrcPath.file -> bool
+
+      ) :> TRAVERSE = struct
 
 	type notifier = GP.info -> SmlInfo.info -> unit
 
 	structure BF = Binfile
 	structure C = Backend.Compile
 
-	type bfc = BF.bfContents
+	type bfc = BF.t
 	type stats = BF.stats
 
 	type bfcReceiver =
@@ -249,7 +255,7 @@ in
 		fun fail () =
 		    if #keep_going (#param gp) then NONE else raise Abort
 
-		fun compile_here (stat, pids) = let
+		fun compileHere (stat, pids) = let
 		    fun perform_setup _ NONE = ()
 		      | perform_setup what (SOME code) =
 			(Say.vsay ["[setup (", what, "): ", code, "]\n"];
@@ -320,13 +326,14 @@ in
 				val cinfo = C.mkCompInfo { source = source,
 							   transform = fn x => x }
 				val guid = SmlInfo.guid i
-				val { csegments, newstatenv, exportPid,
+				val { lits, code, newstatenv, exportPid,
 				      staticPid, imports, pickle = senvP,
-				      ... } =
-				    C.compile { source = source, ast = ast,
-						statenv = stat,
-						compInfo = cinfo, checkErr = check,
-						guid = guid }
+				      ...
+                                    } = C.compile {
+                                      source = source, ast = ast, statenv = stat,
+                                      compInfo = cinfo, checkErr = check,
+                                      guid = guid, native = true
+                                    }
 				val bfc = BF.create {
                                         version = version,
 				        imports = imports,
@@ -334,15 +341,14 @@ in
                                         cmData = cmData,
                                         senv = { pickle = senvP, pid = staticPid },
                                         guid = guid,
-                                        csegments = csegments
+                                        lits = lits,
+                                        code = code
                                       }
 				val memo = bfc2memo (bfc, SmlInfo.lastseen i, stat)
                                 in
                                   perform_setup "post" post;
                                   reset ();
-                                  storeBFC' (gp, i,
-                                             { contents = bfc,
-                                               stats = save bfc });
+                                  storeBFC' (gp, i, { contents = bfc, stats = save bfc });
                                   SOME memo
                                 end
 			in
@@ -359,10 +365,9 @@ in
 				    * else "falls through" and will be
 				    * treated at top level. *)
 				   => fail ()
-		end (* compile_here *)
+		end (* compileHere *)
 		fun notlocal () = let
-		    val _ = youngest := TStamp.max (!youngest,
-						    SmlInfo.lastseen i)
+		    val _ = youngest := TStamp.max (!youngest, SmlInfo.lastseen i)
 		    val urgency = getUrgency i
 		    (* Ok, it is not in the local state, so we first have
 		     * to traverse all children before we can proceed... *)
@@ -398,8 +403,9 @@ in
 				    fun reader s = let
 					val mm0 = StabModmap.get ()
 					val m = GenModIdMap.mkMap' (stat, mm0)
-					val { contents, stats } =
-					    BF.read { stream = s, version = version }
+					val { contents, stats } = BF.read {
+                                                stream = s, offset = 0, version = version
+                                              }
 				    in
 					SmlInfo.setguid (i, BF.guidOf contents);
 					(contents, ts, stats)
@@ -433,10 +439,10 @@ in
 				    Concur.noTasks ()
 				fun compile_again () =
 				    (Say.vsay ["[compiling ", descr, "]\n"];
-				     compile_here (stat, pids))
-				fun compile_there' p =
+				     compileHere (stat, pids))
+				fun compileThere' p =
 				    not (bottleneck ()) andalso
-				    compile_there p
+				    compileThere p
 				fun compile () = let
 				    val sp = SmlInfo.sourcepath i
 				    fun sy () = let
@@ -451,7 +457,7 @@ in
 				in
 				    OS.FileSys.remove binname handle _ => ();
 				    youngest := TStamp.NOTSTAMP;
-				    if compile_there' sp then
+				    if compileThere' sp then
 					tryload (sy, received, compile_again)
 				    else compile_again ()
 				end
@@ -583,4 +589,5 @@ in
 
 	fun getII i = memo2ii (valOf (SmlInfoMap.find (!globalstate, i)))
     end
-end
+
+end (* local *)

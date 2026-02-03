@@ -1,14 +1,12 @@
-// A template for creating release notes for a version
-//
-:version: @VERSION@
+:version: 2026.1
 :date: @DATE@
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
-:legacy-pull-base: https://github.com/smlnj/legacy/pull
 :wiki-base: https://github.com/smlnj/.github/wiki
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
 :stem: latexmath
 :source-highlighter: pygments
 :stylesheet: release-notes.css
@@ -70,6 +68,8 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
+| [.bugid]#335#
+| {issue-base}/225[REPL should always print reals as valid SML real literals]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
@@ -79,6 +79,8 @@ associated with them (or were bug fixes ported from the legacy
 repository):
 
 // ***** include a list of unnumbered/legacy bugs here *****
+* Merged {legacy-issue-base}/374[Legacy pull request 374 (`OS.FileSys.tmpName`
+  should support `TMPDIR`)].
 
 == Supported systems
 

@@ -22,6 +22,59 @@
 #include "gc.h"
 #include "ml-globals.h"
 
+/* the new on-disk file header */
+typedef struct {
+    char        kind[8];        /* file kind (either "BinFile " or "StabArch") */
+    Unsigned32_t version;       /* file version (little endian) */
+    char        smlnjVersion[16]; /* SML/NJ compiler version */
+    Unsigned32_t numSects;      /* number of entries in the section table */
+} binfile_hdr_t;
+
+/* the on-disk section descriptor layout */
+typedef struct {
+    Unsigned32_t id;
+    Unsigned32_t flags;
+    Unsigned32_t offsetB;
+    Unsigned32_t szB;
+} binfile_sect_desc_t;
+
+typedef struct {
+    off_t offset;
+    size_t size;
+} sect_desc_t;
+
+/* section tags */
+#if defined(BYTE_ORDER_BIG)
+#  define BF_TAG(c1,c2,c3,c4)	\
+    ((Unsigned32_t)(c1) << 24 | (Unsigned32_t)(c2) << 16 | (Unsigned32_t)(c3) << 8 | (Unsigned32_t)(c4))
+#else
+#  define BF_TAG(c1,c2,c3,c4)	\
+    ((Unsigned32_t)(c4) << 24 | (Unsigned32_t)(c3) << 16 | (Unsigned32_t)(c2) << 8 | (Unsigned32_t)(c1))
+#endif
+
+#define BF_IMPT	BF_TAG('I','M','P','T')
+#define BF_EXPT BF_TAG('E','X','P','T')
+#define BF_LITS BF_TAG('L','I','T','S')
+#define BF_CODE BF_TAG('C','O','D','E')
+#define BF_CFGP BF_TAG('C','F','G','P')
+
+/* the useful information contained in the header */
+typedef struct {
+    Unsigned32_t version;       /* binfile version; will be 0 for old format files */
+    int         nImports;       /* the number of imports in the importSect */
+    sect_desc_t importSect;     /* import PIDs */
+    sect_desc_t exportSect;     /* the location of the export PID (if present).  For
+                                 * the new binfile format, the export PID is located
+                                 * at the beginning of the static environment section.
+                                 */
+    sect_desc_t litsSect;	/* the literal section */
+    sect_desc_t codeSect;	/* the code section */
+    Int32_t     entry;          /* code entrypoint */
+    bool_t      isNative;       /* true if the code is native machine code; false if */
+                                /* it is a CFG pickle) */
+} binfile_info_t;
+
+
 /* llvm_codegen:
  *
  * Given the source-file name and ASDL pickle of the CFG IR, generate
@@ -63,6 +116,19 @@ static int HEX(int c)
     return c - 'A' + 10;
 }
 
+static void Seek (FILE *file, off_t offset, const char *fname)
+{
+    if (fseeko(file, offset, SEEK_SET) == -1) {
+        Die ("cannot seek to \"%s@%ul\"", fname, (unsigned long)offset);
+    }
+}
+
+static void ReadBinFileAt (FILE *file, void *buf, int nbytes, off_t offset, const char *fname)
+{
+    Seek (file, offset, fname);
+    ReadBinFile (file, buf, nbytes, fname);
+}
+
 
 /* BootML:
  *
@@ -75,7 +141,6 @@ void BootML (const char *bootlist, heap_params_t *heapParams)
     char        *fname;
     int         rts_init = 0;
 
-/*DEBUG*/ SilentLoad=FALSE;/* */
     msp = AllocMLState (TRUE, heapParams);
 
 #ifdef HEAP_MONITOR
@@ -244,20 +309,56 @@ PVT void ReadBinFile (FILE *file, void *buf, int nbytes, const char *fname)
 
 } /* end of ReadBinFile */
 
+/* ReadLEB128Unsigned:
+ *
+ * Read an unsigned packed integer in LEB128 format.
+ */
+PVT Unsigned32_t ReadLEB128Unsigned (FILE *file, const char *fname, int *nb)
+{
+    Unsigned32_t n = 0;
+    Unsigned32_t shift = 0;
+    Unsigned32_t slice;
+    Byte_t       c;
+
+    int i = 0;
+    do {
+        ReadBinFile (file, &c, sizeof(c), fname);
+        slice = c & 0x7f;
+        if ((shift >= 31)
+        && ((shift == 31 && (slice << shift >> shift) != slice)
+            || (shift > 31 && slice != 0)))
+        {
+/* TODO: overflow */
+        }
+        n += slice << shift;
+        shift += 7;
+        i++;
+    } while ((c & 0x80) != 0);
+
+    if (nb != NIL(int *)) { *nb = i; }
+
+    return n;
+
+} /* end of ReadLEB128Unsigned */
+
 /* ReadPackedInt32:
  *
  * Read an integer in "packed" format.  (Small numbers only require 1 byte.)
  */
-PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname)
+PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname, int *nb)
 {
     Unsigned32_t        n;
     Byte_t              c;
 
     n = 0;
+    int i = 0;
     do {
         ReadBinFile (file, &c, sizeof(c), fname);
         n = (n << 7) | (c & 0x7f);
+        i++;
     } while ((c & 0x80) != 0);
+
+    if (nb != NIL(int *)) { *nb = i; }
 
     return ((Int32_t)n);
 
@@ -267,69 +368,233 @@ PVT Int32_t ReadPackedInt32 (FILE *file, const char *fname)
  *
  * Read the header of a binfile.  This code supports multiple binfile formats.
  */
-PVT void ReadHeader (FILE *file, binfile_hdr_info_t *info, const char *fname)
+PVT void ReadHeader (FILE *file, off_t base, binfile_info_t *info, const char *fname)
 {
   /* a buffer that is large enough to hold either form of header */
-    Byte_t buf[sizeof(new_binfile_hdr_t)];
+    Byte_t buf[256];
 
   /* we read the first 8 bytes to see if this is a old-style or new-style header */
     ReadBinFile (file, buf, 8, fname);
     if (memcmp(buf, "BinFile ", 8) == 0) {
-      /* new-style header */
-        new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
-        ReadBinFile (file, &(buf[8]), sizeof(new_binfile_hdr_t) - 8, fname);
-      /* check version number */
-        info->version = BIGENDIAN_TO_HOST32(p->version);
-        if (info->version != BINFILE_VERSION) {
-            Die ("invalid binfile version %0x for \"%s\"", info->version, fname);
+      /* check the version number */
+        Unsigned32_t bfVersion;
+        ReadBinFile (file, &bfVersion, 4, fname);
+        if (LITTLE_TO_HOST32(bfVersion) == 0x20250801) {
+          /* this is the new, container-style, binfile format */
+            binfile_hdr_t *p = (binfile_hdr_t *)buf;
+            p->version = bfVersion;
+            info->version = LITTLE_TO_HOST32(bfVersion);
+            /* read the rest of the header */
+            ReadBinFile (file, &(buf[12]), sizeof(binfile_hdr_t) - 12, fname);
+            int nSects = LITTLE_TO_HOST32(p->numSects);
+            /* flags to track which sections have been seen */
+            bool_t seenImports = FALSE;
+            bool_t seenExports = FALSE;
+            bool_t seenLits = FALSE;
+            bool_t seenCodeOrCFG = FALSE;
+            /* process the sections to get the header info */
+            for (int i = 0;  i < nSects;  ++i) {
+                binfile_sect_desc_t sd;
+                ReadBinFile (file, &sd, sizeof(binfile_sect_desc_t), fname);
+                switch (LITTLE_TO_HOST32(sd.id)) {
+                case BF_IMPT:
+                    if (seenImports) {
+                        Die("multiple 'IMPT' sections");
+                    } else {
+                        seenImports = TRUE;
+                        info->importSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->importSect.size = LITTLE_TO_HOST32(sd.szB);
+                    }
+                    break;
+                case BF_EXPT:
+                    if (seenExports) {
+                        Die("multiple 'EXPT' sections");
+                    } else {
+                        seenExports = TRUE;
+                        info->exportSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->exportSect.size = LITTLE_TO_HOST32(sd.szB);
+                    }
+                    break;
+                case BF_LITS:
+                    if (seenLits) {
+                        Die("multiple 'LITS' sections");
+                    } else {
+                        seenLits = TRUE;
+                        info->litsSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->litsSect.size = LITTLE_TO_HOST32(sd.szB);
+                    }
+                    break;
+                case BF_CODE:
+                    if (seenCodeOrCFG) {
+                        Die("multiple 'CODE' / 'CFGP' sections");
+                    } else {
+                        seenCodeOrCFG = TRUE;
+                        info->codeSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->codeSect.size = LITTLE_TO_HOST32(sd.szB);
+                        info->isNative = TRUE;
+                    }
+                    break;
+                case BF_CFGP:
+                    if (seenCodeOrCFG) {
+                        Die("multiple 'CODE' / 'CFGP' sections");
+                    } else {
+                        seenCodeOrCFG = TRUE;
+                        info->codeSect.offset = LITTLE_TO_HOST32(sd.offsetB);
+                        info->codeSect.size = LITTLE_TO_HOST32(sd.szB);
+                        info->isNative = FALSE;
+                    }
+                    break;
+                default: /* ignore other sections */
+                    break;
+                }
+            }
+            /* check that we have seen all of the necessary sections */
+            if (!seenImports || !seenExports || !seenLits || !seenCodeOrCFG) {
+                char msg[64] = "missing sections:";
+                if (!seenImports) { strcat (msg, " IMPT"); }
+                if (!seenExports) { strcat (msg, " EXPT"); }
+                if (!seenLits) { strcat (msg, " LITS"); }
+                if (!seenCodeOrCFG) { strcat (msg, " CODE/CFGP"); }
+                Die(msg);
+            }
+            /* get additional info for 'IMPT' and 'CODE' sections */
+            {
+                int nb;
+                Seek(file, base + info->importSect.offset, fname);
+                info->nImports = ReadLEB128Unsigned(file, fname, &nb);
+                info->importSect.offset += nb;
+                info->importSect.size -= nb;
+            }
+            if (info->isNative) {
+                int nb;
+                Seek(file, base + info->codeSect.offset, fname);
+                info->entry = ReadLEB128Unsigned(file, fname, &nb);
+                info->codeSect.offset += nb;
+                info->codeSect.size -= nb;
+            }
+        } else if (BIG_TO_HOST32(bfVersion) == BINFILE_VERSION) {
+          /* this is the old (but not original) binfile format */
+            new_binfile_hdr_t *p = (new_binfile_hdr_t *)buf;
+            ReadBinFile (file, &(buf[12]), sizeof(new_binfile_hdr_t) - 12, fname);
+            info->version = BIG_TO_HOST32(bfVersion);
+            info->nImports = BIG_TO_HOST32(p->importCnt);
+            info->importSect.offset = sizeof(new_binfile_hdr_t);
+            info->importSect.size = BIG_TO_HOST32(p->importSzB);
+            info->exportSect.offset = info->importSect.offset + info->importSect.size;
+            info->exportSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->exportCnt);
+            /* for the literals and code, we need to read the lengths */
+            {
+                Int32_t tmp;
+                /* the start of the literals+code section */
+                off_t codeOff = ftello(file)
+                    + info->importSect.size
+                    + info->exportSect.size
+                    + BIG_TO_HOST32(p->cmInfoSzB)
+                    + BIG_TO_HOST32(p->guidSzB)
+                    + BIG_TO_HOST32(p->pad);
+                /* get the literals offset and size */
+                ReadBinFileAt (file, &tmp, sizeof(Int32_t), codeOff, fname);
+                info->litsSect.size = BIG_TO_HOST32(tmp);
+                ReadBinFile (file, &tmp, sizeof(Int32_t), fname); /* ignored */
+                info->litsSect.offset = info->exportSect.offset
+                    + info->exportSect.size
+                    + BIG_TO_HOST32(p->cmInfoSzB)
+                    + BIG_TO_HOST32(p->guidSzB)
+                    + BIG_TO_HOST32(p->pad);
+                /* get the code offset and size */
+                info->codeSect.offset = info->litsSect.offset
+                    + 2 * sizeof(Int32_t);
+                ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+                info->codeSect.size = BIG_TO_HOST32(tmp);
+                ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+                info->entry = BIG_TO_HOST32(tmp);
+                info->isNative = TRUE;
+            }
+        } else {
+            Die ("invalid binfile version %0x for \"%s\"", bfVersion, fname);
         }
-        info->hdrSzB    = sizeof(new_binfile_hdr_t);
-        info->importCnt = BIGENDIAN_TO_HOST32(p->importCnt);
-        info->exportCnt = BIGENDIAN_TO_HOST32(p->exportCnt);
-        info->importSzB = BIGENDIAN_TO_HOST32(p->importSzB);
-        info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
-        info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
-        info->pad       = BIGENDIAN_TO_HOST32(p->pad);
-        info->isNative  = TRUE;
-        info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
-        info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
     } else {
       /* old-style header */
         old_binfile_hdr_t *p = (old_binfile_hdr_t *)buf;
         ReadBinFile (file, &(buf[8]), sizeof(old_binfile_hdr_t) - 8, fname);
-        info->version   = 0;
-        info->hdrSzB    = sizeof(old_binfile_hdr_t);
-        info->importCnt = BIGENDIAN_TO_HOST32(p->importCnt);
-        info->exportCnt = BIGENDIAN_TO_HOST32(p->exportCnt);
-        info->importSzB = BIGENDIAN_TO_HOST32(p->importSzB);
-        info->cmInfoSzB = BIGENDIAN_TO_HOST32(p->cmInfoSzB);
-        info->guidSzB   = BIGENDIAN_TO_HOST32(p->guidSzB);
-        info->pad       = BIGENDIAN_TO_HOST32(p->pad);
-        info->isNative  = TRUE;
-        info->codeSzB   = BIGENDIAN_TO_HOST32(p->codeSzB);
-        info->envSzB    = BIGENDIAN_TO_HOST32(p->envSzB);
-//        Die ("invalid binfile kind in \"%s\"", fname);
+        info->version = 0;
+        info->nImports = BIG_TO_HOST32(p->importCnt);
+        info->importSect.offset = sizeof(old_binfile_hdr_t);
+        info->importSect.size = BIG_TO_HOST32(p->importSzB);
+        info->exportSect.offset = info->importSect.offset + info->importSect.size;
+        info->exportSect.size = sizeof(pers_id_t) * BIG_TO_HOST32(p->exportCnt);
+        /* for the literals and code, we need to read the lengths */
+        {
+            Int32_t tmp;
+            /* the offset (from the start of the binfile) to the literals */
+            info->litsSect.offset = info->exportSect.offset
+                + info->exportSect.size
+                + BIG_TO_HOST32(p->cmInfoSzB)
+                + BIG_TO_HOST32(p->guidSzB)
+                + BIG_TO_HOST32(p->pad);
+            /* seek to the start of the literals+code section in the file */
+            /* get the literals size */
+            ReadBinFileAt (file, &tmp, sizeof(Int32_t), base + info->litsSect.offset, fname);
+            info->litsSect.size = BIG_TO_HOST32(tmp);
+            info->litsSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
+            /* get the code offset and size */
+            info->codeSect.offset = info->litsSect.offset + info->litsSect.size;
+            ReadBinFileAt (file, &tmp, sizeof(Int32_t), base + info->codeSect.offset, fname);
+            info->codeSect.size = BIG_TO_HOST32(tmp);
+            ReadBinFile (file, &tmp, sizeof(Int32_t), fname);
+            info->entry = BIG_TO_HOST32(tmp);
+            info->codeSect.offset += 2 * sizeof(Int32_t); /* adjust offset */
+            info->isNative = TRUE;
+        }
     }
 
 } /* end of ReadHeader */
 
-/* ImportSelection:
+/* OldImportSelection:
  *
  * Select out the interesting bits from the imported object.
+ * This is the "old" version that uses the old packed-int encoding.
  */
-PVT void ImportSelection (ml_state_t *msp, FILE *file, const char *fname,
-                          int *importVecPos, ml_val_t tree)
+PVT void OldImportSelection (
+    ml_state_t *msp, FILE *file, const char *fname,
+    int *importVecPos, ml_val_t tree)
 {
-    Int32_t cnt = ReadPackedInt32 (file, fname);
+    Int32_t cnt = ReadPackedInt32 (file, fname, NIL(int *));
     if (cnt == 0) {
         ML_AllocWrite (msp, *importVecPos, tree);
         (*importVecPos)++;
     }
     else {
         while (cnt-- > 0) {
-            Int32_t selector = ReadPackedInt32 (file, fname);
-            ImportSelection (msp, file, fname, importVecPos,
-                             REC_SEL(tree, selector));
+            Int32_t selector = ReadPackedInt32 (file, fname, NIL(int *));
+            OldImportSelection (
+                msp, file, fname, importVecPos,
+                REC_SEL(tree, selector));
+        }
+    }
+
+} /* end of OldImportSelection */
+
+/* ImportSelection:
+ *
+ * Select out the interesting bits from the imported object.
+ * This is the "new" version that uses the LEB128 packed-int encoding.
+ */
+PVT void ImportSelection (
+    ml_state_t *msp, FILE *file, const char *fname,
+    int *importVecPos, ml_val_t tree)
+{
+    Int32_t cnt = ReadLEB128Unsigned (file, fname, NIL(int *));
+    if (cnt == 0) {
+        ML_AllocWrite (msp, *importVecPos, tree);
+        (*importVecPos)++;
+    }
+    else {
+        while (cnt-- > 0) {
+            Int32_t selector = ReadLEB128Unsigned (file, fname, NIL(int *));
+            ImportSelection (
+                msp, file, fname, importVecPos,
+                REC_SEL(tree, selector));
         }
     }
 
@@ -343,9 +608,8 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     int             i, remainingCode, importRecLen;
     int             exportSzB = 0;
     ml_val_t        codeObj, importRec, closure, val;
-    binfile_hdr_info_t hdr;
+    binfile_info_t hdr;
     pers_id_t       exportPerID;
-    Int32_t         thisSzB, thisEntryPoint;
     size_t          archiveOffset;
     char            *atptr, *colonptr;
     char            *objname = fname;
@@ -387,83 +651,56 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
    * the binfile
    */
     if (archiveOffset != 0) {
-        if (fseek (file, archiveOffset, SEEK_SET) == -1)
-            Die ("cannot seek on archive file \"%s@%ul\"",
-                 fname, (unsigned long) archiveOffset);
+        Seek (file, archiveOffset, fname);
     }
 
   /* get the header */
-    ReadHeader (file, &hdr, fname);
+    ReadHeader (file, archiveOffset, &hdr, fname);
 
   /* read the import PerIDs, and create the import vector */
     {
+        Seek (file, archiveOffset + hdr.importSect.offset, fname);
+
         int     importVecPos;
 
-        importRecLen = hdr.importCnt + 1;
+        importRecLen = hdr.nImports + 1;
 
-        if (NeedGC (msp, REC_SZB(importRecLen)))
+        if (NeedGC (msp, REC_SZB(importRecLen))) {
             InvokeGCWithRoots (msp, 0, &BinFileList, NIL(ml_val_t *));
+        }
 
         ML_AllocWrite (msp, 0, MAKE_DESC(importRecLen, DTAG_record));
         for (importVecPos = 1; importVecPos < importRecLen; ) {
             pers_id_t   importPid;
             ReadBinFile (file, &importPid, sizeof(pers_id_t), fname);
-            ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            if (hdr.version == 0x20250801) {
+                ImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            } else {
+                OldImportSelection (msp, file, fname, &importVecPos, LookupPerID(&importPid));
+            }
         }
         ML_AllocWrite(msp, importRecLen, ML_nil); /* placeholder for literals */
         importRec = ML_Alloc(msp, importRecLen);
     }
 
   /* read the export PerID */
-    if (hdr.exportCnt == 1) {
-        exportSzB = sizeof(pers_id_t);
-        ReadBinFile (file, &exportPerID, exportSzB, fname);
+    if (hdr.exportSect.size == sizeof(pers_id_t)) {
+        ReadBinFileAt (file, &exportPerID, sizeof(pers_id_t), archiveOffset + hdr.exportSect.offset, fname);
     }
-    else if (hdr.exportCnt != 0) {
-        Die ("# of export pids is %d (should be 0 or 1)", (int)hdr.exportCnt);
-    }
-
-  /* seek to code section */
-    {
-        long        off = archiveOffset
-                        + hdr.hdrSzB
-                        + hdr.importSzB
-                        + exportSzB
-                        + hdr.cmInfoSzB
-                        + hdr.guidSzB
-                        + hdr.pad;
-
-        if (fseek(file, off, SEEK_SET) == -1) {
-            Die ("cannot seek on bin file \"%s\"", fname);
-        }
+    else if (hdr.exportSect.size != 0) {
+        Die ("# size of export pids is %d (should be 0 or %d)",
+            (int)hdr.exportSect.size, (int)sizeof(pers_id_t));
     }
 
-  /* Read code objects and run them.  The first code object will be the
-   * data segment.
-   */
-
-    remainingCode = hdr.codeSzB;
-
-  /* read the size and the dummy entry point for the data object */
-    ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
-    thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-    ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname); /* ignored */
-
-    remainingCode -= thisSzB + 2 * sizeof(Int32_t);
-    if (remainingCode < 0) {
-        Die ("format error (data size mismatch) in bin file \"%s\"", fname);
-    }
-
-    if (thisSzB > 0) {
-        Byte_t          *dataObj = NEW_VEC(Byte_t, thisSzB);
-
-        ReadBinFile (file, dataObj, thisSzB, fname);
+  /* read the literals */
+    if (hdr.litsSect.size > 0) {
+        Byte_t *dataObj = NEW_VEC(Byte_t, hdr.litsSect.size);
+        ReadBinFileAt (file, dataObj, hdr.litsSect.size, archiveOffset + hdr.litsSect.offset, fname);
         SaveCState (msp, &BinFileList, &importRec, NIL(ml_val_t *));
-        val = BuildLiterals (msp, dataObj, thisSzB);
+        val = BuildLiterals (msp, dataObj, hdr.litsSect.size);
         FREE(dataObj);
         RestoreCState (msp, &BinFileList, &importRec, NIL(ml_val_t *));
-    }
-    else {
+    } else {
         val = ML_unit;
     }
 
@@ -478,65 +715,43 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         InvokeGCWithRoots (msp, 0, &BinFileList, &val, NIL(ml_val_t *));
     }
 
-    if (remainingCode > 0) {
+  /* read the code */
+    if (hdr.codeSect.size > 0) {
+        Int32_t thisSzB, thisEntryPoint;
+        Seek (file, archiveOffset + hdr.codeSect.offset, fname);
         if (hdr.isNative) {
-            /* read the size and entry point for the code object */
-            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
-            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
-            ReadBinFile (file, &thisEntryPoint, sizeof(Int32_t), fname);
-            thisEntryPoint = BIGENDIAN_TO_HOST32(thisEntryPoint);
-
-            /* how much more? */
-            remainingCode -= thisSzB + 2 * sizeof(Int32_t);
-            if (remainingCode != 0) {
-                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
-            }
-
-            {
-                char *buffer = MALLOC(thisSzB);
-                ReadBinFile (file, buffer, thisSzB, fname);
-                /* allocate a code object and initialize with the code from the binfile */
-                ENABLE_CODE_WRITE
-                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
-                DISABLE_CODE_WRITE
-                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-                if (memcmp(PTR_MLtoC(char, codeObj), buffer, thisSzB) != 0) {
-                    Die("!!!!! code object corruption !!!!!\n");
-                }
-                FREE(buffer);
-            }
+            thisSzB = hdr.codeSect.size;
+            char *buffer = MALLOC(thisSzB);
+            ReadBinFile (file, buffer, thisSzB, fname);
+            /* allocate a code object and initialize with the code from the binfile */
+            ENABLE_CODE_WRITE
+                codeObj = ML_AllocCode (msp, PTR_MLtoC(void, buffer), thisSzB);
+            DISABLE_CODE_WRITE
+            FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
+            FREE(buffer);
+            thisEntryPoint = hdr.entry;
         } else {
-            /* read the size of the CFG pickle */
-            ReadBinFile (file, &thisSzB, sizeof(Int32_t), fname);
-            thisSzB = BIGENDIAN_TO_HOST32(thisSzB);
+            /* get the CFG pickle from the binfile */
+            char *pkl = MALLOC(hdr.codeSect.size);
+            ReadBinFile (file, pkl, hdr.codeSect.size, fname);
 
-            /* how much more? */
-            remainingCode -= thisSzB + sizeof(Int32_t);
-            if (remainingCode != 0) {
-                Die ("format error (code size mismatch) in bin file \"%s\"", fname);
+            if (!SilentLoad) {
+                Say ("  [generate native code]\n");
             }
-            {
-                /* get the CFG pickle from the binfile */
-                char *pkl = MALLOC(thisSzB);
-                ReadBinFile (file, pkl, thisSzB, fname);
 
-                if (!SilentLoad) {
-                    Say ("  [generate native code]\n");
-                }
+            /* generate code; we get a (WordVector.vector * int) value as a result */
+            ml_val_t pair = llvm_codegen (msp, objname, pkl, hdr.codeSect.size);
+            ml_val_t code = GET_SEQ_DATA(REC_SEL(pair, 0));
+            thisEntryPoint = REC_SELINT(pair, 1);
+            thisSzB = GET_SEQ_LEN(REC_SEL(pair, 0));
 
-                /* generate code; we get a (WordVector.vector * int) value as a result */
-                ml_val_t pair = llvm_codegen (msp, objname, pkl, thisSzB);
-                ml_val_t code = GET_SEQ_DATA(REC_SEL(pair, 0));
-                thisEntryPoint = REC_SELINT(pair, 1);
+            /* allocate a code object and initialize with the generated code */
+            ENABLE_CODE_WRITE
+                codeObj = ML_AllocCode (msp, PTR_MLtoC(void, code), thisSzB);
+            DISABLE_CODE_WRITE
+            FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
 
-                /* allocate a code object and initialize with the generated code */
-                ENABLE_CODE_WRITE
-                    codeObj = ML_AllocCode (msp, PTR_MLtoC(void, code), thisSzB);
-                DISABLE_CODE_WRITE
-                FlushICache (PTR_MLtoC(char, codeObj), thisSzB);
-
-                FREE(pkl);
-            }
+            FREE(pkl);
         }
 
         if (!SilentLoad) {
@@ -544,7 +759,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
         }
 
       /* create closure (taking entry point into account) */
-        REC_ALLOC1 (msp, closure, PTR_CtoML(PTR_MLtoC(char, codeObj) + thisEntryPoint));
+        REC_ALLOC1 (msp, closure, PTR_CtoML (PTR_MLtoC(char, codeObj) + thisEntryPoint));
 
       /* apply the closure to the import PerID vector */
         SaveCState (msp, &BinFileList, NIL(ml_val_t *));
@@ -558,7 +773,7 @@ PVT void LoadBinFile (ml_state_t *msp, char *fname)
     }
 
   /* record the resulting exported PerID */
-    if (exportSzB != 0) {
+    if (hdr.exportSect.size > 0) {
         EnterPerID (msp, &exportPerID, val);
     }
 

@@ -42,12 +42,12 @@ ml_val_t BlastIn (ml_state_t *msp, Byte_t *buf, long len, bool_t *errFlg)
 	return ML_unit;
     }
     if (hdr.byteOrder != ORDER) {
-	if (BIGENDIAN_TO_HOST32(hdr.byteOrder) != ORDER) {
+	if (BIG_TO_HOST32(hdr.byteOrder) != ORDER) {
 	    *errFlg = TRUE;
 	    return ML_unit;
 	}
-	hdr.magic = BIGENDIAN_TO_HOST32(hdr.magic);
-	hdr.kind = BIGENDIAN_TO_HOST32(hdr.kind);
+	hdr.magic = BIG_TO_HOST32(hdr.magic);
+	hdr.kind = BIG_TO_HOST32(hdr.kind);
 	inBuf.needsSwap = TRUE;
     }
     if (hdr.magic != BLAST_MAGIC) {

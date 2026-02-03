@@ -327,6 +327,7 @@ is
         Unsafe/cinterface.sig
         Unsafe/cinterface.sml
         Unsafe/object.sig
+	Unsafe/unsafe-int.sig
         Unsafe/unsafe-real64.sig
         Unsafe/unsafe-array.sig
         Unsafe/unsafe-vector.sig
