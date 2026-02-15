@@ -37,7 +37,7 @@ structure List : LIST =
 
     exception Empty = Empty
 
-  (* these functions are implemented in base/system/smlnj/init/pervasive.sml *)
+  (* these functions are implemented in system/smlnj/init/pervasive.sml *)
     val null = null
     val hd = hd
     val tl = tl
