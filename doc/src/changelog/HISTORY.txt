@@ -104,6 +104,13 @@ Here is an update to the entry
 //====================================================================
 == Recent updates
 
+[2026-02-26]::
+Modified **CM** so that the "required privileges" message is no longer
+printed when the CM verbose flag is set to `false` (_e.g._, by using
+the command-line option `-Ccm.verbose=false`)
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //--------------------------------------------------------------------
 [2025/12/23]::
 Added `Unsafe.Int` structure to provide typed access to integer addition

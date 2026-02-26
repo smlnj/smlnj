@@ -44,6 +44,9 @@ FILES::
 
 === CM
 
+* The "required privileges" message is no longer printed when the CM verbose flag is
+  set to `false` (e.g., by using the command-line option `-Ccm.verbose=false`)
+
 === MLRISC
 
 === Runtime System

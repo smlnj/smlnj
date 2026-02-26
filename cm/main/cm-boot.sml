@@ -96,7 +96,7 @@ functor LinkCM (structure HostBackend : BACKEND) =
 		   * use of.) *)
                     Link.cleanup gp;
                     if StringSet.isEmpty rq then ()
-		       else Say.say (
+		       else Say.vsay (
                          "$Execute: required privileges are:\n" ::
 		           map (fn s => ("  " ^ s ^ "\n")) (StringSet.listItems rq));
 		    case l_group gp
