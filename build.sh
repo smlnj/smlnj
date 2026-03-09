@@ -462,9 +462,9 @@ if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
   fi
 else
   cd "$SMLNJ_ROOT" || exit 1
-
+  vsay "$cmd: unpack boot files ($BOOT_ARCHIVE)"
   "$CONFIGDIR"/unpack "$SMLNJ_ROOT" "$BOOT_ARCHIVE"
-
+  vsay "$cmd: extract $SMLNJ_ROOT/$BOOT_FILES/smlnj/basis"
   fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
 
   # Target arc:

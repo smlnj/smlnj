@@ -232,9 +232,7 @@ do
 #         unpack run-time "$ROOT"/base runtime runtime
 # 	;;
       boot.*)
-        # for the boot files, we just fetch the tarball
-        urlgetter
-        $URLGETTER bootfiles $i "$SRCARCHIVEURL"
+        unpack bootfiles "$ROOT" sml.$i $i
  	;;
       compiler)
 	unpack compiler "$ROOT" compiler compiler
