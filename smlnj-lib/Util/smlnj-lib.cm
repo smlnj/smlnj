@@ -47,6 +47,7 @@ signature PROP_LIST
 signature QUEUE
 signature RAND
 signature RANDOM
+signature RAND48
 signature SCAN
 signature SPLAY_TREE
 signature UREF
@@ -99,6 +100,7 @@ structure PropList
 structure Queue
 structure Rand
 structure Random
+structure Rand48
 structure Scan
 structure SimpleURef
 structure TimeLimit
@@ -231,6 +233,8 @@ queue.sml
 rand-sig.sml
 rand.sml
 random-sig.sml
+rand48-sig.sml
+rand48.sml
 real-format.sml
 redblack-map-fn.sml
 redblack-set-fn.sml

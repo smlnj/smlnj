@@ -2,6 +2,14 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
+SML/NJ 2026.1
+-------------------
+
+[2026-03-10]
+        Added `Rand48` structure to the utility library.  This module is an SML
+        implementation of the Standard C Library `rand48` functions.
+
+--------------------------------------------------------------------------------
 SML/NJ 2025.3
 -------------------
 

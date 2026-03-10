@@ -204,6 +204,11 @@ xref:str-Rand.adoc[`[.kw]#structure# Rand`]::
 
 // 50
 
+xref:str-Rand48.adoc[`[.kw]#structure# Rand48`]::
+  **SML** implementation of the **C Standard Library**
+  https://pubs.opengroup.org/onlinepubs/007908799/xsh/drand48.html[`rand48`]
+  functions.
+
 xref:str-Random.adoc[`[.kw]#structure# Random`]::
   Pseudo-random-number generation using the
   http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html[_Mersenne Twister_
@@ -238,16 +243,16 @@ xref:str-TimeLimit.adoc[`[.kw]#structure# TimeLimit`]::
 xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
   **To be written**
 
-xref:str-URef.adoc[`[.kw]#structure# URef`]::
-  Provides mutable references with __Union-Find__ semantics.
-
 // 60
 
-== Usage
+xref:str-URef.adoc[`[.kw]#structure# URef`]::
+  Provides mutable references with __Union-Find__ semantics.
 
 xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
   Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
   encoded strings.
+
+== Usage
 
 By default, the *Util Library* is autoloaded by *CM*, which means that it is
 immediately available to interactive use in the *SML/NJ* REPL.

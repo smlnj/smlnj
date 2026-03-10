@@ -59,6 +59,8 @@ critical bug fix in the *LLVM* code generator.
 
 === SML/NJ Library
 
+* Added `Rand48` structure.
+
 === Successor ML
 
 === ML-LPT
