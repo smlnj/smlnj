@@ -39,16 +39,14 @@ critical bug fix in the *LLVM* code generator.
 
 == Details
 
-// **** details: include those sections that are relevant
-
 === Compiler
+
+* Switched the backend
 
 === CM
 
 * The "required privileges" message is no longer printed when the CM verbose flag is
   set to `false` (e.g., by using the command-line option `-Ccm.verbose=false`)
-
-=== MLRISC
 
 === Runtime System
 
@@ -61,12 +59,6 @@ critical bug fix in the *LLVM* code generator.
 
 * Added `Rand48` structure.
 
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
 === Installation
 
 == Bugs
@@ -77,19 +69,18 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
+| [.bugid]#318#
+| {issue-base}/318[Segmentation fault with SML/NJ compiled MLton]
 | [.bugid]#335#
 | {issue-base}/335[REPL should always print reals as valid SML real literals]
 | [.bugid]#338#
 | {issue-base}/338[incorrect compilation of some large integer literals]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
 * Merged {legacy-issue-base}/374[Legacy pull request 374 (`OS.FileSys.tmpName`
   should support `TMPDIR`)].
 
