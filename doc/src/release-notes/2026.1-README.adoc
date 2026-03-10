@@ -34,7 +34,8 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release modifies the startup script to support Linux 7.  It also contains a
+critical bug fix in the *LLVM* code generator.
 
 == Details
 
@@ -52,6 +53,9 @@ FILES::
 === Runtime System
 
 === Basis Library
+
+* Added `Unsafe.Int` structure to provide typed access to integer addition
+  and subtraction without overflow checking.
 
 === SML/NJ Library
 
@@ -72,7 +76,9 @@ Here is a list of the issues and pull requests that are closed with this release
 | Issue
 | Description
 | [.bugid]#335#
-| {issue-base}/225[REPL should always print reals as valid SML real literals]
+| {issue-base}/335[REPL should always print reals as valid SML real literals]
+| [.bugid]#338#
+| {issue-base}/338[incorrect compilation of some large integer literals]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

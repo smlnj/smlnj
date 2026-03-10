@@ -104,6 +104,14 @@ Here is an update to the entry
 //====================================================================
 == Recent updates
 
+//--------------------------------------------------------------------
+[2026-03-10]::
+Fix for Issue #338[incorrect compilation of some large integer literals].
+This bug was in the **LLVM** submodule.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-02-26]::
 Modified **CM** so that the "required privileges" message is no longer
 printed when the CM verbose flag is set to `false` (_e.g._, by using
