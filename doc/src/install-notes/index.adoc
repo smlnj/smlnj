@@ -17,3 +17,8 @@
 * {dist-dir}/smlnj-amd64-{version}.pkg[Installer for **macOS**/Intel x86-64]
 
 * {dist-dir}/smlnj-arm64-{version}.pkg[Installer for **macOS**/Arm64]
+
+* {dist-dir}/smlnj-amd64-unix-{version}.tgz[Compressed tarball for **Unix**/Intel x86-64]
+
+* {dist-dir}/smlnj-arm64-unix-{version}.tgz[Compressed tarball for **Unix**/Arm64]
+
