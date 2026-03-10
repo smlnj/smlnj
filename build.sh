@@ -14,6 +14,9 @@
 cmd=$0
 here=$(pwd)
 
+# default LLVM directory
+LLVM_DIRNAME=llvm21
+
 complain() {
   echo "$cmd: !!! $@"
   exit 1
@@ -33,14 +36,13 @@ usage() {
   echo "developer options:"
   echo "    -debug-llvm        build a debug version of the LLVM libraries"
   echo "    -sanitize-address  sanitize addresses to check for memory bugs"
-  echo "    -llvmdir dir       specify the path to the LLVM directory"
+  echo "    -llvmdir dir       specify the name of the LLVM directory (default $LLVM_DIRNAME)"
   echo "    -build-cfgc        build the cfgc compiler"
   exit 1
 }
 
 # specifying the LLVM subdirectory (which is a submodule)
 #
-LLVM_DIRNAME=llvm18
 LLVMDIR_OPTION=
 
 # process options
@@ -142,7 +144,7 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 CONFIGDIR="$SMLNJ_ROOT/config"
 RUNTIMEDIR="$SMLNJ_ROOT/runtime"
 if [ x"$LLVMDIR_OPTION" != x ] ; then
-  LLVMDIR="$LLVMDIR_OPTION"
+  LLVMDIR="$RUNTIMEDIR/$LLVMDIR_OPTION"
   # check the validity of the path specified by the user
   if [ ! -x "$LLVMDIR/build-llvm.sh" ] ; then
     complain "invalid LLVM directory: build-llvm.sh script is missing"

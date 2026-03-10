@@ -2,3 +2,6 @@
 	path = runtime/llvm18
 	url = ../smlnj-llvm-18.1.git
 	branch = bitops
+[submodule "runtime/llvm21"]
+	path = runtime/llvm21
+	url = https://github.com/smlnj/smlnj-llvm-21.1.git
