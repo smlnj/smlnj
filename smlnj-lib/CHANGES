@@ -6,8 +6,11 @@ SML/NJ 2026.1
 -------------------
 
 [2026-03-10]
-        Added `Rand48` structure to the utility library.  This module is an SML
-        implementation of the Standard C Library `rand48` functions.
+        Added the `sizeOfValue` function to the `JSON_STREAM_OUTPUT` signature.
+
+[2026-03-10]
+        Added the `Rand48` structure to the utility library.  This module is
+        an SML implementation of the Standard C Library `rand48` functions.
 
 --------------------------------------------------------------------------------
 SML/NJ 2025.3

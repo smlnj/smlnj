@@ -56,4 +56,7 @@ signature JSON_STREAM_OUTPUT =
   (* embed the given value into the output *)
     val value : printer * JSON.value -> unit
 
+  (* return the size of the compact output (i.e., no whitespace) for the value *)
+    val sizeOfValue : JSON.value -> int
+
   end

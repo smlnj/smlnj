@@ -218,4 +218,51 @@ functor JSONStreamOutputFn (Out : TEXT_OUTPUT_STREAM) : JSON_STREAM_OUTPUT
 	    pr v
 	  end
 
+    fun sizeOfValue v = let
+          fun countSeq itemSize ([], sz) = sz + 2
+            | countSeq itemSize (x::xs, sz) =
+                List.foldl (fn (x, sz) => itemSize(x, sz + 1)) (itemSize(x, sz + 2)) xs
+          fun stringSize (s, sz) = let
+                fun getC i  = if (i < size s) then SOME(String.sub(s, i), i+1) else NONE
+                val getWChar = UTF8.getu getC
+                fun lp (i, sz) = (case getWChar i
+                       of SOME(wchr, i) => if (wchr <= 0w126)
+                            then let
+                              val sz = (case UTF8.toAscii wchr
+                                     of #"\"" => sz + 2
+                                      | #"\\" => sz + 2
+                                      | #"\b" => sz + 2
+                                      | #"\f" => sz + 2
+                                      | #"\n" => sz + 2
+                                      | #"\r" => sz + 2
+                                      | #"\t" => sz + 2
+                                      | c => if (wchr < 0w32)
+                                          then sz + 6 (* \uXXXX *)
+                                          else sz + 1
+                                    (* end case *))
+                              in
+                                lp (i, sz)
+                              end
+                            else lp(i, sz + 6) (* \uXXXX *)
+                        | NONE => sz
+                      (* end case *))
+                in
+                  lp (0, sz + 2) (* +2 for quotes *)
+                end
+	  fun count (JSON.OBJECT fields, sz) = let
+                fun fieldSize ((key, v), sz) = count (v, stringSize(key, sz+1))
+		in
+		  countSeq fieldSize (fields, sz)
+		end
+	    | count (JSON.ARRAY vs, sz) = countSeq count (vs, sz)
+	    | count (JSON.NULL, sz) = sz + 4
+	    | count (JSON.BOOL false, sz) = sz + 5
+	    | count (JSON.BOOL true, sz) = sz + 4
+	    | count (JSON.INT n, sz) = sz + size(IntInf.toString n)
+	    | count (JSON.FLOAT f, sz) = sz + size(Real.fmt (StringCvt.GEN(SOME 17)) f)
+	    | count (JSON.STRING s, sz) = stringSize (s, sz)
+          in
+            count (v, 0)
+          end
+
   end

@@ -57,6 +57,8 @@ critical bug fix in the *LLVM* code generator.
 
 === SML/NJ Library
 
+* Added `sizeOfValue` function to the `JSON_STREAM_OUTPUT` signature
+
 * Added `Rand48` structure.
 
 === Installation
@@ -71,6 +73,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | Description
 | [.bugid]#318#
 | {issue-base}/318[Segmentation fault with SML/NJ compiled MLton]
+| [.bugid]#327#
+| {issue-base}/327[JSON library: hint size of `JSON.value` after serialization]
 | [.bugid]#335#
 | {issue-base}/335[REPL should always print reals as valid SML real literals]
 | [.bugid]#338#
