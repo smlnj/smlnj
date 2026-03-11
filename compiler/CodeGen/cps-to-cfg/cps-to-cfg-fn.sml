@@ -1,6 +1,6 @@
 (* cps-to-cfg-fn.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Translate the first-order CPS IR to the CFG IR.
@@ -120,6 +120,7 @@ C.NUMt{sz=sz}
     fun addTag e   = pureOp (TP.ADD, ity, [e, one])
     fun stripTag e = pureOp (TP.SUB, ity, [e, one])
     fun orTag e    = pureOp (TP.ORB, ity, [e, one])
+    fun tag e      = orTag (pureOp (TP.SHL, ity, [e, one]))
 
     fun record desc = TP.RECORD{desc=desc, mut=false}
     fun mutRecord desc = TP.RECORD{desc=desc, mut=true}
@@ -555,9 +556,9 @@ C.NUMt{sz=sz}
                               | (P.XORB, [v1, v2]) => binOp (TP.XORB, v1, v2)
                               | (P.ANDB, [v1, v2]) => binOp (TP.ANDB, v1, v2)
                               | (P.NOTB, [v]) => pureOp (TP.XORB, sz, [genV v, allOnes sz])
-                              | (P.CNTPOP, [v]) => pureOp (TP.CNTPOP, sz, [genV v])
-                              | (P.CNTLZ, [v]) => pureOp (TP.CNTLZ, sz, [genV v])
-                              | (P.CNTTZ, [v]) => pureOp (TP.CNTTZ, sz, [genV v])
+                              | (P.CNTPOP, [v]) => tag (pureOp (TP.CNTPOP, sz, [genV v]))
+                              | (P.CNTLZ, [v]) => tag (pureOp (TP.CNTLZ, sz, [genV v]))
+                              | (P.CNTTZ, [v]) => tag (pureOp (TP.CNTTZ, sz, [genV v]))
                               | (P.ROTL, [v1, v2]) => shiftOp (TP.ROTL, v1, v2)
                               | (P.ROTR, [v1, v2]) => shiftOp (TP.ROTR, v1, v2)
                               | _ => error ["genPure: ", PPCps.pureToString p]

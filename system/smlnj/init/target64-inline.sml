@@ -266,10 +266,10 @@ structure InlineT =
 	val ~       : word -> word        = InLine.word_neg
         val op div  : word * word -> word = InLine.word_div
         val op mod  : word * word -> word = InLine.word_mod
-        val op >    : word * word -> bool   = InLine.word_gt
-        val op >=   : word * word -> bool   = InLine.word_ge
-        val op <    : word * word -> bool   = InLine.word_lt
-        val op <=   : word * word -> bool   = InLine.word_le
+        val op >    : word * word -> bool = InLine.word_gt
+        val op >=   : word * word -> bool = InLine.word_ge
+        val op <    : word * word -> bool = InLine.word_lt
+        val op <=   : word * word -> bool = InLine.word_le
         val rshift  : word * word -> word = InLine.word_raw_rshift
         val rshiftl : word * word -> word = InLine.word_raw_rshiftl
         val lshift  : word * word -> word = InLine.word_raw_lshift
@@ -277,6 +277,14 @@ structure InlineT =
 	val chkRshift  : word * word -> word = InLine.word_rshift
 	val chkRshiftl : word * word -> word = InLine.word_rshiftl
         val notb    : word -> word = InLine.word_notb
+
+(*
+        val cntOnes   : word -> int          = InLine.word_cnt_pop
+        val cntZerosL : word -> int          = InLine.word_cnt_lz
+        val cntZerosR : word -> int          = InLine.word_cnt_tz
+*)
+        val rotateR   : word * word -> word  = InLine.word_rotr
+        val rotateL   : word * word -> word  = InLine.word_rotl
 
         val min     : word * word -> word  = InLine.word_min
         val max     : word * word -> word  = InLine.word_max
@@ -398,6 +406,14 @@ structure InlineT =
         val rshiftl : word64 * word -> word64    = InLine.word64_raw_rshiftl
         val lshift : word64 * word -> word64     = InLine.word64_raw_lshift
         val notb : word64 -> word64              = InLine.word64_notb
+
+(*
+        val cntOnes   : word64 -> int            = InLine.word64_cnt_pop
+        val cntZerosL : word64 -> int            = InLine.word64_cnt_lz
+        val cntZerosR : word64 -> int            = InLine.word64_cnt_tz
+*)
+        val rotateR   : word64 * word -> word64  = InLine.word64_rotr
+        val rotateL   : word64 * word -> word64  = InLine.word64_rotl
 
         val op > : word64 * word64 -> bool	 = InLine.word64_gt
         val op >= : word64 * word64 -> bool	 = InLine.word64_ge

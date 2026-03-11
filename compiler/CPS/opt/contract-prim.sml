@@ -400,10 +400,28 @@ structure ContractPrim : sig
                 Val(NUM{ival = CA.bNot(sizeOfKind kind, #ival i), ty = #ty i})
             (***** ROTL *****)
             | (P.PURE_ARITH{oper=P.ROTL, ...}, [i as NUM{ival=0, ...}, _]) => Val i
-            | (P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
-                if (ival mod IntInf.fromInt sz = 0)
-                  then Val i (* effectively no rotation *)
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
                   else None
+                end
+            (***** ROTR *****)
+            | (P.PURE_ARITH{oper=P.ROTR, ...}, [i as NUM{ival=0, ...}, _]) => Val i
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTR, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else None
+                end
             (***** PURE_NUMSUBSCRIPT *****)
             | (P.PURE_NUMSUBSCRIPT{kind}, [STRING s, NUM i]) => let
                 val v = ord(String.sub(s, Int.fromLarge(#ival i)))

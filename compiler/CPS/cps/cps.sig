@@ -138,8 +138,8 @@ signature CPS =
     datatype value
       = VAR of lvar
       | LABEL of lvar			(* function labels after closure conversion *)
-      | NUM of intty IntConst.t
-      | REAL of int RealConst.t
+      | NUM of intty IntConst.t         (* `NUM{ival, ty = {sz, tag}}` *)
+      | REAL of int RealConst.t         (* `REAL{rval, ty = sz}` *)
       | STRING of string
       | VOID                            (* used in closure conversion *)
 

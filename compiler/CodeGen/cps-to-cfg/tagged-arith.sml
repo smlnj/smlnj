@@ -1,6 +1,6 @@
 (* tagged-arith.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Support for tagged arithmetic, which we lower to machine arithmetic
@@ -10,11 +10,11 @@
 
 structure TaggedArith : sig
 
-  (* convert pure tagged arithmetic to CFG expressions *)
+    (* convert pure tagged arithmetic to CFG expressions *)
     val pure : (CPS.value -> CFG.exp)
 	  -> CPS.P.pureop * bool * int * CPS.value list -> CFG.exp
 
-  (* convert tagged trapping arithmetic to CFG *)
+    (* convert tagged trapping arithmetic to CFG *)
     val trapping : (CPS.value -> CFG.exp)
 	  -> CPS.P.arithop * CPS.value list * LambdaVar.lvar * (CFG.exp -> CFG.stm)
 	  -> CFG.stm
@@ -138,24 +138,20 @@ structure TaggedArith : sig
 		end
             | (CNTPOP, [v]) =>
                 (* untag argument and then count ones *)
-                pureOp (P.CNTPOP, ity, [untagUInt (comp v)])
+                tag(pureOp (P.CNTPOP, ity, [untagUInt (comp v)]))
             | (CNTLZ, [v]) =>
                 (* the tagging does not affect the leading-zero count; plus,
                  * we know that the argument is not zero!
                  *)
-                pureOp (P.CNTLZ, ity, [comp v])
+                tag(pureOp (P.CNTLZ, ity, [comp v]))
             | (CNTTZ, [v]) =>
                 (* rotate the argument right by one; this puts the tag bit into
                  * the high-order bit, so the count for zero will return the correct
-                 * answer (e.g., Word63.countLeadingZeros 0w0 = 0w63
+                 * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63
                  *)
-                pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])])
-            | (ROTL, [v1, v2]) =>
-                (* untag the operands, do the rotations, and tag the result *)
-                tag(pureOp(P.ROTL, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
-            | (ROTR, [v1, v2]) =>
-                (* untag the operands, do the rotations, and tag the result *)
-                tag(pureOp(P.ROTR, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
+                tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
+            | (ROTL, [v1, v2]) => error [".pure: ROTL not supported on tagged words"]
+            | (ROTR, [v1, v2]) => error [".pure: ROTR not supported on tagged words"]
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 

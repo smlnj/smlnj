@@ -34,5 +34,3 @@ structure PrimopBind :> sig
     fun defnOf (_, _, p) = p
 
   end
-
-
