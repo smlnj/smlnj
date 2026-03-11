@@ -2,8 +2,8 @@
 //
 :version: @VERSION@
 :date: @DATE@
-:dist-dir: https://smlnj.org/dist/working/{version}/
-:history: {dist-dir}HISTORY.html
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
@@ -30,7 +30,7 @@
 SML/NJ HOME::
   https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
 FILES::
-  {dist-dir}index.html[[.tt]#{dist-dir}#]
+  {dist-url}index.html[[.tt]#{dist-url}#]
 --
 ''''''''
 

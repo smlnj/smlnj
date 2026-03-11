@@ -1,7 +1,7 @@
-:version: 2026.1
-:date: @DATE@
-:dist-dir: https://smlnj.org/dist/working/{version}/
-:history: {dist-dir}HISTORY.html
+:version: 2026.1-rc1
+:date: March 11, 2026
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
@@ -28,7 +28,7 @@
 SML/NJ HOME::
   https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
 FILES::
-  {dist-dir}index.html[[.tt]#{dist-dir}#]
+  {dist-url}index.html[[.tt]#{dist-url}#]
 --
 ''''''''
 
@@ -48,8 +48,6 @@ critical bug fix in the *LLVM* code generator.
 * The "required privileges" message is no longer printed when the CM verbose flag is
   set to `false` (e.g., by using the command-line option `-Ccm.verbose=false`)
 
-=== Runtime System
-
 === Basis Library
 
 * Added `Unsafe.Int` structure to provide typed access to integer addition
@@ -62,6 +60,11 @@ critical bug fix in the *LLVM* code generator.
 * Added `Rand48` structure.
 
 === Installation
+
+* We now provide architecture-specific compressed tarballs of the system
+  (in addition to the **macOS** installer packages).  These files include
+  all of the source code and the boot files for the architecture.  See the
+  {dist-url}/install.html[installation instructions for details].
 
 == Bugs
 
