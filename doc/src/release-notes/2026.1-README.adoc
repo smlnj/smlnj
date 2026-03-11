@@ -41,7 +41,7 @@ critical bug fix in the *LLVM* code generator.
 
 === Compiler
 
-* Switched the backend
+* Switched the backend to use *LLVM* 21.1.8
 
 === CM
 
