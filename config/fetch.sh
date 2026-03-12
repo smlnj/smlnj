@@ -89,7 +89,7 @@ uselynx() {
 
 # wrapper for curl
 usecurl() {
-    curl -s "$1" >"$2"
+    curl -s --fail "$1" >"$2"
 }
 
 testurlgetter() {
