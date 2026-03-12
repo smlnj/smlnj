@@ -437,7 +437,7 @@ if [ x"$ONLY_RUNTIME" = xyes ] ; then
 fi
 
 #
-# the name of the bin files directory
+# the name of the boot files archive and directory
 #
 # FIXME: should make these file names more consistent!!
 #
