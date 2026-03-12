@@ -50,9 +50,9 @@ vsay() {
 }
 
 make_tarball() {
-  if [ x"$OPSYS" = xdarwin ] ; then
-     TARFLAGS="--no-mac-metadata $TARFLAGS"
-  fi
+  case `uname -s` in
+    Darwin) TARFLAGS="--no-mac-metadata $TARFLAGS" ;;
+  esac
   vsay "tar $TARFLAGS -czf \"$1\" \"$2\""
   tar $TARFLAGS -czf "$1" "$2" || exit 1
 }
