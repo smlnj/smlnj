@@ -13,7 +13,7 @@
 CMD="build-pkg.sh"
 GITHUB_URL="git@github.com:smlnj/smlnj.git"
 DISTROOT=smlnj
-ARCH=""
+ARCH="none"
 VERSION=none
 VERBOSE=""
 CLEANUP=yes
@@ -89,8 +89,8 @@ fi
 #
 if [ x"$ARCH" = xnone ] ; then
   case `uname -p` in
-    i386) ARCH=amd64 ;;
-    arm) ARCH=arm64 ;;
+    i386|x86_64|amd64) ARCH=amd64 ;;
+    arm|aarch64) ARCH=arm64 ;;
     *)
       complain "unknown architecture"
     ;;
@@ -135,14 +135,17 @@ if [ x"$VERSION" = xnone ] ; then
   VERSION=$CONFIG_VERSION
 elif [ x"$VERSION" != x"$CONFIG_VERSION" ] ; then
   echo "$CMD [Error]: version in config/version is $CONFIG_VERSION"
-  cd $HERE
-  rm -rf $DISTROOT
+  cleanup
   exit 1
 fi
 
 # get the bootfiles
 #
-config/unpack . "$BOOT_ARCHIVE"
+if ! config/fetch.sh . "$BOOT_ARCHIVE" ; then
+  echo "$CMD: [Error]: unable to fetch boot files"
+  cleanup
+  exit 1
+fi
 
 # package up the source tree as a compressed tar file
 #
