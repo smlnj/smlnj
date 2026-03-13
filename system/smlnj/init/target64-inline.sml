@@ -114,6 +114,7 @@ structure InlineT =
 	val signBit : real -> bool = InLine.real64_sgn
 
 	val toBits : real -> word64 = InLine.real64_to_bits
+	val fromBits : word64 -> real = InLine.real64_from_bits
       end
 
     structure Int =
@@ -167,14 +168,18 @@ structure InlineT =
 	val fromLarge = InLine.intinf_to_int32
 
 	local
+          (* we need a cast here because the `toInt` conversion sets the high
+           * bits to either all zeros or all ones.
+           *)
+          val castToInt : int32 -> int = InLine.cast
 	(* wrapper that checks the result for Overflow.  Note that
          * this wrapper breaks the inlining of Int32 arithmetic!
 	 *)
 	  fun i32chk oper args = let
 		val res = oper args
 		in
-		  if InLine.int_lt(toInt res, ~2147483648)
-		  orelse InLine.int_lt(2147483647, toInt res)
+		  if InLine.int_lt(castToInt res, ~2147483648)
+		  orelse InLine.int_lt(2147483647, castToInt res)
 		    then raise Assembly.Overflow
 		    else res
 		end
@@ -261,10 +266,10 @@ structure InlineT =
 	val ~       : word -> word        = InLine.word_neg
         val op div  : word * word -> word = InLine.word_div
         val op mod  : word * word -> word = InLine.word_mod
-        val op >    : word * word -> bool   = InLine.word_gt
-        val op >=   : word * word -> bool   = InLine.word_ge
-        val op <    : word * word -> bool   = InLine.word_lt
-        val op <=   : word * word -> bool   = InLine.word_le
+        val op >    : word * word -> bool = InLine.word_gt
+        val op >=   : word * word -> bool = InLine.word_ge
+        val op <    : word * word -> bool = InLine.word_lt
+        val op <=   : word * word -> bool = InLine.word_le
         val rshift  : word * word -> word = InLine.word_raw_rshift
         val rshiftl : word * word -> word = InLine.word_raw_rshiftl
         val lshift  : word * word -> word = InLine.word_raw_lshift
@@ -272,6 +277,14 @@ structure InlineT =
 	val chkRshift  : word * word -> word = InLine.word_rshift
 	val chkRshiftl : word * word -> word = InLine.word_rshiftl
         val notb    : word -> word = InLine.word_notb
+
+(*
+        val cntOnes   : word -> int          = InLine.word_cnt_pop
+        val cntZerosL : word -> int          = InLine.word_cnt_lz
+        val cntZerosR : word -> int          = InLine.word_cnt_tz
+*)
+        val rotateR   : word * word -> word  = InLine.word_rotr
+        val rotateL   : word * word -> word  = InLine.word_rotl
 
         val min     : word * word -> word  = InLine.word_min
         val max     : word * word -> word  = InLine.word_max
@@ -393,6 +406,14 @@ structure InlineT =
         val rshiftl : word64 * word -> word64    = InLine.word64_raw_rshiftl
         val lshift : word64 * word -> word64     = InLine.word64_raw_lshift
         val notb : word64 -> word64              = InLine.word64_notb
+
+(*
+        val cntOnes   : word64 -> int            = InLine.word64_cnt_pop
+        val cntZerosL : word64 -> int            = InLine.word64_cnt_lz
+        val cntZerosR : word64 -> int            = InLine.word64_cnt_tz
+*)
+        val rotateR   : word64 * word -> word64  = InLine.word64_rotr
+        val rotateL   : word64 * word -> word64  = InLine.word64_rotl
 
         val op > : word64 * word64 -> bool	 = InLine.word64_gt
         val op >= : word64 * word64 -> bool	 = InLine.word64_ge

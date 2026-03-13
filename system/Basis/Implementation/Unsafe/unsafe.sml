@@ -1,6 +1,6 @@
 (* unsafe.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Unsafe operations on ML values.
@@ -13,14 +13,16 @@ structure Unsafe :> UNSAFE =
     structure Object = UnsafeObject
     structure Pointer = UnsafePointer
 
+    structure Int =
+      struct
+        val add = InlineT.Int.fast_add
+        val sub = InlineT.Int.fast_sub
+      end
+
     structure Real64 =
       struct
         val castToWord = InlineT.Real64.toBits
-        fun castFromWord (b : Word64.word) : real = let
-              val r : real ref = InlineT.cast(ref b)
-              in
-                !r
-              end
+        val castFromWord = InlineT.Real64.fromBits
       end
 
     structure Vector =
@@ -111,7 +113,7 @@ structure Unsafe :> UNSAFE =
     fun charSize () = 8 (* TODO: add to InlineT *)
     fun realSize () = 64 (* TODO: add to InlineT *)
 
-    (* convert default real to bits *)
+    (* convert default real to bits (deprecated: use Real64.castToWord instead) *)
     val realToBits = InlineT.Real64.toBits
     (* assembly-code function for scaling reals *)
     val scalb = Core.Assembly.A.scalb

@@ -1,6 +1,6 @@
 (* primop-bindings.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -117,6 +117,7 @@ structure PrimopBindings : sig
     fun defineWordOps (prefix, wty, sz, prims) = let
 	  val nk = P.UINT sz
 	  val w_w = ar(wty, wty)
+	  val w_i = ar(wty, BT.intTy)
 	  val ww_w = ar(tup[wty, wty], wty)
 	  val shftTy = ar(tup[wty, BT.wordTy], wty)
 	  val ww_b = ar(tup[wty, wty], BT.boolTy)
@@ -143,6 +144,16 @@ structure PrimopBindings : sig
 	    shift("raw_rshiftl", P.PURE_ARITH{oper=P.RSHIFTL, kind=nk}) :-:
 	    shift("raw_lshift", P.PURE_ARITH{oper=P.LSHIFT, kind=nk}) :-:
 	    mk("notb", w_w, P.PURE_ARITH{oper=P.NOTB, kind=nk}) :-:
+	    mk("cnt_pop", w_i, P.PURE_ARITH{oper=P.CNTPOP, kind=nk}) :-:
+(* QUESTION: do we want separate "inline" versions of the bit counting operators
+ * that check for zero and a "raw" version that doesn't, or are we good with
+ * a single form?.  Also, we can implement "count leading ones" etc. as an inline
+ * primop that logically negates its argument.
+ *)
+	    mk("cnt_lz", w_i, P.PURE_ARITH{oper=P.CNTLZ, kind=nk}) :-:
+	    mk("cnt_tz", w_i, P.PURE_ARITH{oper=P.CNTTZ, kind=nk}) :-:
+	    shift("rotl", P.PURE_ARITH{oper=P.ROTL, kind=nk}) :-:
+	    shift("rotr", P.PURE_ARITH{oper=P.ROTR, kind=nk}) :-:
 	    cmp("lt", P.LT) :-:
 	    cmp("le", P.LTE) :-:
 	    cmp("gt", P.GT) :-:
@@ -182,8 +193,8 @@ structure PrimopBindings : sig
 	    mk_rr_r("max", P.INLMAX nk) :-:
 	    arith_r_r("abs", P.FABS) :-:
 	    arith_r_r("sqrt", P.FSQRT) :-:
-	  (* note that the argument type is 'a to force boxing of the real *)
-	    mk("to_bits", p1(ar(tv1, wTy sz)), P.REAL_TO_BITS sz)
+	    mk("to_bits", ar(rty, wTy sz), P.REAL_TO_BITS sz) :-:
+	    mk("from_bits", ar(wTy sz, rty), P.BITS_TO_REAL sz)
 	  end
 
   (* utility functions for conversions *)

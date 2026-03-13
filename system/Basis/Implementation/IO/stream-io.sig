@@ -1,6 +1,6 @@
 (* stream-io.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -37,7 +37,7 @@ signature STREAM_IO =
     val mkOutstream   : (writer * IO.buffer_mode) -> outstream
     val getWriter     : outstream -> (writer * IO.buffer_mode)
     val getPosOut     : outstream -> out_pos
-    val setPosOut     : out_pos -> unit
+    val setPosOut     : out_pos -> outstream
     val filePosOut    : out_pos -> pos
 
   end

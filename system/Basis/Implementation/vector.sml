@@ -25,7 +25,7 @@ structure Vector : VECTOR =
     fun checkLen n =
 	if InlineT.Int.ltu(maxLen, n) then raise General.Size else ()
 
-  (* this function is implemented in base/system/smlnj/init/pervasive.sml *)
+  (* this function is implemented in system/smlnj/init/pervasive.sml *)
     val fromList = vector
 
     fun tabulate (0, _) = Assembly.vector0

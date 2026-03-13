@@ -28,7 +28,11 @@ structure SMLView : sig
         val getSExpName : AST.ModuleId.t -> string
       end
 
-    structure Type : VIEW_TYPE_BASE
+    structure Type : sig
+        include VIEW_TYPE_BASE
+        (* get the name of the equivalent datatype *)
+        val getIsDatatype : AST.TypeId.t -> string option
+      end
 
     structure Constr : VIEW_CONSTR_BASE
 
@@ -46,20 +50,31 @@ structure SMLView : sig
                 moduleProps =
                   CV.prop(PN.memory_pickler_name, false) ::
                   CV.prop(PN.file_pickler_name, false) ::
-                  CV.prop(PN.sexp_pickle_name, false) ::
+                  CV.prop(PN.sexp_pickler_name, false) ::
                   #moduleProps CV.template,
-                typeProps = #typeProps CV.template,
+                typeProps =
+                  CV.prop(PN.is_datatype, false) ::
+                  #typeProps CV.template,
                 consProps = #consProps CV.template
               }
       end)
 
-    open ViewBase
+    val view = ViewBase.view
+
+    fun multiValueErr propName = raise Fail(concat[
+            "unexpected multiple values for '", propName, "' property"
+          ])
 
     structure File =
       struct
         open ViewBase.File
-(* TODO: add view support *)
-        fun getShareContextName () = "ShareContext"
+        fun getShareContextName () = (
+              case View.getOptValue PN.share_context_name (view, View.File)
+(* TODO: should the default be based on the filename? *)
+               of NONE => "ShareContext"
+                | SOME[name] => name
+                | _ => multiValueErr "share_context_name"
+              (* end case *))
       end
 
     structure Module =
@@ -71,16 +86,29 @@ structure SMLView : sig
                 case View.getOptValue prop (view, View.Module modId)
                  of NONE => getName modId ^ suffix
                   | SOME[name] => name
-                  | _ => raise Fail("unexpected multiple values for "^Atom.toString prop)
+                  | _ => multiValueErr (Atom.toString prop)
                 (* end case *))
         in
         val getPickleSigName = getModName (PN.pickler_name, "PICKLE")
         val getPickleName = getModName (PN.memory_pickler_name, "MemoryPickle")
         val getIOName = getModName (PN.file_pickler_name, "FilePickle")
-        val getSExpName = getModName (PN.sexp_pickle_name, "SExpPickle")
+        val getSExpName = getModName (PN.sexp_pickler_name, "SExpPickle")
         end (* local *)
 
       end
+
+    structure Type =
+      struct
+        open ViewBase.Type
+        fun getIsDatatype tyId = (
+              case View.getOptValue PN.is_datatype (view, View.Type tyId)
+               of NONE => NONE
+                | SOME[name] => SOME name
+                | _ => multiValueErr "is_datatype"
+              (* end case *))
+      end
+
+    structure Constr = ViewBase.Constr
 
   (* the default header template *)
     val header =
@@ -143,7 +171,7 @@ structure SMLView : sig
                   (PN.name,                     "ASDL"),
                   (PN.memory_pickler_name,      "ASDLMemoryPickle"),
                   (PN.file_pickler_name,        "ASDLFilePickle"),
-                  (PN.sexp_pickle_name,         "ASDLSExpPickle")
+                  (PN.sexp_pickler_name,        "ASDLSExpPickle")
                 ]
             end
 

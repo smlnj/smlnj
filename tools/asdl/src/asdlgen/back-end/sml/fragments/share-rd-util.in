@@ -1,5 +1,5 @@
     (* wrapper for reading primitive types *)
-    fun readPrim rdFn (cxt : outstream) = rdFn (#outS cxt)
+    fun readPrim rdFn (cxt : instream) = rdFn (#inS cxt)
     (* read an option *)
     fun readOption rdFn (cxt : instream) = (
           case @PICKLER@.readTag8 (#inS cxt)
@@ -30,11 +30,10 @@
                   obj
                 end
             | n => let
-                fun get (_, []) = raise Subscript
+                fun get ([], _) = raise Subscript
                   | get (x::_, 0w0) = x
                   | get (_::xs, n) = get (xs, n-0w1)
                 in
                   get (!(stk cxt), n)
                 end
           (* end case *))
-        (* end case *))

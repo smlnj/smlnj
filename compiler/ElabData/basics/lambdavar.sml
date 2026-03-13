@@ -166,5 +166,6 @@ structure LambdaVar :> LAMBDA_VAR =
     val op < : lvar * lvar -> bool = op <
     val op > : lvar * lvar -> bool = op >
     val compare : lvar * lvar -> order = Int.compare
+    val hash = Word.fromInt
 
   end (* structure LambdaVar *)

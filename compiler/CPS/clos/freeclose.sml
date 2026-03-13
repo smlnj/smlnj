@@ -156,7 +156,7 @@ structure FreeClose : FREECLOSE = struct
     fun fixkind(fe as (CONT,f,vl,cl,ce)) =
 	   if escapesP f then (contM f; fe)
 	   else (knownM f; contM f; (KNOWN_CONT,f,vl,cl,ce))
-      | fixkind(fe as (fk,f,vl,cl as (CNTt::_),ce)) =
+      | fixkind(fe as (fk,f,vl,cl as (CNTt _ :: _),ce)) =
 	   if escapesP f then (usersM f; (ESCAPE,f,vl,cl,ce))
 	   else (knownM f; (KNOWN_REC,f,vl,cl,ce))
       | fixkind(fe as (fk,f,vl,cl,ce)) =

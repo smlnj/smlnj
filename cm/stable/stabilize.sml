@@ -1,6 +1,6 @@
 (* stabilize.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Reading, generating, and writing stable libraries.
@@ -32,25 +32,30 @@ signature STABILIZE = sig
 	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings ->
 	 GG.group option
 
-    val loadStable :
-	{ getGroup: groupgetter, anyerrors: bool ref } -> groupgetter
+    val loadStable : { getGroup: groupgetter, anyerrors: bool ref } -> groupgetter
 
     val stabilize : GP.info -> { group: GG.group, anyerrors: bool ref,
 				 rebindings: SrcPath.rebindings } ->
 		    GG.group option
-end
+  end
 
-functor StabilizeFn (val arch : string
-		     structure StabModmap : STAB_MODMAP
-		     val recomp : GP.info -> GG.group ->
-			 (SmlInfo.info ->
-			  { contents: Binfile.bfContents,
-			    stats: Binfile.stats }) option
-		     val getII : SmlInfo.info -> IInfo.info) :> STABILIZE =
-struct
+functor StabilizeFn (
+
+    val arch : string
+
+    structure StabModmap : STAB_MODMAP
+
+    val recomp : GP.info
+        -> GG.group
+        -> (SmlInfo.info -> { contents: Binfile.t, stats: Binfile.stats }) option
+
+    val getII : SmlInfo.info -> IInfo.info
+
+  ) :> STABILIZE = struct
+
     type groupgetter =
-	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings ->
-	 GG.group option
+	 GP.info * SrcPath.file * Version.t option * SrcPath.rebindings
+	   -> GG.group option
 
     structure BF = Binfile
 
@@ -93,6 +98,7 @@ struct
 			sn = SmlInfoMap.insert (sn, #smlinfo k, v),
 			pm = pm } }
 
+(* BEGIN IO *)
     fun fetch_pickle s = let
 	fun bytesIn n = let
 	    val bv = BinIO.inputN (s, n)
@@ -111,12 +117,15 @@ struct
         in
           { size = dg_sz, pickle = dg_pickle }
         end
+(* END IO *)
 
+(* BEGIN IO *)
     fun mkPickleFetcher mksname () =
 	SafeIO.perform { openIt = BinIO.openIn o mksname,
 			 closeIt = BinIO.closeIn,
 			 work = #pickle o fetch_pickle,
 			 cleanup = fn _ => () }
+(* END IO *)
 
     fun mkInverseMap sublibs = let
 	(* Here we build a mapping that maps each BNODE to the
@@ -223,12 +232,14 @@ struct
 	val newStamp = Byte.bytesToString (Pid.toBytes (libStampOf a))
 	val policy = #fnpolicy (#param gp)
 	val sname = FilenamePolicy.mkStableName policy (grouppath, version)
+(* BEGIN IO *)
 	fun work s = let
 	    val oldStamp =
 		Byte.bytesToString (BinIO.inputN (s, libstamp_nbytes))
 	in
 	    oldStamp = newStamp
 	end
+(* END IO *)
     in
 	SafeIO.perform { openIt = fn () => BinIO.openIn sname,
 			 closeIt = BinIO.closeIn,
@@ -263,7 +274,9 @@ struct
 				    " (", SrcPath.osstring p, ")"];
 			     raise Format)
 
+(* BEGIN IO *)
 	    val { size = dg_sz, pickle = dg_pickle } = fetch_pickle s
+(* END IO *)
 	    val offset_adjustment = dg_sz + 4 + libstamp_nbytes
 	    val { getter, dropper } =
 		UU.stringGetter' (SOME dg_pickle, mkPickleFetcher mksname)
@@ -979,6 +992,7 @@ struct
 		    if Word8Vector.length libstamp_bytes <> libstamp_nbytes
 		    then EM.impossible "stabilize: libstamp size wrong"
 		    else ()
+(* BEGIN IO *)
 		fun work outs =
 		    (BinIO.output (outs, libstamp_bytes);
 		     writeInt32 (outs, dg_sz);
@@ -987,6 +1001,7 @@ struct
 			     foldl (writeBFC outs)
 				   { code = 0, data = 0, env = 0 }
 				   memberlist
+(* END IO *)
 		     in
 			 Say.vsay ["[code: ", Int.toString code,
 				   ", data: ", Int.toString data,

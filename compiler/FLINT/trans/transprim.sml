@@ -1,6 +1,6 @@
 (* transprim.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Translation of primops to PLambda.  The translation adds extra
@@ -89,9 +89,9 @@ structure TransPrim : sig
 	negate : PL.lexp,	(* negation primitive function *)
 	less : PL.lexp,		(* less-than primitive function *)
 	greater : PL.lexp,	(* greater-than primitive function *)
-	equal : PL.lexp,		(* equality primitivefunction *)
+	equal : PL.lexp,	(* equality primitivefunction *)
 	zero : PL.lexp,		(* the value 0 for the given type *)
-	negOne : PL.lexp		(* the value -1 for the given type *)
+	negOne : PL.lexp	(* the value -1 for the given type *)
       }
 
   (* a cache of the inline_ops records *)

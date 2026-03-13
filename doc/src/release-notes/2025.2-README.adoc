@@ -1,5 +1,5 @@
 :version: 2025.2
-:date: @DATE@
+:date: July 29, 2025
 :dist-dir: https://smlnj.org/dist/working/{version}/
 :history: {dist-dir}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -38,8 +38,6 @@ of the teething issues in the new ARM64 support.
 
 == Details
 
-// **** details: include those sections that are relevant
-
 === Compiler
 
 * changed the way that GC invocation code is generated to not distinguish between
@@ -47,11 +45,28 @@ of the teething issues in the new ARM64 support.
   This change results in significant shrinkage in the size of heap images and more
   closely matches the behavior of the old **MLRISC** code generator.
 
-=== CM
+* A number of changes to the CFG IR:
++
+--
+* replaced the `UMUL` and `SMUL` operators with `MUL`, since the are
+  all the same
+* renamed the shift operators to `SHL`, `ASHR`, and `LSHR`
+* added bit-counting operators: `CNTPOP`, `CNTLZ`, and `CNTTZ`
+* added bit-rotation operators: `ROTL` and `ROTR`
+* added `BITS_TO_FLOAT` and `FLOAT_TO_BITS` primops
+* added `FREM` and `FMADD` primops
+* removed the `OFFSET` expression form, since it is never generated.
+--
 
-=== MLRISC
+* Add a pass to eliminate redundant computation in the CPS IR.  It needs
+  more tuning, however, and so is currently disabled by default.
+
+* Changed the **CPS** IR to track the argument types of continuations.
 
 === Runtime System
+
+* changes to the LLVM code generator to match the **CFG** IR changes in the
+  compiler.
 
 === Basis Library
 
@@ -63,17 +78,15 @@ of the teething issues in the new ARM64 support.
 
 === SML/NJ Library
 
+In addition to several bug fixes (see below), the following changes were made to
+the **SML/NJ Library**:
+
+* Added a number of operations to the `MONO_HASH_SET` interface to make
+  it more compatible with the `ORD_SET` interface.
+
 * moved the `JSON` structure from the *JSON* Library to the *Util* Library.  This
-  change was made to allow code to produce/consume JSON values without depending
+  change was made to allow code to produce/consume *JSON* values without depending
   on the *JSON* library.
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
-=== Installation
 
 == Bugs
 
@@ -91,6 +104,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/302[`PPAbsyn` raises exception when pattern matching on infix constructor]
 | [.bugid]#303#
 | {issue-base}/303[The exception `IO.Io` is not accessible]
+| [.bugid]#304#
+| {issue-base}/304[ElabCore regression for invalid application patterns]
 | [.bugid]#306#
 | {pull-base}/306[Extend inverse power of 5 table for `Real.fromString`]
 | [.bugid]#308#
@@ -99,8 +114,8 @@ Here is a list of the issues that are fixed (or closed) with this release.
 | {issue-base}/310[`IntBinarySet`'s `union`, `intersection`, and `difference` functions do not work correctly]
 | [.bugid]#311#
 | {pull-base}/311[Fix `heap2exec`]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
+| [.bugid]#312#
+| {pull-base}/312[Compile error on Fedora 40 64-bit]
 |=======
 
 We also fixed the following bugs that did not have issues
@@ -112,13 +127,23 @@ repository):
 * Fixed an infinite loop that could occur when clustering the first-order
   **CPS** functions prior to generating the **CFG** IR.
 
-* Ported {legacy-issue}/347[Legacy Issue #347 (`Unsafe.cast` causes Compiler bug)]
+* Merged fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast` causes
+  Compiler bug)]
 
 * Merged {legacy-pull-base}/349[Legacy pull request #349 (`PackReal64Big`
   and `PackReal64Little` export internals)]
 
 * Merged {legacy-pull-base}/351[Legacy pull request #351 (Fix `Word8Buffer.contents`
   to return an object with `ByteVector` representation)]
+
+* Merged fix for {legacy-issue-base}/360[Legacy Issue #360 (Incorrect values
+  returned by `Real.fromString` on strings with many digits)]
+
+* Merged fix for {legacy-issue-base}/362[Legacy Issue #362 (`Real.fromString`
+  on negative inf/infinity returns positive infinity)]
+
+* Merged fix for {legacy-issue-base}/363[Legacy Issue #363 ("default word size"
+  in the documentation for Util/Random)]
 --
 
 == Supported systems
@@ -131,12 +156,13 @@ tested some of them:
 | Architecture | Operating System | Status
 | AMD64 | |
 | | macOS 11 (Big Sur) |
-| | macOS 12 (Monterey) | Tested
-| | macOS 13 (Ventura) | Tested
-| | macOS 14 (Sonoma) | Tested
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) | Tested
-| | Ubuntu 20.04.6 LTS | Tested
+| | Ubuntu 20.04.6 LTS |
 | | Ubuntu 22.04.2 LTS | Tested
+| | https://learn.microsoft.com/en-us/windows/wsl/[Windows WSL] |
 | {nbsp} | |
 | ARM64 | |
 | | macOS 11 (Big Sur) |

@@ -83,7 +83,7 @@ val parseFile : string -> JSON.value
 
 == See Also
 
-xref:str-JSON.adoc[`JSON`],
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:str-JSONStreamParser.adoc[`JSONStreamParser`],
 xref:str-JSONUtil.adoc[`JSONUtil`],
 xref:json-lib.adoc[__The JSON Library__]

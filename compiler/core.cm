@@ -140,7 +140,7 @@ TopLevel/environ/environ.sml
 
 TopLevel/interact/envref.sml
 TopLevel/interact/evalloop.sig
-TopLevel/interact/evalloop.sml
+TopLevel/interact/eval-loop-fn.sml
 TopLevel/interact/interact.sig
 TopLevel/interact/interact.sml
 
@@ -152,7 +152,7 @@ TopLevel/main/control.sml
 TopLevel/main/cconfig.sig
 TopLevel/main/code-generator.sig
 TopLevel/main/compile.sig
-TopLevel/main/compile.sml
+TopLevel/main/compile-fn.sml
 
 TopLevel/print/ppdec.sml
 TopLevel/print/ppobj.sml
@@ -274,6 +274,7 @@ CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
 CodeGen/cfg/cfg.sml
+CodeGen/cfg/normalize-cfg.sml
 CodeGen/cfg/ppcfg.sml
 CodeGen/cfg/cfg-util.sml
 CodeGen/cfg-pickle/cfg-pickle.sig

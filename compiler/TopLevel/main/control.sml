@@ -82,11 +82,11 @@ structure Control_CG : CGCONTROL =
     val spillGen = new (i, "spill-gen", "?", 0)
     val etasplit = new (b, "etasplit", "?", true)
     val uncurry = new (b, "uncurry", "enable uncurrying optimization", true)
-    val enableVN = new (b, "vn", "enable value-numbering optimization pass", true)
-    val vnCondElim = new (b, "vn-cond", "enable redundant conditional elimination", true)
+    val enableVN = new (b, "vn", "enable value-numbering optimization pass", false)
+    val vnCondElim = new (b, "vn-cond", "enable redundant conditional elimination", false)
     val vnRecordElim = new (b, "vn-record", "enable redundant record-allocation elimination", false)
     val vnSelectElim = new (b, "vn-select", "enable redundant record-selection elimination", false)
-    val vnPrimElim = new (b, "vn-prim", "enable redundant primop elimination", true)
+    val vnPrimElim = new (b, "vn-prim", "enable redundant primop elimination", false)
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)
@@ -96,6 +96,7 @@ structure Control_CG : CGCONTROL =
     val printit = new (b, "printit", "whether to show CPS", false)
     val printClusters = new (b, "print-clusters", "whether to print clusters prior to codegen", false)
     val dumpClusters = new (b, "dump-clusters", "whether to dump clusters as a '.dot' file", false)
+    val normalizeCFG = new (b, "normalize-cfg", "whether to normalize the CFG IR", false)
     val printCFG = new (b, "print-cfg", "whether to convert to CFG and print it", false)
     val dumpCFG = new (b, "dump-cfg", "whether to convert to CFG and pickle it", false)
     val verifyLLVM = new (b, "verify-llvm", "enable verification of generated LLVM code", false)
@@ -191,7 +192,6 @@ structure Control : CONTROL =
     val polyEqWarn =
 	new ("poly-eq-warn", "whether to warn about calls of polyEqual", true)
 
-    val preserveLvarNames = new ("preserve-names", "?", false)
     (* these are really all the same ref cell: *)
     val saveit : bool ref = ElabData.saveLvarNames
     val saveAbsyn : bool ref = saveit

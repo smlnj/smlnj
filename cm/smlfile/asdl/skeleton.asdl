@@ -1,0 +1,107 @@
+-- skeleton-rep.asdl
+--
+-- COPYRIGHT (c) 2025 The Fellowship (SML/NJ (https://smlnj.org))
+-- All rights reserved.
+--
+-- ASDL description (SML Skeletons)
+--
+
+module SkeletonRep {
+
+    namespace
+     = VALspace | TYCspace | SIGspace | STRspace | FCTspace | FIXspace
+     | LABspace | TYVspace | FSIGspace
+
+    symbol = (namespace, string)        -- = Symbol.symbol
+    sympath = symbol*                   -- = SymPath.path
+    symset = symbol*                    -- = SymSet.set
+
+    decl
+      = Bind (symbol, modExp)
+      | Local (decl, decl)
+      | Par (decl*)
+      | Seq (decl*)
+      | Open (modExp)
+      | Ref (symset)
+
+    modExp
+      = Var (sympath)
+      | Decl (decl*)
+      | Let (decl*, modExp)
+      | Ign1 (modExp, modExp)
+
+}
+
+view SML {
+  module SkeletonRep <= {
+    file_pickler_name : SkeletonFilePickle
+    pickler_name : SKELETON_PICKLE
+    implementation_prologue
+%%
+    type symbol = Symbol.symbol
+    type sympath = SymPath.path
+%%
+    implementation_epilogue
+%%
+    (* convert a pickled symbol to a `Symbol.symbol` *)
+    fun symbolFromPkl ((ns, n) : symbol_pkl) = (case ns
+           of VALspace => Symbol.varSymbol n
+            | TYCspace => Symbol.tycSymbol n
+            | SIGspace => Symbol.sigSymbol n
+            | STRspace => Symbol.strSymbol n
+            | FCTspace => Symbol.fctSymbol n
+            | FIXspace => Symbol.fixSymbol n
+            | LABspace => Symbol.labSymbol n
+            | TYVspace => Symbol.tyvSymbol n
+            | FSIGspace => Symbol.fsigSymbol n
+          (* end case *))
+    (* convert a `Symbol.symbol` to the pickled symbol *)
+    fun symbolToPkl sym = (Symbol.nameSpace sym, Symbol.name sym)
+    fun spathFromPkl syms = SymPath.SPATH syms
+    fun spathToPkl (SymPath.SPATH syms) = syms
+    fun symsetFromPkl syms = SymbolSet.fromList syms
+    fun symsetToPkl symSet = SymbolSet.listItems symSet
+%%
+  }
+  SkeletonRep.namespace <= is_datatype : Symbol.namespace
+  SkeletonRep.symbol <= {
+    name : symbol_pkl
+    natural_type : symbol
+    wrapper : symbolFromPkl
+    unwrapper : symbolToPkl
+  }
+  SkeletonRep.sympath <= {
+    name : sympath_pkl
+    natural_type : sympath
+    wrapper : spathFromPkl
+    unwrapper : spathToPkl
+  }
+  SkeletonRep.symset <= {
+    name : symset_pkl
+    natural_type : SymbolSet.set
+    wrapper : symsetFromPkl
+    unwrapper : symsetToPkl
+  }
+  <file> <= {
+    implementation_epilogue
+%%
+(* hide the pickling-related types and code *)
+structure Skeleton : sig
+    type symbol = Symbol.symbol
+    type sympath = SymPath.path
+    datatype decl
+      = Bind of symbol * modExp
+      | Local of decl * decl
+      | Par of decl list
+      | Seq of decl list
+      | Open of modExp
+      | Ref of SymbolSet.set
+    and modExp
+      = Var of sympath
+      | Decl of decl list
+      | Let of decl list * modExp
+      | Ign1 of modExp * modExp
+  end = SkeletonRep
+%%
+  }
+}

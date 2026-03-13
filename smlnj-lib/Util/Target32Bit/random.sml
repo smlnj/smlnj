@@ -3,7 +3,7 @@
  * Stateful pseudo-random generation using the 32-bit Mersenne Twister
  * algorithm.
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This code is derived from the 32-bit C version that can be found at

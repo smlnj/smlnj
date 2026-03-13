@@ -1,6 +1,6 @@
 (* unsafe.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Unsafe operations on ML values.
@@ -13,6 +13,7 @@ signature UNSAFE =
     structure Object : UNSAFE_OBJECT
     structure Pointer : UNSAFE_POINTER
 
+    structure Int : UNSAFE_INT
     structure Real64 : UNSAFE_REAL64
 
     structure Vector : UNSAFE_VECTOR
@@ -73,7 +74,7 @@ signature UNSAFE =
     val realSize : unit -> int
 
     (* convert default real to bits *)
-(* NOTE: this function is depracated; use Real64.castToWord instead *)
+(* NOTE: this function is deprecated; use Real64.castToWord instead *)
     val realToBits : real -> Word64.word
 
     (* assembly-code function for scaling reals *)

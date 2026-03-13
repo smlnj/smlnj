@@ -398,6 +398,30 @@ structure ContractPrim : sig
             (***** NOTB *****)
             | (P.PURE_ARITH{oper=P.NOTB, kind}, [NUM i]) =>
                 Val(NUM{ival = CA.bNot(sizeOfKind kind, #ival i), ty = #ty i})
+            (***** ROTL *****)
+            | (P.PURE_ARITH{oper=P.ROTL, ...}, [i as NUM{ival=0, ...}, _]) => Val i
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else None
+                end
+            (***** ROTR *****)
+            | (P.PURE_ARITH{oper=P.ROTR, ...}, [i as NUM{ival=0, ...}, _]) => Val i
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTR, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else None
+                end
             (***** PURE_NUMSUBSCRIPT *****)
             | (P.PURE_NUMSUBSCRIPT{kind}, [STRING s, NUM i]) => let
                 val v = ord(String.sub(s, Int.fromLarge(#ival i)))
@@ -512,6 +536,26 @@ structure ContractPrim : sig
             | (P.INT_TO_REAL{to, ...}, [NUM{ival, ...}]) =>
                 (* NOTE: this conversion might lose precision *)
                 Val(REAL{rval = RealLit.fromInt ival, ty=to})
+(* REAL32: FIXME *)
+            | (P.BITS_TO_REAL _, [NUM{ival, ...}]) => None (* TODO: needs RealLit support *)
+            | (P.BITS_TO_REAL _, [VAR v]) => (case #info(get v)
+                 of PUREinfo(P.REAL_TO_BITS _, [u]) => Val u
+                  | _ => None
+                 (* end case *))
+(* REAL32: FIXME *)
+            | (P.REAL_TO_BITS 64, [REAL{rval, ...}]) => let
+                val (bv, _) = Real64ToBits.toBits rval
+                (* convert bytes to literal value *)
+                val w = Word8Vector.foldl
+                      (fn (b, w) => IntInf.orb(IntInf.<<(w, 0w8), Word8.toLargeInt b))
+                        0 bv
+                in
+                  Val(mkNum(64, w))
+                end
+            | (P.REAL_TO_BITS _, [VAR v]) => (case #info(get v)
+                 of PUREinfo(P.BITS_TO_REAL _, [u]) => Val u
+                  | _ => None
+                 (* end case *))
             | (P.BOX, [VAR v]) => (case #info(get v)
                  of PUREinfo(P.UNBOX, [u]) => Val u
                   | _ => None

@@ -533,6 +533,8 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		     then (typ := ty; (LAYEREDpat(cpat,npat),MARKty(ty, region)))
 		     else (pat,WILDCARDty)
 		 end)
+       | NOpat => (pat, mkMETAtyBounded depth) (* allow error *)
+       | VARpat V.ERRORvar => (pat, mkMETAtyBounded depth) (* allow error *)
        | p => bug "patType -- unexpected pattern"
 
 (* expType : exp * OC.occ * region -> exp * ty *)

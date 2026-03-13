@@ -18,6 +18,7 @@ structure GenSML : sig
   end = struct
 
     structure V = SMLView
+    structure FileV = V.File
     structure ModV = V.Module
     structure TyV = V.Type
     structure ConV = V.Constr
@@ -97,11 +98,24 @@ structure GenSML : sig
             else ()
 
   (* generate the type-declaration file *)
-    fun genTypes (src, outFile, modules) = (
-          case filterPrim modules
+    fun genTypes (src, outFile, modules) = (case filterPrim modules
            of [] => ()
             | modules => if Opt.isEnabled Opt.TYPES
-                  then output (src, outFile, List.map GenTypes.gen modules)
+                then let
+                  val {prologue, epilogue} = FileV.getImplementationCode ()
+                  (* add optional epilogue code *)
+                  val dcls = if null epilogue
+                        then []
+                        else [S.VERBtop epilogue]
+                  (* generate declarations *)
+                  val dcls = (List.map GenTypes.gen modules) @ dcls
+                  (* add optional prologue code *)
+                  val dcls = if null prologue
+                        then dcls
+                        else S.VERBtop prologue :: dcls
+                  in
+                    output (src, outFile, dcls)
+                  end
                 else if Opt.noOutput()
                   then print(outFile ^ "\n")
                   else ()

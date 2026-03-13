@@ -1,0 +1,279 @@
+= The `LEB128` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `LEB128` structure provides binary encoding/decoding of integer and word types
+using the https://en.wikipedia.org/wiki/LEB128[Little-Endian-Base-128 (LEB128)]
+format.  It supports signed and unsigned encodings, decodings, and functions to
+precompute encoding sizes.
+
+== Synopsis
+
+[source,sml]
+------------
+signature LEB128
+structure LEB128 : LEB128
+------------
+
+== Interface
+
+[source,sml]
+------------
+type ('ty, 'src) decoder =
+      (Word8.word, 'src) StringCvt.reader -> 'src -> ('ty * 'src) option
+
+val decodeInt       : (Int.int, 'a) decoder
+val decodeNativeInt : (NativeInt.int, 'a) decoder
+val decodeInt64     : (Int64.int, 'a) decoder
+val decodeIntInf    : (IntInf.int, 'a) decoder
+
+val decodeWord       : (Word.word, 'src) decoder
+val decodeNativeWord : (NativeWord.word, 'src) decoder
+val decodeWord64     : (Word64.word, 'src) decoder
+val decodeUIntInf    : (IntInf.int, 'src) decoder
+
+val sizeOfInt       : Int.int -> int
+val sizeOfNativeInt : NativeInt.int -> int
+val sizeOfInt64     : Int64.int -> int
+val sizeOfIntInf    : IntInf.int -> int
+
+val sizeOfWord       : Word.word -> int
+val sizeOfNativeWord : NativeWord.word -> int
+val sizeOfWord64     : Word64.word -> int
+val sizeOfUIntInf    : IntInf.int -> int
+
+type ('ty, 'dst) encoder =
+       ('dst * Word8.word -> 'dst) -> ('dst * 'ty) -> 'dst
+
+val encodeInt       : (Int.int, 'dst) encoder
+val encodeNativeInt : (Int64.int, 'dst) encoder
+val encodeInt64     : (Int64.int, 'dst) encoder
+val encodeIntInf    : (IntInf.int, 'dst) encoder
+
+val encodeWord       : (Word.word, 'dst) encoder
+val encodeNativeWord : (Word64.word, 'dst) encoder
+val encodeWord64     : (Word64.word, 'dst) encoder
+val encodeUIntInf    : (IntInf.int, 'dst) encoder
+
+val intToBytes       : Int.int -> Word8Vector.vector
+val nativeIntToBytes : Int64.int -> Word8Vector.vector
+val int64ToBytes     : Int64.int -> Word8Vector.vector
+val intInfToBytes    : IntInf.int -> Word8Vector.vector
+
+val wordToBytes       : Word.word -> Word8Vector.vector
+val nativeWordToBytes : Word64.word -> Word8Vector.vector
+val word64ToBytes     : Word64.word -> Word8Vector.vector
+val uIntInfToBytes    : IntInf.int -> Word8Vector.vector
+------------
+
+== Description
+
+The `LEB128` structure provides three kinds of operations: decoders, encoders,
+and size functions.
+
+=== Decoding
+
+The decoding functions take a reader and input source and return an optional result.
+These functions normally return `SOME(value, rest)`, where `value` is the decoded
+number and `rest` is the residual input source.  There are two possible error
+conditions for decoding.  If the input is incomplete (_i.e._, empty or a ends
+with a byte that has the continuation bit set), then `NONE` is returned.  If the
+decoded value is too large for the type, then the link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
+exception is raised.
+
+`[.kw]#type# ('ty, 'src) decoder`
+  the type of a decoder that decodes values of type `'ty` from a byte
+  source of type `src`.
+
+`[.kw]#val# decodeInt : (Int.int, 'a) decoder`::
+  `decodeInt getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeNativeInt : (NativeInt.int, 'a) decoder`::
+  `decodeNativeInt getb src` decodes an LEB128 encoded native-machine integer
+  from `src` using `getb` to read bytes from the `src`.
+
+`[.kw]#val# decodeInt64 : (Int64.int, 'a) decoder`::
+  `decodeInt64 getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeIntInf : (IntInf.int, 'a) decoder`::
+  `decodeIntInf getb src` decodes an LEB128 encoded integer from `src` using `getb` to
+  read bytes from the `src`.  Note that this decoder does not raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`] exception.
+
+`[.kw]#val# decodeWord : (Word.word, 'src) decoder`::
+  `decodeWord getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeNativeWord : (NativeWord.word, 'src) decoder`::
+  `decodeNativeWord getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeWord64 : (IntInf.int, 'src) decoder`::
+  `decodeWord64 getb src` decodes an LEB128 encoded word from `src` using `getb` to
+  read bytes from the `src`.
+
+`[.kw]#val# decodeUIntInf : (IntInf.int, 'src) decoder`::
+  `decodeUIntInf getb src` decodes an LEB128 encoded unsigned integer from `src`
+  using `getb` to read bytes from the `src`.  Note that this decoder does not raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Overflow:EXN:SPEC[`Overflow`]
+  exception.
+
+=== Encoding Size
+
+The encoding-size functions compute the number of bytes required to encode a
+number.  These functions are provided at the same types as the decoding and
+encoding functions, but note that the encoding size only depends on the value
+being encoded, not on the type of the value.
+
+`[.kw]#val# sizeOfInt : Int.int -> int`::
+  `sizeOfInt n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
+
+`[.kw]#val# sizeOfNativeInt : NativeInt.int -> int`::
+  `sizeOfNativeInt n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
+
+`[.kw]#val# sizeOfInt64 : Int64.int -> int`::
+  `sizeOfInt64 n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
+
+`[.kw]#val# sizeOfIntInf : IntInf.int -> int`::
+  `sizeOfIntInf n` returns the size in bytes of the LEB128 encoding of the
+  signed integer `n`.
+
+`[.kw]#val# sizeOfWord : Word.word -> int`::
+  `sizeOfWord w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+`[.kw]#val# sizeOfNativeWord : NativeWord.word -> int`::
+  `sizeOfNativeWord w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+`[.kw]#val# sizeOfWord64 : Word64.word -> int`::
+  `sizeOfWord64 w` returns the size in bytes of the LEB128 encoding of the word `w`.
+
+`[.kw]#val# sizeOfUIntInf : IntInf.int -> int`::
+  `sizeOfUIntInf n` returns the size in bytes of the LEB128 encoding of the
+  unsigned integer `n`.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
+
+=== Encoding
+
+The encoding functions provide an interface designed to support a variety of
+different output targets.  The first argument is a function for outputting
+bytes to an abstract destination, followed by a pair of the destination and
+number to be encoded.  The final destination is returned as the result.
+See the <<Examples>> section below for examples of how to use the general encoding
+functions.
+
+`[.kw]#type# 'ty encoder`::
+  the type of a encoder for values of type `'ty`.
+
+`[.kw]#val# encodeInt : Int.int encoder`::
+  `encodeInt putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeNativeInt : NativeInt.int encoder`::
+  `encodeNativeInt putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeInt64 : Int64.int encoder`::
+  `encodeInt64 putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeIntInf : IntInf.int encoder`::
+  `encodeIntInf putB (dst, n)` outputs the LEB128 encoding of the signed integer `n`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeWord : Word.word encoder`::
+  `encodeWord putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeNativeWord : NativeWord.word encoder`::
+  `encodeNativeWord putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeWord64 : Word64.word encoder`::
+  `encodeWord64 putB (dst, w)` outputs the LEB128 encoding of the unsigned integer `w`
+  to the destination `dst` using `putB` to output bytes.
+
+`[.kw]#val# encodeUIntInf : IntInf.int encoder`::
+  `encodeUIntInf putB (dst, n)` outputs the LEB128 encoding of the unsigned integer `n`
+  to the destination `dst` using `putB` to output bytes.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
+
+=== Encoding to Byte Vectors
+
+In addition to the general encoding functions above, specialized versions
+are provided that convert numbers to their LEB128 byte-vector encoding.
+
+`[.kw]#val# intToBytes : Int.int \-> Word8Vector.vector`::
+  `intToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# nativeIntToBytes : NativeInt.int \-> Word8Vector.vector`::
+  `nativeIntToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# int64ToBytes : Int64.int \-> Word8Vector.vector`::
+  `int64ToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# intInfToBytes : IntInf.int \-> Word8Vector.vector`::
+  `intInfToBytes n` returns the LEB128 encoding of the signed integer `n`.
+
+`[.kw]#val# wordToBytes : Word.word \-> Word8Vector.vector`::
+  `wordToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# nativeWordToBytes : NativeWord.word \-> Word8Vector.vector`::
+  `nativeWordToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# word64ToBytes : Word64.word \-> Word8Vector.vector`::
+  `word64ToBytes w` returns the LEB128 encoding of the word `w`.
+
+`[.kw]#val# uIntInfToBytes : IntInf.int \-> Word8Vector.vector`::
+  `uIntInfToBytes n` returns the LEB128 encoding of the unsigned integer `n`.
+  This expression will raise the
+  link:{sml-basis-url}/general.html#SIG:GENERAL.Domain:EXN:SPEC[`Domain`]
+  exception when `n < 0`.
+
+== Examples
+
+As an example of using the decoding functions, the following function
+decodes integers from vector slices:
+
+[source,sml]
+------------
+fun fromSlice slice = decodeInt Word8VectorSlice.getItem slice
+------------
+
+As an example of using the encoding functions, the following function
+encodes a word into a byte buffer.
+
+[source,sml]
+------------
+fun toBuffer (buf, w) =
+      encodeWord
+        (fn (buf, b) => (Word8Buffer.add1(buf, b); buf))
+        (buf, w)
+------------
+
+For the `toBuffer` function, the buffer keeps track of where the next byte
+goes, but if we want to write the bytes into an array, we need to keep track
+of the index in the first argument.
+
+[source,sml]
+------------
+fun toArray (arr, idx, w) =
+      encodeWord
+        (fn (i, b) => (Word8Array.update(arr, i, b); i+1))
+        (idx, w)
+------------
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__]

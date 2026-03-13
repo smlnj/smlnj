@@ -2,6 +2,8 @@
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
  * All rights reserved.
+ *
+ * Pickler for LambdaVar.lvar type
  *)
 
 structure LambdaVarPickle : sig
@@ -20,9 +22,12 @@ structure LambdaVarPickle : sig
     fun toByte w = Word8.fromLarge(Word.toLarge w)
     fun fromByte w = Word.fromLarge(Word8.toLarge w)
 
+  (* the mask for IDs depends on the native word size *)
+    val mask = Word.<<(0w1, Word.fromInt Word.wordSize - 0w2) - 0w1
+
     fun write_lvar output1 (outS, lv) = let
-	(* mask out low 61 bits of ID *)
-	  val w = Word.andb (Word.fromInt(LambdaVar.toId lv), 0wx1fffffffffffffff)
+	(* mask out low bits of ID *)
+	  val w = Word.andb (Word.fromInt(LambdaVar.toId lv), mask)
 	(* convert to a list of bytes *)
 	  fun cvt (0w0, bytes) = bytes
 	    | cvt (w, bytes) = cvt (Word.>>(w, 0w8), toByte w :: bytes)

@@ -1,6 +1,6 @@
 (* int.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Default int structure (31 bits) for 32-bit targets.
@@ -51,7 +51,7 @@ structure IntImp : INTEGER =
     val op < 	: int * int -> bool = Int.<
     val op <= 	: int * int -> bool = Int.<=
 
-    fun fmt radix = (NumFormat32.fmtInt radix) o InlineT.Int32.fromInt
+    val fmt = NumFormat.fmtInt
 
     fun scan radix = let
 	  val scanInt32 = NumScan32.scanInt radix

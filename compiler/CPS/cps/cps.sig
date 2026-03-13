@@ -1,6 +1,6 @@
 (* cps.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -23,11 +23,11 @@ signature CPS =
     type intty = {sz : int, tag : bool}
 
     datatype cty
-      = NUMt of intty	(* integers of the given type *)
-      | PTRt of pkind	(* pointer *)
-      | FUNt		(* function? *)
-      | FLTt of int	(* float of given size *)
-      | CNTt		(* continuation *)
+      = NUMt of intty	        (* integers of the given type *)
+      | PTRt of pkind	        (* pointer *)
+      | FUNt		        (* function? *)
+      | FLTt of int	        (* float of given size *)
+      | CNTt of cty list	(* continuation *)
 
     structure P : sig
 
@@ -51,6 +51,8 @@ signature CPS =
 	  = ADD | SUB | MUL | QUOT | REM | NEG
 	  | LSHIFT | RSHIFT | RSHIFTL
 	  | ORB | XORB | ANDB | NOTB
+          | CNTPOP | CNTLZ | CNTTZ
+          | ROTL | ROTR
 	  | FDIV | FABS | FSQRT
 
       (* comparison operators
@@ -116,6 +118,8 @@ signature CPS =
 	  | EXTEND_INF of int                   (* sign extend: intN -> IntInf.int *)
 	  | TRUNC_INF of int                    (* IntInf.int -> wordN *)
 	  | INT_TO_REAL of {from: int, to: int}
+          | BITS_TO_REAL of int                 (* bitcast from word to real *)
+          | REAL_TO_BITS of int                 (* bitcast from real to word *)
 	  | SUBSCRIPTV
 	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
 	  | BOX | UNBOX
@@ -134,8 +138,8 @@ signature CPS =
     datatype value
       = VAR of lvar
       | LABEL of lvar			(* function labels after closure conversion *)
-      | NUM of intty IntConst.t
-      | REAL of int RealConst.t
+      | NUM of intty IntConst.t         (* `NUM{ival, ty = {sz, tag}}` *)
+      | REAL of int RealConst.t         (* `REAL{rval, ty = sz}` *)
       | STRING of string
       | VOID                            (* used in closure conversion *)
 

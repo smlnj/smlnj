@@ -2,9 +2,9 @@
 :revnumber: {version}
 :revdate: {release-date}
 :source-highlighter: pygments
-:dist-dir: https://smlnj.org/dist/working/{version}/
-:history: {dist-dir}HISTORY.html
-:release-notes: {dist-dir}{version}-README.html
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
+:release-notes: {dist-url}{version}-README.html
 :stem: latexmath
 :source-highlighter: pygments
 
@@ -29,37 +29,65 @@ systems installed on your machine.
 
 === Installation Steps
 
-Assuming that you have the necessary tools installed, the process for
-building the system from source code is as follows:
+Assuming that you have the necessary tools installed, you can either clone the
+repository or download and unpack one of the source tarballs.  In either
+case, the process for building the system is the same once you have acquired
+the source code.
 
---
-1. clone the repository for version {version}.
-+
+==== Cloning the Repository
+
+To clone the repository, use the following command:
+
 [subs="+attributes"]
 ----
- git clone --depth 1 --branch v{version} --recurse-submodules https://github.com/smlnj/smlnj.git
+git clone --depth 1 --branch v{version} --recurse-submodules https://github.com/smlnj/smlnj.git
 ----
-+
-Note that you can also clone the entire repository and then switch to the
-`v{version}` tag.
-+
+
 The `--depth` option limits the download to just one commit (_i.e._, no
 history), the `--branch` option specifies the version of the source
 code that you are requesting, and the `--recurse-submodules` option is
 necessary to fetch the customized version of the **LLVM** library that we
 use.
 
-2. `cd` to the cloned repository and build the system.
-+
+Note that you can also clone the entire repository and then switch to the
+`v{version}` tag.
+
+Also note that the repository does **not** contain the boot files that are
+necessary to bootstrap the compiler.  These files are downloaded as part of
+running the `build.sh` script below (when they are not present).  If you
+need a distribution that you can build without network access, then download
+one of the source distributions.
+
+==== Downloading a Source Tarball
+
+You can either click on the appropriate link on the {dist-url}index.html[distribution-files
+page] or use a shell command (_e.g._, *curl* or *wget*) to download the file.
+
+For example, the commands
+
+[subs="+attributes"]
 ----
- cd smlnj
- ./build.sh
+curl -O {dist-url}smlnj-<arch>-unix-{version}.tgz
+tar -xzf smlnj-<arch>-unix-{version}.tgz
 ----
+
+will download and unpack the sources for `<arch>` (which should be either `amd64`
+or `arm64`).
+
+==== Build the System
+
+Once you have either cloned the repository or unpacked the source distribution,
+we can build the system with the following commands:
+
+----
+cd smlnj
+./build.sh
+----
+
 Use `build.sh -h` to see the list of options accepted by the build script.
-+
+
 As before, you can modify the `config/targets` file to add/remove components
 from the build.
---
 
 After successful running of the `build.sh` script, `bin/sml` will be the interactive
 system.
@@ -67,10 +95,10 @@ system.
 == macOS Installation Packages
 
 We provide installers for **macOS** running on both
-{dist-dir}smlnj-amd64-{version}.pkg[AMD64 (x86-64)] and
-{dist-dir}smlnj-arm64-{version}.pkg[Arm64 (AArch64)].
+{dist-url}smlnj-amd64-{version}.pkg[AMD64 (x86-64)] and
+{dist-url}smlnj-arm64-{version}.pkg[Arm64 (AArch64)].
 
-=== Installing on macOS 15 Sequoia
+=== Installing on macOS 15 Sequoia and Later
 
 The installer packages work on macOS Sequoia, but they requires a more
 complicated process than for previous versions of macOS. Once you have

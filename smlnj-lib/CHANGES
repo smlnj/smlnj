@@ -2,6 +2,33 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
+SML/NJ 2026.1
+-------------------
+
+[2026-03-10]
+        Added the `sizeOfValue` function to the `JSON_STREAM_OUTPUT` signature.
+
+[2026-03-10]
+        Added the `Rand48` structure to the utility library.  This module is
+        an SML implementation of the Standard C Library `rand48` functions.
+
+--------------------------------------------------------------------------------
+SML/NJ 2025.3
+-------------------
+
+[2025-12-18]
+	Added experimental hashing infrastructure.  This includes the `HASHING`
+	signature that defines an interface to a mechanism for computing a
+	summary value by iterating over the bytes of a value, and a structure
+	`Hash` that computes hash keys.  This module is currently not described
+	in the library documentation, since it is still experimental and subject
+	to change.
+
+[2025-09-13]
+        Added `LEB128` module, which implements packed encoding and decoding
+        of integer and word types using the Little Endian Base 128 encoding.
+
+--------------------------------------------------------------------------------
 SML/NJ 2025.2
 -------------------
 
@@ -15,7 +42,7 @@ SML/NJ 2025.2
 
 [2025-07-17]
         Added a number of operations to the `MONO_HASH_SET` interface to make
-        it more compatible to the `ORD_SET` interface.
+        it more compatible with the `ORD_SET` interface.
 
 [2025-07-12]
         Changed the implementation of the `randInt`, `randWord`, and `randNat`

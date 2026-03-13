@@ -41,7 +41,7 @@ Group
 	structure CompileExn
 	structure PrettyPrint
         structure PPUtil
-	
+
 	structure Stats
 	structure WordStringHashTable
 
@@ -58,6 +58,11 @@ Group
 	signature TARGET
 	structure Target
 is
+	$smlnj/basis/basis.cm
+	$smlnj/smlnj-lib/smlnj-lib.cm
+	$smlnj/smlnj-lib/pp-lib.cm
+	$smlnj/smlnj-lib/controls-lib.cm
+
 	control/basiccontrol.sml
 
 	symbol/symbol.sig
@@ -125,8 +130,3 @@ is
 #else
 	compiler/target64.sml
 #endif
-
-	$smlnj/basis/basis.cm
-	$smlnj/smlnj-lib/smlnj-lib.cm
-	$smlnj/smlnj-lib/pp-lib.cm
-	$smlnj/smlnj-lib/controls-lib.cm

@@ -10,8 +10,8 @@
 #                          by $HEAP_OPSYS
 #
 
-export PATH
-PATH="/bin:/usr/bin"
+#export PATH
+#PATH="/bin:/usr/bin"
 
 HEAP_OPSYS=""
 case `uname -s` in
@@ -27,6 +27,7 @@ case `uname -s` in
     OPSYS=linux
     case `uname -m` in
       x86_64) ARCH=amd64 ;;
+      aarch64) ARCH=arm64 ;;
       *) exit 1;;
     esac
     ;;

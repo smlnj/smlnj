@@ -1,10 +1,10 @@
 (* ieee-real-types.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Types-only definition of the IEEEReal structure.  We need to factor these out of the
- * IEEEReal structure to avoid cyclic module dependencies.
+ * Types-only definition of the IEEEReal structure.  We need to factor
+ * these out of the IEEEReal structure to avoid cyclic module dependencies.
  *)
 
 structure IEEERealTypes =

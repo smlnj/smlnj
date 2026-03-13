@@ -1,6 +1,6 @@
 (* frep-to-real64.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Conversion of the `FloatRep.float_rep` representation to
@@ -24,16 +24,8 @@ structure FRepToReal64 : sig
 
     datatype float_rep = datatype FloatRep.float_rep
 
-(* the following should be in the Unsafe structure *)
     (* bitcast a Word64.word to a Real64.real *)
-    fun fromBits (b : Word64.word) : real = let
-          val r : real ref = InlineT.cast(ref b)
-          in
-            !r
-          end
-(* TODO
     val fromBits = InlineT.Real64.fromBits
-*)
 
 (* the following should be part of the WORD signature *)
     (* count the leading zeros in a Word64.word value *)
@@ -53,6 +45,12 @@ structure FRepToReal64 : sig
               then n - 0w2
               else n - W.fromLarge x
           end
+
+(*+DEBUG**
+    fun w128ToString (hi, lo) = concat[
+	    "(", W64.fmt StringCvt.DEC hi, ", ", W64.fmt StringCvt.DEC lo, ")"
+	  ]
+**-DEBUG*)
 
     val kMantissaBits = 52
     val kExpBits = 11
@@ -113,6 +111,7 @@ structure FRepToReal64 : sig
 
     (* powers of 5 from 5^0 to 5^25 *)
     val pow5TblSz = 26
+    (* NOTE: on 64-bit machines, this table can be represented as a `word vector` *)
     val pow5Tbl : Word64.word vector = let
           fun gen (0, _) = []
             | gen (i, n : Word64.word) = n :: gen(i-1, 0w5 * n)
@@ -305,10 +304,7 @@ structure FRepToReal64 : sig
                   val pow5 = computeInvPow5 (~e10)
                   val _ = (
                         print(concat["j = ", Int.toString j, "\n"]);
-                        print(concat[
-                            "pow5 = (", W64.fmt StringCvt.DEC (#1 pow5),
-                            ", ", W64.fmt StringCvt.DEC (#2 pow5), ")\n"
-                          ]))
+                        print(concat["pow5 = ", w128ToString pow5, "\n"]))
 **-DEBUG*)
                   val m2 = mulShift64(m10, computeInvPow5(~e10), W.fromInt j)
                   val trailingZeros = multipleOfPowerOf5(m10, W.fromInt(~e10))
@@ -376,7 +372,7 @@ structure FRepToReal64 : sig
           end
 
     val posInf = fromBits 0wx7FF0000000000000
-    val negInf = fromBits 0wx7FF0000000000000
+    val negInf = fromBits 0wxFFF0000000000000
     val posNaN = fromBits 0wx7FF8000000000000
     val negNaN = fromBits 0wxFFF8000000000000
     val posZero = fromBits 0wx0000000000000000

@@ -52,8 +52,9 @@ ml_val_t ApplyMLFn (ml_state_t *msp, ml_val_t f, ml_val_t arg, bool_t useCont)
     msp->ml_exnCont     = PTR_CtoML(handle_v+1);
     msp->ml_varReg      = ML_unit;
     msp->ml_arg         = arg;
-    if (! useCont)
+    if (! useCont) {
         msp->ml_cont    = PTR_CtoML(return_c);
+    }
     msp->ml_closure     = f;
     msp->ml_pc          =
     msp->ml_linkReg     = GET_CODE_ADDR(f);
@@ -175,7 +176,9 @@ void RunML (ml_state_t *msp)
               case REQ_RAISE_OVERFLOW: { /* a request for raising Overflow */
                     ml_val_t    loc, traceStk, exn;
                     char *namestring;
+#ifdef DEBUG_OVERFLOW
                     SayDebug("RunML: raise Overflow request: pc = %p\n", msp->ml_pc);
+#endif
                     if ((namestring = (char *)BO_AddrToCodeObjTag((Word_t)(msp->ml_pc))) != NIL(char *))
                     {
                         char    buf2[192];
@@ -198,7 +201,8 @@ void RunML (ml_state_t *msp)
                 break;
 
               case REQ_CALLC: {
-                    ml_val_t    (*f)(), arg;
+                    cfunc_t f;
+                    ml_val_t arg;
 
                     SETUP_RETURN(msp);
                     if (NeedGC (msp, 8*ONE_K))

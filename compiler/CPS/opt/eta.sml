@@ -126,7 +126,7 @@ fun newname x = (sameName x; LV.Tbl.insert m x)
 
 local val km : Set.intset =  Set.new()
 in
-fun addvt (v, CNTt) = Set.add km v
+fun addvt (v, CNTt _) = Set.add km v
   | addvt _ = ()
 fun addft (CONT, v, _, _, _) = Set.add km v
   | addft _ = ()

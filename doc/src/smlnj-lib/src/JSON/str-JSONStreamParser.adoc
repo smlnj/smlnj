@@ -216,6 +216,7 @@ fun getNames file = let
 
 == See Also
 
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:str-JSONParser.adoc[`JSONParser`],
 xref:str-JSONStreamPrinter.adoc[`JSONStreamPrinter`],
 xref:json-lib.adoc[__The JSON Library__]

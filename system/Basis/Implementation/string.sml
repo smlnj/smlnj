@@ -28,7 +28,7 @@ structure StringImp : STRING =
 
     val maxSize = Core.max_length
 
-  (* these functions are implemented in base/system/smlnj/init/pervasive.sml *)
+  (* these functions are implemented in system/smlnj/init/pervasive.sml *)
     val size = size
     val op ^ = op ^
     val concat = concat

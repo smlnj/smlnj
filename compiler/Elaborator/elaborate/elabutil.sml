@@ -270,8 +270,8 @@ fun clean_pat err (CONpat(DATACON{const=false,name,...},_)) =
   | clean_pat err (MARKpat(p,region)) = MARKpat(clean_pat err p, region)
   | clean_pat err p = p
 
-(* patToString : pat -> string
- *   -- not exported, used once in makeAppPat error message *)
+(* this function is not exported and only used in the "obsolete" mkAppPat
+(* patToString : pat -> string *)
 fun patToString WILDpat = "_"
   | patToString (VARpat(VALvar{path,...})) = SP.toString path
   | patToString (CONpat(DATACON{name,...},_)) = S.name name
@@ -286,6 +286,7 @@ fun patToString WILDpat = "_"
   | patToString (ORpat _) = "<or pattern>"
   | patToString (MARKpat _) = "<marked pattern>"
   | patToString _ = "<illegal pattern>"
+*)
 
 (* obsolete
 fun makeAPPpat err (CONpat(d as DATACON{const=false,lazyp,...},tvs),p) =

@@ -220,7 +220,7 @@ local
 	  (BT.word32Tycon,	wordPrefx o Word32.toString o Obj.toWord32),
 	  (BT.word64Tycon,	wordPrefx o Word64.toString o Obj.toWord64),
 	  (BT.charTycon,	char2str),
-	  (BT.realTycon,	Real64.toString o Obj.toReal64),
+	  (BT.realTycon,	Real64.fmt StringCvt.EXACT o Obj.toReal64),
 	  (BT.exnTycon,		exn2str),
 	  (BT.pointerTycon,	fn _ => "cptr"),
 	  (BT.stringTycon,	PrintUtil.formatString o Obj.toString),

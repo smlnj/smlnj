@@ -6,9 +6,17 @@
 module TestSpec {
 
 -- a DAG
-  node = LF (int id)
+  label = string
+
+  node = LF (int id, label! lab)
        | ND (int id, node_ref* kids)
 
   node_ref = node!
 
+  dag = node_ref*
+
+}
+
+view SML {
+  <file> <= share_context_name : NodeContext
 }

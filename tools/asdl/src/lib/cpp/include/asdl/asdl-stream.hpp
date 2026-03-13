@@ -11,7 +11,7 @@
 #ifndef _ASDL_STREAM_HPP_
 #define _ASDL_STREAM_HPP_
 
-#ifndef _ASDL_HPP_
+#ifndef _IN_ASDL_HPP_
 #  error do not include "asdl-stream.hpp" directly; instead include "asdl.hpp"
 #endif
 

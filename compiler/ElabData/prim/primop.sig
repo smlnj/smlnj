@@ -29,6 +29,8 @@ signature PRIMOP =
       = ADD | SUB | MUL | QUOT | REM | NEG
       | LSHIFT | RSHIFT | RSHIFTL
       | ORB | XORB | ANDB | NOTB
+      | CNTPOP | CNTLZ | CNTTZ
+      | ROTL | ROTR
       | FDIV | FABS | FSQRT
 
   (* comparison operators *)
@@ -169,6 +171,9 @@ signature PRIMOP =
       | HOST_WORD_SIZE                  (* E: the number of bits per word *)
       | HOST_BIG_ENDIAN                 (* E: true if host is big-endian *)
       | REAL_TO_BITS of int		(* E: cast real of the given size to a word of
+					 * the same size
+					 *)
+      | BITS_TO_REAL of int		(* E: cast word of the given size to a real of
 					 * the same size
 					 *)
 

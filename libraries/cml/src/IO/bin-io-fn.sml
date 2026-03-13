@@ -1,6 +1,6 @@
 (* bin-io-fn.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the CML version of the BinIO functor.
@@ -620,7 +620,8 @@ functor BinIOFn (
 		      release();
 		      outputExn(strm, "getPosOut", IO.RandomAccessNotSupported))
 		(* end case *);
-		release()
+		release();
+		strmMV
 	      end
 
 	fun setBufferMode (strmMV, mode) = let
@@ -693,7 +694,7 @@ functor BinIOFn (
     fun closeOut strm = StreamIO.closeOut(SV.mGet strm)
     fun getPosOut strm = StreamIO.getPosOut(SV.mGet strm)
     fun setPosOut (strm, p as StreamIO.OUTP{strm=strm', ...}) = (
-	  mUpdate(strm, strm'); StreamIO.setPosOut p)
+	  mUpdate(strm, strm'); ignore (StreamIO.setPosOut p))
 
     fun mkInstream (strm : StreamIO.instream) = SV.mVarInit strm
     fun getInstream (strm : instream) = SV.mGet strm

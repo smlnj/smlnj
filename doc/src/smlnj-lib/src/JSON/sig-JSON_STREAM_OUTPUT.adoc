@@ -46,6 +46,8 @@ val beginArray : printer -> unit
 val endArray : printer -> unit
 
 val value : printer * JSON.value -> unit
+
+val sizeOfValue : JSON.value -> int
 ------------
 
 == Description
@@ -150,9 +152,13 @@ val value : printer * JSON.value -> unit
   equivalent to recursively traversing the *JSON* value while calling
   the appropriate output functions from above.
 
+`[.kw]#val# sizeOfValue : JSON.value \-> int`::
+  `sizeOfValue v` returns the size of the *JSON* value `v` when
+  rendered as a condensed string.
+
 == See Also
 
-xref:str-JSON.adoc[`JSON`],
+xref:../Util/str-JSON.adoc[`JSON`],
 xref:str-JSONBufferPrinter.adoc[`JSONBufferPrinter`],
 xref:str-JSONPrinter.adoc[`JSONPrinter`],
 xref:str-JSONStreamParser.adoc[`JSONStreamParser`],

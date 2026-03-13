@@ -400,6 +400,13 @@ structure PrintSML : sig
 		  end
 	      | S.TYPEdec tb => ppTB ("type", tb)
 	      | S.DATATYPEdec(dbs, tbs) => ppDatatypes (strm, dbs, tbs)
+	      | S.DATATYPEREPdec(tyc1, tyc2) => (
+                  PP.openVBox strm indent0;
+                    PP.openHBox strm;
+                      str "datatype"; sp(); str tyc1; sp();
+                      str "="; sp(); str "datatype"; sp(); str tyc2;
+                    PP.closeBox strm;
+		  PP.closeBox strm)
 	      | S.EXCEPTIONdec con => (
 		  PP.openHBox strm;
 		    str "exception"; sp(); ppCon (strm, con);

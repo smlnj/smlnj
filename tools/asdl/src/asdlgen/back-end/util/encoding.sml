@@ -140,7 +140,8 @@ structure Encoding : sig
 	    (* end case *)
 	  end
 
-    fun smallTag ncons = (ncons < 255)
+    (* we use tag values from 1..ncons, with 0 reserved for `NONE` optional values *)
+    fun smallTag ncons = (ncons < 256)
 
     fun tagTyId ncons = if smallTag ncons
 	  then BaseTypes.tag8TyId

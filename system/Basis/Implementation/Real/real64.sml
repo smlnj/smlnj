@@ -19,16 +19,7 @@ structure Real64Imp : REAL =
     fun *+ (a:real,b,c) = a*b+c
     fun *- (a:real,b,c) = a*b-c
 
-(* TODO: this function should be defined in InlineT *)
-    (* bitcast a Word64.word to a Real64.real *)
-    fun fromBits (b : Word64.word) : real = let
-          val r : real ref = InlineT.cast(ref b)
-          in
-            !r
-          end
-(* TODO
     val fromBits = InlineT.Real64.fromBits
-*)
     val toBits = InlineT.Real64.toBits
 
     val op == = InlineT.Real64.==
@@ -318,9 +309,12 @@ structure Real64Imp : REAL =
     val min : real * real -> real = InlineT.Real64.min
     val max : real * real -> real = InlineT.Real64.max
 
+    (* FloatRep to real normalized conversion *)
+    val frepToReal = FRepToReal64.cvt o FloatRep.normalize64
+
     fun toDecimal r = FloatRep.toDecimalApprox(Real64ToFRep.cvt r)
     fun fromDecimal d = (case FloatRep.fromDecimalApprox d
-           of SOME frep => SOME(FRepToReal64.cvt(FloatRep.normalize64 frep))
+           of SOME frep => SOME(frepToReal frep)
             | NONE => NONE
           (* end case *))
 
@@ -336,7 +330,7 @@ structure Real64Imp : REAL =
           val scan' = StringToFRep.scan getc
           in
             fn cs => (case scan' cs
-                 of SOME(frep, cs) => SOME(FRepToReal64.cvt frep, cs)
+                 of SOME(frep, cs) => SOME(frepToReal frep, cs)
                   | NONE => NONE
                 (* end case *))
           end

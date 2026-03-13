@@ -1,6 +1,6 @@
 (* tagged-arith.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Support for tagged arithmetic, which we lower to machine arithmetic
@@ -10,11 +10,11 @@
 
 structure TaggedArith : sig
 
-  (* convert pure tagged arithmetic to CFG expressions *)
+    (* convert pure tagged arithmetic to CFG expressions *)
     val pure : (CPS.value -> CFG.exp)
 	  -> CPS.P.pureop * bool * int * CPS.value list -> CFG.exp
 
-  (* convert tagged trapping arithmetic to CFG *)
+    (* convert tagged trapping arithmetic to CFG *)
     val trapping : (CPS.value -> CFG.exp)
 	  -> CPS.P.arithop * CPS.value list * LambdaVar.lvar * (CFG.exp -> CFG.stm)
 	  -> CFG.stm
@@ -50,11 +50,11 @@ structure TaggedArith : sig
     fun orTag e = pureOp (P.ORB, ity, [e, one])
     fun addTag e = pureOp (P.ADD, ity, [e, one])
     fun stripTag e = pureOp (P.SUB, ity, [e, one])
-    fun untagInt e = pureOp (P.RSHIFT, ity, [e, one])
-    fun untagUInt e = pureOp (P.RSHIFTL, ity, [e, one])
+    fun untagInt e = pureOp (P.ASHR, ity, [e, one])
+    fun untagUInt e = pureOp (P.LSHR, ity, [e, one])
     fun untag (false, e) = untagUInt e
       | untag (true, e) = untagInt e
-    fun tag e = orTag (pureOp (P.LSHIFT, ity, [e, one]))
+    fun tag e = orTag (pureOp (P.SHL, ity, [e, one]))
 
   (* pure tagged arithmetic; a number "n" is represented as "2*n+1" *)
     fun pure comp (rator, signed, sz, args) = (case (rator, args)
@@ -80,9 +80,8 @@ structure TaggedArith : sig
 			| (_, NUM{ival, ...}) => (untag (signed, comp v1), num(ival+ival))
 			| _ => (stripTag (comp v1), untag (signed, comp v2))
 		      (* end case *))
-		val oper = if signed then P.SMUL else P.UMUL
 		in
-		  addTag (pureOp (oper, ity, [v1, v2]))
+		  addTag (pureOp (P.MUL, ity, [v1, v2]))
 		end
 	    | (QUOT, [v1, v2]) => let
 		val e1 = (case v1
@@ -110,19 +109,19 @@ structure TaggedArith : sig
 		end
 	    | (NEG, [v]) => pureOp (P.SUB, ity, [two, comp v])
 	    | (LSHIFT, [v1, NUM{ival, ...}]) =>
-		addTag (pureOp (P.LSHIFT, ity, [stripTag(comp v1), num ival]))
+		addTag (pureOp (P.SHL, ity, [stripTag(comp v1), num ival]))
 	    | (LSHIFT, [NUM{ival, ...}, v2]) =>
-		addTag (pureOp (P.LSHIFT, ity, [num(ival+ival), untagUInt(comp v2)]))
+		addTag (pureOp (P.SHL, ity, [num(ival+ival), untagUInt(comp v2)]))
 	    | (LSHIFT, [v1, v2]) =>
-		addTag (pureOp (P.LSHIFT, ity, [stripTag(comp v1), untagUInt(comp v2)]))
+		addTag (pureOp (P.SHL, ity, [stripTag(comp v1), untagUInt(comp v2)]))
 	    | (RSHIFT, [v1, NUM{ival, ...}]) =>
-		orTag (pureOp (P.RSHIFT, ity, [comp v1, num ival]))
+		orTag (pureOp (P.ASHR, ity, [comp v1, num ival]))
 	    | (RSHIFT, [v1, v2]) =>
-		orTag (pureOp (P.RSHIFT, ity, [comp v1, untagUInt(comp v2)]))
+		orTag (pureOp (P.ASHR, ity, [comp v1, untagUInt(comp v2)]))
 	    | (RSHIFTL, [v1, NUM{ival, ...}]) =>
-		orTag (pureOp (P.RSHIFTL, ity, [comp v1, num ival]))
+		orTag (pureOp (P.LSHR, ity, [comp v1, num ival]))
 	    | (RSHIFTL, [v1, v2]) =>
-		orTag (pureOp (P.RSHIFTL, ity, [comp v1, untagUInt(comp v2)]))
+		orTag (pureOp (P.LSHR, ity, [comp v1, untagUInt(comp v2)]))
 	    | (ORB, [v1, v2]) => pureOp (P.ORB, ity, [comp v1, comp v2])
 	    | (XORB, [NUM{ival, ...}, v2]) =>
 		pureOp (P.XORB, ity, [num (ival+ival), comp v2])
@@ -137,6 +136,22 @@ structure TaggedArith : sig
 		in
 		  pureOp (P.XORB, ity, [comp v, num mask])
 		end
+            | (CNTPOP, [v]) =>
+                (* untag argument and then count ones *)
+                tag(pureOp (P.CNTPOP, ity, [untagUInt (comp v)]))
+            | (CNTLZ, [v]) =>
+                (* the tagging does not affect the leading-zero count; plus,
+                 * we know that the argument is not zero!
+                 *)
+                tag(pureOp (P.CNTLZ, ity, [comp v]))
+            | (CNTTZ, [v]) =>
+                (* rotate the argument right by one; this puts the tag bit into
+                 * the high-order bit, so the count for zero will return the correct
+                 * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63
+                 *)
+                tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
+            | (ROTL, [v1, v2]) => error [".pure: ROTL not supported on tagged words"]
+            | (ROTR, [v1, v2]) => error [".pure: ROTR not supported on tagged words"]
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 

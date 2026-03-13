@@ -183,7 +183,7 @@ fun yyAction11 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;
-         raise (Fail ("Unexpected text in comment: \"" ^ yytext ^ "\""))
+         raise Fail(concat["Unexpected text in comment: \"", yytext, "\""])
       end
 fun yyAction12 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
@@ -222,6 +222,12 @@ fun yyAction18 (strm, lastMatch : yymatch) = let
       val yytext = yymktext(strm)
       in
         yystrm := strm;  PCDATA yytext
+      end
+fun yyAction19 (strm, lastMatch : yymatch) = let
+      val yytext = yymktext(strm)
+      in
+        yystrm := strm;
+         raise Fail(concat["Unexpected character '", yytext, "'"])
       end
 fun yyQ22 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE => yyAction0(strm, yyNO_MATCH)
@@ -433,33 +439,33 @@ fun yyQ19 (strm, lastMatch : yymatch) = (case (yygetc(strm))
               else yystuck(lastMatch)
       (* end case *))
 fun yyQ18 (strm, lastMatch : yymatch) = (case (yygetc(strm))
-       of NONE => yystuck(lastMatch)
+       of NONE => yyAction19(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = 0wx3F
-              then yyQ21(strm', lastMatch)
+              then yyQ21(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
             else if inp < 0wx3F
               then if inp = 0wx22
-                  then yystuck(lastMatch)
+                  then yyAction19(strm, yyNO_MATCH)
                 else if inp < 0wx22
                   then if inp = 0wx21
-                      then yyQ19(strm', lastMatch)
-                      else yystuck(lastMatch)
+                      then yyQ19(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
+                      else yyAction19(strm, yyNO_MATCH)
                 else if inp = 0wx2F
-                  then yyQ20(strm', lastMatch)
-                  else yystuck(lastMatch)
+                  then yyQ20(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
+                  else yyAction19(strm, yyNO_MATCH)
             else if inp = 0wx5B
-              then yystuck(lastMatch)
+              then yyAction19(strm, yyNO_MATCH)
             else if inp < 0wx5B
               then if inp = 0wx40
-                  then yystuck(lastMatch)
-                  else yyQ22(strm', lastMatch)
+                  then yyAction19(strm, yyNO_MATCH)
+                  else yyQ22(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
             else if inp = 0wx61
-              then yyQ22(strm', lastMatch)
+              then yyQ22(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
             else if inp < 0wx61
-              then yystuck(lastMatch)
+              then yyAction19(strm, yyNO_MATCH)
             else if inp <= 0wx7A
-              then yyQ22(strm', lastMatch)
-              else yystuck(lastMatch)
+              then yyQ22(strm', yyMATCH(strm, yyAction19, yyNO_MATCH))
+              else yyAction19(strm, yyNO_MATCH)
       (* end case *))
 fun yyQ41 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE => yyAction16(strm, yyNO_MATCH)
@@ -597,18 +603,31 @@ fun yyQ17 (strm, lastMatch : yymatch) = (case (yygetc(strm))
               then yyQ40(strm', yyMATCH(strm, yyAction17, yyNO_MATCH))
               else yyAction17(strm, yyNO_MATCH)
       (* end case *))
+fun yyQ47 (strm, lastMatch : yymatch) = (case (yygetc(strm))
+       of NONE => yyAction18(strm, yyNO_MATCH)
+        | SOME(inp, strm') =>
+            if inp = 0wx27
+              then yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+            else if inp < 0wx27
+              then if inp = 0wx26
+                  then yyAction18(strm, yyNO_MATCH)
+                  else yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+            else if inp = 0wx3C
+              then yyAction18(strm, yyNO_MATCH)
+              else yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+      (* end case *))
 fun yyQ16 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE => yyAction18(strm, yyNO_MATCH)
         | SOME(inp, strm') =>
             if inp = 0wx27
-              then yyQ16(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+              then yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
             else if inp < 0wx27
               then if inp = 0wx26
                   then yyAction18(strm, yyNO_MATCH)
-                  else yyQ16(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+                  else yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
             else if inp = 0wx3C
               then yyAction18(strm, yyNO_MATCH)
-              else yyQ16(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
+              else yyQ47(strm', yyMATCH(strm, yyAction18, yyNO_MATCH))
       (* end case *))
 fun yyQ3 (strm, lastMatch : yymatch) = (case (yygetc(strm))
        of NONE =>

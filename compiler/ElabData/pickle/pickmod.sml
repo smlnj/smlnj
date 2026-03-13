@@ -242,9 +242,14 @@ in
 	  | arithopc P.XORB = "\010"
 	  | arithopc P.ANDB = "\011"
 	  | arithopc P.NOTB = "\012"
-	  | arithopc P.FDIV = "\013"
-	  | arithopc P.FABS = "\014"
-          | arithopc P.FSQRT = "\015"
+          | arithopc P.CNTPOP = "\013"
+          | arithopc P.CNTLZ = "\014"
+          | arithopc P.CNTTZ = "\015"
+          | arithopc P.ROTL = "\016"
+          | arithopc P.ROTR = "\017"
+	  | arithopc P.FDIV = "\018"
+	  | arithopc P.FABS = "\019"
+          | arithopc P.FSQRT = "\020"
 	in
 	  arithopc oper $ []
 	end
@@ -353,6 +358,7 @@ in
 	      | P.EXTEND_INF i => ?115 $ [int i]
 	      | P.COPY_INF i => ?116 $ [int i]
 	      | P.REAL_TO_BITS i => ?117 $ [int i]
+	      | P.BITS_TO_REAL i => ?118 $ [int i]
 	      (** WARNING: last value must be < 128!! **)
 
            (* primop_table elements on unpickling *)

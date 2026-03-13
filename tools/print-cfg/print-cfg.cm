@@ -1,6 +1,6 @@
 (* print-cfg.cm
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -21,6 +21,7 @@ is
   cfg.sml
 
 (* extra files added by hand *)
+  c-types.sml
   lambda-var.sml
 
   main.sml

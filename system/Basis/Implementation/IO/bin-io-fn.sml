@@ -1,6 +1,6 @@
 (* bin-io-fn.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * QUESTION: what operations should raise exceptions when the stream is
@@ -543,9 +543,9 @@ functor BinIOFn (
 	      isClosedOut (strm, "setPosOut");
 	      case writer
 	       of PIO.WR{setPos=SOME f, ...} => (
-		    (f pos)
+		    (f pos; strm)
 		      handle ex => outputExn(strm, "setPosOut", ex))
-		| _ => outputExn(strm, "getPosOut", IO.RandomAccessNotSupported)
+		| _ => outputExn(strm, "setPosOut", IO.RandomAccessNotSupported)
 	      (* end case *))
 
 	fun setBufferMode (strm as OSTRM{bufferMode, ...}, IO.NO_BUF) = (
@@ -610,7 +610,7 @@ functor BinIOFn (
     fun closeOut strm = StreamIO.closeOut(!strm)
     fun getPosOut strm = StreamIO.getPosOut(!strm)
     fun setPosOut (strm, p as StreamIO.OUTP{strm=strm', ...}) = (
-	  strm := strm'; StreamIO.setPosOut p)
+	  strm := strm'; ignore (StreamIO.setPosOut p))
 
     fun mkInstream (strm : StreamIO.instream) = ref strm
     fun getInstream (strm : instream) = !strm

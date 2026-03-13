@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Build and installation script for SML/NJ System.
@@ -13,6 +13,9 @@
 
 cmd=$0
 here=$(pwd)
+
+# default LLVM directory
+LLVM_DIRNAME=llvm21
 
 complain() {
   echo "$cmd: !!! $@"
@@ -33,14 +36,13 @@ usage() {
   echo "developer options:"
   echo "    -debug-llvm        build a debug version of the LLVM libraries"
   echo "    -sanitize-address  sanitize addresses to check for memory bugs"
-  echo "    -llvmdir dir       specify the path to the LLVM directory"
+  echo "    -llvmdir dir       specify the name of the LLVM directory (default $LLVM_DIRNAME)"
   echo "    -build-cfgc        build the cfgc compiler"
   exit 1
 }
 
 # specifying the LLVM subdirectory (which is a submodule)
 #
-LLVM_DIRNAME=llvm18
 LLVMDIR_OPTION=
 
 # process options
@@ -142,7 +144,7 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 CONFIGDIR="$SMLNJ_ROOT/config"
 RUNTIMEDIR="$SMLNJ_ROOT/runtime"
 if [ x"$LLVMDIR_OPTION" != x ] ; then
-  LLVMDIR="$LLVMDIR_OPTION"
+  LLVMDIR="$RUNTIMEDIR/$LLVMDIR_OPTION"
   # check the validity of the path specified by the user
   if [ ! -x "$LLVMDIR/build-llvm.sh" ] ; then
     complain "invalid LLVM directory: build-llvm.sh script is missing"
@@ -195,10 +197,6 @@ vsay "$cmd: Installing version $VERSION."
 #
 SRCARCHIVEURL=https://smlnj.cs.uchicago.edu/dist/working/${VERSION}/
 vsay "$cmd: URL of source archive is $SRCARCHIVEURL."
-
-#
-# if necessary, fetch the boot files
-#
 
 ######################################################################
 ## UTILITY SCRIPTS
@@ -439,7 +437,7 @@ if [ x"$ONLY_RUNTIME" = xyes ] ; then
 fi
 
 #
-# the name of the bin files directory
+# the name of the boot files archive and directory
 #
 # FIXME: should make these file names more consistent!!
 #
@@ -466,9 +464,9 @@ if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
   fi
 else
   cd "$SMLNJ_ROOT" || exit 1
-
+  vsay "$cmd: unpack boot files ($BOOT_ARCHIVE)"
   "$CONFIGDIR"/unpack "$SMLNJ_ROOT" "$BOOT_ARCHIVE"
-
+  vsay "$cmd: extract $SMLNJ_ROOT/$BOOT_FILES/smlnj/basis"
   fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
 
   # Target arc:

@@ -79,9 +79,9 @@ structure GenSharingContext : sig
           fun mkFieldInit (f, _) = (f, S.APPexp(S.IDexp "ref", S.LISTexp[]))
           val body = S.RECORDexp(("inS", S.IDexp "inS") :: List.map mkFieldInit fields)
           val mkFunDec = S.FUNdec([inTV], [
-                  S.FB("mk",
+                  S.FB("mkRd",
                     [([S.typedIdPat("inS", inTy)], body)],
-                    SOME(S.CONty([inTy], "t")))
+                    SOME(S.CONty([inTy], "rd")))
                 ])
           in
             [ rdContextTyDec, mkFunDec ]
@@ -116,7 +116,7 @@ structure GenSharingContext : sig
           fun shareMapTy ty = S.CONty([ty], "ASDLShareMap.t")
           (* the context type for writing a pickle *)
           val wrContextTyDec = mkRecordTyDec (
-                [outTV], "t",
+                [outTV], "wr",
                 ("outS", outTy)
                   :: List.map (fn (f, ty) => (f, shareMapTy ty)) fields)
           val wrInitTyDec = mkRecordTyDec (
@@ -126,12 +126,12 @@ structure GenSharingContext : sig
                 (f, S.APPexp(S.selectExp(f, S.IDexp "init"), S.unitExp))
           val body = S.RECORDexp(("outS", S.IDexp "outS") :: List.map mkFieldInit fields)
           val mkFunDec = S.FUNdec([outTV], [
-                  S.FB("mk",
+                  S.FB("mkWr",
                     [(
                       [S.typedIdPat("init", S.CONty([], "init_wr")),
                        S.typedIdPat("outS", outTy)],
                       body)],
-                    SOME(S.CONty([outTy], "t")))
+                    SOME(S.CONty([outTy], "wr")))
                 ])
           in
             [ wrContextTyDec, wrInitTyDec, mkFunDec ]

@@ -17,17 +17,17 @@ CPPFLAGS =		@CPPFLAGS@ -I@ASDL_INCDIR@
 LDFLAGS =		@LDFLAGS@ -L$(ASDL_LIBDIR)
 LIBS =			@LIBS@ -lasdl
 
-CXX_SRCS =          	cxx-test.cxx
-CXX_OBJS =          	$(patsubst %.cxx,%.o,$(CXX_SRCS))
+CXX_SRCS =          	cpp-test.cpp
+CXX_OBJS =          	$(patsubst %.cpp,%.o,$(CXX_SRCS))
 
-build:		cxx-test sml-test
+build:		cpp-test sml-test
 
 ##### C++ test
 #
-cxx-test:	$(CXX_OBJS)
+cpp-test:	$(CXX_OBJS)
 	$(CXX) -o $@ $(CXX_OBJS) $(LDFLAGS) $(LIBS)
 
-%.o : %.cxx
+%.o : %.cpp
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
 
 ##### SML test
@@ -40,7 +40,7 @@ build:
 
 #################### Cleanup ####################
 
-CLEAN_FILES =		cxx-test \
+CLEAN_FILES =		cpp-test \
 			$(CXX_OBJS)
 
 DISTCLEAN_FILES +=      Makefile

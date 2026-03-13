@@ -1,6 +1,6 @@
 (* word.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Default word structure (31 bits) for 32-bit targets.
@@ -59,7 +59,7 @@ structure WordImp : WORD =
     val min : word * word -> word = Word.min
     val max : word * word -> word = Word.max
 
-    fun fmt radix = (NumFormat32.fmtWord radix) o Word.toWord32
+    val fmt = NumFormat.fmtWord
     val toString = fmt StringCvt.HEX
 
     fun scan radix = let

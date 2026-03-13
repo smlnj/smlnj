@@ -17,6 +17,6 @@ body:
       description: >
         Replace `N` with the development-repository issue number below.
       value: >
-        [issue N](https://github.com/smlnj/legacy/issues/N)
+        [Issue N](https://github.com/smlnj/legacy/issues/N)
     validations:
       required: true

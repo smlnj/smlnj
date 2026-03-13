@@ -1,13 +1,12 @@
-(* evalloop.sml
+(* eval-loop-fn.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
-functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
+functor EvalLoopFn (C : TOP_COMPILE) : EVALLOOP =
   struct
 
-    structure C  = Compile
     structure EM = ErrorMsg
     structure S = Symbol
     structure E  = Environment
@@ -24,25 +23,24 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
     fun newline () = say "\n"
     fun saynl msg = (Control.Print.say msg; newline ())
     fun saysnl strs = saynl (concat strs)
-    fun dbsaynl msg =
-	if !debugging then saynl msg else ()
-		    (* diagnostic printing of Ast and Absyn *)
-		      val printDepth = Control_Print.printDepth
+    fun dbsaynl msg = if !debugging then saynl msg else ()
+    (* diagnostic printing of Ast and Absyn *)
+    val printDepth = Control_Print.printDepth
 
     fun debugPrint flag (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
-	if !flag
-	then PP.with_pp (EM.defaultConsumer())
-	  (fn ppstrm =>
-	      (PP.openHVBox ppstrm (PP.Rel 0);
-	       PP.string ppstrm msg;
-	       PP.newline ppstrm;
-	       PP.openHVBox ppstrm (PP.Rel 0);
-	       printfn ppstrm arg;
-	       PP.closeBox ppstrm;
-	       PP.newline ppstrm;
-	       PP.closeBox ppstrm;
-	       PP.flushStream ppstrm))
-	else ()
+          if !flag
+            then PP.with_pp (EM.defaultConsumer())
+              (fn ppstrm =>
+                  (PP.openHVBox ppstrm (PP.Rel 0);
+                   PP.string ppstrm msg;
+                   PP.newline ppstrm;
+                   PP.openHVBox ppstrm (PP.Rel 0);
+                   printfn ppstrm arg;
+                   PP.closeBox ppstrm;
+                   PP.newline ppstrm;
+                   PP.closeBox ppstrm;
+                   PP.flushStream ppstrm))
+            else ()
 
     val compManagerHook : {
 	    manageImport : Ast.dec * EnvRef.envref -> unit,
@@ -119,12 +117,15 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 			      in debugPrint debugging ("AST::", ppAstDec, ast)
 			      end
 
-		      val {csegments, newstatenv, absyn, exportPid, exportLvars, imports, ...} =
-			  C.compile {source=source, ast=ast,
-				     statenv=statenv,
-				     compInfo=cinfo,
-				     checkErr=checkErrors,
-				     guid = () }
+		      val {
+                            lits, code, newstatenv, absyn,
+                            exportPid, exportLvars, imports,
+                            ...
+                          } = C.compile {
+                                source=source, ast=ast, statenv=statenv,
+                                compInfo=cinfo, checkErr=checkErrors,
+                                native = true, guid = ()
+                              }
 		      (** returning absyn and exportLvars here is a bad idea,
 			  they hold on things unnecessarily; this must be
 			  fixed in the long run. (ZHONG)
@@ -132,21 +133,28 @@ functor EvalLoopF (Compile: TOP_COMPILE) : EVALLOOP =
 		      val _ = if !Control.progressMsgs
 			    then say "### C.compile successful\n"
 			    else ()
-		      val _ = let fun ppAbsynDec ppstrm absyn_dec =
-				      PPAbsyn.ppDec (statenv, NONE) ppstrm (absyn_dec, 1000)
-			      in debugPrint debugging ("Absyn: ", ppAbsynDec, absyn)
-			      end
+		      val _ = let
+                            fun ppAbsynDec ppstrm absynDec =
+                                  PPAbsyn.ppDec (statenv, NONE) ppstrm (absynDec, 1000)
+                            in
+                              debugPrint debugging ("Absyn: ", ppAbsynDec, absyn)
+                            end
 
-		      val executable = Execute.mkExec
-					   { cs = csegments,
-					     exnWrapper = ExnDuringExecution }
-				       before checkErrors ("mkExec")
+		      val executable = Execute.mkExec {
+                              lits = lits,
+                              code = case code
+                                 of CodeObj.NativeCode cd => cd
+                                  | _ => raise CompileExn.Compile "expected native code"
+                                (* end case *),
+                              exnWrapper = ExnDuringExecution
+                            } before checkErrors ("mkExec")
 		      val executable = Isolate.isolate (interruptable executable)
 
 		      val _ = (PC.current := Profile.otherIndex)
-		      val newdynenv =
-			  Execute.execute { executable=executable, imports=imports,
-					    exportPid=exportPid, dynEnv=dynEnv }
+		      val newdynenv = Execute.execute {
+                              executable = executable, imports = imports,
+                              exportPid = exportPid, dynEnv = dynEnv
+                            }
 		      val _ = (PC.current := Profile.compileIndex)
 
 		      val newenv = E.mkenv { static = newstatenv, dynamic = newdynenv }

@@ -25,9 +25,13 @@ structure GenTypes : sig
 	  then S.VERBtop[concat["(* ", ModV.getName id, " suppressed *)\n"]]
 	  else let
 	    val name = ModV.getName id
-	    fun genGrp (dcls, dcls') = (case List.foldr genType ([], []) dcls
-		   of ([], tbs) => List.map S.TYPEdec tbs @ dcls'
-		    | (dbs, tbs) => S.DATATYPEdec(dbs, tbs) :: dcls'
+            fun addDTReps ([], dcls) = dcls
+              | addDTReps (dtrs, dcls) = List.map S.DATATYPEREPdec dtrs @ dcls
+	    fun genGrp (dcls, dcls') = (case List.foldr (genType false) ([], [], []) dcls
+		   of (dtrs, [], tbs) =>
+                        addDTReps (dtrs, List.map S.TYPEdec tbs @ dcls')
+		    | (dtrs, dbs, tbs) =>
+                        addDTReps (dtrs, S.DATATYPEdec(dbs, tbs) :: dcls')
 		  (* end case *))
 	    val {prologue, epilogue} = ModV.getImplementationCode id
 	  (* sort and group the ASDL declarations *)
@@ -47,6 +51,9 @@ structure GenTypes : sig
 	    end
       | gen _ = raise Fail "GenTypes.gen: unexpected primitive module"
 
+(* FIXME: what about when the <file> view contains an interface_prologue or
+ * interface_epilogue?
+ *)
   (* generate the optional signature constraint for the module.  This is only
    * generated when the view includes an interface_prologue or interface_epilogue
    * property for the module.
@@ -56,9 +63,10 @@ structure GenTypes : sig
 	   of {prologue=[], epilogue=[]} => NONE
 	    | {prologue, epilogue} => let
 		fun tySpec (tvs, name, ty) = S.TYPEspec(false, tvs, name, SOME ty)
-		fun genGrp (dcls, dcls') = (case List.foldr genType ([], []) dcls
-		       of ([], tbs) => List.map tySpec tbs @ dcls'
-			| (dbs, tbs) => S.DATATYPEspec(dbs, tbs) :: dcls'
+		fun genGrp (dcls, dcls') = (
+                      case List.foldr (genType true) ([], [], []) dcls
+		       of (_, [], tbs) => List.map tySpec tbs @ dcls'
+			| (_, dbs, tbs) => S.DATATYPEspec(dbs, tbs) :: dcls'
 		      (* end case *))
 	      (* add optional epilogue code *)
 		val specs = if null epilogue
@@ -98,21 +106,27 @@ structure GenTypes : sig
 		end
 	  (* end case *))
 
-    and genType (AST.TyDcl{id, def, ...}, (dbs, tbs)) = let
+    and genType isSig (AST.TyDcl{id, def, ...}, (dtrs, dbs, tbs)) = let
 	  val name = TyV.getName id
-	  fun db cons = let
-		fun con (AST.Constr{id, fields=[], ...}) = (ConV.getName id, NONE)
-		  | con (AST.Constr{id, fields, ...}) =
-		      (ConV.getName id, SOME(genProdTy fields))
-		in
-		  (S.DB([], name, List.map con cons)::dbs, tbs)
-		end
+          fun db cons = let
+                fun con (AST.Constr{id, fields=[], ...}) = (ConV.getName id, NONE)
+                  | con (AST.Constr{id, fields, ...}) =
+                      (ConV.getName id, SOME(genProdTy fields))
+                in
+                  (dtrs, S.DB([], name, List.map con cons)::dbs, tbs)
+                end
+	  fun genSumTy cons = if isSig
+                then db cons
+                else (case TyV.getIsDatatype id
+                   of SOME id' => ((name, id')::dtrs, dbs, tbs)
+                    | NONE => db cons
+                  (* end case *))
 	  in
 	    case !def
-	     of AST.EnumTy cons => db cons
-	      | AST.SumTy{attribs, cons} => db cons
-	      | AST.ProdTy{fields} => (dbs, ([], name, genProdTy fields)::tbs)
-	      | AST.AliasTy ty => (dbs, ([], name, genTyExp ty)::tbs)
+	     of AST.EnumTy cons => genSumTy cons
+	      | AST.SumTy{attribs, cons} => genSumTy cons
+	      | AST.ProdTy{fields} => (dtrs, dbs, ([], name, genProdTy fields)::tbs)
+	      | AST.AliasTy ty => (dtrs, dbs, ([], name, genTyExp ty)::tbs)
 	      | AST.PrimTy => raise Fail "unexpected primitive type"
 	    (* end case *)
 	  end

@@ -1,6 +1,6 @@
 (* backend-fn.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -12,9 +12,10 @@ functor BackendFn (
 
   ) : BACKEND = struct
 
+    (* interactive compiler *)
     structure Interact = Interact (
-        EvalLoopF (
-          CompileF (
+        EvalLoopFn (
+          CompileFn (
 	    val cproto_conv = cproto_conv
             structure M = M
             structure CC : CCONFIG = struct
@@ -25,6 +26,7 @@ functor BackendFn (
                 type hash = unit
                 type pid = PersStamps.persstamp
                 type guid = unit
+
                 local
                   val topCount = ref 0
                 in
@@ -47,7 +49,8 @@ functor BackendFn (
                 end (* local *)
             end)))
 
-    structure Compile = CompileF (
+    (* batch (aka bootstrap) compiler *)
+    structure Compile = CompileFn (
         val cproto_conv = cproto_conv
         structure M = M
         structure CC : CCONFIG = struct

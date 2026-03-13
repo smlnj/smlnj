@@ -84,7 +84,7 @@ structure CPSUtil : sig
     fun sizeOfTy (CPS.FLTt sz) = sz
       | sizeOfTy (CPS.NUMt{tag=false, sz}) = sz
       | sizeOfTy (CPS.NUMt _) = Target.mlValueSz
-      | sizeOfTy (CPS.PTRt _ | CPS.FUNt | CPS.CNTt) = Target.mlValueSz
+      | sizeOfTy (CPS.PTRt _ | CPS.FUNt | CPS.CNTt _) = Target.mlValueSz
 
     fun isFloat (CPS.FLTt _) = true
       | isFloat _ = false
@@ -100,7 +100,9 @@ structure CPSUtil : sig
       | ctyToString (CPS.PTRt(CPS.FPT k)) = concat["[PF", Int.toString k, "]"]
       | ctyToString (CPS.PTRt CPS.VPT) =  "[PV]"
       | ctyToString (CPS.FUNt) = "[FN]"
-      | ctyToString (CPS.CNTt) = "[C]"
+      | ctyToString (CPS.CNTt tys) = concat [
+            "[C<", String.concatWithMap "," ctyToString tys, ">]"
+          ]
 
     fun combinepaths (p, CPS.OFFp 0) = p
       | combinepaths (p, q) = let
@@ -130,8 +132,8 @@ structure CPSUtil : sig
     in
 
     (* REAL32: this code assumes only one float type *)
-    fun tcflt tc = if LK.tc_eqv(tc, tc_real) then true else false
-    fun ltflt lt = if LK.lt_eqv(lt, lt_real) then true else false
+    fun tcflt tc = LK.tc_eqv(tc, tc_real)
+    fun ltflt lt = LK.lt_eqv(lt, lt_real)
 
     fun rtyc (f, []) = CPS.RPT 0
       | rtyc (f, ts) = let
@@ -153,18 +155,22 @@ structure CPSUtil : sig
 	      (* end case *)),
 	  fn tc => LD.tcw_tuple (tc,
 	      fn ts => CPS.PTRt(rtyc(tcflt, ts)),
-	      fn tc =>
-		if LD.tcp_arrow tc then CPS.FUNt
-		else if LD.tcp_cont tc then CPS.CNTt
-		else BOGt))
+	      fn tc => if LD.tcp_arrow tc
+                  then CPS.FUNt
+                  else LD.tcw_cont(tc,
+                    fn tcs => CPS.CNTt(List.map ctyc tcs),
+                    fn _ => BOGt)))
 
     fun ctype lt =
 	  LD.ltw_tyc(lt, fn tc => ctyc tc,
 	      fn lt =>
-		LD.ltw_str(lt, fn ts => CPS.PTRt(rtyc(fn _ => false, ts)),
-		    fn lt => if LD.ltp_fct lt then CPS.FUNt
-			     else if LD.ltp_cont lt then CPS.CNTt
-				  else BOGt))
+		LD.ltw_str(lt, fn lts => CPS.PTRt(rtyc(fn _ => false, lts)),
+		    fn lt => if LD.ltp_fct lt
+                        then CPS.FUNt
+                        else LD.ltw_cont(lt,
+                            fn lts => CPS.CNTt(List.map ctype lts),
+                            fn lt => BOGt)))
+
     end (* local *)
 
   end

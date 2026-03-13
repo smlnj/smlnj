@@ -1,6 +1,6 @@
 (* ppcps.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -134,7 +134,9 @@ structure PPCps : PPCPS =
       | pureToString (P.COPY_INF i) = concat ["copy_", cvtParam i, "_inf"]
       | pureToString (P.EXTEND_INF i) =  concat ["extend_", cvtParam i, "_inf"]
       | pureToString (P.INT_TO_REAL{from, to}) =
-	  concat ["real", cvtParam from, "_", cvtParam to]
+	  concat ["int", cvtParam from, "_to_real", cvtParam to]
+      | pureToString (P.BITS_TO_REAL sz) = "bits_to_real" ^ cvtParam sz
+      | pureToString (P.REAL_TO_BITS sz) = concat ["real", cvtParam sz, "_to_bits"]
       | pureToString P.SUBSCRIPTV = "subscriptv"
       | pureToString (P.PURE_NUMSUBSCRIPT{kind}) = "numsubscriptv" ^ numkindToString kind
       | pureToString P.GETTAG = "gettag"

@@ -2,7 +2,7 @@
 #
 # NOTE: this script is not really necessary anymore, since the sources are
 # fetched by cloning the GitHub repository.  We are keeping it for now because
-# the SML installer (`system/smlnj/installer`) in 2021.1 uses it.
+# several scripts use it to fetch the boot files.
 #
 # This script was extracted from install.sh and deals with the fetching
 # and unpacking of source/bootfile trees.  The first argument must be
@@ -94,7 +94,7 @@ uselynx() {
 
 # wrapper for curl
 usecurl() {
-    curl -s "$1" >"$2"
+    curl -s --fail "$1" >"$2"
 }
 
 testurlgetter() {
@@ -204,6 +204,7 @@ fetch_n_unpack() {
     fi
 }
 
+# unpack <name> <dir> <component> <tarfile>
 #
 # The main "unpack" driver function that invokes the above helper.
 #
@@ -230,9 +231,9 @@ do
 #       runtime)
 #         unpack run-time "$ROOT"/base runtime runtime
 # 	;;
-#       boot.*)
-#         unpack bootfiles "$ROOT" sml.$i $i
-# 	;;
+      boot.*)
+        unpack bootfiles "$ROOT" sml.$i $i
+ 	;;
       compiler)
 	unpack compiler "$ROOT" compiler compiler
 	;;
