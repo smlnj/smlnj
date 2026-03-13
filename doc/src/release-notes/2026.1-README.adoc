@@ -74,8 +74,6 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
-| [.bugid]#318#
-| {issue-base}/318[Segmentation fault with SML/NJ compiled MLton]
 | [.bugid]#327#
 | {issue-base}/327[JSON library: hint size of `JSON.value` after serialization]
 | [.bugid]#335#
