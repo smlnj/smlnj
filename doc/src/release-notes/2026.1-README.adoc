@@ -1,5 +1,5 @@
-:version: 2026.1-rc1
-:date: March 11, 2026
+:version: 2026.1
+:date: March 14, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues

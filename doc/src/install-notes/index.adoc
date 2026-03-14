@@ -4,7 +4,7 @@
 :source-highlighter: pygments
 :dist-url: https://smlnj.org/dist/working/{version}
 :history: {dist-url}/HISTORY.html
-:release-notes: {dist-url}/{version}-README.html
+:release-notes: {dist-url}/README.html
 :stem: latexmath
 :source-highlighter: pygments
 

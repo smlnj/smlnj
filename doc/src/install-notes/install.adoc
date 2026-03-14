@@ -2,9 +2,9 @@
 :revnumber: {version}
 :revdate: {release-date}
 :source-highlighter: pygments
-:dist-url: https://smlnj.org/dist/working/{version}/
-:history: {dist-url}HISTORY.html
-:release-notes: {dist-url}{version}-README.html
+:dist-url: https://smlnj.org/dist/working/{version}
+:history: {dist-url}/HISTORY.html
+:release-notes: {dist-url}/README.html
 :stem: latexmath
 :source-highlighter: pygments
 
@@ -60,14 +60,14 @@ one of the source distributions.
 
 ==== Downloading a Source Tarball
 
-You can either click on the appropriate link on the {dist-url}index.html[distribution-files
+You can either click on the appropriate link on the {dist-url}/index.html[distribution-files
 page] or use a shell command (_e.g._, *curl* or *wget*) to download the file.
 
 For example, the commands
 
 [subs="+attributes"]
 ----
-curl -O {dist-url}smlnj-<arch>-unix-{version}.tgz
+curl -O {dist-url}/smlnj-<arch>-unix-{version}.tgz
 tar -xzf smlnj-<arch>-unix-{version}.tgz
 ----
 
@@ -95,8 +95,8 @@ system.
 == macOS Installation Packages
 
 We provide installers for **macOS** running on both
-{dist-url}smlnj-amd64-{version}.pkg[AMD64 (x86-64)] and
-{dist-url}smlnj-arm64-{version}.pkg[Arm64 (AArch64)].
+{dist-url}/smlnj-amd64-{version}.pkg[AMD64 (x86-64)] and
+{dist-url}/smlnj-arm64-{version}.pkg[Arm64 (AArch64)].
 
 === Installing on macOS 15 Sequoia and Later
 
