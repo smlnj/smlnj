@@ -58,6 +58,8 @@ FILES::
 
 === ML-LPT
 
+* Fixed {issue-base}/341[Issue 341].
+
 === Documentation
 
 === Installation
@@ -72,6 +74,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | Description
 | [.bugid]#340#
 | {issue-base}/340[Stop building *LLVM* with `gold`]
+| [.bugid]#341#
+| {issue-base}/341[The value of `yypos` is incorrect when `skip` is used in **ml-ulex**]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
