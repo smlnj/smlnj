@@ -18,19 +18,24 @@ signature OBJECT_DESC =
     val maxLength : IntInf.int		(* one greater than max length value *)
 
   (* tag values *)
-    val tag_record : tag
-    val tag_ref : tag
-    val tag_vec_hdr : tag
-    val tag_vec_data : tag
-    val tag_arr_hdr : tag
-    val tag_arr_data : tag
-    val tag_raw : tag		(* word-aligned raw data *)
-    val tag_raw64 : tag		(* 64-bit aligned raw data *)
-    val tag_special : tag
+    val tag_record : tag        (* records of uniform values *)
+    val tag_vec_hdr : tag       (* immutable vector-descriptor object *)
+    val tag_vec_data : tag      (* polymorphic vector data (same as records) *)
+    val tag_arr_hdr : tag       (* mutable array-descriptor object *)
+    val tag_arr_data : tag      (* polymorphic array data *)
+    val tag_ref : tag           (* references are length-one array data *)
+    val tag_raw : tag           (* raw data; i.e., strings, floats, etc *)
+    val tag_mixed : tag         (* records of mixed uniform and raw data *)
+    val tag_special : tag       (* special objects *)
 
-  (* build a descriptor from a tag and length (in words) *)
+  (* build an object header from a tag and length (in words) *)
     val makeDesc : (IntInf.int * tag) -> IntInf.int
     val makeDesc' : (int * tag) -> IntInf.int
+
+  (* build an object header for a mixed record, where `len` is the length of
+   * the uniform data part and `totLen` is the total length.
+   *)
+    val makeMixedDesc' : {len : int, totLen : int} -> IntInf.int
 
   (* fixed descriptors *)
     val desc_pair : IntInf.int
