@@ -46,6 +46,14 @@ FILES::
 
 === CM
 
+=== LLVM
+
+* Disabled the "convert switch to lookup table" optimization in LLVM because it can
+  result in non-position-independent code being generated.  See
+  {pull-base}/342[Pull Request #342 (Fix relocation issues causing MLton crash)] for
+  the details.  This change fixes {issue-base}/318[Issue #318 (Segmentation fault
+  with SML/NJ compiled MLton)].
+
 === MLRISC
 
 === Runtime System
@@ -72,10 +80,14 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
+| [.bugid]#318#
+| {issue-base}/318[Segmentation fault with SML/NJ compiled MLton]
 | [.bugid]#340#
 | {issue-base}/340[Stop building *LLVM* with `gold`]
 | [.bugid]#341#
 | {issue-base}/341[The value of `yypos` is incorrect when `skip` is used in **ml-ulex**]
+| [.bugid]#341#
+| {pull-base}/342[Fix relocation issues causing MLton crash]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
