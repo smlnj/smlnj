@@ -240,10 +240,13 @@ xref:str-TimeLimit.adoc[`[.kw]#structure# TimeLimit`]::
   Provides a mechanism for limiting the execution
   time of a computation.
 
-xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
-  **To be written**
+xref:str-Trilean.adoc[`[.kw]#structure# Trilean`]::
+  Provides an implementation of three-valued logic.
 
 // 60
+
+xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
+  **To be written**
 
 xref:str-URef.adoc[`[.kw]#structure# URef`]::
   Provides mutable references with __Union-Find__ semantics.
@@ -374,9 +377,12 @@ include::str-Queue.adoc[]
 
 include::str-Rand.adoc[]
 
-include::str-Random.adoc[]
+include::str-Rand48.adoc[]
 
-// 50
+// 50 -- note that `str-Native.adoc` is referenced twice by the HTML,
+// but only once by the PDF
+
+include::str-Random.adoc[]
 
 include::str-RealOrderStats.adoc[]
 
@@ -392,14 +398,15 @@ include::fun-SplaySetFn.adoc[]
 
 include::str-TimeLimit.adoc[]
 
+include::str-Trilean.adoc[]
+
 include::str-UnivariateStats.adoc[]
+
+// 60
 
 include::str-URef.adoc[]
 
 include::str-UTF8.adoc[]
-
-// 60 -- note that `str-Native.adoc` is referenced twice by the HTML,
-// but only once by the PDF
 
 // Return to normal title levels.
 :leveloffset: 0

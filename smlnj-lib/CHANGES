@@ -2,6 +2,13 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
+SML/NJ 2026.2
+-------------------
+
+[2026-04-18]
+        Added the `Trilean` structure to the utility library.
+
+--------------------------------------------------------------------------------
 SML/NJ 2026.1
 -------------------
 
