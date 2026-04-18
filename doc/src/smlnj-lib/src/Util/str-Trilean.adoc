@@ -63,54 +63,54 @@ val all3 : ('a -> t) -> 'a list -> t
       represents unknown
 --
 
-`[.kw]#val# toString : t -> string`::
+`[.kw]#val# toString : t \-> string`::
   `toString tri` returns a string representation of `tri`, where
   `F` maps to `"false"`, `T` maps to `"true"`, and `U` maps to `"unknown"`.
 
-`[.kw]#val# scan : (char,'a) StringCvt.reader -> (t,'a) StringCvt.reader`::
+`[.kw]#val# scan : (char,'a) StringCvt.reader \-> (t,'a) StringCvt.reader`::
 (* convert a string to a Trilean value; we accept "f", "t", "u",
  * "unk", "false", "true", and "unknown" (case insensitive) as valid
  * strings.
  *)
 
-`[.kw]#val# fromString : string -> t option`::
+`[.kw]#val# fromString : string \-> t option`::
   converts a string to a Trilean value; it is equivalent to
   {sml-basis-url}/Basis/string-cvt.html#SIG:STRING_CVT.scanString:VAL[`StringCvt.scanString scan`].
 
-`[.kw]#val# fromBool : bool -> t`::
+`[.kw]#val# fromBool : bool \-> t`::
   maps a Boolean to its corresponding Trilean value.
 
-`[.kw]#val# toBool : t -> bool option`::
+`[.kw]#val# toBool : t \-> bool option`::
   converts a Trilean value to an optional Boolean, where `U` is mapped to `NONE`
 
-`[.kw]#val# isTrue : t -> bool`::
+`[.kw]#val# isTrue : t \-> bool`::
   `isTrue tri` returns `true` if `tri` is `T` and `false` otherwise.
 
-`[.kw]#val# isFalse : t -> bool`::
+`[.kw]#val# isFalse : t \-> bool`::
   `isTrue tri` returns `true` if `tri` is `F` and `false` otherwise.
 
-`[.kw]#val# isKnown : t -> bool`::
+`[.kw]#val# isKnown : t \-> bool`::
   `isTrue tri` returns `false` if `tri` is `U` and `true` otherwise.
 
-`[.kw]#val# isUnknown : t -> bool`::
+`[.kw]#val# isUnknown : t \-> bool`::
   `isTrue tri` returns `true` if `tri` is `U` and `false` otherwise.
 
-`[.kw]#val# not3 : t -> t`::
+`[.kw]#val# not3 : t \-> t`::
   `not3 tri` returns the logical negation of `tri`; it behaves like `Bool.not` if
   its argument is known and returns `U` for `not3 U`.
 
-`[.kw]#val# and3 : t * t -> t`::
+`[.kw]#val# and3 : t * t \-> t`::
   `and3 (a, b)` returns the logical conjunction of `a` and `b`
 
-`[.kw]#val# or3 : t * t -> t`::
+`[.kw]#val# or3 : t * t \-> t`::
   `or3 (a, b)` returns the logical negation
 
-`[.kw]#val# exists3 : ('a -> t) -> 'a list -> t`::
+`[.kw]#val# exists3 : ('a \-> t) \-> 'a list \-> t`::
   `exists3 pred xs` returns `T` if there exists an element `x` in `xs` for
   which `pred x` returns `T`, and `F` if `pred` returns `F` for all elements
   in `xs`; otherwise it returns `U`.
 
-`[.kw]#val# all3 : ('a -> t) -> 'a list -> t`::
+`[.kw]#val# all3 : ('a \-> t) \-> 'a list \-> t`::
   `all3 pred xs` returns `T` if `pred x` returns `T` for every `x` in `xs`,
   it returns `F` if `pred x` returns `F` for at least one `x` in `xs`, and
   otherwise returns `U`.
