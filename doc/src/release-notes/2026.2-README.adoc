@@ -86,8 +86,10 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/340[Stop building *LLVM* with `gold`]
 | [.bugid]#341#
 | {issue-base}/341[The value of `yypos` is incorrect when `skip` is used in **ml-ulex**]
-| [.bugid]#341#
+| [.bugid]#342#
 | {pull-base}/342[Fix relocation issues causing MLton crash]
+| [.bugid]#343#
+| {issue-base}/343[Comparison of `Word8Vector.vector`s results in polymorphic equality]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

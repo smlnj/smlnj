@@ -242,6 +242,7 @@ structure PEqual : PEQUAL =
 (* FIXME: since real is **not** an equality type, this case is not needed!!! *)
 		      else if TU.equalTycon(tyc, BT.realTycon)   then prim(PU.FEQLd,realeqty)
 		      else if TU.equalTycon(tyc, BT.stringTycon) then getStrEq()
+		      else if TU.equalTycon(tyc, BT.word8vectorTycon) then getStrEq()
 		      else if TU.equalTycon(tyc, BT.intinfTycon) then getIntInfEq()
 		      else if TU.equalTycon(tyc, BT.refTycon)    then ptrEq(PO.PTREQL, ty)
 		      else if TU.equalTycon(tyc, BT.pointerTycon) then ptrEq(PO.PTREQL, ty)
