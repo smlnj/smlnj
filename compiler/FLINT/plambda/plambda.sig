@@ -64,7 +64,7 @@ signature PLAMBDA =
       | VECTOR of lexp list * Lty.tyc
       | RECORD of lexp list
       | SRECORD of lexp list
-      | SELECT of int * lexp
+      | SELECT of int * lexp    (* record selection (zero based) *)
 
       | WRAP of Lty.tyc * bool * lexp
       | UNWRAP of Lty.tyc * bool * lexp
