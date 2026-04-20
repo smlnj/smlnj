@@ -104,13 +104,40 @@ Here is an update to the entry
 //====================================================================
 //== Recent updates
 
+//--------------------------------------------------------------------
+[2026-04-20]::
+Added internal support for equality testing on monomorphic arrays
+(see `FLINT/trans/pequal.sml`).  The basic idea is to generate a
+function that does pointer equality on the sequence data pointers.
+We should also use this operation to implement equality on polymorphic
+arrays, but that may require a more sophisticated handling of FLINT
+types.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-19]::
+Fix for {issue-base}/343[Issue #343 (Comparison of
+`Word8Vector.vector`s results in polymorphic equality)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-15]::
+Updated the *LLVM* submodule to fix {issue-base}/318[Issue #318
+(Segmentation fault with SML/NJ compiled MLton)].  See
+{pull-base}/342[Pull Request #342] for a detailed discussion of
+the problem.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //====================================================================
 == Version 2026.1; 2026/03/14
 
 //--------------------------------------------------------------------
 [2026-03-10]::
-Fix for Issue #338[incorrect compilation of some large integer literals].
-This bug was in the **LLVM** submodule.
+Fix for {issue-base}/338[Issue #338 (incorrect compilation of some
+large integer literals)].  This bug was in the **LLVM** submodule.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
