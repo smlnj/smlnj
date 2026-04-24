@@ -74,7 +74,9 @@ and tyckind
       freetycs: tycon list,       (* tycs derived from functor params *)
       family : dtypeFamily,
       stripped : bool}            (* true if datatype has matched a simple type spec *)
-  | ABSTRACT of tycon
+  | ABSTRACT of tycon             (* abstract type; the argument is the underlying
+                                   * concrete type.
+                                   *)
   | FLEXTYC of tycpath            (* instantiated formal type constructor *)
   | FORMAL                        (* used only inside signatures *)
   | TEMP                          (* used only during datatype elaborations *)
