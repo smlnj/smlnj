@@ -105,6 +105,15 @@ Here is an update to the entry
 //== Recent updates
 
 //--------------------------------------------------------------------
+[2026-04-24]::
+Changed `PEqual.test` (`FLINT/trans/pequal.sml`) to always defer to
+the underlying concrete type when handling abstract types.  This change
+fixes {issue-base}/344[Issue #344 (Spurious "calling polyEqual"
+warnings)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-04-20]::
 Added internal support for equality testing on monomorphic arrays
 (see `FLINT/trans/pequal.sml`).  The basic idea is to generate a

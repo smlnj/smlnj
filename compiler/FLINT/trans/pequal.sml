@@ -276,8 +276,6 @@ structure PEqual : PEQUAL =
 		   * correctly, so use it as the fallback. (JHR)
 		   *
 		      else if TU.equalTycon(tyc,BT.arrayTycon) then ptrEq(PO.PTREQL, ty)
-		      else if TU.equalTycon(tyc,BT.word8arrayTycon) then ptrEq(PO.PTREQL, ty)
-		      else if TU.equalTycon(tyc,BT.real64arrayTycon) then ptrEq(PO.PTREQL, ty)
 		  **********************)
 		      else raise Poly
 		(* end case *))
@@ -317,7 +315,11 @@ structure PEqual : PEQUAL =
 		  | CONty (tyc as GENtyc { kind, eq, stamp, arity, path, ... }, tyl) => (
 		      case (!eq, kind)
 		       of (_, PRIMITIVE) => atomeq (tyc, ty)
-			| (YES, ABSTRACT tyc') => test (CONty (tyc', tyl), depth)
+                      (* for abstract types, I think that we should ignore the
+                       * `eq` property and always defer to the concrete type.
+                       * [JHR; 2026-04-24]
+                       *)
+			| (_, ABSTRACT tyc') => test (CONty (tyc', tyl), depth)
 			| (ABS,_) =>
 			    test(T.CONty(GENtyc{eq=ref YES,stamp=stamp,arity=arity,
 						 kind=kind,path=path,stub=NONE}, tyl),
