@@ -92,15 +92,19 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/343[Comparison of `Word8Vector.vector`s results in polymorphic equality]
 | [.bugid]#344#
 | {issue-base}/344[Spurious "calling polyEqual" warnings]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
+| [.bugid]#345#
+| {pull-base}/345[Fix missing case in `FLINT/reify`]
 |=======
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* Fixed {legacy-issue-base}/353[Legacy Issue #353
+  (Inconsistent datatype representation causes segfault)]
+
+* Fixed {legacy-issue-base}/368[Legacy Issue #353
+  ("bogus overflow fault" in code using functors)]
 
 == Supported systems
 
