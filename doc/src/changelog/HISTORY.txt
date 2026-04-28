@@ -105,6 +105,21 @@ Here is an update to the entry
 //== Recent updates
 
 //--------------------------------------------------------------------
+[2026/04/28]::
+Fixed a long-standing FLINT representation-analysis bug for untagged,
+polymorphic values. The `tcTag` function in `FLINT/reps/typeoper.sml`
+handled de-Bruijn-indexed type variables (`LT.TC_VAR`) but not named
+type variables (`LT.TC_NVAR`). Since `deb2name` runs before `reify`,
+type variables had already been converted back to named variables,
+causing FLINT to incorrectly omit some representation coercions.
++
+This change fixes issues {legacy-issue-base}/353[legacy/#353] and
+{legacy-issue-base}/368[legacy/#368]. See {pull-base}/345[Pull Request
+#345 (Fix missing case in FLINT/reify)] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2026-04-24]::
 Changed `PEqual.test` (`FLINT/trans/pequal.sml`) to always defer to
 the underlying concrete type when handling abstract types.  This change
