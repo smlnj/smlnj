@@ -103,7 +103,7 @@ repository):
 * Fixed {legacy-issue-base}/353[Legacy Issue #353
   (Inconsistent datatype representation causes segfault)]
 
-* Fixed {legacy-issue-base}/368[Legacy Issue #353
+* Fixed {legacy-issue-base}/368[Legacy Issue #368
   ("bogus overflow fault" in code using functors)]
 
 == Supported systems
