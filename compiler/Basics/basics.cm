@@ -6,7 +6,10 @@
  * Basic definitions and utilities used within the SML/NJ compiler.
  *)
 
-Library
+(* NOTE: this needs to be a group (instead of a library, because of the
+ * visual compiler (see system/smlnj/viscomp/basics.cm)
+ *)
+Group
 
   signature BASIC_CONTROL
   structure BasicControl
@@ -62,7 +65,7 @@ Library
   structure CTypes
   structure NumKind
   structure ArithOps
-  structure CommonPrimOps
+  structure CommonOps
   structure CompareOps
   structure PureOps
 

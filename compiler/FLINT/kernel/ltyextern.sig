@@ -82,7 +82,7 @@ val ltc_rkind   : FunRecMeta.rkind * Lty.lty list -> Lty.lty
 val ltd_rkind   : Lty.lty * int -> Lty.lty
 
 (** given a tyc, select the appropriate update primop *)
-val tc_upd_prim : Lty.tyc -> Primop.primop
+val tc_upd_prim : Lty.tyc -> FPrimOps.t
 
 (** translating the tkind into the corresponding type *)
 val tk_lty      : Lty.tkind -> Lty.lty

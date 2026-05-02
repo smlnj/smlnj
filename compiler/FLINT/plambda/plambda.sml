@@ -10,7 +10,7 @@ structure PLambda : PLAMBDA =
   structure A  = Access
   structure LV = LambdaVar
   structure LT = Lty
-  structure PO = Primop
+  structure PO = FPrimOps
   (* mentions Symbol *)
 
   (* dataconstr: record containing name of the constructor, the corresponding conrep,
@@ -45,8 +45,8 @@ structure PLambda : PLAMBDA =
       | WORD of int IntConst.t
       | REAL of int RealConst.t
       | STRING of string
-      | PRIM of PO.primop * LT.lty * LT.tyc list
-      | GENOP of dict * PO.primop * LT.lty * LT.tyc list
+      | PRIM of PO.t * LT.lty * LT.tyc list
+      | GENOP of dict * PO.t * LT.lty * LT.tyc list
 
       | FN of LV.lvar * LT.lty * lexp  (* lty is the type of the parameter lvar *)
       | FIX of LV.lvar list * LT.lty list * lexp list * lexp

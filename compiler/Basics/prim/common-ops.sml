@@ -1,4 +1,4 @@
-(* common-prim-ops.sml
+(* common-ops.sml
  *
  * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
@@ -8,7 +8,7 @@
  * also used in the CPS IR, they are omitted from this module.
  *)
 
-structure CommonPrimOps =
+structure CommonOps =
   struct
 
     datatype t
@@ -62,14 +62,9 @@ structure CommonPrimOps =
       | GET_SEQ_DATA                    (* E: get data pointer from arr/vec header *)
       | SUBSCRIPT_REC                   (* E: record subscript operation *)
       | SUBSCRIPT_RAW64                 (* E: raw64 subscript operation *)
-(* the following two operators are not used on 64-bit systems and could be removed *)
-      | INTERN64                        (* E: convert a pair of word32 values to
-                                         * a 64-bit number.
-                                         *)
-      | EXTERN64                        (* E: convert a 64-bit number to a pair
-                                         * of word32 values.
-                                         *)
     (* Primops to support C FFI. *)
+      | CPTR_TO_WORD			(* E: cast c_pointer to address-sized word type *)
+      | WORD_TO_CPTR			(* E: case address-sized word type to c_pointer *)
       | RAW_LOAD of NumKind.t           (* E: load from arbitrary memory location *)
       | RAW_STORE of NumKind.t          (* E: store to arbitrary memory location *)
       (* E: make a call to a C-function;
@@ -83,12 +78,8 @@ structure CommonPrimOps =
             ml_res_opt: ccall_type option,
             reentrant: bool
           } option
-      (* Allocate uninitialized storage on the heap.
-       * The record is meant to hold short-lived C objects, i.e., they
-       * are not ML pointers.  The representation is
-       * the same as RECORD with tag tag_raw or tag_raw64.
-       *)
-      | RAW_RECORD of { align64 : bool }  (* E: *)
+      (* Allocate uninitialized raw storage on the heap *)
+      | RAW_RECORD of { align : int }  (* E: *)
 
     and ccall_type
       = CCI32           (* passed as int32 *)
@@ -153,13 +144,12 @@ structure CommonPrimOps =
               | GET_SEQ_DATA => "getseqdata"
               | SUBSCRIPT_REC => "subscriptrec"
               | SUBSCRIPT_RAW64 => "subscriptraw64"
-              | INTERN64 => "intern64"
-              | EXTERN64 => "extern64"
+              | CPTR_TO_WORD => "cptr_to_word"
+              | WORD_TO_CPTR => "word_to_cptr"
               | RAW_LOAD nk => concat ["raw_load(", NumKind.toString nk, ")"]
               | RAW_STORE nk => concat ["raw_store(", NumKind.toString nk, ")"]
               | RAW_CCALL _ => "raw_ccall"
-              | RAW_RECORD{ align64 } =>
-                  if align64 then "raw64_record" else "raw_record"
+              | RAW_RECORD{align} => concat ["raw", Int.toString align, "_record"]
             (* end case *)
           end
 

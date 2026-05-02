@@ -88,8 +88,8 @@ structure CProto : sig
  *)
     val decode : string -> { fun_ty : Types.ty, encoding : Types.ty } -> {
 	    c_proto    : CTypes.c_proto,
-	    ml_args    : Primop.ccall_type list,
-	    ml_res_opt : Primop.ccall_type option,
+	    ml_args    : CommonOps.ccall_type list,
+	    ml_res_opt : CommonOps.ccall_type option,
 	    reentrant  : bool
 	  }
 
@@ -97,7 +97,8 @@ structure CProto : sig
 
     exception BadEncoding
 
-    structure P = Primop
+    structure P = PrimOps
+    structure CP = CommonOps
     structure T = Types
     structure BT = BasicTypes
     structure CT = CTypes
@@ -116,22 +117,22 @@ structure CProto : sig
     fun decode defaultconv { encoding = t, fun_ty } = let
 	(* The type-mapping table: *)
 	val m =
-	    [(BT.intTy,           CT.C_signed   CT.I_int,       P.CCI32),
-	     (BT.wordTy,          CT.C_unsigned CT.I_int,       P.CCI32),
-	     (BT.stringTy,        CT.C_PTR,                     P.CCI32),
-	     (BT.boolTy,          CT.C_PTR,                     P.CCML),
-	     (BT.realTy,          CT.C_double,                  P.CCR64),
-	     (listTy BT.realTy,   CT.C_float,                   P.CCR64),
-	     (BT.charTy,          CT.C_signed   CT.I_char,      P.CCI32),
-	     (BT.word8Ty,         CT.C_unsigned CT.I_char,      P.CCI32),
-	     (BT.int32Ty,         CT.C_signed   CT.I_long,      P.CCI32),
-	     (BT.word32Ty,        CT.C_unsigned CT.I_long,      P.CCI32),
-	     (listTy BT.charTy,   CT.C_signed   CT.I_short,     P.CCI32),
-	     (listTy BT.word8Ty,  CT.C_unsigned CT.I_short,     P.CCI32),
-	     (listTy BT.int32Ty,  CT.C_signed   CT.I_long_long, P.CCI64),
-	     (listTy BT.word32Ty, CT.C_unsigned CT.I_long_long, P.CCI64),
-	     (listTy (listTy BT.realTy), CT.C_long_double,      P.CCR64),
-	     (BT.exnTy,           CT.C_STRUCT [],               P.CCI32)]
+	    [(BT.intTy,           CT.C_signed   CT.I_int,       CP.CCI32),
+	     (BT.wordTy,          CT.C_unsigned CT.I_int,       CP.CCI32),
+	     (BT.stringTy,        CT.C_PTR,                     CP.CCI32),
+	     (BT.boolTy,          CT.C_PTR,                     CP.CCML),
+	     (BT.realTy,          CT.C_double,                  CP.CCR64),
+	     (listTy BT.realTy,   CT.C_float,                   CP.CCR64),
+	     (BT.charTy,          CT.C_signed   CT.I_char,      CP.CCI32),
+	     (BT.word8Ty,         CT.C_unsigned CT.I_char,      CP.CCI32),
+	     (BT.int32Ty,         CT.C_signed   CT.I_long,      CP.CCI32),
+	     (BT.word32Ty,        CT.C_unsigned CT.I_long,      CP.CCI32),
+	     (listTy BT.charTy,   CT.C_signed   CT.I_short,     CP.CCI32),
+	     (listTy BT.word8Ty,  CT.C_unsigned CT.I_short,     CP.CCI32),
+	     (listTy BT.int32Ty,  CT.C_signed   CT.I_long_long, CP.CCI64),
+	     (listTy BT.word32Ty, CT.C_unsigned CT.I_long_long, CP.CCI64),
+	     (listTy (listTy BT.realTy), CT.C_long_double,      CP.CCR64),
+	     (BT.exnTy,           CT.C_STRUCT [],               CP.CCI32)]
 
 	fun look t =
 	    Option.map (fn (_, x, y) => (x, y))
@@ -145,28 +146,27 @@ structure CProto : sig
 
 	(* Given [T] (see above), produce the CTypes.c_type value
 	 * and Primop.ccall_type corresponding to T: *)
-	fun dt t =
-	    case look t of
-		SOME tt => tt
-	      | NONE =>
-		(case BT.getFields t of
-		     SOME (f1 :: fl) =>
-		       if TU.equalType (f1, BT.unitTy) then
-			   (CT.C_STRUCT (map (#1 o dt) fl), P.CCI32)
-		       else
-			   (CT.C_UNION (map (#1 o dt) fl), P.CCI32)
-		   | _ => bad ())
+	fun dt t = (case look t
+                 of SOME tt => tt
+	          | NONE => (case BT.getFields t
+                       of SOME (f1 :: fl) =>
+                            if TU.equalType (f1, BT.unitTy)
+                              then (CT.C_STRUCT (map (#1 o dt) fl), CP.CCI32)
+		              else (CT.C_UNION (map (#1 o dt) fl), CP.CCI32)
+		        | _ => bad ()
+                      (* end case *))
+                (* end case *))
 
-	fun rdt (t, ml_args) =
-	    if TU.equalType (t, BT.unitTy) then
-		(CT.C_void, NONE, ml_args)
-	    else let val (ct, mt) = dt t
-		 in
-		     case ct of
-			 (CT.C_STRUCT _ | CT.C_UNION _) =>
-			   (ct, SOME mt, mt :: ml_args)
-		       | _ => (ct, SOME mt, ml_args)
-		 end
+	fun rdt (t, ml_args) = if TU.equalType (t, BT.unitTy)
+              then (CT.C_void, NONE, ml_args)
+	      else let
+                val (ct, mt) = dt t
+                in
+                  case ct
+                   of (CT.C_STRUCT _ | CT.C_UNION _) => (ct, SOME mt, mt :: ml_args)
+                    | _ => (ct, SOME mt, ml_args)
+                  (* end case *)
+                end
 
 	val (fty, nlists) = unlist (t, 0)
 
@@ -177,36 +177,36 @@ structure CProto : sig
 	    else if TU.equalType (t, BT.wordTy) then SOME "ccall"
 	    else if TU.equalType (t, BT.intTy) then SOME "stdcall"
 	    else NONE
-    in
-	(* Get argument types and result type; decode them.
-	 * Construct the corresponding CTypes.c_proto value. *)
-	case getDomainRange fty of
-	    NONE => bad ()
-	  | SOME (d, r) =>
-	    let val (conv, argTys, argsML) =
-		    (case getConv d of
-			 SOME conv => (conv, [], [])
-		       | NONE =>
-			 (case BT.getFields d of
-			      SOME (convty :: fl) =>
-				(case getConv convty of
-				     SOME conv =>
-				     let val (argTys, argsML) =
-					     ListPair.unzip (map dt fl)
-				     in
-					 (conv, argTys, argsML)
-				     end
-				   | NONE => bad ())
-			    | _ => bad ()))
-		val (retTy, retML, argsML) = rdt (r, argsML)
-	    in
-		{ c_proto = { conv = conv,
-			      retTy = retTy,
-			      paramTys = argTys },
-		  ml_args = argsML,
-		  ml_res_opt = retML,
-		  reentrant = reentrant }
-	    end
-    end
+        in
+          (* Get argument types and result type; decode them.
+           * Construct the corresponding CTypes.c_proto value. *)
+          case getDomainRange fty of
+              NONE => bad ()
+            | SOME (d, r) =>
+              let val (conv, argTys, argsML) =
+                      (case getConv d of
+                           SOME conv => (conv, [], [])
+                         | NONE =>
+                           (case BT.getFields d of
+                                SOME (convty :: fl) =>
+                                  (case getConv convty of
+                                       SOME conv =>
+                                       let val (argTys, argsML) =
+                                               ListPair.unzip (map dt fl)
+                                       in
+                                           (conv, argTys, argsML)
+                                       end
+                                     | NONE => bad ())
+                              | _ => bad ()))
+                  val (retTy, retML, argsML) = rdt (r, argsML)
+              in
+                  { c_proto = { conv = conv,
+                                retTy = retTy,
+                                paramTys = argTys },
+                    ml_args = argsML,
+                    ml_res_opt = retML,
+                    reentrant = reentrant }
+              end
+        end (* decode *)
 
     end

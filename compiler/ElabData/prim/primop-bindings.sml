@@ -12,7 +12,12 @@ structure PrimopBindings : sig
 
     structure T = Types
     structure BT = BasicTypes
-    structure P = Primop
+    structure P = PrimOps
+    structure CP = CommonOps
+    structure InlP = InlineOps
+    structure ArithP = ArithOps
+    structure PureP = PureOps
+    structure CmpP = CompareOps
 
   (* type abbreviations *)
 
@@ -73,13 +78,13 @@ structure PrimopBindings : sig
 	  fun mka (name, ty, p) = (concat[tyName, "_arr_", name], ty, p)
 	  in
 	    prims :-:
-	    mkv("sub", numSubTy, P.INLNUMSUBSCRIPTV elemK) :-:
-	    mkv("unsafe_sub", subTy vecTy, P.NUMSUBSCRIPTV elemK) :-:
-	    mkv("unsafe_update", updTy vecTy, P.NUMUPDATE elemK) :-:
-	    mka("sub", numSubTy, P.INLNUMSUBSCRIPT elemK) :-:
-	    mka("update", numUpdTy, P.INLNUMUPDATE elemK) :-:
-	    mka("unsafe_sub", subTy arrTy, P.NUMSUBSCRIPT elemK) :-:
-	    mka("unsafe_update", updTy arrTy, P.NUMUPDATE elemK)
+	    mkv("sub", numSubTy, P.INLINE(InlP.NUMSUBSCRIPTV elemK)) :-:
+	    mkv("unsafe_sub", subTy vecTy, P.PRIM(CP.NUMSUBSCRIPTV elemK)) :-:
+	    mkv("unsafe_update", updTy vecTy, P.PRIM(CP.NUMUPDATE elemK)) :-:
+	    mka("sub", numSubTy, P.INLINE(InlP.NUMSUBSCRIPT elemK)) :-:
+	    mka("update", numUpdTy, P.INLINE(InlP.NUMUPDATE elemK)) :-:
+	    mka("unsafe_sub", subTy arrTy, P.PRIM(CP.NUMSUBSCRIPT elemK)) :-:
+	    mka("unsafe_update", updTy arrTy, P.PRIM(CP.NUMUPDATE elemK))
 	  end
 
   (* add operations for an integer type to the primop list *)
@@ -90,27 +95,27 @@ structure PrimopBindings : sig
 	  val ii_b = ar(tup[ity, ity], BT.boolTy)
 	  fun mk (name, ty, p) = (prefix ^ name, ty, p)
 	  fun mk_ii_i (name, p) = mk(name, ii_i, p)
-	  fun iarith_ii_i (name, p) = mk_ii_i(name, P.IARITH{oper=p, sz=sz})
+	  fun iarith_ii_i (name, p) = mk_ii_i(name, P.ARITH{oper=p, sz=sz})
 	  fun cmp (name, p) = mk(name, ii_b, P.CMP{oper=p, kind=nk})
 	  in
 	    prims :-:
-	    iarith_ii_i("add", P.IADD) :-:
-	    iarith_ii_i("sub", P.ISUB) :-:
-	    iarith_ii_i("mul", P.IMUL) :-:
-	    mk_ii_i("div", P.INLDIV nk) :-:
-	    mk_ii_i("mod", P.INLMOD nk) :-:
-	    mk_ii_i("quot", P.INLQUOT nk) :-:
-	    mk_ii_i("rem", P.INLREM nk) :-:
-	    mk("neg", i_i, P.IARITH{oper=P.INEG, sz=sz}) :-:
-	    cmp("lt", P.LT) :-:
-	    cmp("le", P.LTE) :-:
-	    cmp("gt", P.GT) :-:
-	    cmp("ge", P.GTE) :-:
-	    cmp("eql", P.EQL) :-:
-	    cmp("neq", P.NEQ) :-:
-	    mk_ii_i("min", P.INLMIN nk) :-:
-	    mk_ii_i("max", P.INLMAX nk) :-:
-	    mk("abs", i_i, P.INLABS nk)
+	    iarith_ii_i("add", ArithP.IADD) :-:
+	    iarith_ii_i("sub", ArithP.ISUB) :-:
+	    iarith_ii_i("mul", ArithP.IMUL) :-:
+	    mk_ii_i("div", P.INLINE(InlP.DIV nk)) :-:
+	    mk_ii_i("mod", P.INLINE(InlP.MOD nk)) :-:
+	    mk_ii_i("quot", P.INLINE(InlP.QUOT nk)) :-:
+	    mk_ii_i("rem", P.INLINE(InlP.REM nk)) :-:
+	    mk("neg", i_i, P.ARITH{oper=ArithP.INEG, sz=sz}) :-:
+	    cmp("lt", CmpP.LT) :-:
+	    cmp("le", CmpP.LTE) :-:
+	    cmp("gt", CmpP.GT) :-:
+	    cmp("ge", CmpP.GTE) :-:
+	    cmp("eql", CmpP.EQL) :-:
+	    cmp("neq", CmpP.NEQ) :-:
+	    mk_ii_i("min", P.INLINE(InlP.MIN nk)) :-:
+	    mk_ii_i("max", P.INLINE(InlP.MAX nk)) :-:
+	    mk("abs", i_i, P.INLINE(InlP.ABS nk))
 	  end
 
   (* add operations for a word type to the primop list *)
@@ -123,45 +128,48 @@ structure PrimopBindings : sig
 	  val ww_b = ar(tup[wty, wty], BT.boolTy)
 	  fun mk (name, ty, p) = (prefix ^ name, ty, p)
 	  fun mk_ww_w (name, p) = mk(name, ww_w, p)
-	  fun arith_ww_w (name, p) = mk_ww_w(name, P.PURE_ARITH{oper=p, kind=nk})
+	  fun arith_ww_w (name, p) = mk_ww_w(name, P.PURE{oper=p, kind=nk})
 	  fun shift (name, p) = mk(name, shftTy, p)
 	  fun cmp (name, p) = mk(name, ww_b, P.CMP{oper=p, kind=nk})
 	  in
 	    prims :-:
-	    arith_ww_w("add", P.ADD) :-:
-	    arith_ww_w("sub", P.SUB) :-:
-	    arith_ww_w("mul", P.MUL) :-:
-	    mk_ww_w("div", P.INLQUOT nk) :-:
-	    mk_ww_w("mod", P.INLREM nk) :-:
-	    mk("neg", w_w, P.PURE_ARITH{oper=P.NEG, kind=nk}) :-:
-	    arith_ww_w("orb", P.ORB) :-:
-	    arith_ww_w("xorb", P.XORB) :-:
-	    arith_ww_w("andb", P.ANDB) :-:
-	    shift("rshift", P.INLRSHIFT nk) :-:
-	    shift("rshiftl", P.INLRSHIFTL nk) :-:
-	    shift("lshift", P.INLLSHIFT nk) :-:
-	    shift("raw_rshift", P.PURE_ARITH{oper=P.RSHIFT, kind=nk}) :-:
-	    shift("raw_rshiftl", P.PURE_ARITH{oper=P.RSHIFTL, kind=nk}) :-:
-	    shift("raw_lshift", P.PURE_ARITH{oper=P.LSHIFT, kind=nk}) :-:
-	    mk("notb", w_w, P.PURE_ARITH{oper=P.NOTB, kind=nk}) :-:
-	    mk("cnt_pop", w_i, P.PURE_ARITH{oper=P.CNTPOP, kind=nk}) :-:
+	    arith_ww_w("add", PureP.ADD) :-:
+	    arith_ww_w("sub", PureP.SUB) :-:
+	    arith_ww_w("mul", PureP.MUL) :-:
+	    mk_ww_w("div", P.INLINE(InlP.QUOT nk)) :-:
+	    mk_ww_w("mod", P.INLINE(InlP.REM nk)) :-:
+	    mk("neg", w_w, P.PURE{oper=PureP.NEG, kind=nk}) :-:
+	    arith_ww_w("orb", PureP.ORB) :-:
+	    arith_ww_w("xorb", PureP.XORB) :-:
+	    arith_ww_w("andb", PureP.ANDB) :-:
+	    shift("rshift", P.INLINE(InlP.RSHIFT nk)) :-:
+	    shift("rshiftl", P.INLINE(InlP.RSHIFTL nk)) :-:
+	    shift("lshift", P.INLINE(InlP.LSHIFT nk)) :-:
+	    shift("raw_rshift", P.PURE{oper=PureP.RSHIFT, kind=nk}) :-:
+	    shift("raw_rshiftl", P.PURE{oper=PureP.RSHIFTL, kind=nk}) :-:
+	    shift("raw_lshift", P.PURE{oper=PureP.LSHIFT, kind=nk}) :-:
+	    mk("notb", w_w, P.PURE{oper=PureP.NOTB, kind=nk}) :-:
+	    mk("cnt_ones", w_i, P.INLINE(InlP.CNTO nk)) :-:
+	    mk("cnt_zeros", w_i, P.INLINE(InlP.CNTZ nk)) :-:
 (* QUESTION: do we want separate "inline" versions of the bit counting operators
  * that check for zero and a "raw" version that doesn't, or are we good with
  * a single form?.  Also, we can implement "count leading ones" etc. as an inline
  * primop that logically negates its argument.
  *)
-	    mk("cnt_lz", w_i, P.PURE_ARITH{oper=P.CNTLZ, kind=nk}) :-:
-	    mk("cnt_tz", w_i, P.PURE_ARITH{oper=P.CNTTZ, kind=nk}) :-:
-	    shift("rotl", P.PURE_ARITH{oper=P.ROTL, kind=nk}) :-:
-	    shift("rotr", P.PURE_ARITH{oper=P.ROTR, kind=nk}) :-:
-	    cmp("lt", P.LT) :-:
-	    cmp("le", P.LTE) :-:
-	    cmp("gt", P.GT) :-:
-	    cmp("ge", P.GTE) :-:
-	    cmp("eql", P.EQL) :-:
-	    cmp("neq", P.NEQ) :-:
-	    mk_ww_w("min", P.INLMIN nk) :-:
-	    mk_ww_w("max", P.INLMAX nk)
+	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_leading_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_trailing_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    shift("rotl", P.PURE{oper=PureP.ROTL, kind=nk}) :-:
+	    shift("rotr", P.PURE{oper=PureP.ROTR, kind=nk}) :-:
+	    cmp("lt", CmpP.LT) :-:
+	    cmp("le", CmpP.LTE) :-:
+	    cmp("gt", CmpP.GT) :-:
+	    cmp("ge", CmpP.GTE) :-:
+	    cmp("eql", CmpP.EQL) :-:
+	    cmp("neq", CmpP.NEQ) :-:
+	    mk_ww_w("min", P.INLINE(InlP.MIN nk)) :-:
+	    mk_ww_w("max", P.INLINE(InlP.MAX nk))
 	  end
 
   (* add operations for a real type to the primop list *)
@@ -172,48 +180,54 @@ structure PrimopBindings : sig
 	  val rr_b = ar(tup[rty, rty], BT.boolTy)
 	  fun mk (name, ty, p) = (prefix ^ name, ty, p)
 	  fun mk_rr_r (name, p) = mk(name, rr_r, p)
-	  fun arith_rr_r (name, p) = mk_rr_r(name, P.PURE_ARITH{oper=p, kind=nk})
-	  fun arith_r_r (name, p) = mk(name, r_r, P.PURE_ARITH{oper=p, kind=nk})
+	  fun arith_rr_r (name, p) = mk_rr_r(name, P.PURE{oper=p, kind=nk})
+	  fun arith_r_r (name, p) = mk(name, r_r, P.PURE{oper=p, kind=nk})
 	  fun cmp (name, p) = mk(name, rr_b, P.CMP{oper=p, kind=nk})
 	  in
 	    prims :-:
-	    arith_rr_r("add", P.ADD) :-:
-	    arith_rr_r("sub", P.SUB) :-:
-	    arith_rr_r("mul", P.MUL) :-:
-	    arith_rr_r("div", P.FDIV) :-:
-	    arith_r_r("neg", P.NEG) :-:
-	    cmp("lt", P.LT) :-:
-	    cmp("le", P.LTE) :-:
-	    cmp("gt", P.GT) :-:
-	    cmp("ge", P.GTE) :-:
-	    cmp("eql", P.EQL) :-:
-	    cmp("neq", P.NEQ) :-:
-	    mk("sgn", ar(rty, BT.boolTy), P.FSGN sz) :-:
-	    mk_rr_r("min", P.INLMIN nk) :-:
-	    mk_rr_r("max", P.INLMAX nk) :-:
-	    arith_r_r("abs", P.FABS) :-:
-	    arith_r_r("sqrt", P.FSQRT) :-:
-	    mk("to_bits", ar(rty, wTy sz), P.REAL_TO_BITS sz) :-:
-	    mk("from_bits", ar(wTy sz, rty), P.BITS_TO_REAL sz)
+	    arith_rr_r("add", PureP.ADD) :-:
+	    arith_rr_r("sub", PureP.SUB) :-:
+	    arith_rr_r("mul", PureP.MUL) :-:
+	    arith_rr_r("div", PureP.FDIV) :-:
+	    arith_r_r("neg", PureP.NEG) :-:
+	    cmp("lt", CmpP.LT) :-:
+	    cmp("le", CmpP.LTE) :-:
+	    cmp("gt", CmpP.GT) :-:
+	    cmp("ge", CmpP.GTE) :-:
+	    cmp("eql", CmpP.EQL) :-:
+	    cmp("neq", CmpP.NEQ) :-:
+	    mk("sgn", ar(rty, BT.boolTy), P.PRIM(CP.FSGN sz)) :-:
+	    mk_rr_r("min", P.INLINE(InlP.MIN nk)) :-:
+	    mk_rr_r("max", P.INLINE(InlP.MAX nk)) :-:
+	    arith_r_r("abs", PureP.FABS) :-:
+	    arith_r_r("sqrt", PureP.FSQRT) :-:
+	    mk("to_bits", ar(rty, wTy sz), P.PRIM(CP.REAL_TO_BITS sz)) :-:
+	    mk("from_bits", ar(wTy sz, rty), P.PRIM(CP.BITS_TO_REAL sz))
 	  end
+
+    fun pTESTU arg = P.PRIM(CP.TESTU arg)
+    fun pTEST arg = P.PRIM(CP.TEST arg)
+    fun pTRUNC arg = P.PRIM(CP.TRUNC arg)
+    fun pEXTEND arg = P.PRIM(CP.EXTEND arg)
+    fun pCOPY arg = P.PRIM(CP.COPY arg)
 
   (* utility functions for conversions *)
     fun sCopy (srcSz, dstSz) = if (srcSz < dstSz)
-	    then P.EXTEND(srcSz, dstSz)
+	    then pEXTEND(srcSz, dstSz)
 	  else if (srcSz = dstSz)
-	    then P.COPY(srcSz, dstSz)
-	    else P.TRUNC(srcSz, dstSz)
+	    then pCOPY(srcSz, dstSz)
+	    else pTRUNC(srcSz, dstSz)
     fun sCopyChk (srcSz, dstSz) = if (srcSz < dstSz)
-	    then P.EXTEND(srcSz, dstSz)
+	    then pEXTEND(srcSz, dstSz)
 	  else if (srcSz = dstSz)
-	    then P.COPY(srcSz, dstSz)
-	    else P.TEST(srcSz, dstSz)
+	    then pCOPY(srcSz, dstSz)
+	    else pTEST(srcSz, dstSz)
     fun uCopy (srcSz, dstSz) = if (srcSz <= dstSz)
-	  then P.COPY(srcSz, dstSz)
-	  else P.TRUNC(srcSz, dstSz)
+	  then pCOPY(srcSz, dstSz)
+	  else pTRUNC(srcSz, dstSz)
     fun uCopyChk (srcSz, dstSz) = if (srcSz < dstSz)
-	  then P.COPY(srcSz, dstSz)
-	  else P.TESTU(srcSz, dstSz)
+	  then pCOPY(srcSz, dstSz)
+	  else pTESTU(srcSz, dstSz)
 
   (* generate conversion operators for the int and word types of the given
    * size.
@@ -240,80 +254,80 @@ structure PrimopBindings : sig
 	  val prims = if (sz = largeWSz)
 		then prims
 		else prims :-:
-		  (nm("", lgWName, wName), wFrom largeWTy, P.TRUNC(largeWSz, sz)) :-:
-		  (nm("unsigned_", wName, lgWName), wTo largeWTy, P.COPY(sz, largeWSz)) :-:
-		  (nm("signed_", wName, lgWName), wTo largeWTy, P.EXTEND(sz, largeWSz))
+		  (nm("", lgWName, wName), wFrom largeWTy, pTRUNC(largeWSz, sz)) :-:
+		  (nm("unsigned_", wName, lgWName), wTo largeWTy, pCOPY(sz, largeWSz)) :-:
+		  (nm("signed_", wName, lgWName), wTo largeWTy, pEXTEND(sz, largeWSz))
 	  in
 	    prims :-:
 	  (* int type to/from intinf *)
-	    (iName ^  "_to_intinf", iTo BT.intinfTy, P.EXTEND_INF sz) :-:
-	    ("intinf_to_" ^ iName, iFrom BT.intinfTy, P.TEST_INF sz) :-:
+	    (iName ^  "_to_intinf", iTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF sz)) :-:
+	    ("intinf_to_" ^ iName, iFrom BT.intinfTy, P.INLINE(InlP.TEST_INF sz)) :-:
 	  (* word type to/from default int type *)
 	    ("int_to_" ^ wName, wFrom BT.intTy, sCopy(intSz, sz)) :-:
 	    (nm("unsigned_", wName, "int"), wTo BT.intTy, uCopyChk(sz, intSz)) :-:
 	    (nm("signed_", wName, "int"), wTo BT.intTy, sCopyChk(sz, intSz)) :-:
 	  (* word type to/from int inf *)
-	    ("unsigned_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.COPY_INF sz) :-:
-	    ("signed_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.EXTEND_INF sz) :-:
-	    ("intinf_to_" ^ wName, wFrom BT.intinfTy, P.TRUNC_INF sz)
+	    ("unsigned_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.COPY_INF sz)) :-:
+	    ("signed_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF sz)) :-:
+	    ("intinf_to_" ^ wName, wFrom BT.intinfTy, P.INLINE(InlP.TRUNC_INF sz))
 	  end
 
   (* size-independent primops *)
     val prims = [] :-:
 	(* continuation operators *)
-	  ("callcc", p1(ar(ar(contTy tv1,tv1),tv1)), P.CALLCC) :-:
-	  ("throw", p2(ar(contTy tv1,ar(tv1,tv2))), P.THROW) :-:
-	  ("capture", p1(ar(ar(ccontTy tv1,tv1),tv1)), P.CAPTURE) :-:
-	  ("isolate", p1(ar(ar(tv1,BT.unitTy),contTy tv1)), P.ISOLATE) :-:
-	  ("cthrow", p2(ar(ccontTy tv1,ar(tv1,tv2))), P.THROW) :-:
+	  ("callcc", p1(ar(ar(contTy tv1,tv1),tv1)), P.PRIM CP.CALLCC) :-:
+	  ("throw", p2(ar(contTy tv1,ar(tv1,tv2))), P.PRIM CP.THROW) :-:
+	  ("capture", p1(ar(ar(ccontTy tv1,tv1),tv1)), P.PRIM CP.CAPTURE) :-:
+	  ("isolate", p1(ar(ar(tv1,BT.unitTy),contTy tv1)), P.PRIM CP.ISOLATE) :-:
+	  ("cthrow", p2(ar(ccontTy tv1,ar(tv1,tv2))), P.PRIM CP.THROW) :-:
 	(* reference operations *)
-	  ("!", p1(ar(refTy tv1,tv1)), P.DEREF) :-:
-	  (":=", p1(ar(tup[refTy tv1,tv1],BT.unitTy)), P.ASSIGN) :-:
-	  ("makeref", p1(ar(tv1,refTy tv1)), P.MAKEREF) :-:
+	  ("!", p1(ar(refTy tv1,tv1)), P.PRIM CP.DEREF) :-:
+	  (":=", p1(ar(tup[refTy tv1,tv1],BT.unitTy)), P.PRIM CP.ASSIGN) :-:
+	  ("makeref", p1(ar(tv1,refTy tv1)), P.PRIM CP.MAKEREF) :-:
 	(* boxity tests *)
-	  ("boxed", p1(ar(tv1,BT.boolTy)), P.BOXED) :-:
-	  ("unboxed", p1(ar(tv1,BT.boolTy)), P.UNBOXED) :-:
+	  ("boxed", p1(ar(tv1,BT.boolTy)), P.PRIM CP.BOXED) :-:
+	  ("unboxed", p1(ar(tv1,BT.boolTy)), P.PRIM CP.UNBOXED) :-:
 	(* type casts *)
-	  ("cast", p2(ar(tv1,tv2)), P.CAST) :-:
+	  ("cast", p2(ar(tv1,tv2)), P.PRIM CP.CAST) :-:
 	(* polymorphic equality tests *)
-	  ("=", ep1(ar(tup[tv1,tv1],BT.boolTy)), P.POLYEQL) :-:
-	  ("<>", ep1(ar(tup[tv1,tv1],BT.boolTy)), P.POLYNEQ) :-:
-	  ("ptr_eql", p1(ar(tup[tv1,tv1],BT.boolTy)), P.PTREQL) :-:
-	  ("ptr_neq", p1(ar(tup[tv1,tv1],BT.boolTy)), P.PTRNEQ) :-:
+	  ("=", ep1(ar(tup[tv1,tv1],BT.boolTy)), P.PRIM CP.POLYEQL) :-:
+	  ("<>", ep1(ar(tup[tv1,tv1],BT.boolTy)), P.PRIM CP.POLYNEQ) :-:
+	  ("ptr_eql", p1(ar(tup[tv1,tv1],BT.boolTy)), P.PRIM CP.PTREQL) :-:
+	  ("ptr_neq", p1(ar(tup[tv1,tv1],BT.boolTy)), P.PRIM CP.PTRNEQ) :-:
 	(* runtime hooks *)
-	  ("getvar", p1(ar(BT.unitTy,tv1)), P.GETVAR) :-:
-	  ("setvar", p1(ar(tv1,BT.unitTy)), P.SETVAR) :-:
-	  ("mkspecial", p2(ar(tup[BT.intTy,tv1],tv2)), P.MKSPECIAL) :-:
-	  ("getspecial", p1(ar(tv1,BT.intTy)), P.GETSPECIAL) :-:
-	  ("setspecial", p1(ar(tup[tv1,BT.intTy],BT.unitTy)), P.SETSPECIAL) :-:
-	  ("gethdlr", p1(ar(BT.unitTy,contTy tv1)), P.GETHDLR) :-:
-	  ("sethdlr", p1(ar(contTy tv1,BT.unitTy)), P.SETHDLR) :-:
-	  ("gettag", p1(ar(tv1,BT.intTy)), P.GETTAG) :-:
-	  ("objlength", p1(ar(tv1, BT.intTy)), P.OBJLENGTH) :-:
+	  ("getvar", p1(ar(BT.unitTy,tv1)), P.PRIM CP.GETVAR) :-:
+	  ("setvar", p1(ar(tv1,BT.unitTy)), P.PRIM CP.SETVAR) :-:
+	  ("mkspecial", p2(ar(tup[BT.intTy,tv1],tv2)), P.PRIM CP.MKSPECIAL) :-:
+	  ("getspecial", p1(ar(tv1,BT.intTy)), P.PRIM CP.GETSPECIAL) :-:
+	  ("setspecial", p1(ar(tup[tv1,BT.intTy],BT.unitTy)), P.PRIM CP.SETSPECIAL) :-:
+	  ("gethdlr", p1(ar(BT.unitTy,contTy tv1)), P.PRIM CP.GETHDLR) :-:
+	  ("sethdlr", p1(ar(contTy tv1,BT.unitTy)), P.PRIM CP.SETHDLR) :-:
+	  ("gettag", p1(ar(tv1,BT.intTy)), P.PRIM CP.GETTAG) :-:
+	  ("objlength", p1(ar(tv1, BT.intTy)), P.PRIM CP.OBJLENGTH) :-:
 	(* inline basis operations *)
-	  ("inl_compose", p3(ar(tup[ar(tv2,tv3),ar(tv1,tv2)],ar(tv1,tv3))), P.INLCOMPOSE) :-:
-	  ("inl_before", p2(ar(tup[tv1,tv2],tv1)), P.INLBEFORE) :-:
-	  ("inl_ignore", p1(ar(tv1,BT.unitTy)), P.INLIGNORE) :-:
-	  ("inl_identity", p1(ar(tv1,tv1)), P.INLIDENTITY) :-:
-	  ("inl_not", ar(BT.boolTy, BT.boolTy), P.INLNOT) :-:
-	  ("inl_chr", ar(BT.intTy, BT.charTy), P.INLCHR) :-:
-	  ("inl_ord", ar(BT.charTy, BT.intTy), P.CAST) :-:
+	  ("inl_compose", p3(ar(tup[ar(tv2,tv3),ar(tv1,tv2)],ar(tv1,tv3))), P.INLINE InlP.COMPOSE) :-:
+	  ("inl_before", p2(ar(tup[tv1,tv2],tv1)), P.INLINE InlP.BEFORE) :-:
+	  ("inl_ignore", p1(ar(tv1,BT.unitTy)), P.INLINE InlP.IGNORE) :-:
+	  ("inl_identity", p1(ar(tv1,tv1)), P.INLINE InlP.IDENTITY) :-:
+	  ("inl_not", ar(BT.boolTy, BT.boolTy), P.INLINE InlP.NOT) :-:
+	  ("inl_chr", ar(BT.intTy, BT.charTy), P.INLINE InlP.CHR) :-:
+	  ("inl_ord", ar(BT.charTy, BT.intTy), P.PRIM(CP.COPY(8, Target.defaultIntSz))) :-:
 	(* polymorphic array and vector *)
-	  ("mkarray", p1(ar(tup[BT.intTy,tv1],arrTy tv1)), P.INLMKARRAY) :-:
-	  ("arr_unsafe_sub", p1(ar(tup[arrTy tv1,BT.intTy],tv1)), P.SUBSCRIPT) :-:
-	  ("arr_sub", p1(ar(tup[arrTy tv1,BT.intTy],tv1)), P.INLSUBSCRIPT) :-:
-	  ("vec_unsafe_sub", p1(ar(tup[vecTy tv1,BT.intTy],tv1)), P.SUBSCRIPTV) :-:
-	  ("vec_sub", p1(ar(tup[vecTy tv1,BT.intTy],tv1)), P.INLSUBSCRIPTV) :-:
-	  ("arr_unsafe_update", p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.UPDATE) :-:
-	  ("arr_update", p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.INLUPDATE) :-:
+	  ("mkarray", p1(ar(tup[BT.intTy,tv1],arrTy tv1)), P.INLINE InlP.MKARRAY) :-:
+	  ("arr_unsafe_sub", p1(ar(tup[arrTy tv1,BT.intTy],tv1)), P.PRIM CP.SUBSCRIPT) :-:
+	  ("arr_sub", p1(ar(tup[arrTy tv1,BT.intTy],tv1)), P.INLINE InlP.SUBSCRIPT) :-:
+	  ("vec_unsafe_sub", p1(ar(tup[vecTy tv1,BT.intTy],tv1)), P.PRIM CP.SUBSCRIPTV) :-:
+	  ("vec_sub", p1(ar(tup[vecTy tv1,BT.intTy],tv1)), P.INLINE InlP.SUBSCRIPTV) :-:
+	  ("arr_unsafe_update", p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.PRIM CP.UPDATE) :-:
+	  ("arr_update", p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.INLINE InlP.UPDATE) :-:
 	  ("arr_unboxed_update",
-	    p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.UNBOXEDUPDATE) :-:
+	    p1(ar(tup[arrTy tv1,BT.intTy,tv1],BT.unitTy)), P.PRIM CP.UNBOXEDUPDATE) :-:
 	(* generic sequence operations*)
-	  ("newArray0", p1(ar(BT.unitTy, tv1)), P.NEW_ARRAY0) :-:
-	  ("seq_length", p1(ar(tv1, BT.intTy)), P.LENGTH) :-:
-	  ("seq_data", p2(ar(tv1, tv2)), P.GET_SEQ_DATA) :-:
-	  ("raw64Sub", p1(ar(tup[tv1, BT.intTy], BT.realTy)), P.SUBSCRIPT_RAW64) :-:
-	  ("recordSub", p2(ar(tup[tv1,BT.intTy], tv2)), P.SUBSCRIPT_REC)
+	  ("newArray0", p1(ar(BT.unitTy, tv1)), P.PRIM CP.NEW_ARRAY0) :-:
+	  ("seq_length", p1(ar(tv1, BT.intTy)), P.PRIM CP.LENGTH) :-:
+	  ("seq_data", p2(ar(tv1, tv2)), P.PRIM CP.GET_SEQ_DATA) :-:
+	  ("raw64Sub", p1(ar(tup[tv1, BT.intTy], BT.realTy)), P.PRIM CP.SUBSCRIPT_RAW64) :-:
+	  ("recordSub", p2(ar(tup[tv1,BT.intTy], tv2)), P.PRIM CP.SUBSCRIPT_REC)
 
   (* operations on word8 arrays/vectors *)
     val prims = defineMonoSeqOps (
@@ -332,10 +346,10 @@ structure PrimopBindings : sig
 	  fun mk (name, ty, p) = ("real64_arr_" ^ name, ty, p)
 	  in
 	    prims :-:
-	    mk("sub", numSubTy, P.INLNUMSUBSCRIPT elemK) :-:
-	    mk("update", numUpdTy, P.INLNUMUPDATE elemK) :-:
-	    mk("unsafe_sub", subTy, P.NUMSUBSCRIPT elemK) :-:
-	    mk("unsafe_update", updTy, P.NUMUPDATE elemK)
+	    mk("sub", numSubTy, P.INLINE(InlP.NUMSUBSCRIPT elemK)) :-:
+	    mk("update", numUpdTy, P.INLINE(InlP.NUMUPDATE elemK)) :-:
+	    mk("unsafe_sub", subTy, P.PRIM(CP.NUMSUBSCRIPT elemK)) :-:
+	    mk("unsafe_update", updTy, P.PRIM(CP.NUMUPDATE elemK))
 	  end
 (* TODO: once we have real64vectors, we can define those operations too *)
 
@@ -355,17 +369,17 @@ structure PrimopBindings : sig
 	  in
 	    prims :-:
 	  (* unchecked addition/subtraction *)
-	    ("int_unsafe_add", ii_i, P.PURE_ARITH{oper=P.ADD, kind=nk}) :-:
-	    ("int_unsafe_sub", ii_i, P.PURE_ARITH{oper=P.SUB, kind=nk}) :-:
+	    ("int_unsafe_add", ii_i, P.PURE{oper=PureP.ADD, kind=nk}) :-:
+	    ("int_unsafe_sub", ii_i, P.PURE{oper=PureP.SUB, kind=nk}) :-:
 	  (* bitwise operations *)
-	    ("int_orb", ii_i, P.PURE_ARITH{oper=P.ORB, kind=nk}) :-:
-	    ("int_xorb", ii_i, P.PURE_ARITH{oper=P.XORB, kind=nk}) :-:
-	    ("int_andb", ii_i, P.PURE_ARITH{oper=P.ANDB, kind=nk}) :-:
-	    ("int_raw_rshift", iw_i, P.PURE_ARITH{oper=P.RSHIFT, kind=nk}) :-:
-	    ("int_raw_lshift", iw_i, P.PURE_ARITH{oper=P.LSHIFT, kind=nk}) :-:
-	    ("int_notb", i_i, P.PURE_ARITH{oper=P.NOTB, kind=nk}) :-:
-	    ("int_ltu", ii_b, P.CMP{oper=P.LT, kind=nk}) :-:
-	    ("int_geu", ii_b, P.CMP{oper=P.GTE, kind=nk})
+	    ("int_orb", ii_i, P.PURE{oper=PureP.ORB, kind=nk}) :-:
+	    ("int_xorb", ii_i, P.PURE{oper=PureP.XORB, kind=nk}) :-:
+	    ("int_andb", ii_i, P.PURE{oper=PureP.ANDB, kind=nk}) :-:
+	    ("int_raw_rshift", iw_i, P.PURE{oper=PureP.RSHIFT, kind=nk}) :-:
+	    ("int_raw_lshift", iw_i, P.PURE{oper=PureP.LSHIFT, kind=nk}) :-:
+	    ("int_notb", i_i, P.PURE{oper=PureP.NOTB, kind=nk}) :-:
+	    ("int_ltu", ii_b, P.CMP{oper=CmpP.LT, kind=nk}) :-:
+	    ("int_geu", ii_b, P.CMP{oper=CmpP.GTE, kind=nk})
 	  end
 
   (* default word operations *)
@@ -403,17 +417,17 @@ structure PrimopBindings : sig
 	  fun wFrom ty = ar(ty, BT.word8Ty)
 	  in
 	    prims :-:
-	    (lgWName ^ "_to_word8", wFrom largeWTy, P.TRUNC(largeWSz, 8)) :-:
-	    ("unsigned_word8_to_" ^ lgWName, wTo largeWTy, P.COPY(8, largeWSz)) :-:
-	    ("signed_word8_to_" ^ lgWName, wTo largeWTy, P.EXTEND(8, largeWSz)) :-:
+	    (lgWName ^ "_to_word8", wFrom largeWTy, pTRUNC(largeWSz, 8)) :-:
+	    ("unsigned_word8_to_" ^ lgWName, wTo largeWTy, pCOPY(8, largeWSz)) :-:
+	    ("signed_word8_to_" ^ lgWName, wTo largeWTy, pEXTEND(8, largeWSz)) :-:
 	  (* word type to/from default int type *)
 	    ("int_to_word8", wFrom BT.intTy, sCopy(intSz, 8)) :-:
 	    ("unsigned_word8_to_int", wTo BT.intTy, uCopyChk(8, intSz)) :-:
 	    ("signed_word8_to_int", wTo BT.intTy, sCopyChk(8, intSz)) :-:
 	  (* word type to/from int inf *)
-	    ("unsigned_word8_to_intinf", wTo BT.intinfTy, P.COPY_INF 8) :-:
-	    ("signed_word8_to_intinf", wTo BT.intinfTy, P.EXTEND_INF 8) :-:
-	    ("intinf_to_word8", wFrom BT.intinfTy, P.TRUNC_INF 8)
+	    ("unsigned_word8_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.COPY_INF 8)) :-:
+	    ("signed_word8_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF 8)) :-:
+	    ("intinf_to_word8", wFrom BT.intinfTy, P.INLINE(InlP.TRUNC_INF 8))
 	  end
 
   (* some additional conversions that are used in system/smlnj/init/core-intinf.sml
@@ -421,34 +435,19 @@ structure PrimopBindings : sig
    *)
     val prims = if Target.is64
 	  then prims :-:
-	      ("trunc_int64_to_word", ar(BT.int64Ty, BT.wordTy), P.TRUNC(64, intSz)) :-:
-	      ("trunc_word64_to_int", ar(BT.word64Ty, BT.intTy), P.TRUNC(64, intSz)) :-:
-	      ("copy_int64_to_word64", ar(BT.int64Ty, BT.word64Ty), P.COPY(64, 64)) :-:
-	      ("copy_word_to_int64", ar(BT.wordTy, BT.int64Ty), P.COPY(intSz, 64)) :-:
-	      ("copy_word64_to_int64", ar(BT.word64Ty, BT.int64Ty), P.COPY(64, 64))
+	      ("trunc_int64_to_word", ar(BT.int64Ty, BT.wordTy), pTRUNC(64, intSz)) :-:
+	      ("trunc_word64_to_int", ar(BT.word64Ty, BT.intTy), pTRUNC(64, intSz)) :-:
+	      ("copy_int64_to_word64", ar(BT.int64Ty, BT.word64Ty), pCOPY(64, 64)) :-:
+	      ("copy_word_to_int64", ar(BT.wordTy, BT.int64Ty), pCOPY(intSz, 64)) :-:
+	      ("copy_word64_to_int64", ar(BT.word64Ty, BT.int64Ty), pCOPY(64, 64))
 	  else let
 	    in
 	      prims :-:
-	      ("trunc_int32_to_word", ar(BT.int32Ty, BT.wordTy), P.TRUNC(32, intSz)) :-:
-	      ("trunc_word32_to_int", ar(BT.word32Ty, BT.intTy), P.TRUNC(32, intSz)) :-:
-	      ("copy_int32_to_word32", ar(BT.int32Ty, BT.word32Ty), P.COPY(32, 32)) :-:
-	      ("copy_word_to_int32", ar(BT.wordTy, BT.int32Ty), P.COPY(intSz, 32)) :-:
-	      ("copy_word32_to_int32", ar(BT.word32Ty, BT.int32Ty), P.COPY(32, 32))
-	    end
-
-  (* primops to go between abstract and concrete representation of
-   * 64-bit ints and words for 32-bit targets
-   *)
-    val prims = if Target.is64
-	  then prims
-	  else let
-	    val pw32 = tup[BT.word32Ty, BT.word32Ty]
-	    in
-	      prims :-:
-	      ("int64_to_pair", ar(BT.int64Ty, pw32), P.EXTERN64) :-:
-	      ("int64_from_pair", ar(pw32, BT.int64Ty), P.INTERN64) :-:
-	      ("word64_to_pair", ar(BT.word64Ty, pw32), P.EXTERN64) :-:
-	      ("word64_from_pair", ar(pw32, BT.word64Ty), P.INTERN64)
+	      ("trunc_int32_to_word", ar(BT.int32Ty, BT.wordTy), pTRUNC(32, intSz)) :-:
+	      ("trunc_word32_to_int", ar(BT.word32Ty, BT.intTy), pTRUNC(32, intSz)) :-:
+	      ("copy_int32_to_word32", ar(BT.int32Ty, BT.word32Ty), pCOPY(32, 32)) :-:
+	      ("copy_word_to_int32", ar(BT.wordTy, BT.int32Ty), pCOPY(intSz, 32)) :-:
+	      ("copy_word32_to_int32", ar(BT.word32Ty, BT.int32Ty), pCOPY(32, 32))
 	    end
 
 (* REAL32: FIXME *)
@@ -456,9 +455,9 @@ structure PrimopBindings : sig
     val prims = let
 	  val r_i = ar(BT.realTy, BT.intTy)
 	  fun r2i (name, fl) =
-		(name, r_i, P.REAL_TO_INT{floor=fl, from=realSz, to=intSz})
+		(name, r_i, P.PRIM(CP.REAL_TO_INT{floor=fl, from=realSz, to=intSz}))
 	  fun i2r (name, iTy, iSz) =
-		(name, ar(iTy, BT.realTy), P.INT_TO_REAL{from=iSz, to=realSz})
+		(name, ar(iTy, BT.realTy), P.PRIM(CP.INT_TO_REAL{from=iSz, to=realSz}))
 	  in
 	    prims :-:
 	    r2i("floor_real64_to_int", true) :-:
@@ -476,12 +475,12 @@ structure PrimopBindings : sig
 	  fun cmp (name, p) = ("char_"^name, cc_b, P.CMP{oper=p, kind=P.UINT intSz})
 	  in
 	    prims :-:
-	    cmp("lt", P.LT) :-:
-	    cmp("le", P.LTE) :-:
-	    cmp("gt", P.GT) :-:
-	    cmp("ge", P.GTE) :-:
-	    cmp("eql", P.EQL) :-:
-	    cmp("neq", P.NEQ)
+	    cmp("lt", CmpP.LT) :-:
+	    cmp("le", CmpP.LTE) :-:
+	    cmp("gt", CmpP.GT) :-:
+	    cmp("ge", CmpP.GTE) :-:
+	    cmp("eql", CmpP.EQL) :-:
+	    cmp("neq", CmpP.NEQ)
 	  end
 
   (* primops for the c_pointer type *)
@@ -489,14 +488,14 @@ structure PrimopBindings : sig
 	  val wName = "word" ^ Int.toString Target.pointerSz
 	  in
 	    prims :-:
-	    ("cptr_to_" ^ wName, ar(BT.pointerTy, addrTy), P.PTR_TO_WORD) :-:
-	    (wName ^ "_to_cptr", ar(addrTy, BT.pointerTy), P.WORD_TO_PTR)
+	    ("cptr_to_" ^ wName, ar(BT.pointerTy, addrTy), P.PRIM CP.CPTR_TO_WORD) :-:
+	    (wName ^ "_to_cptr", ar(addrTy, BT.pointerTy), P.PRIM CP.WORD_TO_CPTR)
 	  end
 
   (* primops for host properties *)
     val prims = prims :-:
-          ("host_word_size", ar(BT.unitTy, BT.intTy), P.HOST_WORD_SIZE) :-:
-          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.HOST_BIG_ENDIAN)
+          ("host_word_size", ar(BT.unitTy, BT.intTy), P.INLINE InlP.HOST_WORD_SIZE) :-:
+          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.INLINE InlP.HOST_BIG_ENDIAN)
 
   (* primops for C FFI *)
     val prims = let
@@ -525,19 +524,19 @@ structure PrimopBindings : sig
 	  val rccTy = p3(ar(tup[adrTy, tv1, tv2], tv3))
 	  fun mk (name, ty, p) = ("raw_" ^ name, ty, p)
 	  fun mkLd (name, ty, nk) =
-		("raw_load_" ^ name, ar(adrTy, ty), P.RAW_LOAD nk)
+		("raw_load_" ^ name, ar(adrTy, ty), P.PRIM(CP.RAW_LOAD nk))
 	  fun mkSt(name, ty, nk) =
-		("raw_store_" ^ name, ar(tup[adrTy, ty], BT.unitTy), P.RAW_STORE nk)
+		("raw_store_" ^ name, ar(tup[adrTy, ty], BT.unitTy), P.PRIM(CP.RAW_STORE nk))
 	  fun mkSub (name, ty, nk) =
-		("raw_sub_" ^ name, p1(ar(tup[tv1, offsetTy], ty)), P.RAW_LOAD nk)
+		("raw_sub_" ^ name, p1(ar(tup[tv1, offsetTy], ty)), P.PRIM(CP.RAW_LOAD nk))
 	  fun mkUpd (name, ty, nk) = (
 		  "raw_update_" ^ name,
 		  p1(ar(tup[tv1, offsetTy, ty], BT.unitTy)),
-		  P.RAW_STORE nk
+		  P.PRIM(CP.RAW_STORE nk)
 		)
 	  in
 	    prims :-:
-	    mk("ccall", rccTy, P.RAW_CCALL NONE) :-:
+	    mk("ccall", rccTy, P.PRIM(CP.RAW_CCALL NONE)) :-:
 	  (* Support for direct construction of C objects on ML heap.
 	   * rawrecord builds a record holding C objects on the heap.
 	   * rawselectxxx index on this record.  They are of type:
@@ -546,8 +545,7 @@ structure PrimopBindings : sig
 	   * the record as a ML object, in case it passes thru a gc boundary.
 	   * rawupdatexxx writes to the record.
 	   *)
-	    mk("record", p1(ar(BT.intTy,tv1)), P.RAW_RECORD { align64 = false }) :-:
-	    mk("record64", p1(ar(BT.intTy,tv1)), P.RAW_RECORD { align64 = true }) :-:
+	    mk("raw_record", p1(ar(BT.intTy,tv1)), P.PRIM(CP.RAW_RECORD{align = 64})) :-:
 	  (* load/store raw values *)
 	    mkLd("word8", BT.word32Ty, P.UINT 8) :-:
 	    mkLd("int8", BT.int32Ty, P.INT 8) :-:
@@ -593,7 +591,7 @@ fun prBind bind = let
       in
 	Control_Print.say(concat[
 	    StringCvt.padLeft #" " 30 n, " = ",
-	    PrimopUtil.toString p, "\n"
+	    P.toString p, "\n"
 	  ])
       end
 

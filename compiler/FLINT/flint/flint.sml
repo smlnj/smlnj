@@ -40,13 +40,13 @@ structure FLINT : FLINT =
       | RAISE of value * LT.lty list  (* value is a VAR *)
       | HANDLE of lexp * value        (* value is a VAR *)
 
-      | BRANCH of primop * value list * lexp * lexp (* 2 "continuations" *)
-      | PRIMOP of primop * value list * LV.lvar * lexp
+      | BRANCH of FPrimOps.t * value list * lexp * lexp (* 2 "continuations" *)
+      | PRIMOP of FPrimOps.t * value list * LV.lvar * lexp
 
     withtype fundec = FR.fkind * LV.lvar * (LV.lvar * LT.lty) list * lexp
     and tfundec = FR.tfkind * LV.lvar * (LT.tvar * LT.tkind) list * lexp
     and dict = {default: LV.lvar, table: (LT.tyc list * LV.lvar) list}
-    and primop = dict option * Primop.primop * LT.lty * LT.tyc list
+    and primop = dict option * FPrimOps.t * LT.lty * LT.tyc list
 	    (* Invariant: primop's lty is always fully closed *)
 
     type prog = fundec  (* was "lvar * lty * lexp" *)

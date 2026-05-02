@@ -35,13 +35,13 @@ signature FLINT =
       | RAISE of value * Lty.lty list
       | HANDLE of lexp * value
 
-      | BRANCH of primop * value list * lexp * lexp
-      | PRIMOP of primop * value list * LambdaVar.lvar * lexp
+      | BRANCH of FPrimOps.t * value list * lexp * lexp
+      | PRIMOP of FPrimOps.t * value list * LambdaVar.lvar * lexp
 
     withtype fundec = FunRecMeta.fkind * LambdaVar.lvar * (LambdaVar.lvar * Lty.lty) list * lexp
     and tfundec = FunRecMeta.tfkind * LambdaVar.lvar * (Lty.tvar * Lty.tkind) list * lexp
     and dict = {default: LambdaVar.lvar, table: (Lty.tyc list * LambdaVar.lvar) list}
-    and primop = dict option * Primop.primop * Lty.lty * Lty.tyc list
+    and primop = dict option * FPrimOps.t * Lty.lty * Lty.tyc list
 	(* Invariant: primop's lty is always fully closed *)
 
     type prog = fundec  (* was "lvar * lty * lexp" *)

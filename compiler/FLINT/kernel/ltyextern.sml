@@ -17,7 +17,7 @@ local
   structure LK = LtyKernel
   structure LB = LtyBasic
   structure LKC = LtyKindChk
-  structure PO = Primop     (* really should not refer to this *)
+  structure PO = FPrimOps     (* really should not refer to this *)
   structure PP = PrettyPrint
   structure PU = PPUtil
 
@@ -231,26 +231,31 @@ fun ltd_rkind (lt, i) = lt_select (lt, i, "ltyextern.sml#279")
 (****************************************************************************
  *             UTILITY FUNCTIONS USED BY POST-REPRESENTATION ANALYSIS       *
  ****************************************************************************)
-(* tc_upd_prim : LT.tyc -> PO.primop *)
+(* tc_upd_prim : LT.tyc -> PO.t *)
 (** find out what is the appropriate primop given a tyc *)
+local
+  val pUNBOXEDUPDATE = PO.PRIM CommonOps.UNBOXEDUPDATE
+  val pUPDATE = PO.PRIM CommonOps.UPDATE
+in
 fun tc_upd_prim tc =
-  let fun h(LT.TC_PRIM pt) = if PT.ubxupd pt then PO.UNBOXEDUPDATE else PO.UPDATE
-        | h(LT.TC_TUPLE _ | LT.TC_ARROW _) = PO.UPDATE
+  let fun h(LT.TC_PRIM pt) = if PT.ubxupd pt then pUNBOXEDUPDATE else pUPDATE
+        | h(LT.TC_TUPLE _ | LT.TC_ARROW _) = pUPDATE
         | h(LT.TC_FIX{family={size=1,gen=tc,params=ts,...},index=0}) =
             let val ntc = case ts of [] => tc
                                    | _ => LD.tcc_app(tc, ts)
              in (case (LK.tc_whnm_out ntc)
                   of LT.TC_FN([k],b) => h (LK.tc_whnm_out b)
-                   | _ => PO.UPDATE)
+                   | _ => pUPDATE)
             end
         | h(LT.TC_SUM tcs) =
             let fun g (a::r) = if LK.tc_eqv(a, LB.tcc_unit) then g r else false
                   | g [] = true
-             in if (g tcs) then PO.UNBOXEDUPDATE else PO.UPDATE
+             in if (g tcs) then pUNBOXEDUPDATE else pUPDATE
             end
-        | h _ = PO.UPDATE
+        | h _ = pUPDATE
    in h(LK.tc_whnm_out tc)
   end
+end (* local *)
 
 (** tk_lty : tkind -> lty --- finds out the corresponding type for a tkind *)
 fun tk_lty tk =

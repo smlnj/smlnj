@@ -36,8 +36,9 @@ structure PEqual : PEQUAL =
     structure LE = LtyExtern
     structure TU = TypesUtil
     structure SE = StaticEnv
-    structure PO = Primop
-    structure PU = PrimopUtil
+    structure PO = PrimOps
+    structure FP = FPrimOps
+    structure CP = CommonOps
     structure PT = PrimTyc
     structure PP = PrettyPrint
     open Types PLambda
@@ -134,7 +135,7 @@ structure PEqual : PEQUAL =
 		  GENtyc{
 		      stamp=s,arity=arity, eq=ref(YES),
 		      kind=DATATYPE{
-			  index=i, family=family,root=NONE,
+			  index=i, family=family, root=NONE,
 			  stamps=stamps, freetycs=freetycs, stripped=false
 			},
 		      path=InvPath.IPATH[tycname],
@@ -226,7 +227,7 @@ structure PEqual : PEQUAL =
 
 	  fun eqTy (ty : Types.ty) = eqLty(toLty ty)
 	  fun prim (p, lt) = PRIM(p, lt, [])
-	  fun ptrEq (ty : Types.ty) = prim(PO.PTREQL, eqTy ty)
+	  fun ptrEq (ty : Types.ty) = prim(FP.PRIM CP.PTREQL, eqTy ty)
 
           (* an lexp for testing the equality of two mutable arrays.  This operation
            * is implemented as pointer equality on their data pointers.
@@ -237,11 +238,11 @@ structure PEqual : PEQUAL =
                 val arg = mkv()
                 val seqLty = LD.ltc_tyc seqtc
                 fun dataPtr i = APP(
-                      prim(PO.GET_SEQ_DATA, getSeqDataTy seqLty),
+                      prim(FP.PRIM CP.GET_SEQ_DATA, getSeqDataTy seqLty),
                       SELECT(i, VAR arg))
                 in
                   FN(arg, pairLty seqLty,
-                    APP(prim(PO.PTREQL, eqLty(LD.ltc_tyc dataLTy)),
+                    APP(prim(FP.PRIM CP.PTREQL, eqLty(LD.ltc_tyc dataLTy)),
                       RECORD[dataPtr 0, dataPtr 1]))
                 end
 
@@ -258,10 +259,10 @@ structure PEqual : PEQUAL =
 		else NONE
 
 	  fun atomeq (tyc, ty : Types.ty) = (case numKind tyc
-		 of SOME(PO.INT sz) => prim(PU.mkIEQL sz, intEqTy sz)
-		  | SOME(PO.UINT sz) => prim(PU.mkUIEQL sz, uintEqTy sz)
+		 of SOME(PO.INT sz) => prim(FP.mkIEQL sz, intEqTy sz)
+		  | SOME(PO.UINT sz) => prim(FP.mkUIEQL sz, uintEqTy sz)
 		  | NONE =>
-		      if TU.equalTycon(tyc, BT.boolTycon)   then prim(PU.IEQL,booleqty)
+		      if TU.equalTycon(tyc, BT.boolTycon)   then prim(FP.IEQL,booleqty)
 		      else if TU.equalTycon(tyc, BT.stringTycon) then getStrEq()
 		      else if TU.equalTycon(tyc, BT.word8vectorTycon) then getStrEq()
 		      else if TU.equalTycon(tyc, BT.intinfTycon) then getIntInfEq()
@@ -278,6 +279,7 @@ structure PEqual : PEQUAL =
 		      else if TU.equalTycon(tyc,BT.arrayTycon) then ptrEq(PO.PTREQL, ty)
 		  **********************)
 		      else raise Poly
+                  | _ => bug "invalid numkind for atomeq"
 		(* end case *))
 
 	  fun test (ty, 0) = raise Poly
@@ -392,7 +394,7 @@ structure PEqual : PEQUAL =
 						      (* end case *)
 						    end
 					      (* end case *))
-					 val root = APP(PRIM(PO.PTREQL, pty, []),
+					 val root = APP(PRIM(FP.PRIM CP.PTREQL, pty, []),
 							RECORD[VAR x, VAR y])
 					 val nbody = COND(root, trueLexp, body)
 					 in
@@ -426,7 +428,7 @@ structure PEqual : PEQUAL =
 		    (* might want to include intinf into this table (but we
 		     * need a tcc_intinf for that)... *)
 		    table=[([LB.tcc_string], getStrEq())]},
-		   PO.POLYEQL, toLty polyEqTy,
+		   FP.PRIM CP.POLYEQL, toLty polyEqTy,
 		   [toTyc concreteType]))
 
   end (* structure PEqual *)
