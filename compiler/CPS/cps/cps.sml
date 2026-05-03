@@ -32,7 +32,7 @@ structure CPS : CPS =
     structure P =
       struct
       (* numkind includes kind and size *)
-	datatype numkind = INT of int | UINT of int | FLOAT of int
+	datatype numkind = datatype NumKind.t
 
       (* integer arithmetic operations that may overflow *)
 	datatype arithop = datatype ArithOps.t

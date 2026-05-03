@@ -28,7 +28,9 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
     structure FR = FunRecMeta
     structure LE = LtyExtern
     structure LV = LambdaVar
-    structure AP = Primop
+    structure NK = NumKind
+    structure FP = FPrimOps
+    structure CP = CommonOps
     structure PL = PLambda
     structure F  = FLINT
     structure FU = FlintUtil
@@ -36,6 +38,8 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
     structure CU = CPSUtil
 
     open CPS
+
+    datatype numkind = datatype NumKind.t
 
     fun bug s = ErrorMsg.impossible ("Convert: " ^ s)
     val say = Control.Print.say
@@ -72,10 +76,10 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
    *              CONSTANTS AND UTILITY FUNCTIONS                            *
    ***************************************************************************)
 
-    fun unwrapFlt (sz, u, x, ce) = PURE(P.UNWRAP(P.FLOAT sz),  [u], x, FLTt sz, ce)
-    fun unwrapInt (sz, u, x, ce) = PURE(P.UNWRAP(P.INT sz), [u], x, boxIntTy sz, ce)
-    fun wrapFlt (sz, u, x, ce) = PURE(P.WRAP(P.FLOAT sz), [u], x, CU.BOGt, ce)
-    fun wrapInt (sz, u, x, ce) = PURE(P.WRAP(P.INT sz), [u], x, CU.BOGt, ce)
+    fun unwrapFlt (sz, u, x, ce) = PURE(P.UNWRAP(NK.FLOAT sz),  [u], x, FLTt sz, ce)
+    fun unwrapInt (sz, u, x, ce) = PURE(P.UNWRAP(NK.INT sz), [u], x, boxIntTy sz, ce)
+    fun wrapFlt (sz, u, x, ce) = PURE(P.WRAP(NK.FLOAT sz), [u], x, CU.BOGt, ce)
+    fun wrapInt (sz, u, x, ce) = PURE(P.WRAP(NK.INT sz), [u], x, CU.BOGt, ce)
 
     fun all_float (FLTt _::r) = all_float r
       | all_float (_::r) = false
@@ -112,50 +116,45 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
    *              UTILITY FUNCTIONS FOR PROCESSING THE PRIMOPS               *
    ***************************************************************************)
 
-  (* numkind: AP.numkind -> P.numkind *)
-    fun numkind (AP.INT bits) = P.INT bits
-      | numkind (AP.UINT bits) = P.UINT bits
-      | numkind (AP.FLOAT bits) = P.FLOAT bits
-
-  (* cmpop: {oper: AP.cmpop, kind: AP.numkind} -> P.branch *)
+  (* cmpop: {oper: FP.cmpop, kind: FP.numkind} -> P.branch *)
     fun cmpop stuff = (case stuff
-	   of {oper, kind as AP.FLOAT size} => let
-		val rator = (case oper
-		      of AP.GT => P.F_GT
-		       | AP.GTE  => P.F_GE
-		       | AP.LT   => P.F_LT
-		       | AP.LTE  => P.F_LE
-		       | AP.EQL  => P.F_EQ
-		       | AP.NEQ  => P.F_ULG
+	   of {oper, kind as NK.FLOAT size} => let
+		val tst = (case oper
+		      of CompareOps.GT  => P.F_GT
+		       | CompareOps.GTE => P.F_GE
+		       | CompareOps.LT  => P.F_LT
+		       | CompareOps.LTE => P.F_LE
+		       | CompareOps.EQL => P.F_EQ
+		       | CompareOps.NEQ => P.F_ULG
 		     (* end case *))
 		in
-		  P.FCMP{oper= rator, size=size}
+		  P.FCMP{oper=tst, size=size}
 		end
-	    | {oper, kind} => P.CMP{oper=oper, kind=numkind kind}
+	    | {oper, kind} => P.CMP{oper=oper, kind=kind}
 	  (* end case *))
 
-  (* mapBranch:  AP.primop -> P.branch *)
+  (* mapBranch:  FP.primop -> P.branch *)
     fun mapBranch p = (case p
-	   of AP.BOXED => P.BOXED
-	    | AP.UNBOXED => P.UNBOXED
+	   of FP.CMP stuff => cmpop stuff
+	    | FP.PRIM CP.BOXED => P.BOXED
+	    | FP.PRIM CP.UNBOXED => P.UNBOXED
 (* TODO: expand FSGN using the same technique as REAL_TO_BITS *)
-	    | AP.FSGN sz => P.FSGN sz
-	    | AP.CMP stuff => cmpop stuff
-	    | AP.PTREQL => P.PEQL
-	    | AP.PTRNEQ => P.PNEQ
+	    | FP.PRIM(CP.FSGN sz) => P.FSGN sz
+	    | FP.PRIM CP.PTREQL => P.PEQL
+	    | FP.PRIM CP.PTRNEQ => P.PNEQ
 	    | _ => bug(concat[
-		  "unexpected primop ", PrimopUtil.toString p, " in mapBranch"
+		  "unexpected primop ", FP.toString p, " in mapBranch"
 		])
 	  (* end case *))
 
   (* primwrap: cty -> P.pure *)
-    fun primwrap (NUMt{sz, ...}) = P.WRAP(P.INT sz)
-      | primwrap (FLTt sz) = P.WRAP(P.FLOAT sz)
+    fun primwrap (NUMt{sz, ...}) = P.WRAP(NK.INT sz)
+      | primwrap (FLTt sz) = P.WRAP(NK.FLOAT sz)
       | primwrap _ = P.BOX
 
   (* primunwrap: cty -> P.pure *)
-    fun primunwrap (NUMt{sz, ...}) = P.UNWRAP(P.INT sz)
-      | primunwrap (FLTt sz) = P.UNWRAP(P.FLOAT sz)
+    fun primunwrap (NUMt{sz, ...}) = P.UNWRAP(NK.INT sz)
+      | primunwrap (FLTt sz) = P.UNWRAP(NK.FLOAT sz)
       | primunwrap _ = P.UNBOX
 
   (* a temporary classifier of various kinds of CPS primops *)
@@ -165,63 +164,58 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
       | PKL of P.looker
       | PKA of P.arith
 
-  (* map_primop: AP.primop -> pkind *)
+  (* map_primop: FP.primop -> pkind *)
     fun map_primop p = (case p
-	   of AP.TEST(from,to) =>   PKA (P.TEST{from=from, to=to})
-	    | AP.TESTU(from,to) =>  PKA (P.TESTU{from=from, to=to})
-	    | AP.COPY(from,to) =>   PKP (P.COPY{from=from, to=to})
-	    | AP.EXTEND(from,to) => PKP (P.EXTEND{from=from, to=to})
-	    | AP.TRUNC(from,to) =>  PKP (P.TRUNC{from=from, to=to})
+	   of FP.ARITH{oper, sz} => PKA(P.IARITH{oper=oper,sz=sz})
+	    | FP.PURE{oper, kind} => PKP(P.PURE_ARITH{oper=oper,kind=kind})
+	    | FP.PRIM(CP.TEST(from,to)) =>   PKA (P.TEST{from=from, to=to})
+	    | FP.PRIM(CP.TESTU(from,to)) =>  PKA (P.TESTU{from=from, to=to})
+	    | FP.PRIM(CP.COPY(from,to)) =>   PKP (P.COPY{from=from, to=to})
+	    | FP.PRIM(CP.EXTEND(from,to)) => PKP (P.EXTEND{from=from, to=to})
+	    | FP.PRIM(CP.TRUNC(from,to)) =>  PKP (P.TRUNC{from=from, to=to})
+	    | FP.PRIM(CP.TEST_INF to) => PKA (P.TEST_INF to)
+	    | FP.PRIM(CP.TRUNC_INF to) => PKP (P.TRUNC_INF to)
+	    | FP.PRIM(CP.COPY_INF from) => PKP (P.COPY_INF from)
+	    | FP.PRIM(CP.EXTEND_INF from) => PKP (P.EXTEND_INF from)
+	    | FP.PRIM(CP.REAL_TO_INT arg) => PKA(P.REAL_TO_INT arg)
+	    | FP.PRIM(CP.INT_TO_REAL arg) => PKP(P.INT_TO_REAL arg)
+	    | FP.PRIM(CP.SUBSCRIPTV) => PKP P.SUBSCRIPTV
+	    | FP.PRIM(CP.MAKEREF) =>    PKP P.MAKEREF
+	    | FP.PRIM(CP.LENGTH) =>     PKP P.LENGTH
+	    | FP.PRIM(CP.OBJLENGTH) =>  PKP P.OBJLENGTH
+	    | FP.PRIM(CP.GETTAG) =>     PKP P.GETTAG
+	    | FP.PRIM(CP.MKSPECIAL) =>  PKP P.MKSPECIAL
+	    | FP.PRIM(CP.CAST) =>       PKP P.CAST
+            | FP.PRIM(CP.REAL_TO_BITS sz) => PKP(P.REAL_TO_BITS sz)
+            | FP.PRIM(CP.BITS_TO_REAL sz) => PKP(P.BITS_TO_REAL sz)
+	    | FP.PRIM(CP.NEW_ARRAY0) => PKP P.NEWARRAY0
+	    | FP.PRIM(CP.GET_SEQ_DATA) => PKP P.GETSEQDATA
+	    | FP.PRIM(CP.SUBSCRIPT_REC) => PKP P.RECSUBSCRIPT
+	    | FP.PRIM(CP.SUBSCRIPT_RAW64) => PKP P.RAW64SUBSCRIPT
 
-	    | AP.TEST_INF to => PKA (P.TEST_INF to)
-	    | AP.TRUNC_INF to => PKP (P.TRUNC_INF to)
-	    | AP.COPY_INF from => PKP (P.COPY_INF from)
-	    | AP.EXTEND_INF from => PKP (P.EXTEND_INF from)
+	    | FP.PRIM(CP.SUBSCRIPT) => PKL P.SUBSCRIPT
+	    | FP.PRIM(CP.NUMSUBSCRIPT kind) => PKL(P.NUMSUBSCRIPT{kind=kind})
+	    | FP.PRIM(CP.NUMSUBSCRIPTV kind) => PKP(P.PURE_NUMSUBSCRIPT{kind=kind})
+	    | FP.PRIM(CP.DEREF) =>      PKL P.DEREF
+	    | FP.PRIM(CP.GETHDLR) =>    PKL P.GETHDLR
+	    | FP.PRIM(CP.GETVAR ) =>    PKL P.GETVAR
+	    | FP.PRIM(CP.GETSPECIAL) => PKL P.GETSPECIAL
 
-	    | AP.IARITH{oper, sz} => PKA(P.IARITH{oper=oper,sz=sz})
-	    | AP.PURE_ARITH{oper, kind} => PKP(P.PURE_ARITH{oper=oper,kind=numkind kind})
-	    | AP.REAL_TO_INT arg => PKA(P.REAL_TO_INT arg)
-	    | AP.INT_TO_REAL arg => PKP(P.INT_TO_REAL arg)
-            | AP.REAL_TO_BITS sz => PKP(P.REAL_TO_BITS sz)
-            | AP.BITS_TO_REAL sz => PKP(P.BITS_TO_REAL sz)
+	    | FP.PRIM(CP.SETHDLR) => PKS P.SETHDLR
+	    | FP.PRIM(CP.NUMUPDATE kind) => PKS(P.NUMUPDATE{kind=kind})
+	    | FP.PRIM(CP.UNBOXEDUPDATE) => PKS P.UNBOXEDUPDATE
+	    | FP.PRIM(CP.UPDATE) => PKS P.UPDATE
+	    | FP.PRIM(CP.ASSIGN) => PKS P.ASSIGN
+	    | FP.PRIM(CP.UNBOXEDASSIGN) => PKS P.UNBOXEDASSIGN
+	    | FP.PRIM(CP.SETVAR) => PKS P.SETVAR
+	    | FP.PRIM(CP.SETSPECIAL) => PKS P.SETSPECIAL
 
-	    | AP.SUBSCRIPTV => PKP P.SUBSCRIPTV
-	    | AP.MAKEREF =>    PKP P.MAKEREF
-	    | AP.LENGTH =>     PKP P.LENGTH
-	    | AP.OBJLENGTH =>  PKP P.OBJLENGTH
-	    | AP.GETTAG =>     PKP P.GETTAG
-	    | AP.MKSPECIAL =>  PKP P.MKSPECIAL
- (*         | AP.THROW =>      PKP (P.cast) *)
-	    | AP.CAST =>       PKP P.CAST
-	    | AP.MKETAG =>     PKP P.MAKEREF
-	    | AP.NEW_ARRAY0 => PKP P.NEWARRAY0
-	    | AP.GET_SEQ_DATA => PKP P.GETSEQDATA
-	    | AP.SUBSCRIPT_REC => PKP P.RECSUBSCRIPT
-	    | AP.SUBSCRIPT_RAW64 => PKP P.RAW64SUBSCRIPT
+	    | FP.PRIM(CP.RAW_LOAD nk) => PKL (P.RAWLOAD{ kind = nk })
+	    | FP.PRIM(CP.RAW_STORE nk) => PKS (P.RAWSTORE{ kind = nk })
+	    | FP.PRIM(CP.RAW_RECORD{align = 64}) => PKP (P.RAWRECORD (SOME RK_RAW64BLOCK))
 
-	    | AP.SUBSCRIPT => PKL P.SUBSCRIPT
-	    | AP.NUMSUBSCRIPT kind=> PKL(P.NUMSUBSCRIPT{kind=numkind kind})
-	    | AP.NUMSUBSCRIPTV kind => PKP(P.PURE_NUMSUBSCRIPT{kind=numkind kind})
-	    | AP.DEREF =>      PKL P.DEREF
-	    | AP.GETHDLR =>    PKL P.GETHDLR
-	    | AP.GETVAR  =>    PKL P.GETVAR
-	    | AP.GETSPECIAL => PKL P.GETSPECIAL
-
-	    | AP.SETHDLR => PKS P.SETHDLR
-	    | AP.NUMUPDATE kind => PKS(P.NUMUPDATE{kind=numkind kind})
-	    | AP.UNBOXEDUPDATE => PKS P.UNBOXEDUPDATE
-	    | AP.UPDATE => PKS P.UPDATE
-	    | AP.ASSIGN => PKS P.ASSIGN
-	    | AP.UNBOXEDASSIGN => PKS P.UNBOXEDASSIGN
-	    | AP.SETVAR => PKS P.SETVAR
-	    | AP.SETSPECIAL => PKS P.SETSPECIAL
-
-	    | AP.RAW_LOAD nk => PKL (P.RAWLOAD{ kind = numkind nk })
-	    | AP.RAW_STORE nk => PKS (P.RAWSTORE{ kind = numkind nk })
-	    | AP.RAW_RECORD{ align64 = false } => PKP (P.RAWRECORD (SOME RK_RAWBLOCK))
-	    | AP.RAW_RECORD{ align64 = true } => PKP (P.RAWRECORD (SOME RK_RAW64BLOCK))
-
-	    | _ => bug (concat["bad primop in map_primop: ", PrimopUtil.toString p, "\n"])
+	    | FP.MKETAG =>     PKP P.MAKEREF
+	    | _ => bug (concat["bad primop in map_primop: ", FP.toString p, "\n"])
 	  (* end case *))
 
   (***************************************************************************
@@ -497,7 +491,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                 (* NOTE: the `'a cont` type is actually represented as a CPS
                  * function, not a continuation.
                  *)
-	      | F.PRIMOP((_,p as (AP.CALLCC | AP.CAPTURE),_,_), [f], v, e) => let
+	      | F.PRIMOP((_,p as (FP.PRIM CP.CALLCC | FP.PRIM CP.CAPTURE),_,_), [f], v, e) => let
                   (* `F` is the continuation of the `callcc` application
                    * that evaluates `e`
                    *)
@@ -512,7 +506,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                    * The `capture` form ignores the exception handler
                    *)
                   val (hdr1,hdr2) = (case p
-                         of AP.CALLCC =>
+                         of FP.PRIM CP.CALLCC =>
                              mkfn(fn h =>
                               (fn e => SETTER(P.SETHDLR, [VAR h], e),
                                fn e => LOOKER(P.GETHDLR, [], h, CU.BOGt, e)))
@@ -548,7 +542,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                  *                  in f (bogus_kont, x)
                  *              in [[ e ]]
                  *)
-	      | F.PRIMOP((_,AP.ISOLATE,lt,ts), [f], v, e) => let
+	      | F.PRIMOP((_,FP.PRIM CP.ISOLATE,lt,ts), [f], v, e) => let
 		  val (exndecs, exnvar) = let
 			val h = mkv() and x = mkv()
                         in
@@ -566,23 +560,23 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                     FIX(exndecs, FIX(newfdecs, loop(e, c)))
 		  end
 
-	      | F.PRIMOP(po as (_,AP.THROW,_,_), [u], v, e) =>
+	      | F.PRIMOP(po as (_,FP.PRIM CP.THROW,_,_), [u], v, e) =>
 		  (newname(v, lpvar u); loop(e, c))
     (*            PURE(P.WRAP, [lpvar u], v, FUNt, c(VAR v))          *)
 
-	      | F.PRIMOP(po as (_,AP.WCAST,_,_), [u], v, e) =>
+	      | F.PRIMOP(po as (_,FP.WCAST,_,_), [u], v, e) =>
 		  (newname(v, lpvar u); loop(e, c))
 
-	      | F.PRIMOP(po as (_,AP.WRAP,_,_), [u], v, e) =>
+	      | F.PRIMOP(po as (_,FP.WRAP,_,_), [u], v, e) =>
 		  let val ct = CU.ctyc(FU.getWrapTyc po)
 		   in PURE(primwrap ct, [lpvar u], v, CU.BOGt, loop(e, c))
 		  end
-	      | F.PRIMOP(po as (_,AP.UNWRAP,_,_), [u], v, e) =>
+	      | F.PRIMOP(po as (_,FP.UNWRAP,_,_), [u], v, e) =>
 		  let val ct = CU.ctyc(FU.getUnWrapTyc po)
 		   in PURE(primunwrap ct, [lpvar u], v, ct, loop(e, c))
 		  end
 
-	      | F.PRIMOP(po as (_,AP.MARKEXN,_,_), [x,m], v, e) =>
+	      | F.PRIMOP(po as (_, FP.MARKEXN,_,_), [x,m], v, e) =>
 		  let val bty = LB.ltc_void
 		      val ety = LD.ltc_tuple[bty,bty,bty]
 		      val (xx,x0,x1,x2) = (mkv(),mkv(),mkv(),mkv())
@@ -602,18 +596,18 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 					       loop(e,c)))))))))
 		  end
 
-	      | F.PRIMOP ((_,AP.RAW_CCALL NONE,_,_), _::_::a::_,v,e) => (
+	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL NONE),_,_), _::_::a::_,v,e) => (
 		(* code generated here should never be executed anyway,
 		 * so we just fake it... *)
 		  print "*** pro-forma raw-ccall\n";
 		  newname (v, lpvar a); loop(e,c))
 
-	      | F.PRIMOP ((_,AP.RAW_CCALL (SOME i),lt,ts),f::a::_::_,v,e) => let
+	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL(SOME i)), lt, ts), f::a::_::_, v, e) => let
 		    val { c_proto, ml_args, ml_res_opt, reentrant } = i
-		    fun cty AP.CCR64 = FLTt 64		(* REAL32: FIXME *)
-		      | cty AP.CCI32 = boxIntTy 32	(* 64BIT: FIXME *)
-		      | cty AP.CCML = CU.BOGt
-		      | cty AP.CCI64 = CU.BOGt	(* 64BIT: FIXME *)
+		    fun cty CP.CCR64 = FLTt 64		(* REAL32: FIXME *)
+		      | cty CP.CCI32 = boxIntTy 32	(* 64BIT: FIXME *)
+		      | cty CP.CCML = CU.BOGt
+		      | cty CP.CCI64 = CU.BOGt	(* 64BIT: FIXME *)
 		    val a' = lpvar a
 		    fun rcc args = let
 			val al = map VAR args
@@ -624,7 +618,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 			 of NONE =>
 			    RCC (reentrant, linkage, c_proto, al, [(v, tagIntTy)], loop (e, c))
 (* 64BIT: this code implements the fake 64-bit integers that are used on 32-bit targets *)
-			  | SOME AP.CCI64 =>
+			  | SOME CP.CCI64 =>
 			    let val (v1, v2) = (mkv (), mkv ())
 			    in
 			      RCC (reentrant, linkage, c_proto, al,
@@ -662,40 +656,19 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 		      | _ => build (ml_args, [], 0)
 		end
 
-	      | F.PRIMOP ((_,AP.RAW_CCALL _,_,_),_,_,_) => bug "bad raw_ccall"
+	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL _),_,_),_,_,_) => bug "bad raw_ccall"
 
-	      | F.PRIMOP ((_,AP.RAW_RECORD _,_,_),[x as F.VAR _],v,e) =>
+	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_RECORD _),_,_),[x as F.VAR _],v,e) =>
 		(* code generated here should never be executed anyway,
 		 * so we just fake it... *)
 		(print "*** pro-forma raw-record\n";
 		 newname (v, lpvar x); loop(e,c))
 
-	    (* conversions to/from 64-bits and pairs of 32-bit words on 32-bit targets *)
-	      | F.PRIMOP((_, AP.INTERN64, _, _), args, res, e) => let
-		  val [hi, lo] = lpvars args
-		  in
-		    RECORD(RK_RAWBLOCK, [(hi, OFFp0), (lo, OFFp0)], res,
-		      loop(e, c))
-		  end
-	      | F.PRIMOP((_, AP.EXTERN64, _, _), args, res, e) => let
-		  val [arg] = lpvars args
-		  val num32Ty = boxIntTy 32
-		  val hi = LV.mkLvar() and lo = LV.mkLvar()
-		  val hiBox = LV.mkLvar() and loBox = LV.mkLvar()
-		  in
-		    SELECT(0, arg, hi, num32Ty,
-		    SELECT(1, arg, lo, num32Ty,
-		    PURE(P.WRAP(P.INT 32), [VAR hi], hiBox, PTRt VPT,
-		    PURE(P.WRAP(P.INT 32), [VAR lo], loBox, PTRt VPT,
-		      RECORD(RK_RECORD, [(VAR hiBox, OFFp0), (VAR loBox, OFFp0)], res,
-			loop(e, c))))))
-		  end
-
 	    (* conversions between runtime-system pointers and words *)
-	      | F.PRIMOP((_, AP.PTR_TO_WORD, _, _), [arg], res, e) =>
+	      | F.PRIMOP((_, FP.PRIM CP.CPTR_TO_WORD, _, _), [arg], res, e) =>
 		  PURE(P.CAST, [lpvar arg], res, addrTy,
 		    loop(e, c))
-	      | F.PRIMOP((_, AP.WORD_TO_PTR, _, _), [arg], res, e) =>
+	      | F.PRIMOP((_, FP.PRIM CP.WORD_TO_CPTR, _, _), [arg], res, e) =>
 		  PURE(P.CAST, [lpvar arg], res, PTRt VPT,
 		    loop(e, c))
 

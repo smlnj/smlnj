@@ -63,11 +63,11 @@ structure PPCps : PPCPS =
       | numkindToString (P.UINT bits) = "u" ^ Int.toString bits
       | numkindToString (P.FLOAT bits) = "f" ^ Int.toString bits
 
-    val arithopToString = ArithOps.arithopToString
+    val arithopToString = ArithOps.toString
 
-    val pureopToString = ArithOps.pureopToString
+    val pureopToString = PureOps.toString
 
-    val cmpopToString = ArithOps.cmpopToString
+    val cmpopToString = CompareOps.toString
 
     fun fcmpopToString P.F_EQ   = "="
       | fcmpopToString P.F_ULG = "?<>"
