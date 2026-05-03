@@ -1,6 +1,6 @@
 (* unpickmod.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The new unpickler (based on the new generic unpickling facility).
@@ -59,7 +59,12 @@ structure UnpickMod : UNPICKMOD = struct
     structure V = Variable
     structure ED = EntPath.EvDict
     structure PS = PersStamps
-    structure P = Primop
+    structure P = PrimOps
+    structure InlP = InlineOps
+    structure ArithP = ArithOps
+    structure PureP = PureOps
+    structure CmpP = CompareOps
+    structure CP = CommonOps
     structure M = Modules
     structure B = Bindings
     structure POI = PrimopId
@@ -67,87 +72,24 @@ structure UnpickMod : UNPICKMOD = struct
     structure UU = UnpickleUtil
     exception Format = UU.Format
 
-    (* The order of the entries in the following tables
-     * must be coordinated with pickmod! *)
-    val primop_table =
-	#[P.MKETAG,  (* 0 *)
-	  P.WRAP,
-	  P.UNWRAP,
-	  P.SUBSCRIPT,
-	  P.SUBSCRIPTV,
-	  P.INLSUBSCRIPT,
-	  P.INLSUBSCRIPTV,
-	  P.INLMKARRAY,
-	  P.PTREQL,
-	  P.PTRNEQ,
-
-	  P.POLYEQL, (* 10 *)
-	  P.POLYNEQ,
-	  P.BOXED,
-	  P.UNBOXED,
-	  P.LENGTH,
-	  P.OBJLENGTH,
-	  P.CAST,
-	  P.MARKEXN,
-	  P.GETHDLR,
-	  P.SETHDLR,
-
-	  P.GETVAR, (* 20 *)
-	  P.SETVAR,
-	  P.MAKEREF,
-	  P.CALLCC,
-	  P.CAPTURE,
-	  P.THROW,
-	  P.DEREF,
-	  P.ASSIGN,
-	  P.UPDATE,
-	  P.INLUPDATE,
-
-	  P.UNBOXEDUPDATE, (* 30 *)
-	  P.GETTAG,
-	  P.MKSPECIAL,
-	  P.SETSPECIAL,
-	  P.GETSPECIAL,
-	  P.INLNOT,
-	  P.INLCOMPOSE,
-	  P.INLBEFORE,
-	  P.INL_ARRAY,
-	  P.INL_VECTOR,
-
-	  P.ISOLATE, (* 40 *)
-	  P.WCAST,
-	  P.NEW_ARRAY0,
-	  P.GET_SEQ_DATA,
-	  P.SUBSCRIPT_REC,
-	  P.SUBSCRIPT_RAW64,
-	  P.UNBOXEDASSIGN,
-	  P.RAW_CCALL NONE,
-	  P.INLIGNORE,
-	  P.INLIDENTITY,
-
-	  P.INLCHR, (* 50 *)
-	  P.INTERN64,
-	  P.EXTERN64,
-	  P.PTR_TO_WORD,
-	  P.WORD_TO_PTR,
-          P.HOST_WORD_SIZE,
-          P.HOST_BIG_ENDIAN (* 56 *)
-        ]
-
-    val arithop_table =
-	#[P.IADD, P.ISUB, P.IMUL, P.IDIV, P.IMOD, P.IQUOT, P.IREM, P.INEG]
+    val arithop_table = #[
+            ArithP.IADD, ArithP.ISUB, ArithP.IMUL,
+            ArithP.IDIV, ArithP.IMOD,
+            ArithP.IQUOT, ArithP.IREM,
+            ArithP.INEG
+          ]
 
     val pureop_table = #[
-            P.ADD, P.SUB, P.MUL, P.QUOT, P.REM, P.NEG,
-            P.LSHIFT, P.RSHIFT, P.RSHIFTL,
-            P.ORB, P.XORB, P.ANDB, P.NOTB,
-            P.CNTPOP, P.CNTLZ, P.CNTTZ,
-            P.ROTL, P.ROTR,
-            P.FDIV, P.FABS, P.FSQRT
+            PureP.ADD, PureP.SUB, PureP.MUL, PureP.QUOT, PureP.REM, PureP.NEG,
+            PureP.LSHIFT, PureP.RSHIFT, PureP.RSHIFTL,
+            PureP.ORB, PureP.XORB, PureP.ANDB, PureP.NOTB,
+            PureP.CNTPOP, PureP.CNTLZ, PureP.CNTTZ,
+            PureP.ROTL, PureP.ROTR,
+            PureP.FDIV, PureP.FABS, PureP.FSQRT
           ]
 
     val cmpop_table =
-	#[P.GT, P.GTE, P.LT, P.LTE, P.EQL, P.NEQ]
+	#[CmpP.GT, CmpP.GTE, CmpP.LT, CmpP.LTE, CmpP.EQL, CmpP.NEQ]
 
     val eqprop_table =
 	#[T.YES, T.NO, T.IND, T.OBJ, T.DATA, T.ABS, T.UNDEF]
@@ -225,9 +167,9 @@ structure UnpickMod : UNPICKMOD = struct
 	      | a #"C" = A.PATH (access (), int ())
 	      | a #"D" = A.NO_ACCESS
 	      | a _ = raise Format
-	in
-	    share accM a
-	end
+            in
+              share accM a
+            end
 
 	fun conrep () = let
 	    fun cr #"A" = A.UNTAGGED
@@ -241,26 +183,105 @@ structure UnpickMod : UNPICKMOD = struct
 	      | cr #"I" = A.SUSP NONE
 	      | cr #"J" = A.SUSP (SOME (access (), access ()))
 	      | cr _ = raise Format
-	in
-	    share crM cr
-	end
+            in
+              share crM cr
+            end
 
 	fun consig () = let
 	    fun cs #"S" = A.CSIG (int (), int ())
 	      | cs #"N" = A.CNIL
 	      | cs _ = raise Format
-	in
-	    share csM cs
-	end
+            in
+              share csM cs
+            end
+
+	fun ctype () = let
+	    fun ct #"\020" = CTypes.C_ARRAY (ctype (), int ())
+	      | ct #"\021" = CTypes.C_STRUCT (ctypelist ())
+	      | ct #"\022" = CTypes.C_UNION (ctypelist ())
+	      | ct c =
+		Vector.sub (ctype_table, Char.ord c)
+		handle General.Subscript => raise Format
+            in
+              share ctypeM ct
+            end
+
+	and ctypelist () = list ctypeListM ctype ()
+
+        fun ccalltype() = let
+            fun ct #"\000" = CP.CCI32
+              | ct #"\001" = CP.CCI64
+              | ct #"\002" = CP.CCR64
+	      | ct #"\003" = CP.CCML
+              | ct _       = raise Format
+            in
+              nonshare ct
+            end
+
+        and ccalltypelist () = list ccalltypeListM ccalltype ()
+        and ccalltypeoption () = option ccalltypeOptionM ccalltype ()
+
+	fun ccall_info () = let
+	    fun cp #"C" =
+		{ c_proto = { conv = string (),
+			      retTy = ctype (),
+			      paramTys = ctypelist () },
+		  ml_args = ccalltypelist (),
+		  ml_res_opt = ccalltypeoption (),
+		  reentrant = bool () }
+	      | cp _ = raise Format
+            in
+              share cciM cp
+            end
 
 	fun numkind () = let
 	    fun nk #"A" = P.INT (int ())
 	      | nk #"B" = P.UINT (int ())
 	      | nk #"C" = P.FLOAT (int ())
 	      | nk _ = raise Format
-	in
-	    share nkM nk
-	end
+            in
+              share nkM nk
+            end
+
+        fun inlineop () = let
+            fun inl #"\000" = InlP.DIV(numkind())
+              | inl #"\001" = InlP.MOD(numkind())
+              | inl #"\002" = InlP.QUOT(numkind())
+              | inl #"\003" = InlP.REM(numkind())
+              | inl #"\004" = InlP.LSHIFT(numkind())
+              | inl #"\005" = InlP.RSHIFT(numkind())
+              | inl #"\006" = InlP.RSHIFTL(numkind())
+              | inl #"\007" = InlP.CNTZ(numkind())
+              | inl #"\008" = InlP.CNTO(numkind())
+              | inl #"\009" = InlP.CNTLZ(numkind())
+              | inl #"\010" = InlP.CNTLO(numkind())
+              | inl #"\011" = InlP.CNTTZ(numkind())
+              | inl #"\012" = InlP.CNTTO(numkind())
+              | inl #"\013" = InlP.IS_POW2(numkind())
+              | inl #"\014" = InlP.CEIL_LOG2(numkind())
+              | inl #"\015" = InlP.MIN(numkind())
+              | inl #"\016" = InlP.MAX(numkind())
+              | inl #"\017" = InlP.ABS(numkind())
+              | inl #"\018" = InlP.CHR
+              | inl #"\019" = InlP.MKARRAY
+              | inl #"\020" = InlP.SUBSCRIPT
+              | inl #"\021" = InlP.SUBSCRIPTV
+              | inl #"\022" = InlP.UPDATE
+              | inl #"\023" = InlP.UNBOXEDUPDATE
+              | inl #"\024" = InlP.NUMSUBSCRIPT(numkind())
+              | inl #"\025" = InlP.NUMSUBSCRIPTV(numkind())
+              | inl #"\026" = InlP.NUMUPDATE(numkind())
+              | inl #"\027" = InlP.NOT
+              | inl #"\028" = InlP.COMPOSE
+              | inl #"\029" = InlP.BEFORE
+              | inl #"\030" = InlP.IGNORE
+              | inl #"\031" = InlP.IDENTITY
+              | inl #"\032" = InlP.HOST_WORD_SIZE
+              | inl #"\033" = InlP.HOST_BIG_ENDIAN
+              | inl _ = raise Format
+            in
+              nonshare inl
+            end
 
 	local
 	  fun operator tbl = let
@@ -275,105 +296,78 @@ structure UnpickMod : UNPICKMOD = struct
 	val pureop = operator pureop_table
 	val cmpop = operator cmpop_table
 	end (* local *)
-(*
-	fun arithop () = let
-	    fun ao c =
-		Vector.sub (arithop_table, Char.ord c)
-		handle General.Subscript => raise Format
-	    in
-	      nonshare ao
-	    end
 
-	fun cmpop () = let
-	    fun co c =
-		Vector.sub (cmpop_table, Char.ord c)
-		handle General.Subscript => raise Format
-	    in
-	      nonshare co
-	    end
-*)
-
-	fun ctype () = let
-	    fun ct #"\020" = CTypes.C_ARRAY (ctype (), int ())
-	      | ct #"\021" = CTypes.C_STRUCT (ctypelist ())
-	      | ct #"\022" = CTypes.C_UNION (ctypelist ())
-	      | ct c =
-		Vector.sub (ctype_table, Char.ord c)
-		handle General.Subscript => raise Format
-	in
-	    share ctypeM ct
-	end
-
-	and ctypelist () = list ctypeListM ctype ()
-
-        fun ccalltype() = let
-            fun ct #"\000" = P.CCI32
-              | ct #"\001" = P.CCI64
-              | ct #"\002" = P.CCR64
-	      | ct #"\003" = P.CCML
-              | ct _       = raise Format
-        in  nonshare ct
-        end
-
-        and ccalltypelist () = list ccalltypeListM ccalltype ()
-        and ccalltypeoption () = option ccalltypeOptionM ccalltype ()
-
-	fun ccall_info () = let
-	    fun cp #"C" =
-		{ c_proto = { conv = string (),
-			      retTy = ctype (),
-			      paramTys = ctypelist () },
-		  ml_args = ccalltypelist (),
-		  ml_res_opt = ccalltypeoption (),
-		  reentrant = bool () }
-	      | cp _ = raise Format
-	in
-	    share cciM cp
-	end
+        fun commonop () = let
+            fun fromto oper = oper(int(), int())
+            fun cop #"\000" = CP.FSGN(int())
+              | cop #"\001" = fromto CP.TESTU
+              | cop #"\002" = fromto CP.TEST
+              | cop #"\003" = fromto CP.TRUNC
+              | cop #"\004" = fromto CP.EXTEND
+              | cop #"\005" = fromto CP.COPY
+              | cop #"\006" = CP.TEST_INF(int())
+              | cop #"\007" = CP.TRUNC_INF(int())
+              | cop #"\008" = CP.EXTEND_INF(int())
+              | cop #"\009" = CP.COPY_INF(int())
+              | cop #"\010" = CP.REAL_TO_INT{floor=bool(), from=int(), to=int()}
+              | cop #"\011" = CP.INT_TO_REAL{from=int(), to=int()}
+              | cop #"\012" = CP.NUMSUBSCRIPT(numkind())
+              | cop #"\013" = CP.NUMSUBSCRIPTV(numkind())
+              | cop #"\014" = CP.NUMUPDATE(numkind())
+              | cop #"\015" = CP.SUBSCRIPT
+              | cop #"\016" = CP.SUBSCRIPTV
+              | cop #"\017" = CP.UPDATE
+              | cop #"\018" = CP.UNBOXEDUPDATE
+              | cop #"\019" = CP.LENGTH
+              | cop #"\020" = CP.PTREQL
+              | cop #"\021" = CP.PTRNEQ
+              | cop #"\022" = CP.POLYEQL
+              | cop #"\023" = CP.POLYNEQ
+              | cop #"\024" = CP.BOXED
+              | cop #"\025" = CP.UNBOXED
+              | cop #"\026" = CP.CAST
+              | cop #"\027" = CP.REAL_TO_BITS(int())
+              | cop #"\028" = CP.BITS_TO_REAL(int())
+              | cop #"\029" = CP.GETHDLR
+              | cop #"\030" = CP.SETHDLR
+              | cop #"\031" = CP.GETVAR
+              | cop #"\032" = CP.SETVAR
+              | cop #"\033" = CP.CALLCC
+              | cop #"\034" = CP.CAPTURE
+              | cop #"\035" = CP.THROW
+              | cop #"\036" = CP.ISOLATE
+              | cop #"\037" = CP.MAKEREF
+              | cop #"\038" = CP.DEREF
+              | cop #"\039" = CP.ASSIGN
+              | cop #"\040" = CP.UNBOXEDASSIGN
+              | cop #"\041" = CP.OBJLENGTH
+              | cop #"\042" = CP.GETTAG
+              | cop #"\043" = CP.MKSPECIAL
+              | cop #"\044" = CP.SETSPECIAL
+              | cop #"\045" = CP.GETSPECIAL
+              | cop #"\046" = CP.NEW_ARRAY0
+              | cop #"\047" = CP.GET_SEQ_DATA
+              | cop #"\048" = CP.SUBSCRIPT_REC
+              | cop #"\049" = CP.SUBSCRIPT_RAW64
+              | cop #"\050" = CP.CPTR_TO_WORD
+              | cop #"\051" = CP.WORD_TO_CPTR
+              | cop #"\052" = CP.RAW_LOAD(numkind())
+              | cop #"\053" = CP.RAW_STORE(numkind())
+              | cop #"\054" = CP.RAW_CCALL NONE
+              | cop #"\055" = CP.RAW_CCALL(SOME(ccall_info()))
+              | cop #"\056" = CP.RAW_RECORD{align=int()}
+              | cop _ = raise Format
+            in
+              nonshare cop
+            end
 
 	fun primop () = let
-	    fun po #"\080" = P.IARITH { oper = arithop (), sz = int () }
-	      | po #"\081" = P.PURE_ARITH { oper = pureop (), kind = numkind () }
-	      | po #"\082" = P.CMP { oper = cmpop (), kind = numkind () }
-	      | po #"\083" = P.FSGN (int ())
-	      | po #"\084" = P.TEST (int (), int ())
-	      | po #"\085" = P.TESTU (int (), int ())
-	      | po #"\086" = P.TRUNC (int (), int ())
-	      | po #"\087" = P.EXTEND (int (), int ())
-	      | po #"\088" = P.COPY (int (), int ())
-	      | po #"\089" = P.INLDIV (numkind ())
-	      | po #"\090" = P.INLMOD (numkind ())
-	      | po #"\091" = P.INLQUOT (numkind ())
-	      | po #"\092" = P.INLREM (numkind ())
-	      | po #"\093" = P.INLLSHIFT (numkind ())
-	      | po #"\094" = P.INLRSHIFT (numkind ())
-	      | po #"\095" = P.INLRSHIFTL (numkind ())
-	      | po #"\096" = P.REAL_TO_INT { floor = bool (), from = int (), to = int () }
-	      | po #"\097" = P.INT_TO_REAL { from = int (), to = int ()}
-	      | po #"\098" = P.NUMSUBSCRIPT (numkind ())
-	      | po #"\099" = P.NUMSUBSCRIPTV (numkind ())
-	      | po #"\100" = P.NUMUPDATE (numkind ())
-	      | po #"\101" = P.INLNUMSUBSCRIPT (numkind ())
-	      | po #"\102" = P.INLNUMSUBSCRIPTV (numkind ())
-	      | po #"\103" = P.INLNUMUPDATE (numkind ())
-	      | po #"\104" = P.INL_MONOARRAY (numkind ())
-	      | po #"\105" = P.INL_MONOVECTOR (numkind ())
-	      | po #"\106" = P.RAW_LOAD (numkind ())
-	      | po #"\107" = P.RAW_STORE (numkind ())
-	      | po #"\108" = P.RAW_CCALL (SOME (ccall_info ()))
-	      | po #"\109" = P.RAW_RECORD { align64 = bool () }
-	      | po #"\110" = P.INLMIN (numkind ())
-	      | po #"\111" = P.INLMAX (numkind ())
-	      | po #"\112" = P.INLABS (numkind ())
-	      | po #"\113" = P.TEST_INF (int ())
-	      | po #"\114" = P.TRUNC_INF (int ())
-	      | po #"\115" = P.EXTEND_INF (int ())
-	      | po #"\116" = P.COPY_INF (int ())
-	      | po #"\117" = P.REAL_TO_BITS (int ())
-	      | po #"\118" = P.BITS_TO_REAL (int ())
-	      | po c =
-		Vector.sub (primop_table, Char.ord c)
-		handle General.Subscript => raise Format
+            fun po #"\000" = P.INLINE(inlineop())
+              | po #"\001" = P.ARITH{ oper = arithop (), sz = int () }
+              | po #"\002" = P.PURE{ oper = pureop (), kind = numkind () }
+              | po #"\003" = P.CMP{ oper = cmpop (), kind = numkind () }
+              | po #"\004" = P.PRIM(commonop())
+              | po _ = raise Format
 	    in
 	      share poM po
 	    end

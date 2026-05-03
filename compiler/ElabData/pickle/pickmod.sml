@@ -1,6 +1,6 @@
 (* pickmod.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The revised pickler using the new "generic" pickling facility.
@@ -71,8 +71,8 @@ local
 in
   structure PickMod :> PICKMOD = struct
 
-    datatype context =
-	INITIAL of ModuleId.tmap
+    datatype context
+      = INITIAL of ModuleId.tmap
       | REHASH of PersStamps.persstamp
       | LIBRARY of ((int * Symbol.symbol) option * ModuleId.tmap) list
 
@@ -90,7 +90,12 @@ in
     structure V = Variable
     structure ED = EntPath.EvDict
     structure PS = PersStamps
-    structure P = Primop
+    structure P = PrimOps
+    structure InlP = InlineOps
+    structure ArithP = ArithOps
+    structure PureP = PureOps
+    structure CmpP = CompareOps
+    structure CP = CommonOps
     structure M = Modules
     structure B = Bindings
 
@@ -120,20 +125,71 @@ in
     val emptyMap = { dt = DTMap.empty, mb = MBMap.empty, mi = MI.emptyUmap }
 
     (* type info *)
-    val (NK, AO, PAO, CO, PO, CS, A, CR, LT, TC,
-	 TK, V, C, E, FK, RK, ST, MI, EQP, TYCKIND,
-	 DTI, DTF, TYCON, T, PI, VAR, SD, SG, FSG, SP,
-	 STR, F, STE, TCE, STRE, FE, EE, ED, EEV, FX,
-	 EN, B, DCON, DICT, FPRIM, FUNDEC, TFUNDEC, DATACON, DTMEM, NRD,
-         OVERLD, FCTC, SEN, FEN, SPATH, IPATH, STRID, FCTID, CCI, CTYPE,
-         CCALL_TYPE, SPE, TSI) =
-	( 1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
-	 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-	 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-	 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
-	 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
-         61, 62, 63)
+    val NK = 1          (* datatype NumKind.t *)
+    val ILO = 2         (* datatype InlineOps.t *)
+    val AO = 3          (* datatype ArithOps.t *)
+    val PAO = 4         (* datatype PureOps.t *)
+    val CO = 5          (* datatype CompareOps.t *)
+    val COO = 6         (* datatype CommonOps.t *)
+    val PO = 7          (* datatype PrimOps.t *)
+    val CS = 8 	        (* datatype Access.consig *)
+    val A = 9           (* datatype xx *)
+    val CR = 10	        (* datatype xx *)
+    val LT = 11	        (* datatype xx *)
+    val TC = 12	        (* datatype xx *)
+    val TK = 13	        (* datatype xx *)
+    val V = 14	        (* datatype xx *)
+    val C = 15	        (* datatype xx *)
+    val E = 16	        (* datatype xx *)
+    val FK = 17	        (* datatype xx *)
+    val RK = 18	        (* datatype xx *)
+    val ST = 19	        (* datatype xx *)
+    val MI = 20	        (* datatype xx *)
+    val EQP = 21	(* datatype xx *)
+    val TYCKIND = 22	(* datatype xx *)
+    val DTI = 23	(* datatype xx *)
+    val DTF = 24	(* datatype xx *)
+    val TYCON = 25	(* datatype xx *)
+    val T = 26  	(* datatype xx *)
+    val PI = 27 	(* datatype xx *)
+    val VAR = 28	(* datatype xx *)
+    val SD = 29 	(* datatype xx *)
+    val SG = 30 	(* datatype xx *)
+    val FSG = 31        (* datatype xx *)
+    val SP = 32 	(* datatype xx *)
+    val STR = 33	(* datatype xx *)
+    val F = 34	        (* datatype xx *)
+    val STE = 35	(* datatype xx *)
+    val TCE = 36	(* datatype xx *)
+    val STRE = 37	(* datatype xx *)
+    val FE = 38 	(* datatype xx *)
+    val EE = 39 	(* datatype xx *)
+    val ED = 40 	(* datatype xx *)
+    val EEV = 41	(* datatype xx *)
+    val FX = 42 	(* datatype xx *)
+    val EN = 43 	(* datatype xx *)
+    val B = 44  	(* datatype xx *)
+    val DCON = 45	(* datatype xx *)
+    val DICT = 46	(* datatype xx *)
+    val FPRIM = 47	(* datatype xx *)
+    val FUNDEC = 48	(* datatype xx *)
+    val TFUNDEC = 49	(* datatype xx *)
+    val DATACON = 50	(* datatype xx *)
+    val DTMEM = 51	(* datatype xx *)
+    val NRD = 52	(* datatype xx *)
+    val OVERLD = 53	(* datatype xx *)
+    val FCTC = 54	(* datatype xx *)
+    val SEN = 55	(* datatype xx *)
+    val FEN = 56	(* datatype xx *)
+    val SPATH = 57	(* datatype xx *)
+    val IPATH = 58	(* datatype xx *)
+    val STRID = 59	(* datatype xx *)
+    val FCTID = 60	(* datatype xx *)
+    val CCI = 61	(* C call info *)
+    val CTYPE = 62	(* datatype CTypes.c_type *)
+    val CCALL_TYPE = 63 (* datatype CommonOps.ccall_type *)
+    val SPE = 64	(* datatype PrimId.str_prim_elem *)
+    val TSI = 65	(* datatype Modules.tycSpecInfo *)
 
     (* this is a bit awful...
      * (we really ought to have syntax for "functional update") *)
@@ -213,219 +269,221 @@ in
 	  nk arg
 	end
 
+    fun inlineop oper = let
+	val op $ = PU.$ ILO
+        in
+          case oper
+           of InlP.DIV nk => "\000" $ [numkind nk]
+            | InlP.MOD nk => "\001" $ [numkind nk]
+            | InlP.QUOT nk => "\002" $ [numkind nk]
+            | InlP.REM nk => "\003" $ [numkind nk]
+            | InlP.LSHIFT nk => "\004" $ [numkind nk]
+            | InlP.RSHIFT nk => "\005" $ [numkind nk]
+            | InlP.RSHIFTL nk => "\006" $ [numkind nk]
+            | InlP.CNTZ nk => "\007" $ [numkind nk]
+            | InlP.CNTO nk => "\008" $ [numkind nk]
+            | InlP.CNTLZ nk => "\009" $ [numkind nk]
+            | InlP.CNTLO nk => "\010" $ [numkind nk]
+            | InlP.CNTTZ nk => "\011" $ [numkind nk]
+            | InlP.CNTTO nk => "\012" $ [numkind nk]
+            | InlP.IS_POW2 nk => "\013" $ [numkind nk]
+            | InlP.CEIL_LOG2 nk => "\014" $ [numkind nk]
+            | InlP.MIN nk => "\015" $ [numkind nk]
+            | InlP.MAX nk => "\016" $ [numkind nk]
+            | InlP.ABS nk => "\017" $ [numkind nk]
+            | InlP.CHR => "\018" $ []
+            | InlP.MKARRAY => "\019" $ []
+            | InlP.SUBSCRIPT => "\020" $ []
+            | InlP.SUBSCRIPTV => "\021" $ []
+            | InlP.UPDATE => "\022" $ []
+            | InlP.UNBOXEDUPDATE => "\023" $ []
+            | InlP.NUMSUBSCRIPT nk => "\024" $ [numkind nk]
+            | InlP.NUMSUBSCRIPTV nk => "\025" $ [numkind nk]
+            | InlP.NUMUPDATE nk => "\026" $ [numkind nk]
+            | InlP.NOT => "\027" $ []
+            | InlP.COMPOSE => "\028" $ []
+            | InlP.BEFORE => "\029" $ []
+            | InlP.IGNORE => "\030" $ []
+            | InlP.IDENTITY => "\031" $ []
+            | InlP.HOST_WORD_SIZE => "\032" $ []
+            | InlP.HOST_BIG_ENDIAN => "\033" $ []
+	end
+
     fun arithop oper = let
 	val op $ = PU.$ AO
-	fun arithopc P.IADD = "\000"
-	  | arithopc P.ISUB = "\001"
-	  | arithopc P.IMUL = "\002"
-	  | arithopc P.IDIV = "\003"
-	  | arithopc P.IMOD = "\004"
-          | arithopc P.IQUOT = "\005"
-	  | arithopc P.IREM = "\006"
-	  | arithopc P.INEG = "\007"
+	fun arithopc ArithP.IADD = "\000"
+	  | arithopc ArithP.ISUB = "\001"
+	  | arithopc ArithP.IMUL = "\002"
+	  | arithopc ArithP.IDIV = "\003"
+	  | arithopc ArithP.IMOD = "\004"
+          | arithopc ArithP.IQUOT = "\005"
+	  | arithopc ArithP.IREM = "\006"
+	  | arithopc ArithP.INEG = "\007"
 	in
 	  arithopc oper $ []
 	end
 
     fun pureop oper = let
 	val op $ = PU.$ PAO
-	fun arithopc P.ADD = "\000"
-	  | arithopc P.SUB = "\001"
-	  | arithopc P.MUL = "\002"
-          | arithopc P.QUOT = "\003"
-	  | arithopc P.REM = "\004"
-	  | arithopc P.NEG = "\005"
-	  | arithopc P.LSHIFT = "\006"
-	  | arithopc P.RSHIFT = "\007"
-	  | arithopc P.RSHIFTL = "\008"
-	  | arithopc P.ORB = "\009"
-	  | arithopc P.XORB = "\010"
-	  | arithopc P.ANDB = "\011"
-	  | arithopc P.NOTB = "\012"
-          | arithopc P.CNTPOP = "\013"
-          | arithopc P.CNTLZ = "\014"
-          | arithopc P.CNTTZ = "\015"
-          | arithopc P.ROTL = "\016"
-          | arithopc P.ROTR = "\017"
-	  | arithopc P.FDIV = "\018"
-	  | arithopc P.FABS = "\019"
-          | arithopc P.FSQRT = "\020"
+	fun arithopc PureP.ADD = "\000"
+	  | arithopc PureP.SUB = "\001"
+	  | arithopc PureP.MUL = "\002"
+          | arithopc PureP.QUOT = "\003"
+	  | arithopc PureP.REM = "\004"
+	  | arithopc PureP.NEG = "\005"
+	  | arithopc PureP.LSHIFT = "\006"
+	  | arithopc PureP.RSHIFT = "\007"
+	  | arithopc PureP.RSHIFTL = "\008"
+	  | arithopc PureP.ORB = "\009"
+	  | arithopc PureP.XORB = "\010"
+	  | arithopc PureP.ANDB = "\011"
+	  | arithopc PureP.NOTB = "\012"
+          | arithopc PureP.CNTPOP = "\013"
+          | arithopc PureP.CNTLZ = "\014"
+          | arithopc PureP.CNTTZ = "\015"
+          | arithopc PureP.ROTL = "\016"
+          | arithopc PureP.ROTR = "\017"
+	  | arithopc PureP.FDIV = "\018"
+	  | arithopc PureP.FABS = "\019"
+          | arithopc PureP.FSQRT = "\020"
 	in
 	  arithopc oper $ []
 	end
 
     fun cmpop oper = let
 	val op $ = PU.$ CO
-	fun cmpopc P.GT = "\000"
-	  | cmpopc P.GTE = "\001"
-	  | cmpopc P.LT = "\002"
-	  | cmpopc P.LTE = "\003"
-	  | cmpopc P.EQL = "\004"
-	  | cmpopc P.NEQ = "\005"
+	fun cmpopc CmpP.GT = "\000"
+	  | cmpopc CmpP.GTE = "\001"
+	  | cmpopc CmpP.LT = "\002"
+	  | cmpopc CmpP.LTE = "\003"
+	  | cmpopc CmpP.EQL = "\004"
+	  | cmpopc CmpP.NEQ = "\005"
 	in
 	  cmpopc oper $ []
 	end
+
+    fun commonop oper = let
+	fun ?n = String.str (Char.chr n)
+	fun fromto tag (from, to) = tag $ [int from, int to]
+	fun %?n = ?n $ []
+        in
+          case oper
+           of CP.FSGN sz => "\000" $ [int sz]
+            | CP.TESTU(from, to) => fromto "\001"
+            | CP.TEST(from, to) => fromto "\002"
+            | CP.TRUNC(from, to) => fromto "\003"
+            | CP.EXTEND(from, to) => fromto "\004"
+            | CP.COPY(from, to) => fromto "\005"
+            | CP.TEST_INF sz => "\006" $ [int sz]
+            | CP.TRUNC_INF sz => "\007" $ [int sz]
+            | CP.EXTEND_INF sz => "\008" $ [int sz]
+            | CP.COPY_INF sz => "\009" $ [int sz]
+            | CP.REAL_TO_INT{floor, from, to} => "\010" $ [bool floor, int from, int to]
+            | CP.INT_TO_REAL{from, to} => "\011" $ [bool floor, int from, int to]
+            | CP.NUMSUBSCRIPT nk => "\012" $ [numkind nk]
+            | CP.NUMSUBSCRIPTV nk => "\013" $ [numkind nk]
+            | CP.NUMUPDATE nk => "\014" $ [numkind nk]
+            | CP.SUBSCRIPT => "\015" $ []
+            | CP.SUBSCRIPTV => "\016" $ []
+            | CP.UPDATE => "\017" $ []
+            | CP.UNBOXEDUPDATE => "\018" $ []
+            | CP.LENGTH => "\019" $ []
+            | CP.PTREQL => "\020" $ []
+            | CP.PTRNEQ => "\021" $ []
+            | CP.POLYEQL => "\022" $ []
+            | CP.POLYNEQ => "\023" $ []
+            | CP.BOXED => "\024" $ []
+            | CP.UNBOXED => "\025" $ []
+            | CP.CAST => "\026" $ []
+            | CP.REAL_TO_BITS sz => "\027" $ [int sz]
+            | CP.BITS_TO_REAL sz => "\028" $ [int sz]
+            | CP.GETHDLR => "\029" $ []
+            | CP.SETHDLR => "\030" $ []
+            | CP.GETVAR => "\031" $ []
+            | CP.SETVAR => "\032" $ []
+            | CP.CALLCC => "\033" $ []
+            | CP.CAPTURE => "\034" $ []
+            | CP.THROW => "\035" $ []
+            | CP.ISOLATE => "\036" $ []
+            | CP.MAKEREF => "\037" $ []
+            | CP.DEREF => "\038" $ []
+            | CP.ASSIGN => "\039" $ []
+            | CP.UNBOXEDASSIGN => "\040" $ []
+            | CP.OBJLENGTH => "\041" $ []
+            | CP.GETTAG => "\042" $ []
+            | CP.MKSPECIAL => "\043" $ []
+            | CP.SETSPECIAL => "\044" $ []
+            | CP.GETSPECIAL => "\045" $ []
+            | CP.NEW_ARRAY0 => "\046" $ []
+            | CP.GET_SEQ_DATA => "\047" $ []
+            | CP.SUBSCRIPT_REC => "\048" $ []
+            | CP.SUBSCRIPT_RAW64 => "\049" $ []
+            | CP.CPTR_TO_WORD => "\050" $ []
+            | CP.WORD_TO_CPTR => "\051" $ []
+            | CP.RAW_LOAD nk => "\052" $ [numkind nk]
+            | CP.RAW_STORE nk => "\053" $ [numkind nk]
+            | CP.RAW_CCALL NONE => "\054" $ []
+            | CP.RAW_CCALL(SOME cci) => "\055" $ [ccall_info cci]
+            | CP.RAW_RECORD{align} => "\056" $ [int align]
+        end
+
+    fun primop p = let
+        val op $ = PU.$ PO
+        in
+          case p
+           of P.INLINE p => "\000" $ [inlineop p]
+            | P.ARITH{oper, sz} => "\001" $ [arithop oper, int sz]
+            | P.PURE{oper, kind} => "\002" $ [pureop oper, numkind kind]
+            | P.CMP{oper, kind} => "\003" $ [cmpop oper, numkind kind]
+            | P.PRIM p => "\004" $ [commonop p]
+        end
 
     fun ctype t = let
 	val op $ = PU.$ CTYPE
 	fun ?n = String.str (Char.chr n)
 	fun %?n = ?n $ []
-    in
-	case t of
-	    CTypes.C_void => %?0
-	  | CTypes.C_float => %?1
-	  | CTypes.C_double => %?2
-	  | CTypes.C_long_double => %?3
-	  | CTypes.C_unsigned CTypes.I_char => %?4
-	  | CTypes.C_unsigned CTypes.I_short => %?5
-	  | CTypes.C_unsigned CTypes.I_int => %?6
-	  | CTypes.C_unsigned CTypes.I_long => %?7
-	  | CTypes.C_unsigned CTypes.I_long_long => %?8
-	  | CTypes.C_signed CTypes.I_char => %?9
-	  | CTypes.C_signed CTypes.I_short => %?10
-	  | CTypes.C_signed CTypes.I_int => %?11
-	  | CTypes.C_signed CTypes.I_long => %?12
-	  | CTypes.C_signed CTypes.I_long_long => %?13
-	  | CTypes.C_PTR => %?14
-	  | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
-	  | CTypes.C_STRUCT l => ?21 $ [list ctype l]
-	  | CTypes.C_UNION l => ?22 $ [list ctype l]
-    end
+        in
+          case t
+           of CTypes.C_void => %?0
+            | CTypes.C_float => %?1
+            | CTypes.C_double => %?2
+            | CTypes.C_long_double => %?3
+            | CTypes.C_unsigned CTypes.I_char => %?4
+            | CTypes.C_unsigned CTypes.I_short => %?5
+            | CTypes.C_unsigned CTypes.I_int => %?6
+            | CTypes.C_unsigned CTypes.I_long => %?7
+            | CTypes.C_unsigned CTypes.I_long_long => %?8
+            | CTypes.C_signed CTypes.I_char => %?9
+            | CTypes.C_signed CTypes.I_short => %?10
+            | CTypes.C_signed CTypes.I_int => %?11
+            | CTypes.C_signed CTypes.I_long => %?12
+            | CTypes.C_signed CTypes.I_long_long => %?13
+            | CTypes.C_PTR => %?14
+            | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
+            | CTypes.C_STRUCT l => ?21 $ [list ctype l]
+            | CTypes.C_UNION l => ?22 $ [list ctype l]
+        end
 
-    fun ccall_type t =
-    let val op $ = PU.$ CCALL_TYPE
-    in  case t of
-          P.CCI32 => "\000" $ []
-        | P.CCI64 => "\001" $ []
-        | P.CCR64 => "\002" $ []
-        | P.CCML  => "\003" $ []
-    end
+    fun ccall_type t = let
+        val op $ = PU.$ CCALL_TYPE
+        in
+          case t
+           of P.CCI32 => "\000" $ []
+            | P.CCI64 => "\001" $ []
+            | P.CCR64 => "\002" $ []
+            | P.CCML  => "\003" $ []
+        end
 
     fun ccall_info { c_proto = { conv, retTy, paramTys },
 		     ml_args, ml_res_opt, reentrant } = let
 	val op $ = PU.$ CCI
-    in
-	"C" $ [string conv, ctype retTy, list ctype paramTys,
-	       list ccall_type ml_args, option ccall_type ml_res_opt,
-               bool reentrant
-              ]
-    end
-
-    fun primop p = let
-	val op $ = PU.$ PO
-	fun ?n = String.str (Char.chr n)
-	fun fromto tag (from, to) = ?tag $ [int from, int to]
-	fun %?n = ?n $ []
-	in
-	    case p
-	     of P.IARITH { oper, sz } => ?80 $ [arithop oper, int sz]
-	      | P.PURE_ARITH {oper, kind } => ?81 $ [pureop oper, numkind kind]
-	      | P.CMP { oper, kind } => ?82 $ [cmpop oper, numkind kind]
-	      | P.FSGN sz => ?83 $ [ int sz ]
-	      | P.TEST x => fromto 84 x
-	      | P.TESTU x => fromto 85 x
-	      | P.TRUNC x => fromto 86 x
-	      | P.EXTEND x => fromto 87 x
-	      | P.COPY x => fromto 88 x
-	      | P.INLDIV kind => ?89 $ [numkind kind]
-	      | P.INLMOD kind => ?90 $ [numkind kind]
-	      | P.INLQUOT kind => ?91 $ [numkind kind]
-	      | P.INLREM kind => ?92 $ [numkind kind]
-	      | P.INLLSHIFT kind => ?93 $ [numkind kind]
-	      | P.INLRSHIFT kind => ?94 $ [numkind kind]
-	      | P.INLRSHIFTL kind => ?95 $ [numkind kind]
-	      | P.REAL_TO_INT { floor, from, to } => ?96 $ [bool floor, int from, int to]
-	      | P.INT_TO_REAL { from, to } => ?97 $ [int from, int to]
-	      | P.NUMSUBSCRIPT kind => ?98 $ [numkind kind]
-	      | P.NUMSUBSCRIPTV kind => ?99 $ [numkind kind]
-	      | P.NUMUPDATE kind => ?100 $ [numkind kind]
-	      | P.INLNUMSUBSCRIPT kind => ?101 $ [numkind kind]
-	      | P.INLNUMSUBSCRIPTV kind => ?102 $ [numkind kind]
-	      | P.INLNUMUPDATE kind => ?103 $ [numkind kind]
-	      | P.INL_MONOARRAY kind => ?104 $ [numkind kind]
-	      | P.INL_MONOVECTOR kind => ?105 $ [numkind kind]
-	      | P.RAW_LOAD kind => ?106 $ [numkind kind]
-	      | P.RAW_STORE kind => ?107 $ [numkind kind]
-	      | P.RAW_CCALL (SOME i) => ?108 $ [ccall_info i]
-	      | P.RAW_RECORD { align64 } => ?109 $ [bool align64]
-
-	      | P.INLMIN kind => ?110 $ [numkind kind]
-	      | P.INLMAX kind => ?111 $ [numkind kind]
-	      | P.INLABS kind => ?112 $ [numkind kind]
-
-	      | P.TEST_INF i => ?113 $ [int i]
-	      | P.TRUNC_INF i => ?114 $ [int i]
-	      | P.EXTEND_INF i => ?115 $ [int i]
-	      | P.COPY_INF i => ?116 $ [int i]
-	      | P.REAL_TO_BITS i => ?117 $ [int i]
-	      | P.BITS_TO_REAL i => ?118 $ [int i]
-	      (** WARNING: last value must be < 128!! **)
-
-           (* primop_table elements on unpickling *)
-	      | P.MKETAG => %?0
-	      | P.WRAP => %?1
-	      | P.UNWRAP => %?2
-	      | P.SUBSCRIPT => %?3
-	      | P.SUBSCRIPTV => %?4
-	      | P.INLSUBSCRIPT => %?5
-	      | P.INLSUBSCRIPTV => %?6
-	      | P.INLMKARRAY => %?7
-	      | P.PTREQL => %?8
-	      | P.PTRNEQ => %?9
-
-	      | P.POLYEQL => %?10
-	      | P.POLYNEQ => %?11
-	      | P.BOXED => %?12
-	      | P.UNBOXED => %?13
-	      | P.LENGTH => %?14
-	      | P.OBJLENGTH => %?15
-	      | P.CAST => %?16
-	      | P.MARKEXN => %?17
-	      | P.GETHDLR => %?18
-	      | P.SETHDLR => %?19
-
-	      | P.GETVAR => %?20
-	      | P.SETVAR => %?21
-	      | P.MAKEREF => %?22
-	      | P.CALLCC => %?23
-	      | P.CAPTURE => %?24
-	      | P.THROW => %?25
-	      | P.DEREF => %?26
-	      | P.ASSIGN => %?27 (* NOTE: P.UNBOXEDASSIGN is defined below @ 30 *)
-	      | P.UPDATE => %?28
-	      | P.INLUPDATE => %?29
-
-	      | P.UNBOXEDUPDATE => %?30
-	      | P.GETTAG => %?31
-	      | P.MKSPECIAL => %?32
-	      | P.SETSPECIAL => %?33
-	      | P.GETSPECIAL => %?34
-	      | P.INLNOT => %?35
-	      | P.INLCOMPOSE => %?36
-	      | P.INLBEFORE => %?37
-	      | P.INL_ARRAY => %?38
-	      | P.INL_VECTOR => %?39
-
-	      | P.ISOLATE => %?40
-	      | P.WCAST => %?41
-	      | P.NEW_ARRAY0 => %?42
-	      | P.GET_SEQ_DATA => %?43
-	      | P.SUBSCRIPT_REC => %?44
-	      | P.SUBSCRIPT_RAW64 => %?45
-	      | P.UNBOXEDASSIGN => %?46
-	      | P.RAW_CCALL NONE => %?47
-	      | P.INLIGNORE => %?48
-	      | P.INLIDENTITY => %?49
-
-	      | P.INLCHR => %?50
-	      | P.INTERN64 => %?51
-	      | P.EXTERN64 => %?52
-	      | P.PTR_TO_WORD => %?53
-	      | P.WORD_TO_PTR => %?54
-              | P.HOST_WORD_SIZE => %?55
-              | P.HOST_BIG_ENDIAN => %?56
-	      (** WARNING: last value must be < 80!! **)
-    end
+        in
+          "C" $ [
+              string conv, ctype retTy, list ctype paramTys,
+              list ccall_type ml_args, option ccall_type ml_res_opt,
+              bool reentrant
+            ]
+        end
 
     fun consig arg = let
 	val op $ = PU.$ CS
