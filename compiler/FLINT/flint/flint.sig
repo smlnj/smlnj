@@ -35,8 +35,8 @@ signature FLINT =
       | RAISE of value * Lty.lty list
       | HANDLE of lexp * value
 
-      | BRANCH of FPrimOps.t * value list * lexp * lexp
-      | PRIMOP of FPrimOps.t * value list * LambdaVar.lvar * lexp
+      | BRANCH of primop * value list * lexp * lexp
+      | PRIMOP of primop * value list * LambdaVar.lvar * lexp
 
     withtype fundec = FunRecMeta.fkind * LambdaVar.lvar * (LambdaVar.lvar * Lty.lty) list * lexp
     and tfundec = FunRecMeta.tfkind * LambdaVar.lvar * (Lty.tvar * Lty.tkind) list * lexp

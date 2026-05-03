@@ -260,16 +260,16 @@ structure PrimopBindings : sig
 	  in
 	    prims :-:
 	  (* int type to/from intinf *)
-	    (iName ^  "_to_intinf", iTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF sz)) :-:
-	    ("intinf_to_" ^ iName, iFrom BT.intinfTy, P.INLINE(InlP.TEST_INF sz)) :-:
+	    (iName ^  "_to_intinf", iTo BT.intinfTy, P.PRIM(CP.EXTEND_INF sz)) :-:
+	    ("intinf_to_" ^ iName, iFrom BT.intinfTy, P.PRIM(CP.TEST_INF sz)) :-:
 	  (* word type to/from default int type *)
 	    ("int_to_" ^ wName, wFrom BT.intTy, sCopy(intSz, sz)) :-:
 	    (nm("unsigned_", wName, "int"), wTo BT.intTy, uCopyChk(sz, intSz)) :-:
 	    (nm("signed_", wName, "int"), wTo BT.intTy, sCopyChk(sz, intSz)) :-:
 	  (* word type to/from int inf *)
-	    ("unsigned_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.COPY_INF sz)) :-:
-	    ("signed_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF sz)) :-:
-	    ("intinf_to_" ^ wName, wFrom BT.intinfTy, P.INLINE(InlP.TRUNC_INF sz))
+	    ("unsigned_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.PRIM(CP.COPY_INF sz)) :-:
+	    ("signed_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.PRIM(CP.EXTEND_INF sz)) :-:
+	    ("intinf_to_" ^ wName, wFrom BT.intinfTy, P.PRIM(CP.TRUNC_INF sz))
 	  end
 
   (* size-independent primops *)
@@ -425,9 +425,9 @@ structure PrimopBindings : sig
 	    ("unsigned_word8_to_int", wTo BT.intTy, uCopyChk(8, intSz)) :-:
 	    ("signed_word8_to_int", wTo BT.intTy, sCopyChk(8, intSz)) :-:
 	  (* word type to/from int inf *)
-	    ("unsigned_word8_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.COPY_INF 8)) :-:
-	    ("signed_word8_to_intinf", wTo BT.intinfTy, P.INLINE(InlP.EXTEND_INF 8)) :-:
-	    ("intinf_to_word8", wFrom BT.intinfTy, P.INLINE(InlP.TRUNC_INF 8))
+	    ("unsigned_word8_to_intinf", wTo BT.intinfTy, P.PRIM(CP.COPY_INF 8)) :-:
+	    ("signed_word8_to_intinf", wTo BT.intinfTy, P.PRIM(CP.EXTEND_INF 8)) :-:
+	    ("intinf_to_word8", wFrom BT.intinfTy, P.PRIM(CP.TRUNC_INF 8))
 	  end
 
   (* some additional conversions that are used in system/smlnj/init/core-intinf.sml

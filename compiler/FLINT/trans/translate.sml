@@ -40,7 +40,9 @@ local
   structure LE = LtyExtern  (* == PLambdaType *)
   structure M  = Modules
   structure MC = MatchComp
-  structure PO = Primop
+  structure PO = PrimOps
+  structure FP = FPrimOps
+  structure CP = CommonOps
   structure PP = PrettyPrint
   structure PU = PPUtil
   structure S  = Symbol
@@ -215,7 +217,7 @@ fun toDconLty d ty =
 
 (* CON' : Plambda.dataconstr * PlambdType.tyc list * lexp -> lexp *)
 (* version of CON with special translation of ref and susp pseudo datacons *)
-fun CON' ((_, DA.REF, lt), ts, e) = APP (PRIM (PO.MAKEREF, lt, ts), e)
+fun CON' ((_, DA.REF, lt), ts, e) = APP (PRIM (FP.PRIM CP.MAKEREF, lt, ts), e)
   | CON' ((_, DA.SUSP (SOME(DA.LVAR d, _)), lt), ts, e) =
       let val v   = mkv ()
           val fe = FN (v, LD.ltc_tuple [], e)
@@ -234,7 +236,7 @@ fun patToConsig (APPpat(dcon,_,_)) = TU.dataconSign dcon
 
 local
   val region = ref(0,0)
-  val markexn = PRIM(PO.MARKEXN,
+  val markexn = PRIM(FP.MARKEXN,
 		  LD.ltc_parrow(LD.ltc_tuple [LB.ltc_exn, LB.ltc_string],
 				LB.ltc_exn), [])
 in
@@ -693,14 +695,14 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                     bug "mkVE -- NONE")))
 	  val _ = dbsaynl "<<mkVE: after matchInstTypes"
        in case (primop, intrinsicParams)
-            of (PO.POLYEQL, [t]) => eqGen(intrinsicType, t, toTcLt d)
-             | (PO.POLYNEQ, [t]) =>
+            of (PO.PRIM CP.POLYEQL, [t]) => eqGen(intrinsicType, t, toTcLt d)
+             | (PO.PRIM CP.POLYNEQ, [t]) =>
                composeNOT(eqGen(intrinsicType, t, toTcLt d), toLty d t)
-             | (PO.RAW_CCALL NONE, [a, b, c]) =>
+             | (PO.PRIM(CP.RAW_CCALL NONE), [a, b, c]) =>
                let val i = SOME (CProto.decode cproto_conv
                                    { fun_ty = a, encoding = b })
                            handle CProto.BadEncoding => NONE
-               in PRIM (PO.RAW_CCALL i, toLty d intrinsicType,
+               in PRIM (FP.PRIM(CP.RAW_CCALL i), toLty d intrinsicType,
                         map (toTyc d) intrinsicParams)
                end
              | _ => (** where do these intrinsicType originate?
@@ -1378,7 +1380,7 @@ and mkExp (exp, d) =
 						  LB.ltc_tv 0)])
                     end
 		val indexLexp = INT{ival = IntInf.fromInt index, ty = Target.defaultIntSz}
-	     in APP(PRIM(PO.SUBSCRIPTV, lt_sub, [tc]),
+	     in APP(PRIM(FP.PRIM CP.SUBSCRIPTV, lt_sub, [tc]),
 		    RECORD[ mkExp0 exp, indexLexp ])
             end
 
@@ -1464,7 +1466,7 @@ and mkExp (exp, d) =
 		 of DATAcon((_, DA.REF, lt), ts, lvar) =>
 		      (* ref pseudo-constructor, single, hence unique rule *)
 		      LET(lvar,
-			  APP (PRIM (Primop.DEREF, LE.lt_swap lt, ts), scrutineeLexp),
+			  APP (PRIM(FP.PRIM CP.DEREF, LE.lt_swap lt, ts), scrutineeLexp),
 			  lexp1)
 		  | DATAcon((_, DA.SUSP(SOME(_, DA.LVAR f)), lt), ts, lvar) =>
 		      (* susp pseudo-constructor, single, hence unique rule *)
@@ -1499,7 +1501,7 @@ and mkExp (exp, d) =
 					 [LD.ltc_parrow(LB.ltc_tv 0, LB.ltc_int)])
 		val vectortyc = LB.tcc_vector elemtyc
 	     in LET(lengthLvar,
-		    APP(PRIM(PO.LENGTH, lt_len, [vectortyc]), scrutineeLexp),
+		    APP(PRIM(FP.PRIM CP.LENGTH, lt_len, [vectortyc]), scrutineeLexp),
 		    SWITCH(VAR lengthLvar, DA.CNIL, map transSRULE srules, SOME(mkExp0 default)))
 	    end
 

@@ -18,6 +18,10 @@ structure CommonOps =
       | TRUNC of int * int              (* E: int to smaller int/word truncation, e.g. trunc_32_31 *)
       | EXTEND of int * int             (* E: sign-extend word/int to larger int *)
       | COPY of int * int               (* E: conversions, e.g. copy_32_32_ii *)
+      | TEST_INF of int            	(* intinf conversions; e.g., test_inf_31 *)
+      | TRUNC_INF of int           	(* intinf truncations; e.g., trunc_inf_31 *)
+      | EXTEND_INF of int          	(* sign-extend word/int to intinf *)
+      | COPY_INF of int            	(* zero-extend word/int to intinf *)
       | REAL_TO_INT of {                (* E: floor, round *)
             floor : bool,
             from : int, to : int
@@ -99,6 +103,10 @@ structure CommonOps =
               | TRUNC(from, to) => cvtFromTo ("trunc", from, to)
               | EXTEND(from, to) => cvtFromTo ("extend", from, to)
               | COPY(from, to) => cvtFromTo ("copy", from, to)
+              | TEST_INF sz => "test_inf_" ^ Int.toString sz
+              | TRUNC_INF sz => "trunc_inf_" ^ Int.toString sz
+              | EXTEND_INF sz => concat ["extend_", Int.toString sz, "_inf"]
+              | COPY_INF sz =>  concat ["copy_", Int.toString sz, "_inf"]
               | REAL_TO_INT{floor, from, to} => concat [
                     if floor then "floor_real" else "round_real",
                     Int.toString from, "_to_int", Int.toString to

@@ -1,6 +1,6 @@
 (* flintutil.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -54,7 +54,7 @@ local
   structure LD = LtyDef
   structure LB = LtyBasic
   structure LE = LtyExtern
-  structure PO = Primop
+  structure PO = FPrimOps
   structure DA = Access
   structure M  = LambdaVar.Map
   structure A  = Access

@@ -25,7 +25,8 @@ local
   structure LE = LtyExtern
   structure FR = FunRecMeta
   structure PT = PrimTyc
-  structure PO = Primop
+  structure PO = FPrimOps
+  structure CP = CommonOps
   structure PL = PLambda
   structure F  = FLINT
   structure FU = FlintUtil
@@ -68,7 +69,7 @@ val (iadd_prim, uadd_prim) = let
       val lt_int = LB.ltc_int
       val intOpTy = LD.ltc_parrow(LD.ltc_tuple[lt_int,lt_int],lt_int)
       in
-        (PL.PRIM(PrimopUtil.IADD, intOpTy, []), PL.PRIM(PrimopUtil.UADD, intOpTy, []))
+        (PL.PRIM(PO.IADD, intOpTy, []), PL.PRIM(PO.UADD, intOpTy, []))
       end
 
 fun bug msg = ErrorMsg.impossible("FlintNM: "^msg)
@@ -88,32 +89,44 @@ local val (trueDcon', falseDcon') =
         end
 in
 
-fun flint_prim (po as (d, p, lt, ts), vs, v, e) =
-  (case p
-    of (PO.BOXED  | PO.UNBOXED | PO.CMP _ | PO.FSGN _ | PO.PTREQL |
-        PO.PTRNEQ | PO.POLYEQL | PO.POLYNEQ) =>
-          (*** branch primops get translated into F.BRANCH ***)
-          F.LET([v], F.BRANCH(po, vs, boolLexp true, boolLexp false), e)
-     | (PO.GETHDLR | PO.GETVAR) =>
-          (*** primops that take zero arguments; argument types
-               must be unit ***)
-          let fun fix t =
-                LD.ltw_arrow(t,
-		(fn (ff,[t1],ts2) =>
-		    (if LK.tc_eqv(t1, LB.tcc_unit)
-		     then LD.ltc_tyc(LK.tcc_arrow(ff, [], ts2))
-		     else bug "unexpected zero-args prims 1 in flint_prim")
-		  | _ => bug "flint_prim:t1"),
-                fn _ => bug "unexpected zero-args prims 2 in flint_prim")
-              val nlt =
-                LD.ltw_ppoly(lt,
-                   fn (ks, t) => LD.ltc_ppoly(ks, fix t),
-                   fn _ => fix lt)
-           in F.PRIMOP((d,p,nlt,ts), [], v, e)
-          end
-     | _ =>
-          F.PRIMOP(po, vs, v, e))
-
+fun flint_prim (po as (d, p, lt, ts), vs, v, e) = let
+      (* branch primops get translated into F.BRANCH *)
+      fun branch () = F.LET([v], F.BRANCH(po, vs, boolLexp true, boolLexp false), e)
+      (* primops that take zero arguments; argument types must be unit *)
+      fun prim0 () = let
+            fun fix t = LD.ltw_arrow(
+                  t,
+                  fn (ff, [t1], ts2) => (if LK.tc_eqv(t1, LB.tcc_unit)
+                      then LD.ltc_tyc(LK.tcc_arrow(ff, [], ts2))
+                      else bug "unexpected zero-args prims 1 in flint_prim")
+                   | _ => bug "flint_prim:t1",
+                  fn _ => bug "unexpected zero-args prims 2 in flint_prim")
+            val nlt = LD.ltw_ppoly(lt,
+                  fn (ks, t) => LD.ltc_ppoly(ks, fix t),
+                  fn _ => fix lt)
+            in
+              F.PRIMOP((d,p,nlt,ts), [], v, e)
+            end
+      (* all other primops *)
+      fun default () = F.PRIMOP(po, vs, v, e)
+      in
+        case p
+         of PO.CMP _ => branch ()
+          | PO.PRIM p' => (case p'
+               of CP.BOXED => branch ()
+                | CP.UNBOXED => branch ()
+                | CP.FSGN _ => branch ()
+                | CP.PTREQL => branch ()
+                | CP.PTRNEQ => branch ()
+                | CP.POLYEQL => branch ()
+                | CP.POLYNEQ => branch ()
+                | CP.GETHDLR => prim0 ()
+                | CP.GETVAR => prim0 ()
+                | _ => default ()
+              (* end case *))
+          | _ => default ()
+        (* end case *)
+      end
 end (* local flint_prim *)
 
 (* force_raw freezes the calling conventions of a data constructor;
