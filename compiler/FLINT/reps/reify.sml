@@ -23,7 +23,7 @@ local
   structure LV = LambdaVar
   structure DA = Access
   structure DI = DebIndex
-  structure PO = Primop
+  structure PO = FPrimOps
   structure PL = PLambda
   structure FU = FlintUtil
   open FLINT
@@ -258,11 +258,10 @@ let val getlty =  Recover.recover (fdec, false)
                       val hdr = LP.mkuwp(tc, kenv, true, tycNarrow tc)
                    in LET([v], hdr(RET u), loop e)
                   end
-	      | PRIMOP((_, PO.INLMKARRAY, _, _), _, _, _) => bug "unexpected INLMKARRAY"
               | PRIMOP(xp as (NONE, po, lt, ts), vs, v, e) =>
                   PRIMOP((NONE, po, ltyNarrow lt, ts), vs, v, loop e)
               | PRIMOP((_,po,_,_), vs, v, e) =>
-                  (say(concat["\n####", PrimopUtil.toString po, "####\n"]);
+                  (say(concat["\n####", PO.toString po, "####\n"]);
                    bug "unexpected PRIMOP in loop")
              (* end case *))
       in loop

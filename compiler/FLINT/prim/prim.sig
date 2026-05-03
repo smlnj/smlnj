@@ -7,7 +7,6 @@
 signature FLINT_PRIM_OPS =
   sig
 
-
     datatype t
       = ARITH of {oper : ArithOps.t, sz : int}
       | PURE of {oper : PureOps.t, kind : NumKind.t}
@@ -28,5 +27,10 @@ signature FLINT_PRIM_OPS =
 
     val mkIEQL : int -> t   (* make equality primop for other sizes *)
     val mkUIEQL : int -> t  (* and for unsigned (kind = UINT) *)
+
+    (* return true if the primop is not pure (i.e., it can raise an exception,
+     * update memory, allocate mutable memory, or do a continuation operation.
+     *)
+    val impurePO : t -> bool
 
   end

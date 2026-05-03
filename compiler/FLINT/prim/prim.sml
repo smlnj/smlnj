@@ -45,4 +45,29 @@ structure FPrimOps : FLINT_PRIM_OPS =
     fun mkIEQL size = CMP{oper=CompareOps.EQL, kind=NumKind.INT size}
     fun mkUIEQL size = CMP{oper=CompareOps.EQL, kind=NumKind.UINT size}
 
+    fun impurePO (ARITH _) = true
+      | impurePO (PURE _) = false
+      | impurePO (CMP _) = false
+      | impurePO (PRIM(CommonOps.FSGN _)) = false
+      | impurePO (PRIM(CommonOps.EXTEND _)) = false
+      | impurePO (PRIM(CommonOps.TRUNC _)) = false
+      | impurePO (PRIM(CommonOps.COPY _)) = false
+      | impurePO (PRIM CommonOps.PTREQL) = false
+      | impurePO (PRIM CommonOps.PTRNEQ) = false
+      | impurePO (PRIM CommonOps.POLYEQL) = false
+      | impurePO (PRIM CommonOps.POLYNEQ) = false
+      | impurePO (PRIM CommonOps.BOXED) = false
+      | impurePO (PRIM CommonOps.UNBOXED) = false
+      | impurePO (PRIM CommonOps.LENGTH) = false
+      | impurePO (PRIM CommonOps.OBJLENGTH) = false
+      | impurePO (PRIM CommonOps.CAST) = false
+      | impurePO (PRIM CommonOps.CPTR_TO_WORD) = false
+      | impurePO (PRIM CommonOps.WORD_TO_CPTR) = false
+      | impurePO (PRIM(CommonOps.REAL_TO_BITS _)) = false
+      | impurePO (PRIM(CommonOps.BITS_TO_REAL _)) = false
+      | impurePO WCAST = false
+      | impurePO WRAP = false
+      | impurePO UNWRAP = false
+      | impurePO _ = true
+
   end

@@ -35,13 +35,13 @@ structure CPS : CPS =
 	datatype numkind = INT of int | UINT of int | FLOAT of int
 
       (* integer arithmetic operations that may overflow *)
-	datatype arithop = datatype ArithOps.arithop
+	datatype arithop = datatype ArithOps.t
 
       (* pure arithmetic operations that cannot overflow *)
-	datatype pureop = datatype ArithOps.pureop
+	datatype pureop = datatype PureOps.t
 
       (* generic comparison operations *)
-	datatype cmpop = datatype ArithOps.cmpop
+	datatype cmpop = datatype CompareOps.t
 
       (* fcmpop conforms to the IEEE std 754 predicates. *)
 	datatype fcmpop

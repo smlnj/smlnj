@@ -1,20 +1,20 @@
 (* chkflint.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * FLINT Type Checker
  *)
-
-(* FLINT Type Checker *)
 
 signature CHKFLINT = sig
 
-(** which set of the typing rules to use while doing the typecheck *)
-type typsys (* currently very crude *)
+    (** which set of the typing rules to use while doing the typecheck *)
+    type typsys (* currently very crude *)
 
-val checkTop : FLINT.fundec * typsys -> bool
-val checkExp : FLINT.lexp * typsys -> bool
+    val checkTop : FLINT.fundec * typsys -> bool
+    val checkExp : FLINT.lexp * typsys -> bool
 
-end (* signature CHKFLINT *)
+  end (* signature CHKFLINT *)
 
 structure ChkFlint : CHKFLINT =
 struct
@@ -33,7 +33,7 @@ local
   structure DA = Access
   structure DI = DebIndex
   structure PF = PrintFlint
-  structure PO = Primop
+  structure PO = FPrimOps
   structure S  = LV.Set
   structure PL = PLambda
   open FLINT

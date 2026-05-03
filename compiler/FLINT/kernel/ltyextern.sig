@@ -81,8 +81,8 @@ val ltd_fkfun   : Lty.lty -> Lty.lty list * Lty.lty list (* fkind omitted *)
 val ltc_rkind   : FunRecMeta.rkind * Lty.lty list -> Lty.lty
 val ltd_rkind   : Lty.lty * int -> Lty.lty
 
-(** given a tyc, select the appropriate update primop *)
-val tc_upd_prim : Lty.tyc -> FPrimOps.t
+(** given a tyc can we use an "unboxed" update (i.e., no store-list allocation) *)
+val tc_unboxed_upd : Lty.tyc -> bool
 
 (** translating the tkind into the corresponding type *)
 val tk_lty      : Lty.tkind -> Lty.lty

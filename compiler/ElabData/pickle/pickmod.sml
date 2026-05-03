@@ -260,6 +260,53 @@ in
 	    cvt
 	  end
 
+    fun ctype t = let
+	val op $ = PU.$ CTYPE
+	fun ?n = String.str (Char.chr n)
+	fun %?n = ?n $ []
+        in
+          case t
+           of CTypes.C_void => %?0
+            | CTypes.C_float => %?1
+            | CTypes.C_double => %?2
+            | CTypes.C_long_double => %?3
+            | CTypes.C_unsigned CTypes.I_char => %?4
+            | CTypes.C_unsigned CTypes.I_short => %?5
+            | CTypes.C_unsigned CTypes.I_int => %?6
+            | CTypes.C_unsigned CTypes.I_long => %?7
+            | CTypes.C_unsigned CTypes.I_long_long => %?8
+            | CTypes.C_signed CTypes.I_char => %?9
+            | CTypes.C_signed CTypes.I_short => %?10
+            | CTypes.C_signed CTypes.I_int => %?11
+            | CTypes.C_signed CTypes.I_long => %?12
+            | CTypes.C_signed CTypes.I_long_long => %?13
+            | CTypes.C_PTR => %?14
+            | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
+            | CTypes.C_STRUCT l => ?21 $ [list ctype l]
+            | CTypes.C_UNION l => ?22 $ [list ctype l]
+        end
+
+    fun ccall_type t = let
+        val op $ = PU.$ CCALL_TYPE
+        in
+          case t
+           of CP.CCI32 => "\000" $ []
+            | CP.CCI64 => "\001" $ []
+            | CP.CCR64 => "\002" $ []
+            | CP.CCML  => "\003" $ []
+        end
+
+    fun ccall_info { c_proto = { conv, retTy, paramTys },
+		     ml_args, ml_res_opt, reentrant } = let
+	val op $ = PU.$ CCI
+        in
+          "C" $ [
+              string conv, ctype retTy, list ctype paramTys,
+              list ccall_type ml_args, option ccall_type ml_res_opt,
+              bool reentrant
+            ]
+        end
+
     fun numkind arg = let
 	val op $ = PU.$ NK
 	fun nk (P.INT i) = "A" $ [int i]
@@ -363,23 +410,22 @@ in
 	end
 
     fun commonop oper = let
-	fun ?n = String.str (Char.chr n)
+	val op $ = PU.$ COO
 	fun fromto tag (from, to) = tag $ [int from, int to]
-	fun %?n = ?n $ []
         in
           case oper
            of CP.FSGN sz => "\000" $ [int sz]
-            | CP.TESTU(from, to) => fromto "\001"
-            | CP.TEST(from, to) => fromto "\002"
-            | CP.TRUNC(from, to) => fromto "\003"
-            | CP.EXTEND(from, to) => fromto "\004"
-            | CP.COPY(from, to) => fromto "\005"
+            | CP.TESTU(from, to) => fromto "\001" (from, to)
+            | CP.TEST(from, to) => fromto "\002" (from, to)
+            | CP.TRUNC(from, to) => fromto "\003" (from, to)
+            | CP.EXTEND(from, to) => fromto "\004" (from, to)
+            | CP.COPY(from, to) => fromto "\005" (from, to)
             | CP.TEST_INF sz => "\006" $ [int sz]
             | CP.TRUNC_INF sz => "\007" $ [int sz]
             | CP.EXTEND_INF sz => "\008" $ [int sz]
             | CP.COPY_INF sz => "\009" $ [int sz]
             | CP.REAL_TO_INT{floor, from, to} => "\010" $ [bool floor, int from, int to]
-            | CP.INT_TO_REAL{from, to} => "\011" $ [bool floor, int from, int to]
+            | CP.INT_TO_REAL{from, to} => "\011" $ [int from, int to]
             | CP.NUMSUBSCRIPT nk => "\012" $ [numkind nk]
             | CP.NUMSUBSCRIPTV nk => "\013" $ [numkind nk]
             | CP.NUMUPDATE nk => "\014" $ [numkind nk]
@@ -436,53 +482,6 @@ in
             | P.PURE{oper, kind} => "\002" $ [pureop oper, numkind kind]
             | P.CMP{oper, kind} => "\003" $ [cmpop oper, numkind kind]
             | P.PRIM p => "\004" $ [commonop p]
-        end
-
-    fun ctype t = let
-	val op $ = PU.$ CTYPE
-	fun ?n = String.str (Char.chr n)
-	fun %?n = ?n $ []
-        in
-          case t
-           of CTypes.C_void => %?0
-            | CTypes.C_float => %?1
-            | CTypes.C_double => %?2
-            | CTypes.C_long_double => %?3
-            | CTypes.C_unsigned CTypes.I_char => %?4
-            | CTypes.C_unsigned CTypes.I_short => %?5
-            | CTypes.C_unsigned CTypes.I_int => %?6
-            | CTypes.C_unsigned CTypes.I_long => %?7
-            | CTypes.C_unsigned CTypes.I_long_long => %?8
-            | CTypes.C_signed CTypes.I_char => %?9
-            | CTypes.C_signed CTypes.I_short => %?10
-            | CTypes.C_signed CTypes.I_int => %?11
-            | CTypes.C_signed CTypes.I_long => %?12
-            | CTypes.C_signed CTypes.I_long_long => %?13
-            | CTypes.C_PTR => %?14
-            | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
-            | CTypes.C_STRUCT l => ?21 $ [list ctype l]
-            | CTypes.C_UNION l => ?22 $ [list ctype l]
-        end
-
-    fun ccall_type t = let
-        val op $ = PU.$ CCALL_TYPE
-        in
-          case t
-           of P.CCI32 => "\000" $ []
-            | P.CCI64 => "\001" $ []
-            | P.CCR64 => "\002" $ []
-            | P.CCML  => "\003" $ []
-        end
-
-    fun ccall_info { c_proto = { conv, retTy, paramTys },
-		     ml_args, ml_res_opt, reentrant } = let
-	val op $ = PU.$ CCI
-        in
-          "C" $ [
-              string conv, ctype retTy, list ctype paramTys,
-              list ccall_type ml_args, option ccall_type ml_res_opt,
-              bool reentrant
-            ]
         end
 
     fun consig arg = let
