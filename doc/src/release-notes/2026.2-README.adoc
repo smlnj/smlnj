@@ -94,6 +94,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/344[Spurious "calling polyEqual" warnings]
 | [.bugid]#345#
 | {pull-base}/345[Fix missing case in `FLINT/reify`]
+| [.bugid]#346#
+| {pull-base}/346[Successor ML: type annotations on record puns]
 |=======
 
 We also fixed the following bugs that did not have issues
