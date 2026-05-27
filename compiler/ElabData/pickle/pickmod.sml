@@ -120,20 +120,69 @@ in
     val emptyMap = { dt = DTMap.empty, mb = MBMap.empty, mi = MI.emptyUmap }
 
     (* type info *)
-    val (NK, AO, PAO, CO, PO, CS, A, CR, LT, TC,
-	 TK, V, C, E, FK, RK, ST, MI, EQP, TYCKIND,
-	 DTI, DTF, TYCON, T, PI, VAR, SD, SG, FSG, SP,
-	 STR, F, STE, TCE, STRE, FE, EE, ED, EEV, FX,
-	 EN, B, DCON, DICT, FPRIM, FUNDEC, TFUNDEC, DATACON, DTMEM, NRD,
-         OVERLD, FCTC, SEN, FEN, SPATH, IPATH, STRID, FCTID, CCI, CTYPE,
-         CCALL_TYPE, SPE, TSI) =
-	( 1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
-	 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-	 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-	 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
-	 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
-         61, 62, 63)
+    val NK = 1          (* datatype NumKind.t *)
+    val AO = 2          (* datatype ArithOps.t *)
+    val PAO = 3         (* datatype PureOps.t *)
+    val CO = 4          (* datatype CompareOps.t *)
+    val PO = 5          (* datatype PrimOps.t *)
+    val CS = 6          (* datatype Access.consig *)
+    val A = 7           (* datatype Access.access *)
+    val CR = 8          (* datatype Access.conrep *)
+    val LT = 9          (* unused *)
+    val TC = 10         (* unused *)
+    val TK = 11         (* unused *)
+    val V = 12          (* unused *)
+    val C = 13          (* unused *)
+    val E = 14          (* unused *)
+    val FK = 15         (* unused *)
+    val RK = 16         (* unused *)
+    val ST = 17         (* datatype Stamps.stamp *)
+    val MI = 18         (* unused *)
+    val EQP = 19        (* datatype Types.eqprop *)
+    val TYCKIND = 20    (* datatype Types.tyckind *)
+    val DTI = 21        (* datatype info *)
+    val DTF = 22        (* type Types.dtypeFamily *)
+    val TYCON = 23      (* datatype Types.tycon *)
+    val T = 24          (* datatype Types.ty *)
+    val PI = 25         (* datatype PrimopId.prim_id *)
+    val VAR = 26        (* datatype Variable.var *)
+    val SD = 27         (* datatype Modules.strDef *)
+    val SG = 28         (* datatype Modules.Signature *)
+    val FSG = 29        (* datatype Modules.fctSig *)
+    val SP = 30         (* datatype Modules.spec *)
+    val STR = 31        (* datatype Modules.Structure *)
+    val F = 32          (* datatype Modules.Functor *)
+    val STE = 33        (* datatype Modules.stampExp *)
+    val TCE = 34        (* datatype Modules.tycExp *)
+    val STRE = 35       (* datatype Modules.strExp *)
+    val FE = 36         (* datatype Modules.fctExp *)
+    val EE = 37         (* datatype Modules.entityExp *)
+    val ED = 38         (* datatype Modules.entityDec *)
+    val EEV = 39        (* datatype Modules.entityEnv *)
+    val FX = 40         (* datatype Fixity.fixity *)
+    val EN = 41         (* datatype Modules.entity *)
+    val B = 42          (* datatype Bindings.binding *)
+    val DCON = 43       (* unused *)
+    val DICT = 44       (* unused *)
+    val FPRIM = 45      (* unused *)
+    val FUNDEC = 46     (* unused *)
+    val TFUNDEC = 47    (* unused *)
+    val DATACON = 48    (* datatype Types.datacon *)
+    val DTMEM = 49      (* type Types.dtmember *)
+    val NRD = 50        (* type Types.dconDesc *)
+    val OVERLD = 51     (* unused *)
+    val FCTC = 52       (* datatype Modules.fctClosure *)
+    val SEN = 53        (* type Modules.strEntity *)
+    val FEN = 54        (* type Modules.fctEntity *)
+    val SPATH = 55      (* datatype SymPath.path *)
+    val IPATH = 56      (* datatype InvPath.path *)
+    val STRID = 57      (* type ModuleId.strId *)
+    val FCTID = 58      (* type ModuleId.fctId *)
+    val CCI = 59        (* C call info *)
+    val CTYPE = 60      (* datatype CTypes.c_type *)
+    val CCALL_TYPE = 61 (* datatype CommonOps.ccall_type *)
+    val SPE = 62        (* datatype PrimId.str_prim_elem *)
+    val TSI = 63        (* datatype Modules.tycSpecInfo *)
 
     (* this is a bit awful...
      * (we really ought to have syntax for "functional update") *)
