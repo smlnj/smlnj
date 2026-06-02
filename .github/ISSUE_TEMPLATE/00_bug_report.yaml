@@ -114,15 +114,15 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: also_legacy
-    description: >
-      Is this issue also present in the "legacy" version of the system?  Note, that if the
-      answer is "Yes," you should still only file one issue report.
-    options:
-      - Unknown
-      - Yes
-      - No
-    default: 0
+    attributes:
+      label: Is this issue also present in the "legacy" version of the system?
+      description: >
+        Note, that if the answer is "Yes," you should still only file one issue report.
+      options:
+        - Unknown
+        - Yes
+        - No
+      default: 0
   - type: textarea
     id: description
     attributes:
