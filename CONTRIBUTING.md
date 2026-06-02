@@ -13,11 +13,11 @@ The most common form of contribution is reporting bugs, which should be done
 by [creating an issue](https://github.com/smlnj/smlnj/issues/new/choose).
 
 Note that we have two main repositories for SML/NJ: the so called ["development
-branch"](https://github.com/smlnj/smlnj) (this one) and the ["legacy" branch](
-https://github.com/smlnj/legacy).  When reporting a bug, please use the appropriate
-issue tracker.  If the bug affects both versions (a common occurance), just
-report one instance of the bug and we will create a cross-reference issue in
-the other tracker.
+branch"](https://github.com/smlnj/smlnj) (this one) and the ["legacy"
+branch](https://github.com/smlnj/legacy).  When reporting a bug, please use
+the appropriate issue tracker.  If the bug affects both versions (a common
+occurance), just report one instance of the bug and we will create a
+cross-reference issue in the other tracker.
 
 ## Pull Requests
 
