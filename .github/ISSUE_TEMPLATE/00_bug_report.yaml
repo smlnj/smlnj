@@ -74,7 +74,6 @@ body:
         - label: "Other"
     validations:
       required: true
-
   - type: markdown
     attributes:
       value: >
@@ -113,49 +112,39 @@ body:
         - Critical
     validations:
       required: true
-  - type: dropdown
-    id: also_legacy
-    attributes:
-      label: "Is this issue also present in the "legacy" version of the system?"
-      description: Note, that if the answer is "Yes," you should still only file one issue report.
-      options:
-        - Unknown
-        - Occurs in the Legacy Repository
-        - Does not occur in the Legacy Repository
-      default: 0
-  - type: textarea
+  - type : textarea
     id: description
     attributes:
       label: Description
       description: Provide a short description of what the problem is.
     validations:
       required: true
-  - type: textarea
+  - type : textarea
     id: transcript
     attributes:
       label: Transcript
       description: Please include a transcript of the bad behavior here.
-  - type: textarea
+  - type : textarea
     id: expected-behavior
     attributes:
       label: Expected Behavior
       description: Explain how you think things should work.
-  - type: textarea
+  - type : textarea
     id: reproduce
     attributes:
       label: Steps to Reproduce
       description: >
         Explain how to reproduce the problem.  Include sample code (the smaller, the
-        better) that exhibits the problem, when appropriate.  If reproducing the bug
+        better) that exhibits the problem, when ppropriate.  If reproducing the bug
         requires a large system, you can drag a text/zip/gzip file here or provide a
         download link for getting the code that exhibits the bug.
     validations:
       required: true
-  - type: markdown
+  - type : markdown
     attributes:
       value: >
         # Additional Information
-  - type: textarea
+  - type : textarea
     id: additional-info
     attributes:
       label: Additional Information
