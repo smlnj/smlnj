@@ -150,16 +150,6 @@ body:
         download link for getting the code that exhibits the bug.
     validations:
       required: true
-  - type: upload
-    id: reproduce_upload
-    attributes:
-      label: "Upload code to reproduce the error."
-      description: >
-        You can upload the sample code and data needed to reproduce the issue
-        here as an archive file (`.zip`, `.gz`, or `.tar.gz`).  Please include
-        instructions for how to reproduce the issue.
-    validations:
-      accept: ".zip,.gz,.tar.gz"
   - type: markdown
     attributes:
       value: >
