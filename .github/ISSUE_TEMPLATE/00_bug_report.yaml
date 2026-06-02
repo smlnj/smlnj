@@ -112,24 +112,24 @@ body:
         - Critical
     validations:
       required: true
-  - type : textarea
+  - type: textarea
     id: description
     attributes:
       label: Description
       description: Provide a short description of what the problem is.
     validations:
       required: true
-  - type : textarea
+  - type: textarea
     id: transcript
     attributes:
       label: Transcript
       description: Please include a transcript of the bad behavior here.
-  - type : textarea
+  - type: textarea
     id: expected-behavior
     attributes:
       label: Expected Behavior
       description: Explain how you think things should work.
-  - type : textarea
+  - type: textarea
     id: reproduce
     attributes:
       label: Steps to Reproduce
@@ -140,11 +140,11 @@ body:
         download link for getting the code that exhibits the bug.
     validations:
       required: true
-  - type : markdown
+  - type: markdown
     attributes:
       value: >
         # Additional Information
-  - type : textarea
+  - type: textarea
     id: additional-info
     attributes:
       label: Additional Information
