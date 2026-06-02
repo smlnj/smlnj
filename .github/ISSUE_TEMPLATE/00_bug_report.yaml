@@ -145,11 +145,21 @@ body:
       label: Steps to Reproduce
       description: >
         Explain how to reproduce the problem.  Include sample code (the smaller, the
-        better) that exhibits the problem, when ppropriate.  If reproducing the bug
+        better) that exhibits the problem, when appropriate.  If reproducing the bug
         requires a large system, you can drag a text/zip/gzip file here or provide a
         download link for getting the code that exhibits the bug.
     validations:
       required: true
+  - type: upload
+    id: reproduce_upload
+    attributes:
+      label: "Upload code to reproduce the error."
+      description: >
+        You can upload the sample code and data needed to reproduce the issue
+        here as an archive file (`.zip`, `.gz`, or `.tar.gz`).  Please include
+        instructions for how to reproduce the issue.
+    validations:
+      accept: ".zip,.gz,.tar.gz"
   - type: markdown
     attributes:
       value: >
