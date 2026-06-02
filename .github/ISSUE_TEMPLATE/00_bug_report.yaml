@@ -120,8 +120,8 @@ body:
       description: Note, that if the answer is "Yes," you should still only file one issue report.
       options:
         - Unknown
-        - Yes
-        - No
+        - Occurs in the Legacy Repository
+        - Does not occur in the Legacy Repository
       default: 0
   - type: textarea
     id: description
