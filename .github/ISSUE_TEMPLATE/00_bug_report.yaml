@@ -8,9 +8,9 @@ body:
       value: >
         # Instructions
 
-        Please use this form to report problems in the **development** version (*e.g.*, 2025.2)
+        Please use this form to report problems in the **development** version (*e.g.*, 2026.1)
         of [**Standard ML of New Jersey**](https://smlnj.org).
-        To report bugs in the legacy version (*e.g.*, 110.99.8), use the
+        To report bugs in the legacy version (*e.g.*, 110.99.9), use the
         [legacy version form](https://github.com/smlnj/legacy/issues/new?template=bug_report.yaml).
 
         To request a feature, please use the
@@ -74,6 +74,7 @@ body:
         - label: "Other"
     validations:
       required: true
+
   - type: markdown
     attributes:
       value: >
@@ -112,39 +113,57 @@ body:
         - Critical
     validations:
       required: true
-  - type : textarea
+  - type: dropdown
+    id: also_legacy
+    description: >
+      Is this issue also present in the "legacy" version of the system?  Note, that if the
+      answer is "Yes," you should still only file one issue report.
+    options:
+      - Unknown
+      - Yes
+      - No
+    default: 0
+  - type: textarea
     id: description
     attributes:
       label: Description
       description: Provide a short description of what the problem is.
     validations:
       required: true
-  - type : textarea
+  - type: textarea
     id: transcript
     attributes:
       label: Transcript
       description: Please include a transcript of the bad behavior here.
-  - type : textarea
+  - type: textarea
     id: expected-behavior
     attributes:
       label: Expected Behavior
       description: Explain how you think things should work.
-  - type : textarea
+  - type: textarea
     id: reproduce
     attributes:
       label: Steps to Reproduce
       description: >
         Explain how to reproduce the problem.  Include sample code (the smaller, the
-        better) that exhibits the problem, when ppropriate.  If reproducing the bug
+        better) that exhibits the problem, when appropriate.  If reproducing the bug
         requires a large system, you can drag a text/zip/gzip file here or provide a
         download link for getting the code that exhibits the bug.
     validations:
       required: true
-  - type : markdown
+  - type: upload
+    id: reproduce_upload
+    attributes:
+      label: Upload code to reproduce the error.
+      description: >
+        You can upload the sample code and data needed to reproduce the issue
+        here as an archive file (`.zip`, `.gz`, or `.tar.gz`).  Please include
+        instructions for how to reproduce the issue.
+  - type: markdown
     attributes:
       value: >
         # Additional Information
-  - type : textarea
+  - type: textarea
     id: additional-info
     attributes:
       label: Additional Information
