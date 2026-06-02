@@ -114,10 +114,10 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: also_legacy
     attributes:
-      label: Is this issue also present in the "legacy" version of the system?
-      description: >
-        Note, that if the answer is "Yes," you should still only file one issue report.
+      label: "Is this issue also present in the "legacy" version of the system?"
+      description: Note, that if the answer is "Yes," you should still only file one issue report.
       options:
         - Unknown
         - Yes
@@ -154,11 +154,13 @@ body:
   - type: upload
     id: reproduce_upload
     attributes:
-      label: Upload code to reproduce the error.
+      label: "Upload code to reproduce the error."
       description: >
         You can upload the sample code and data needed to reproduce the issue
         here as an archive file (`.zip`, `.gz`, or `.tar.gz`).  Please include
         instructions for how to reproduce the issue.
+    validations:
+      accept: ".zip,.gz,.tar.gz"
   - type: markdown
     attributes:
       value: >
