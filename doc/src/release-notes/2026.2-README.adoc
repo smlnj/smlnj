@@ -44,6 +44,8 @@ FILES::
 
 === Compiler
 
+* The printing of real results in the REPL has been improved.
+
 === CM
 
 === LLVM
