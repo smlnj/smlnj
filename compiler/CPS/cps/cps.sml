@@ -14,8 +14,7 @@ structure CPS : CPS =
       | RK_CONT		(* closure record for continuation *)
       | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
       | RK_KNOWN	(* closure record for known function *)
-      | RK_RAW64BLOCK	(* 64-bit aligned raw data record *)
-      | RK_RAWBLOCK	(* word-aligned raw data record *)
+      | RK_RAWBLOCK	(* raw data record *)
 
     datatype pkind = VPT | RPT of int | FPT of int
 

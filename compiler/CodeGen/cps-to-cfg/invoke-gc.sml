@@ -272,9 +272,12 @@ fun prRoots roots = Control.Print.say (concat["Roots = ", roots2s roots, "\n"])
 		val n64 = List.length raw64
 		val (nWords, tag) = if Target.is64
 		        then (align64 (4*n32) div 8 + n64, D.tag_raw)
+(* Old code for 32-bit systems
 		      else if (n64 = 0)
 			then (n32, D.tag_raw)
-			else (2 * (align64 (4*n32) div 8 + n64), D.tag_raw64)
+			else (2 * (align64 (4*n32) div 8 + n64), D.tag_raw)
+*)
+                        else raise Fail "32-bit systems are not supported"
 		val desc = D.makeDesc' (nWords, tag)
 		val (flds, args) = let
 		      fun get sz ((ix, nk), (flds, args)) =

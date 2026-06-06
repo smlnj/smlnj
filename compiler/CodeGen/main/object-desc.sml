@@ -67,7 +67,7 @@ structure ObjectDesc :> OBJECT_DESC =
   (* fixed descriptors *)
     val desc_pair = makeDesc(2, tag_record)
     val desc_ref = makeDesc(1, tag_ref)
-    val desc_real64 = makeDesc(wordsPerReal, tag_raw64)
+    val desc_real64 = makeDesc(wordsPerReal, tag_raw)
     val desc_polyvec = makeDesc(seq_poly, tag_vec_hdr)
     val desc_polyarr = makeDesc(seq_poly, tag_arr_hdr)
     val desc_special = makeDesc(0, tag_special)

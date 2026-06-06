@@ -47,8 +47,6 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
     val valueSzb = IntInf.fromInt MS.valueSize
     val realSzb = IntInf.fromInt MS.realSize
     val addrTy = MS.addressBitWidth	(* naturalsize of address arithmetic *)
-    val wordsPerDbl = 8 div ws
-    val wordsPerDbl' = IntInf.fromInt wordsPerDbl
 
   (* return true if integers of `sz` bits are represented as tagged values *)
     fun isTaggedInt sz = (sz <= defaultIntSz)
@@ -208,10 +206,10 @@ C.NUMt{sz=sz}
 			    bindVarIn(x, k)))
 		      end
 (* REAL32: FIXME *)
-		  | RECORD(CPS.RK_FCONT, flds, x, k) => allocFltRecord (flds, x, k)
+		  | RECORD(CPS.RK_FCONT, flds, x, k) => allocRawRecord (flds, x, k)
 (* REAL32: FIXME *)
 		  | RECORD(CPS.RK_RAW64BLOCK, flds, x, k) => allocFltRecord (flds, x, k)
-		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) => allocIntRecord (flds, x, k)
+		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) => allocRawRecord (flds, x, k)
 		  | RECORD(_, flds, x, k) => allocRecord (
 		      D.makeDesc' (length flds, D.tag_record),
 		      flds, x, bindVarIn(x, k))
@@ -349,7 +347,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.WRAP(P.FLOAT 32), [v], x, _, k) => (* REAL32: FIXME *)
 		      error ["wrap for 32-bit floats is not implemented"]
 		  | PURE(P.WRAP(P.FLOAT 64), [v], x, _, k) => let
-		      val desc = D.makeDesc'(wordsPerDbl, D.tag_raw64)
+		      val desc = D.makeDesc'(wordsPerDbl, D.tag_raw)
 		      val oper = rawRecord (desc, TP.FLT, 64, 1)
 		      in
 			C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
@@ -361,9 +359,7 @@ C.NUMt{sz=sz}
 		      val (desc, scale) = (case rk
 			     of NONE => (NONE, MS.valueSize)
 			      | SOME CPS.RK_FCONT =>
-				  (mkDesc(wordsPerDbl * n, D.tag_raw64), MS.realSize)
-			      | SOME CPS.RK_RAW64BLOCK =>
-				  (mkDesc(wordsPerDbl * n, D.tag_raw64), MS.realSize)
+				  (mkDesc(n, D.tag_raw), MS.realSize)
 			      | SOME CPS.RK_RAWBLOCK =>
 				  (mkDesc(n, D.tag_raw), MS.valueSize)
 			      | SOME CPS.RK_VECTOR => error [
@@ -399,16 +395,8 @@ C.NUMt{sz=sz}
 	  and allocRecord (desc, fields, x, k) =
 		C.ALLOC(record desc, List.map getField fields, x, k)
 (* REAL32: FIXME *)
-	(* Allocate a record with 64-bit real components *)
-	  and allocFltRecord (fields, x, k) = let
-		val len = length fields
-		val desc = D.makeDesc'(wordsPerDbl * len, D.tag_raw64)
-		val oper = rawRecord (desc, TP.FLT, 64, len)
-		in
-		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))
-		end
-	(* Allocate a record with machine-int-sized components *)
-	  and allocIntRecord (fields, x, k) = let
+	(* Allocate a record with raw machine-int-sized components *)
+	  and allocRawRecord (fields, x, k) = let
 		val len = length fields
 		val desc = D.makeDesc'(len, D.tag_raw)
 		val oper = rawRecord (desc, TP.INT, ity, len)

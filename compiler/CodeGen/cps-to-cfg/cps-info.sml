@@ -132,11 +132,6 @@ structure CPSInfo : sig
 	  val recordTy = Tbl.insert typs
 	  fun init cexp = (case cexp
 		 of RECORD(rk, flds, x, k) => (
-		      case rk
-		       of CPS.RK_FCONT => align 8
-			| CPS.RK_RAW64BLOCK => align 8
-			| _ => ()
-		      (* end case *);
 		      recordTy (x, BOGty);
 		      List.app (useArg o #1) flds;
 		      init k)
@@ -171,8 +166,6 @@ structure CPSInfo : sig
 			| P.NEWARRAY0 => bindVar x
 			| P.WRAP(P.INT sz) => (align(sz div 8); bindVar x)
 			| P.WRAP(P.FLOAT sz) => (align(sz div 8); bindVar x)
-			| P.RAWRECORD(SOME CPS.RK_RAW64BLOCK) => (
-			    align 8; bindVar x)
 			| P.RAWRECORD _ => bindVar x
 			| _ => ()
 		      (* end case *);

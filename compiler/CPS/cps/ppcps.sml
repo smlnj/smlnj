@@ -161,7 +161,6 @@ structure PPCps : PPCPS =
 	    | RK_CONT => "RK_CONT"
 	    | RK_FCONT => "RK_FCONT"
 	    | RK_KNOWN => "RK_KNOWN"
-	    | RK_RAW64BLOCK => "RK_RAW64BLOCK"
 	    | RK_RAWBLOCK => "RK_RAWBLOCK"
 	  (* end case *))
 

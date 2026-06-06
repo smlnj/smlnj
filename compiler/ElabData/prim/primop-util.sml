@@ -165,8 +165,9 @@ structure PrimopUtil : sig
       | toString (P.RAW_LOAD nk) = concat ["raw_load(", prNumkind nk, ")"]
       | toString (P.RAW_STORE nk) = concat ["raw_store(", prNumkind nk, ")"]
       | toString (P.RAW_CCALL _) = "raw_ccall"
-      | toString (P.RAW_RECORD{ align64 }) =
-	  if align64 then "raw64_record" else "raw_record"
+      | toString (P.RAW_RECORD{ align64 }) = if Target.is64 orelse not align64
+            then "raw_record"
+	    else "raw64_record"
       | toString P.UNBOXEDASSIGN = "(unboxed):="
       | toString P.WCAST = "wcast"
       | toString P.MARKEXN = "markexn"

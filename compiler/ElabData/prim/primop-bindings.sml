@@ -546,7 +546,7 @@ structure PrimopBindings : sig
 	   * the record as a ML object, in case it passes thru a gc boundary.
 	   * rawupdatexxx writes to the record.
 	   *)
-	    mk("record", p1(ar(BT.intTy,tv1)), P.RAW_RECORD { align64 = false }) :-:
+	    mk("record", p1(ar(BT.intTy,tv1)), P.RAW_RECORD { align64 = Target.is64 }) :-:
 	    mk("record64", p1(ar(BT.intTy,tv1)), P.RAW_RECORD { align64 = true }) :-:
 	  (* load/store raw values *)
 	    mkLd("word8", BT.word32Ty, P.UINT 8) :-:

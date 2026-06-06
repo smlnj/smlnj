@@ -278,7 +278,7 @@ fun sharable _ = true
 (* given a fun_kind return the appropriate unboxed closure kind *)
 (* need runtime support for RK_FCONT (new tags etc.) CURRENTLY NOT SUPPORTED *)
 fun unboxedKind (CONT | KNOWN_CONT) = RK_FCONT
-  | unboxedKind _ = RK_RAW64BLOCK
+  | unboxedKind _ = RK_RAWBLOCK
 
 (* given a fix kind return the appropriate boxed closure kind *)
 fun boxedKind (CONT | KNOWN_CONT) = RK_CONT
@@ -565,7 +565,7 @@ fun fetchClosures(env as Env(_,closureL,_,_),lives,fkind) =
 
       fun reusable2 (_,CR(_,{kind,...})) = sharable(kind,fkind)
 
-      fun fblock (_,CR(_,{kind=(RK_RAW64BLOCK|RK_FCONT),...})) = true
+      fun fblock (_,CR(_,{kind=(RK_RAWBLOCK|RK_FCONT),...})) = true
         | fblock _ = false
 
       val level = 4 (* should be made adjustable in the future *)
@@ -1749,11 +1749,6 @@ val allgpFree = mergeV(gpspill,gpFree)
 val unboxedFree = utgpFree
 
 (* filter out all unboxed-values *)
-(* INT32: here is the place to filter out all 32-bit integers,
-    put them into unboxedFree, then you have to find a way to put both
-    32-bit integers and unboxed float numbers in the same record.
-   Currently, I use RK_RAW64BLOCK to denote this kind of record_kind,
-   you might want to put all floats ahead of all 32-bit ints. *)
 (* val (allgpFree,unboxedFree) = partition isBoxed3 allgpFree *)
 
 val (allgpFree,fpcInfo) =
@@ -1771,8 +1766,8 @@ val (allgpFree,fpcInfo) =
 val (fphdr,env,nframes) =
       case fpcInfo
         of NONE => (fn ce => ce,initEnv,[])
-         | SOME(c,a) => let val (int32a,a) = partition isUntaggedInt a
-                         in closureUnboxed(c,int32a,a,fixKind,initEnv)
+         | SOME(c,a) => let val (untagged,a) = partition isUntaggedInt a
+                         in closureUnboxed(c,untagged,a,fixKind,initEnv)
                         end
 
 (* sharing with the enclosing closures if possible *)
@@ -1980,7 +1975,7 @@ and close(ce,env,sn,csg,csf,ret) =
        let val (env,header) = fixAccess([v],env)
         in header(SWITCH(v,c,map (fn c => close(c,env,sn,csg,csf,ret)) l))
        end
-    | RECORD(k as RK_RAW64BLOCK,l,v,c) =>
+    | RECORD(k as RK_RAWBLOCK,l,v,c) =>
        let val (env,header) = fixAccess(map #1 l,env)
            val env = augValue(v,U.BOGt,env)
         in header(RECORD(k,l,v,close(c,env,sn,csg,csf,ret)))

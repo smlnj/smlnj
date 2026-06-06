@@ -75,9 +75,7 @@ structure Limit : sig
 		fun inc (n, e) = count (allocSzW+n, e)
 		in
 		  case exp
-		   of C.RECORD(C.RK_RAW64BLOCK, vl, _, e) => inc( record64Sz(length vl), e)
-		    | C.RECORD(C.RK_FCONT, vl, _, e) => inc (record64Sz(length vl), e)
-		    | C.RECORD(C.RK_VECTOR, vl, _, e) => inc (length vl + (seqHdrSz + 1), e)
+		   of C.RECORD(C.RK_VECTOR, vl, _, e) => inc (length vl + (seqHdrSz + 1), e)
 		    | C.RECORD(_, vl, _, e) => inc (length vl + 1, e)
 		    | C.SELECT(_, _, _, _, e) => continue e
 		    | C.OFFSET(_, _, _, e) => continue e

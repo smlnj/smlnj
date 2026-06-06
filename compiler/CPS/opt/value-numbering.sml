@@ -75,8 +75,7 @@ structure ValueNumbering : sig
             | toCode C.RK_CONT = 3
             | toCode C.RK_FCONT = 4
             | toCode C.RK_KNOWN = 5
-            | toCode C.RK_RAW64BLOCK = 6
-            | toCode C.RK_RAWBLOCK = 7
+            | toCode C.RK_RAWBLOCK = 6
           in
             cmpCode (toCode rk1, toCode rk2)
           end

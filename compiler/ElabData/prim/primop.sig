@@ -147,7 +147,7 @@ signature PRIMOP =
    (* Allocate uninitialized storage on the heap.
     * The record is meant to hold short-lived C objects, i.e., they
     * are not ML pointers.  The representation is
-    * the same as RECORD with tag tag_raw or tag_raw64.
+    * the same as RECORD with tag tag_raw.
     *)
       | RAW_RECORD of { align64 : bool }  (* E: *)
 

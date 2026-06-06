@@ -12,7 +12,6 @@
  * language is in dev-notes/new-literals.md.
  *)
 
-(* redundant for now
 signature LITERALS =
   sig
 
@@ -26,7 +25,6 @@ signature LITERALS =
     val split : CPS.function -> CPS.function * Word8Vector.vector
 
   end
-*)
 
 structure NewLiterals : LITERALS =
   struct
@@ -613,23 +611,15 @@ structure NewLiterals : LITERALS =
 			case rk
 			 of C.RK_RAWBLOCK => let
 			      fun isImmed (C.NUM _) = true
+                                | isImmed (C.REAL _) = true
 				| isImmed _ = false
 			      fun encode (C.NUM{ty={sz, ...}, ival}) =
 				    largeIntToBytes(sz, ival)
+                                | encode (C.REAL{ty, rval}) = real64ToBytes rval
 				| encode _ = bug "RAWBLOCK: impossible"
 			      in
 				if List.all isImmed ul
 				  then addRaw (W8V.concat(List.map encode ul), v)
-				  else useValues ul
-			      end
-			  | C.RK_RAW64BLOCK => let
-			      fun isImmed (C.REAL _) = true
-				| isImmed _ = false
-			      fun encode (C.REAL{ty, rval}) = real64ToBytes rval
-				| encode _ = bug "RAWBLOCK: impossible"
-			      in
-				if List.all isImmed ul
-				  then addRaw64 (W8V.concat(List.map encode ul), v)
 				  else useValues ul
 			      end
 			  | _ => if List.all isConst ul

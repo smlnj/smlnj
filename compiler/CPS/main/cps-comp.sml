@@ -51,8 +51,7 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
     val convert   = phase "CPS 060 convert" Convert.convert
     val cpstrans  = phase "CPS 065 cpstrans" CPStrans.cpstrans
     val cpsopt    = phase "CPS 070 cpsopt" CPSopt.reduce
-    val litsplit  = phase "CPS 075 litsplit" Literals.split
-    val newlitsplit = phase "CPS 075 litsplit" NewLiterals.split
+    val litsplit = phase "CPS 075 litsplit" NewLiterals.split
     val closure   = phase "CPS 080 closure"  Closure.closeCPS
     val globalfix = phase "CPS 090 globalfix" GlobalFix.globalfix
     val spill     = phase "CPS 100 spill" Spill.spill
@@ -122,9 +121,7 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 	  val function = check "after cpsopt-code" (cpsopt (function, NONE, false))
 	  (* split out heap-allocated literals; litProg is the bytecode *)
 (* TODO: switch to newLiterals for all targets *)
-	  val (function, data) = if !Control.CG.newLiterals orelse Target.is64
-		then newlitsplit function
-		else litsplit function
+	  val (function, data) = litsplit function
 	  val _ = check "after lit-split" function
 	  (* convert CPS to closure-passing style *)
 	  val function = prC "after closure" (closure function)

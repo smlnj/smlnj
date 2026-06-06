@@ -91,7 +91,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	  (* end case *))
 
     fun recordFL(ul,_,w,ce) =
-	  RECORD(RK_RAW64BLOCK, map (fn u => (u,OFFp 0)) ul, w, ce)
+	  RECORD(RK_RAWBLOCK, map (fn u => (u,OFFp 0)) ul, w, ce)
 
     fun recordNM (ul, ts, w, ce) =
       let fun g (FLTt sz::r,u::z,l,h) =
@@ -219,7 +219,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	    | AP.RAW_LOAD nk => PKL (P.RAWLOAD{ kind = numkind nk })
 	    | AP.RAW_STORE nk => PKS (P.RAWSTORE{ kind = numkind nk })
 	    | AP.RAW_RECORD{ align64 = false } => PKP (P.RAWRECORD (SOME RK_RAWBLOCK))
-	    | AP.RAW_RECORD{ align64 = true } => PKP (P.RAWRECORD (SOME RK_RAW64BLOCK))
+	    | AP.RAW_RECORD{ align64 = true } => PKP (P.RAWRECORD (SOME RK_RAWBLOCK))
 
 	    | _ => bug (concat["bad primop in map_primop: ", PrimopUtil.toString p, "\n"])
 	  (* end case *))

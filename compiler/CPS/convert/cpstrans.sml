@@ -112,7 +112,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
 			    val v = mkv()
 			    val vs = map (fn x => (x, OFFp 0)) spfvars
 			    val ct = PTRt(FPT (length vs))
-			    fun fh e = RECORD(RK_RAW64BLOCK, vs, v, e)
+			    fun fh e = RECORD(RK_RAWBLOCK, vs, v, e)
 			    in
 			      (fh, (VAR v)::spgvars, ct::spgctys)
 			    end
