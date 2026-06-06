@@ -1,6 +1,6 @@
 (* pickmod.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The revised pickler using the new "generic" pickling facility.
@@ -71,8 +71,8 @@ local
 in
   structure PickMod :> PICKMOD = struct
 
-    datatype context =
-	INITIAL of ModuleId.tmap
+    datatype context
+      = INITIAL of ModuleId.tmap
       | REHASH of PersStamps.persstamp
       | LIBRARY of ((int * Symbol.symbol) option * ModuleId.tmap) list
 
@@ -140,7 +140,7 @@ in
     val MI = 18         (* unused *)
     val EQP = 19        (* datatype Types.eqprop *)
     val TYCKIND = 20    (* datatype Types.tyckind *)
-    val DTI = 21        (* datatype info *)
+    val DTI = 21        (* {stamps, freetycs, family} *)
     val DTF = 22        (* type Types.dtypeFamily *)
     val TYCON = 23      (* datatype Types.tycon *)
     val T = 24          (* datatype Types.ty *)
@@ -253,6 +253,53 @@ in
 	    cvt
 	  end
 
+    fun ctype t = let
+	val op $ = PU.$ CTYPE
+	fun ?n = String.str (Char.chr n)
+	fun %?n = ?n $ []
+        in
+          case t
+           of CTypes.C_void => %?0
+            | CTypes.C_float => %?1
+            | CTypes.C_double => %?2
+            | CTypes.C_long_double => %?3
+            | CTypes.C_unsigned CTypes.I_char => %?4
+            | CTypes.C_unsigned CTypes.I_short => %?5
+            | CTypes.C_unsigned CTypes.I_int => %?6
+            | CTypes.C_unsigned CTypes.I_long => %?7
+            | CTypes.C_unsigned CTypes.I_long_long => %?8
+            | CTypes.C_signed CTypes.I_char => %?9
+            | CTypes.C_signed CTypes.I_short => %?10
+            | CTypes.C_signed CTypes.I_int => %?11
+            | CTypes.C_signed CTypes.I_long => %?12
+            | CTypes.C_signed CTypes.I_long_long => %?13
+            | CTypes.C_PTR => %?14
+            | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
+            | CTypes.C_STRUCT l => ?21 $ [list ctype l]
+            | CTypes.C_UNION l => ?22 $ [list ctype l]
+        end
+
+    fun ccall_type t = let
+        val op $ = PU.$ CCALL_TYPE
+        in
+          case t
+           of P.CCI32 => "\000" $ []
+            | P.CCI64 => "\001" $ []
+            | P.CCR64 => "\002" $ []
+            | P.CCML  => "\003" $ []
+        end
+
+    fun ccall_info { c_proto = { conv, retTy, paramTys },
+		     ml_args, ml_res_opt, reentrant } = let
+	val op $ = PU.$ CCI
+        in
+          "C" $ [
+              string conv, ctype retTy, list ctype paramTys,
+              list ccall_type ml_args, option ccall_type ml_res_opt,
+              bool reentrant
+            ]
+        end
+
     fun numkind arg = let
 	val op $ = PU.$ NK
 	fun nk (P.INT i) = "A" $ [int i]
@@ -314,51 +361,6 @@ in
 	in
 	  cmpopc oper $ []
 	end
-
-    fun ctype t = let
-	val op $ = PU.$ CTYPE
-	fun ?n = String.str (Char.chr n)
-	fun %?n = ?n $ []
-    in
-	case t of
-	    CTypes.C_void => %?0
-	  | CTypes.C_float => %?1
-	  | CTypes.C_double => %?2
-	  | CTypes.C_long_double => %?3
-	  | CTypes.C_unsigned CTypes.I_char => %?4
-	  | CTypes.C_unsigned CTypes.I_short => %?5
-	  | CTypes.C_unsigned CTypes.I_int => %?6
-	  | CTypes.C_unsigned CTypes.I_long => %?7
-	  | CTypes.C_unsigned CTypes.I_long_long => %?8
-	  | CTypes.C_signed CTypes.I_char => %?9
-	  | CTypes.C_signed CTypes.I_short => %?10
-	  | CTypes.C_signed CTypes.I_int => %?11
-	  | CTypes.C_signed CTypes.I_long => %?12
-	  | CTypes.C_signed CTypes.I_long_long => %?13
-	  | CTypes.C_PTR => %?14
-	  | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
-	  | CTypes.C_STRUCT l => ?21 $ [list ctype l]
-	  | CTypes.C_UNION l => ?22 $ [list ctype l]
-    end
-
-    fun ccall_type t =
-    let val op $ = PU.$ CCALL_TYPE
-    in  case t of
-          P.CCI32 => "\000" $ []
-        | P.CCI64 => "\001" $ []
-        | P.CCR64 => "\002" $ []
-        | P.CCML  => "\003" $ []
-    end
-
-    fun ccall_info { c_proto = { conv, retTy, paramTys },
-		     ml_args, ml_res_opt, reentrant } = let
-	val op $ = PU.$ CCI
-    in
-	"C" $ [string conv, ctype retTy, list ctype paramTys,
-	       list ccall_type ml_args, option ccall_type ml_res_opt,
-               bool reentrant
-              ]
-    end
 
     fun primop p = let
 	val op $ = PU.$ PO
@@ -687,7 +689,7 @@ in
 	and dtypeInfo x = let
 	    val op $ = PU.$ DTI
 	    fun dti_raw (ss, family, freetycs) =
-		"a" $ [list stamp (Vector.foldr (op ::) [] ss),
+		"a" $ [list stamp (Vector.toList ss),
 		       dtFamily family, list tycon freetycs]
 	in
 	    share (DTs (Vector.sub (#1 x, 0))) dti_raw x
@@ -696,8 +698,7 @@ in
 	and dtFamily x = let
 	    val op $ = PU.$ DTF
 	    fun dtf_raw { mkey, members, properties } =
-		"b" $ [stamp mkey,
-		       list dtmember (Vector.foldr (op ::) [] members)]
+		"b" $ [stamp mkey, list dtmember (Vector.toList members)]
 	in
 	    share (MBs (#mkey x)) dtf_raw x
 	end
