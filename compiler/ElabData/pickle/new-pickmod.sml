@@ -66,10 +66,8 @@ signature PICKMOD = sig
 	  exportLvars: LambdaVar.lvar list, hasExports: bool }
 end
 
-local
-    functor MapFn = RedBlackMapFn
-in
-  structure PickMod :> PICKMOD = struct
+structure PickMod :> PICKMOD =
+  struct
 
     datatype context
       = INITIAL of ModuleId.tmap
@@ -482,15 +480,16 @@ in
             | P.PURE{oper, kind} => "\002" $ [pureop oper, numkind kind]
             | P.CMP{oper, kind} => "\003" $ [cmpop oper, numkind kind]
             | P.PRIM p => "\004" $ [commonop p]
+          (* end case *)
         end
 
     fun consig arg = let
 	val op $ = PU.$ CS
 	fun cs (A.CSIG (i, j)) = "S" $ [int i, int j]
 	  | cs A.CNIL = "N" $ []
-    in
-	cs arg
-    end
+        in
+	  cs arg
+        end
 
     fun mkAccess { lvar, isLocalPid } = let
 	val op $ = PU.$ A
@@ -518,9 +517,9 @@ in
 	  | conrep A.LISTNIL = "H" $ []
 	  | conrep (A.SUSP NONE) = "I" $ []
 	  | conrep (A.SUSP (SOME (a, b))) = "J" $ [access a, access b]
-    in
-	{ access = access, conrep = conrep }
-    end
+        in
+	  { access = access, conrep = conrep }
+        end
 
     (* the environment pickler *)
     fun envPickler registerLvar context = let
@@ -1148,4 +1147,3 @@ in
 	  exportLvars = rev lvars, hasExports = hasExports }
     end
   end
-end

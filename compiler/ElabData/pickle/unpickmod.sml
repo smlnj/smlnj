@@ -286,7 +286,7 @@ structure UnpickMod : UNPICKMOD = struct
               | po #"\004" = P.PRIM CP.SUBSCRIPTV
               | po #"\005" = P.INLINE InlP.SUBSCRIPT
               | po #"\006" = P.INLINE InlP.SUBSCRIPTV
-              | po #"\007" = P.INLINE InlP.P.INLMKARRAY
+              | po #"\007" = P.INLINE InlP.MKARRAY
               | po #"\008" = P.PRIM CP.PTREQL
               | po #"\009" = P.PRIM CP.PTRNEQ
               | po #"\010" = P.PRIM CP.POLYEQL
@@ -296,7 +296,6 @@ structure UnpickMod : UNPICKMOD = struct
               | po #"\014" = P.PRIM CP.LENGTH
               | po #"\015" = P.PRIM CP.OBJLENGTH
               | po #"\016" = P.PRIM CP.CAST
-              | po #"\017" = P.PRIM CP.MARKEXN
               | po #"\018" = P.PRIM CP.GETHDLR
               | po #"\019" = P.PRIM CP.SETHDLR
               | po #"\020" = P.PRIM CP.GETVAR
@@ -308,7 +307,7 @@ structure UnpickMod : UNPICKMOD = struct
               | po #"\026" = P.PRIM CP.DEREF
               | po #"\027" = P.PRIM CP.ASSIGN
               | po #"\028" = P.PRIM CP.UPDATE
-              | po #"\029" = P.PRIM CP.INLUPDATE
+              | po #"\029" = P.INLINE InlP.UPDATE
               | po #"\030" = P.PRIM CP.UNBOXEDUPDATE
               | po #"\031" = P.PRIM CP.GETTAG
               | po #"\032" = P.PRIM CP.MKSPECIAL
@@ -336,6 +335,15 @@ structure UnpickMod : UNPICKMOD = struct
               | po #"\054" = P.PRIM CP.WORD_TO_CPTR
               | po #"\055" = P.INLINE InlP.HOST_WORD_SIZE
               | po #"\056" = P.INLINE InlP.HOST_BIG_ENDIAN
+                (* new bitops *)
+              | po #"\057" = P.INLINE(InlP.CNTZ(numkind ()))
+              | po #"\058" = P.INLINE(InlP.CNTO(numkind ()))
+              | po #"\059" = P.INLINE(InlP.CNTLZ(numkind ()))
+              | po #"\060" = P.INLINE(InlP.CNTLO(numkind ()))
+              | po #"\061" = P.INLINE(InlP.CNTTZ(numkind ()))
+              | po #"\062" = P.INLINE(InlP.CNTTO(numkind ()))
+              | po #"\063" = P.INLINE(InlP.IS_POW2(numkind ()))
+              | po #"\064" = P.INLINE(InlP.CEIL_LOG2(numkind ()))
               | po #"\080" = P.ARITH{ oper = arithop (), sz = int () }
 	      | po #"\081" = P.PURE{ oper = pureop (), kind = numkind () }
 	      | po #"\082" = P.CMP{ oper = cmpop (), kind = numkind () }
@@ -352,11 +360,15 @@ structure UnpickMod : UNPICKMOD = struct
 	      | po #"\093" = P.INLINE(InlP.LSHIFT(numkind ()))
 	      | po #"\094" = P.INLINE(InlP.RSHIFT(numkind ()))
 	      | po #"\095" = P.INLINE(InlP.RSHIFTL(numkind ()))
-	      | po #"\096" = P.REAL_TO_INT { floor = bool (), from = int (), to = int () }
-	      | po #"\097" = P.INT_TO_REAL { from = int (), to = int ()}
-	      | po #"\098" = P.NUMSUBSCRIPT (numkind ())
-	      | po #"\099" = P.NUMSUBSCRIPTV (numkind ())
-	      | po #"\100" = P.NUMUPDATE (numkind ())
+	      | po #"\096" = P.PRIM(CP.REAL_TO_INT{
+                  floor = bool (), from = int (), to = int ()
+                })
+	      | po #"\097" = P.PRIM(CP.INT_TO_REAL{
+                  from = int (), to = int ()
+                })
+	      | po #"\098" = P.PRIM(CP.NUMSUBSCRIPT(numkind ()))
+	      | po #"\099" = P.PRIM(CP.NUMSUBSCRIPTV(numkind ()))
+	      | po #"\100" = P.PRIM(CP.NUMUPDATE(numkind ()))
 	      | po #"\101" = P.INLINE(InlP.NUMSUBSCRIPT(numkind ()))
 	      | po #"\102" = P.INLINE(InlP.NUMSUBSCRIPTV(numkind ()))
 	      | po #"\103" = P.INLINE(InlP.NUMUPDATE(numkind ()))
@@ -365,7 +377,7 @@ structure UnpickMod : UNPICKMOD = struct
 	      | po #"\106" = P.PRIM(CP.RAW_LOAD(numkind ()))
 	      | po #"\107" = P.PRIM(CP.RAW_STORE(numkind ()))
 	      | po #"\108" = P.PRIM(CP.RAW_CCALL(SOME (ccall_info ())))
-	      | po #"\109" = P.PRIM(CP.RAW_RECORD{ align64 = bool () })
+	      | po #"\109" = P.PRIM(CP.RAW_RECORD{align = if bool() then 64 else 32})
 	      | po #"\110" = P.INLINE(InlP.MIN(numkind ()))
 	      | po #"\111" = P.INLINE(InlP.MAX(numkind ()))
 	      | po #"\112" = P.INLINE(InlP.ABS(numkind ()))

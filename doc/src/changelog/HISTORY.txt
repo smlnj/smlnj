@@ -105,6 +105,14 @@ Here is an update to the entry
 //== Recent updates
 
 //--------------------------------------------------------------------
+[2026-06-07]::
+Refactor the representation of primops so that the invariants about which
+primops are valid in which IRs are more strictly enforced.  Have also added
+inline primops for the new bitops (counting bits, etc.)
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-06-04]::
 Add specialized code to support the printing of reals in the REPL,
 which fixes {legacy-issue-base}/330[Legacy Issue 330 (REPL should always
