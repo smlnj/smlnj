@@ -467,7 +467,7 @@ structure PickMod :> PICKMOD =
             | P.INLINE(InlP.CNTTO kind) => ?62 $ [numkind kind]
             | P.INLINE(InlP.IS_POW2 kind) => ?63 $ [numkind kind]
             | P.INLINE(InlP.CEIL_LOG2 kind) => ?64 $ [numkind kind]
-            | _ => raise Fail(concat["unexpected primop '", P.toString p, "'"])
+            | _ => bug(concat["unexpected primop '", P.toString p, "'"])
           (* end case *)
         end
 
@@ -1031,6 +1031,7 @@ structure PickMod :> PICKMOD =
           | binding (B.FIXbind x) = "8" $ [fixity x]
 
         fun env e = let
+(*DEBUG*)val _ = print "# PickMod.envPickler.env\n"
             val syms = ListMergeSort.uniqueSort symCmp (StaticEnv.symbols e)
             val pairs = map (fn s => (s, StaticEnv.look (e, s))) syms
             in
@@ -1041,6 +1042,7 @@ structure PickMod :> PICKMOD =
         end (* envPickler *)
 
     fun pickleEnv context e = let
+(*DEBUG*)val _ = print "# PickMod.pickleEnv\n"
         val lvlist = ref []
         fun registerLvar v = lvlist := v :: !lvlist
         val pickler = envPickler registerLvar context
