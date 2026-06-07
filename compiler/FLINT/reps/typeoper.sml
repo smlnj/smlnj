@@ -221,7 +221,38 @@ fun tagInt i = INT{ival = IntInf.fromInt i, ty = Target.defaultIntSz}
  *                      TYPED INTERPRETATION OF UNTAGGED                    *
  ****************************************************************************)
 
-(** tc is of kind Omega; this function tests whether tc can be a tagged int ? *)
+(** tc is of kind Omega; this function tests whether tc can be a tagged int ?
+ *    YES: some inhabitants of the type `tc` may be represented as a tagged
+ *      integer. Therefore, when this type is given an UNTAGGED representation
+ *      in a datatype: e.g. datatype t = A | B of tc, where A is represented by
+ *      a constant, and (B x), by box(x). Pattern matching on (a: t) is compiled
+ *      as (see utgd below):
+ *        if boxed(a) then
+ *          a' = unwrap[tuple[tc]](a)
+ *          x  = select a' 0
+ *        else
+ *          ...
+ *    NO: all inhabitants of type `tc` are represented by pointers, so (B x) as
+ *      defined above is represented by identity(x). Pattern matching on (a: T)
+ *      is compiled as follows:
+ *        if boxed(a) then
+ *          x = unwrap[tc](a)
+ *        else
+ *          ...
+ *    MAYBE(runtime_type_code): this cannot be decided statically, so the cases
+ *      are selected based on a runtime type code.
+ *        if boxed(a) then
+ *          x =
+ *            if runtime_type_code = tcode_void then
+ *              .. YES branch ..
+ *            else
+ *              .. NO branch ..
+ *        else
+ *          ..
+ * This function must adhere to the logic of ConRep.infer
+ * (compiler/ElabData/types/conrep.sml).
+ *                                                                         -BZ
+ * *)
 fun tcTag (kenv, tc) =
   let fun loop x =     (* a lot of approximations in this function *)
 	(case (LK.tc_whnm_out x)
@@ -235,7 +266,7 @@ fun tcTag (kenv, tc) =
 	   | (LT.TC_FIX _) => YES
 	   | (LT.TC_APP(tx, _)) =>
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _ | LT.TC_NVAR _) =>
 		       MAYBE (tcLexp kenv x)
 		   | _ => YES)
 	   | _ => (MAYBE (tcLexp kenv x)))

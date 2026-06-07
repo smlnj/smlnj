@@ -105,6 +105,31 @@ Here is an update to the entry
 //== Recent updates
 
 //--------------------------------------------------------------------
+[2026-06-04]::
+Add specialized code to support the printing of reals in the REPL,
+which fixes {legacy-issue-base}/330[Legacy Issue 330 (REPL should always
+print reals as valid SML real literals)].  This code should be
+forward-compatible with 32-bit reals, since it works by converting
+`IEEEReal.decimal_approx` values to strings.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026/04/28]::
+Fixed a long-standing FLINT representation-analysis bug for untagged,
+polymorphic values. The `tcTag` function in `FLINT/reps/typeoper.sml`
+handled de-Bruijn-indexed type variables (`LT.TC_VAR`) but not named
+type variables (`LT.TC_NVAR`). Since `deb2name` runs before `reify`,
+type variables had already been converted back to named variables,
+causing FLINT to incorrectly omit some representation coercions.
++
+This change fixes issues {legacy-issue-base}/353[legacy/#353] and
+{legacy-issue-base}/368[legacy/#368]. See {pull-base}/345[Pull Request
+#345 (Fix missing case in FLINT/reify)] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2026-04-24]::
 Changed `PEqual.test` (`FLINT/trans/pequal.sml`) to always defer to
 the underlying concrete type when handling abstract types.  This change
@@ -172,6 +197,9 @@ in the REPL.  This change addresses Issue #335 (REPL should always
 print reals as valid SML real literals).  Note, we might want to
 eventually implement something more specialized, since values like
 `1.2` are rendered using scientific notation (_i.e._, `0.12E1`).
++
+*NOTE:* a better fix for this issue was ported from the legacy
+branch on 2026-06-04.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
