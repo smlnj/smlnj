@@ -138,7 +138,6 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
     fun mapBranch p = (case p
 	   of AP.BOXED => P.BOXED
 	    | AP.UNBOXED => P.UNBOXED
-(* TODO: expand FSGN using the same technique as REAL_TO_BITS *)
 	    | AP.FSGN sz => P.FSGN sz
 	    | AP.CMP stuff => cmpop stuff
 	    | AP.PTREQL => P.PEQL
