@@ -334,6 +334,8 @@ structure InlineT =
 	val chkRshift : word8 * word -> word8	= InLine.word8_rshift
 	val chkRshiftl : word8 * word -> word8	= InLine.word8_rshiftl
 	val chkLshift : word8 * word -> word8	= w8adapt InLine.word8_lshift
+        val rotateR : word8 * word -> word8     = InLine.word8_rotr
+        val rotateL : word8 * word -> word8     = InLine.word8_rotl
 	end (* local *)
 
 	val min     : word8 * word8 -> word8 = InLine.word8_min
@@ -378,6 +380,8 @@ structure InlineT =
 	val chkRshift  : word32 * word -> word32 = InLine.word32_rshift
 	val chkRshiftl : word32 * word -> word32 = InLine.word32_rshiftl
 	val chkLshift  : word32 * word -> word32 = w32adapt InLine.word32_lshift
+        val rotateR : word32 * word -> word32   = InLine.word32_rotr
+        val rotateL : word32 * word -> word32   = InLine.word32_rotl
 	end (* local *)
 
         val min     : word32 * word32 -> word32  = InLine.word32_min

@@ -77,4 +77,8 @@ structure Word64Imp : sig
 
     val popCount = W64PopCount.popCount
 
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = W64.rotateL
+    val rotateR = W64.rotateR
+
   end

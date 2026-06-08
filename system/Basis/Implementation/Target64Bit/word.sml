@@ -79,4 +79,8 @@ structure WordImp : WORD =
 
     fun popCount w = W64PopCount.popCount (Word.toLarge w)
 
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = Word.rotateL
+    val rotateR = Word.rotateR
+
   end  (* structure WordImp *)

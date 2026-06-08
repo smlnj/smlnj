@@ -67,4 +67,8 @@ structure Word32Imp : WORD =
 
     val popCount = W32PopCount.popCount
 
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = W32.rotateL
+    val rotateR = W32.rotateR
+
   end  (* structure Word32 *)

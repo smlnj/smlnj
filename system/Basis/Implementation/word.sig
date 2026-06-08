@@ -71,4 +71,26 @@ signature WORD_2016 =
 
   end
 
-signature WORD = WORD_2016
+signature WORD_2026 =
+  sig
+    include WORD_2004
+
+    val rotateL : word * Word.word -> word
+    val rotateR : word * Word.word -> word
+(* TODO *
+    val countZeros : word -> int
+    val countOnes : word -> int
+
+    val countLeadingZeros : word -> int
+    val countLeadingOnes : word -> int
+
+    val countTrailingZeros : word -> int
+    val countTrailingOnes : word -> int
+
+    val isPowerOf2 : word -> bool
+    val ceilLog2 : word -> Word.word
+*)
+
+  end
+
+signature WORD = WORD_2026
