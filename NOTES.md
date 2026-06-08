@@ -25,7 +25,7 @@ The following steps were taken to make the changes
   ```
 
 * tag this check point
-  ```console
+  ``` console
   git tag -a rm-raw64-tag -m "tag_raw64 removed from compiler"
   git push origin tag rm-raw64-tag
   ```
@@ -34,7 +34,7 @@ The following steps were taken to make the changes
   can only be done once we have binfiles that do not use that descriptor tag.
 
 * tag this check point
-  ```console
+  ``` console
   git tag -a rm-runtime-raw64-tag -m "tag_raw64 removed from runtime system"
   git push origin tag rm-runtime-raw64-tag
   ```
