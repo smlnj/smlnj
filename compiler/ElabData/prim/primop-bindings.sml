@@ -123,6 +123,7 @@ structure PrimopBindings : sig
 	  val nk = P.UINT sz
 	  val w_w = ar(wty, wty)
 	  val w_i = ar(wty, BT.intTy)
+	  val w_b = ar(wty, BT.boolTy)
 	  val ww_w = ar(tup[wty, wty], wty)
 	  val shftTy = ar(tup[wty, BT.wordTy], wty)
 	  val ww_b = ar(tup[wty, wty], BT.boolTy)
@@ -156,10 +157,12 @@ structure PrimopBindings : sig
  * a single form?.  Also, we can implement "count leading ones" etc. as an inline
  * primop that logically negates its argument.
  *)
-	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLO nk)) :-:
 	    mk("cnt_leading_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
-	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTTO nk)) :-:
 	    mk("cnt_trailing_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+            mk("is_pow2", w_b, P.INLINE(InlP.IS_POW2 nk)) :-:
+            mk("ceil_log2", ar(wty, BT.wordTy), P.INLINE(InlP.CEIL_LOG2 nk)) :-:
 	    shift("rotl", P.PURE{oper=PureP.ROTL, kind=nk}) :-:
 	    shift("rotr", P.PURE{oper=PureP.ROTR, kind=nk}) :-:
 	    cmp("lt", CmpP.LT) :-:
