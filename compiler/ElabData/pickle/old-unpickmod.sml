@@ -146,10 +146,8 @@ structure UnpickMod : UNPICKMOD = struct
         val accM = UU.mkMap ()
         val crM = UU.mkMap ()
         val csM = UU.mkMap ()
-        val nkM = UU.mkMap ()                   (* numkind *)
-        val inlM = UU.mkMap ()                  (* inline primops *)
-        val comM = UU.mkMap ()                  (* common primops *)
-        val poM = UU.mkMap ()                   (* primops *)
+        val nkM = UU.mkMap ()
+        val poM = UU.mkMap ()
         val boolListM = UU.mkMap ()
         val boolOptionM = UU.mkMap ()
         val tkindM = UU.mkMap ()
@@ -201,6 +199,29 @@ structure UnpickMod : UNPICKMOD = struct
               share csM cs
             end
 
+        fun numkind () = let
+            fun nk #"A" = P.INT (int ())
+              | nk #"B" = P.UINT (int ())
+              | nk #"C" = P.FLOAT (int ())
+              | nk _ = raise Format
+            in
+              share nkM nk
+            end
+
+        local
+          fun operator tbl = let
+                fun rator c =
+                      Vector.sub (tbl, Char.ord c)
+                        handle General.Subscript => raise Format
+                in
+                  fn () => nonshare rator
+                end
+        in
+        val arithop = operator arithop_table
+        val pureop = operator pureop_table
+        val cmpop = operator cmpop_table
+        end (* local *)
+
         fun ctype () = let
             fun ct #"\020" = CTypes.C_ARRAY (ctype (), int ())
               | ct #"\021" = CTypes.C_STRUCT (ctypelist ())
@@ -240,140 +261,116 @@ structure UnpickMod : UNPICKMOD = struct
               share cciM cp
             end
 
-        fun numkind () = let
-            fun nk #"A" = P.INT (int ())
-              | nk #"B" = P.UINT (int ())
-              | nk #"C" = P.FLOAT (int ())
-              | nk _ = raise Format
-            in
-              share nkM nk
-            end
-
-        fun inlineop () = let
-            fun inl #"\000" = InlP.DIV(numkind())
-              | inl #"\001" = InlP.MOD(numkind())
-              | inl #"\002" = InlP.QUOT(numkind())
-              | inl #"\003" = InlP.REM(numkind())
-              | inl #"\004" = InlP.LSHIFT(numkind())
-              | inl #"\005" = InlP.RSHIFT(numkind())
-              | inl #"\006" = InlP.RSHIFTL(numkind())
-              | inl #"\007" = InlP.CNTZ(numkind())
-              | inl #"\008" = InlP.CNTO(numkind())
-              | inl #"\009" = InlP.CNTLZ(numkind())
-              | inl #"\010" = InlP.CNTLO(numkind())
-              | inl #"\011" = InlP.CNTTZ(numkind())
-              | inl #"\012" = InlP.CNTTO(numkind())
-              | inl #"\013" = InlP.IS_POW2(numkind())
-              | inl #"\014" = InlP.CEIL_LOG2(numkind())
-              | inl #"\015" = InlP.MIN(numkind())
-              | inl #"\016" = InlP.MAX(numkind())
-              | inl #"\017" = InlP.ABS(numkind())
-              | inl #"\018" = InlP.CHR
-              | inl #"\019" = InlP.MKARRAY
-              | inl #"\020" = InlP.SUBSCRIPT
-              | inl #"\021" = InlP.SUBSCRIPTV
-              | inl #"\022" = InlP.UPDATE
-              | inl #"\023" = InlP.UNBOXEDUPDATE
-              | inl #"\024" = InlP.NUMSUBSCRIPT(numkind())
-              | inl #"\025" = InlP.NUMSUBSCRIPTV(numkind())
-              | inl #"\026" = InlP.NUMUPDATE(numkind())
-              | inl #"\027" = InlP.NOT
-              | inl #"\028" = InlP.COMPOSE
-              | inl #"\029" = InlP.BEFORE
-              | inl #"\030" = InlP.IGNORE
-              | inl #"\031" = InlP.IDENTITY
-              | inl #"\032" = InlP.HOST_WORD_SIZE
-              | inl #"\033" = InlP.HOST_BIG_ENDIAN
-              | inl _ = raise Format
-            in
-              share inlM inl
-            end
-
-        local
-          fun operator tbl = let
-                fun rator c =
-                      Vector.sub (tbl, Char.ord c)
-                        handle General.Subscript => raise Format
-                in
-                  fn () => nonshare rator
-                end
-        in
-        val arithop = operator arithop_table
-        val pureop = operator pureop_table
-        val cmpop = operator cmpop_table
-        end (* local *)
-
-        fun commonop () = let
-            fun fromto oper = oper(int(), int())
-            fun cop #"\000" = CP.FSGN(int())
-              | cop #"\001" = fromto CP.TESTU
-              | cop #"\002" = fromto CP.TEST
-              | cop #"\003" = fromto CP.TRUNC
-              | cop #"\004" = fromto CP.EXTEND
-              | cop #"\005" = fromto CP.COPY
-              | cop #"\006" = CP.TEST_INF(int())
-              | cop #"\007" = CP.TRUNC_INF(int())
-              | cop #"\008" = CP.EXTEND_INF(int())
-              | cop #"\009" = CP.COPY_INF(int())
-              | cop #"\010" = CP.REAL_TO_INT{floor=bool(), from=int(), to=int()}
-              | cop #"\011" = CP.INT_TO_REAL{from=int(), to=int()}
-              | cop #"\012" = CP.NUMSUBSCRIPT(numkind())
-              | cop #"\013" = CP.NUMSUBSCRIPTV(numkind())
-              | cop #"\014" = CP.NUMUPDATE(numkind())
-              | cop #"\015" = CP.SUBSCRIPT
-              | cop #"\016" = CP.SUBSCRIPTV
-              | cop #"\017" = CP.UPDATE
-              | cop #"\018" = CP.UNBOXEDUPDATE
-              | cop #"\019" = CP.LENGTH
-              | cop #"\020" = CP.PTREQL
-              | cop #"\021" = CP.PTRNEQ
-              | cop #"\022" = CP.POLYEQL
-              | cop #"\023" = CP.POLYNEQ
-              | cop #"\024" = CP.BOXED
-              | cop #"\025" = CP.UNBOXED
-              | cop #"\026" = CP.CAST
-              | cop #"\027" = CP.REAL_TO_BITS(int())
-              | cop #"\028" = CP.BITS_TO_REAL(int())
-              | cop #"\029" = CP.GETHDLR
-              | cop #"\030" = CP.SETHDLR
-              | cop #"\031" = CP.GETVAR
-              | cop #"\032" = CP.SETVAR
-              | cop #"\033" = CP.CALLCC
-              | cop #"\034" = CP.CAPTURE
-              | cop #"\035" = CP.THROW
-              | cop #"\036" = CP.ISOLATE
-              | cop #"\037" = CP.MAKEREF
-              | cop #"\038" = CP.DEREF
-              | cop #"\039" = CP.ASSIGN
-              | cop #"\040" = CP.UNBOXEDASSIGN
-              | cop #"\041" = CP.OBJLENGTH
-              | cop #"\042" = CP.GETTAG
-              | cop #"\043" = CP.MKSPECIAL
-              | cop #"\044" = CP.SETSPECIAL
-              | cop #"\045" = CP.GETSPECIAL
-              | cop #"\046" = CP.NEW_ARRAY0
-              | cop #"\047" = CP.GET_SEQ_DATA
-              | cop #"\048" = CP.SUBSCRIPT_REC
-              | cop #"\049" = CP.SUBSCRIPT_RAW64
-              | cop #"\050" = CP.CPTR_TO_WORD
-              | cop #"\051" = CP.WORD_TO_CPTR
-              | cop #"\052" = CP.RAW_LOAD(numkind())
-              | cop #"\053" = CP.RAW_STORE(numkind())
-              | cop #"\054" = CP.RAW_CCALL NONE
-              | cop #"\055" = CP.RAW_CCALL(SOME(ccall_info()))
-              | cop #"\056" = CP.RAW_RECORD{align=int()}
-              | cop _ = raise Format
-            in
-              share comM cop
-            end
-
         fun primop () = let
-            fun po #"\000" = P.INLINE(inlineop())
-              | po #"\001" = P.ARITH{ oper = arithop (), sz = int () }
-              | po #"\002" = P.PURE{ oper = pureop (), kind = numkind () }
-              | po #"\003" = P.CMP{ oper = cmpop (), kind = numkind () }
-              | po #"\004" = P.PRIM(commonop())
-              | po _ = raise Format
+            fun po #"\000" = raise Fail "MKETAG is deprecated"
+              | po #"\001" = raise Fail "P.WRAP is deprecated"
+              | po #"\002" = raise Fail "P.UNWRAP is deprecated"
+              | po #"\003" = P.PRIM CP.SUBSCRIPT
+              | po #"\004" = P.PRIM CP.SUBSCRIPTV
+              | po #"\005" = P.INLINE InlP.SUBSCRIPT
+              | po #"\006" = P.INLINE InlP.SUBSCRIPTV
+              | po #"\007" = P.INLINE InlP.MKARRAY
+              | po #"\008" = P.PRIM CP.PTREQL
+              | po #"\009" = P.PRIM CP.PTRNEQ
+              | po #"\010" = P.PRIM CP.POLYEQL
+              | po #"\011" = P.PRIM CP.POLYNEQ
+              | po #"\012" = P.PRIM CP.BOXED
+              | po #"\013" = P.PRIM CP.UNBOXED
+              | po #"\014" = P.PRIM CP.LENGTH
+              | po #"\015" = P.PRIM CP.OBJLENGTH
+              | po #"\016" = P.PRIM CP.CAST
+              | po #"\018" = P.PRIM CP.GETHDLR
+              | po #"\019" = P.PRIM CP.SETHDLR
+              | po #"\020" = P.PRIM CP.GETVAR
+              | po #"\021" = P.PRIM CP.SETVAR
+              | po #"\022" = P.PRIM CP.MAKEREF
+              | po #"\023" = P.PRIM CP.CALLCC
+              | po #"\024" = P.PRIM CP.CAPTURE
+              | po #"\025" = P.PRIM CP.THROW
+              | po #"\026" = P.PRIM CP.DEREF
+              | po #"\027" = P.PRIM CP.ASSIGN
+              | po #"\028" = P.PRIM CP.UPDATE
+              | po #"\029" = P.INLINE InlP.UPDATE
+              | po #"\030" = P.PRIM CP.UNBOXEDUPDATE
+              | po #"\031" = P.PRIM CP.GETTAG
+              | po #"\032" = P.PRIM CP.MKSPECIAL
+              | po #"\033" = P.PRIM CP.SETSPECIAL
+              | po #"\034" = P.PRIM CP.GETSPECIAL
+              | po #"\035" = P.INLINE InlP.NOT
+              | po #"\036" = P.INLINE InlP.COMPOSE
+              | po #"\037" = P.INLINE InlP.BEFORE
+              | po #"\038" = raise Fail "INL_ARRAY is deprecated"
+              | po #"\039" = raise Fail "INL_VECTOR is deprecated"
+              | po #"\040" = P.PRIM CP.ISOLATE
+              | po #"\041" = raise Fail "WCAST is deprecated"
+              | po #"\042" = P.PRIM CP.NEW_ARRAY0
+              | po #"\043" = P.PRIM CP.GET_SEQ_DATA
+              | po #"\044" = P.PRIM CP.SUBSCRIPT_REC
+              | po #"\045" = P.PRIM CP.SUBSCRIPT_RAW64
+              | po #"\046" = P.PRIM CP.UNBOXEDASSIGN
+              | po #"\047" = P.PRIM(CP.RAW_CCALL NONE)
+              | po #"\048" = P.INLINE InlP.IGNORE
+              | po #"\049" = P.INLINE InlP.IDENTITY
+              | po #"\050" = P.INLINE InlP.CHR
+              | po #"\051" = raise Fail "INTERN64 is deprecated"
+              | po #"\052" = raise Fail "EXTERN64 is deprecated"
+              | po #"\053" = P.PRIM CP.CPTR_TO_WORD
+              | po #"\054" = P.PRIM CP.WORD_TO_CPTR
+              | po #"\055" = P.INLINE InlP.HOST_WORD_SIZE
+              | po #"\056" = P.INLINE InlP.HOST_BIG_ENDIAN
+                (* new bitops *)
+              | po #"\057" = P.INLINE(InlP.CNTZ(numkind ()))
+              | po #"\058" = P.INLINE(InlP.CNTO(numkind ()))
+              | po #"\059" = P.INLINE(InlP.CNTLZ(numkind ()))
+              | po #"\060" = P.INLINE(InlP.CNTLO(numkind ()))
+              | po #"\061" = P.INLINE(InlP.CNTTZ(numkind ()))
+              | po #"\062" = P.INLINE(InlP.CNTTO(numkind ()))
+              | po #"\063" = P.INLINE(InlP.IS_POW2(numkind ()))
+              | po #"\064" = P.INLINE(InlP.CEIL_LOG2(numkind ()))
+              | po #"\080" = P.ARITH{ oper = arithop (), sz = int () }
+              | po #"\081" = P.PURE{ oper = pureop (), kind = numkind () }
+              | po #"\082" = P.CMP{ oper = cmpop (), kind = numkind () }
+              | po #"\083" = P.PRIM(CP.FSGN(int ()))
+              | po #"\084" = P.PRIM(CP.TEST(int (), int ()))
+              | po #"\085" = P.PRIM(CP.TESTU(int (), int ()))
+              | po #"\086" = P.PRIM(CP.TRUNC(int (), int ()))
+              | po #"\087" = P.PRIM(CP.EXTEND(int (), int ()))
+              | po #"\088" = P.PRIM(CP.COPY(int (), int ()))
+              | po #"\089" = P.INLINE(InlP.DIV(numkind ()))
+              | po #"\090" = P.INLINE(InlP.MOD(numkind ()))
+              | po #"\091" = P.INLINE(InlP.QUOT(numkind ()))
+              | po #"\092" = P.INLINE(InlP.REM(numkind ()))
+              | po #"\093" = P.INLINE(InlP.LSHIFT(numkind ()))
+              | po #"\094" = P.INLINE(InlP.RSHIFT(numkind ()))
+              | po #"\095" = P.INLINE(InlP.RSHIFTL(numkind ()))
+              | po #"\096" = P.PRIM(CP.REAL_TO_INT{
+                  floor = bool (), from = int (), to = int ()
+                })
+              | po #"\097" = P.PRIM(CP.INT_TO_REAL{
+                  from = int (), to = int ()
+                })
+              | po #"\098" = P.PRIM(CP.NUMSUBSCRIPT(numkind ()))
+              | po #"\099" = P.PRIM(CP.NUMSUBSCRIPTV(numkind ()))
+              | po #"\100" = P.PRIM(CP.NUMUPDATE(numkind ()))
+              | po #"\101" = P.INLINE(InlP.NUMSUBSCRIPT(numkind ()))
+              | po #"\102" = P.INLINE(InlP.NUMSUBSCRIPTV(numkind ()))
+              | po #"\103" = P.INLINE(InlP.NUMUPDATE(numkind ()))
+              | po #"\104" = raise Fail "INL_MONOARRAY is deprecated"
+              | po #"\105" = raise Fail "INL_MONOVECTOR is deprecated"
+              | po #"\106" = P.PRIM(CP.RAW_LOAD(numkind ()))
+              | po #"\107" = P.PRIM(CP.RAW_STORE(numkind ()))
+              | po #"\108" = P.PRIM(CP.RAW_CCALL(SOME (ccall_info ())))
+              | po #"\109" = P.PRIM(CP.RAW_RECORD{align = if bool() then 64 else 32})
+              | po #"\110" = P.INLINE(InlP.MIN(numkind ()))
+              | po #"\111" = P.INLINE(InlP.MAX(numkind ()))
+              | po #"\112" = P.INLINE(InlP.ABS(numkind ()))
+              | po #"\113" = P.PRIM(CP.TEST_INF(int ()))
+              | po #"\114" = P.PRIM(CP.TRUNC_INF(int ()))
+              | po #"\115" = P.PRIM(CP.EXTEND_INF(int ()))
+              | po #"\116" = P.PRIM(CP.COPY_INF(int ()))
+              | po #"\117" = P.PRIM(CP.REAL_TO_BITS(int ()))
+              | po #"\118" = P.PRIM(CP.BITS_TO_REAL(int ()))
+              | po c = raise Format
             in
               share poM po
             end

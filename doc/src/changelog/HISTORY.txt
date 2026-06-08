@@ -106,6 +106,13 @@ Here is an update to the entry
 
 //--------------------------------------------------------------------
 [2026-06-07]::
+Updated `ElabData/pickle/pickmod.sml` and `ElabData/pickle/unpickmod.sml`
+to match the new structure of the primitive-operator datatypes.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-06-07]::
 Refactor the representation of primops so that the invariants about which
 primops are valid in which IRs are more strictly enforced.  Have also added
 inline primops for the new bitops (counting bits, etc.)
