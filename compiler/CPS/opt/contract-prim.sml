@@ -96,7 +96,8 @@ structure ContractPrim : sig
     local
       val tt = {sz = Target.defaultIntSz, tag = true}
     in
-    fun tagInt n = NUM{ival = IntInf.fromInt n, ty = tt}
+    fun tagInt' n = NUM{ival = n, ty = tt}
+    fun tagInt n = tagInt'(IntInf.fromInt n)
     end
 
   (* get the size of an integer operation *)
@@ -407,7 +408,7 @@ structure ContractPrim : sig
                 val n = ival mod sz'
                 in
                   if (n = 0) then Val v
-                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else if (sz' <> n) then Pure(p, [v, tagInt' n])
                   else None
                 end
             (***** ROTR *****)
@@ -419,7 +420,7 @@ structure ContractPrim : sig
                 val n = ival mod sz'
                 in
                   if (n = 0) then Val v
-                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else if (sz' <> n) then Pure(p, [v, tagInt' n])
                   else None
                 end
             (***** PURE_NUMSUBSCRIPT *****)
