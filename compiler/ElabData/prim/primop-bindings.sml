@@ -154,14 +154,13 @@ structure PrimopBindings : sig
 	    mk("cnt_zeros", w_i, P.INLINE(InlP.CNTZ nk)) :-:
 (* QUESTION: do we want separate "inline" versions of the bit counting operators
  * that check for zero and a "raw" version that doesn't, or are we good with
- * a single form?.  Also, we can implement "count leading ones" etc. as an inline
- * primop that logically negates its argument.
+ * a single form?.
  *)
 	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLO nk)) :-:
 	    mk("cnt_leading_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
 	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTTO nk)) :-:
 	    mk("cnt_trailing_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
-            mk("is_pow2", w_b, P.INLINE(InlP.IS_POW2 nk)) :-:
+            mk("is_pow2", w_b, P.PRIM(CP.IS_POW2 sz)) :-:
             mk("ceil_log2", ar(wty, BT.wordTy), P.INLINE(InlP.CEIL_LOG2 nk)) :-:
 	    shift("rotl", P.PURE{oper=PureP.ROTL, kind=nk}) :-:
 	    shift("rotr", P.PURE{oper=PureP.ROTR, kind=nk}) :-:

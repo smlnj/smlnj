@@ -135,11 +135,11 @@ structure ValueNumbering : sig
             | toCode P.CNTPOP = 13
             | toCode P.CNTLZ  = 14
             | toCode P.CNTTZ = 15
-            | toCode P.ROTL = 16
-            | toCode P.ROTR = 17
-            | toCode P.FDIV = 18
-            | toCode P.FABS = 19
-            | toCode P.FSQRT = 20
+            | toCode P.ROTL = 17
+            | toCode P.ROTR = 18
+            | toCode P.FDIV = 19
+            | toCode P.FABS = 20
+            | toCode P.FSQRT = 21
           in
             cmpCode(toCode op1, toCode op2)
           end
@@ -334,6 +334,7 @@ structure ValueNumbering : sig
               | (P.FCMP{oper=cmp1, size=n1}, P.FCMP{oper=cmp2, size=n2}) =>
                   (cmp1 = cmp2) andalso (n1 = n2)
               | (P.FSGN n1, P.FSGN n2) => (n1 = n2)
+              | (P.IS_POW2 n1, P.IS_POW2 n2) => (n1 = n2)
               | (P.BOXED, P.BOXED) => true
               | (P.UNBOXED, P.UNBOXED) => true
               | (P.PEQL, P.PEQL) => true

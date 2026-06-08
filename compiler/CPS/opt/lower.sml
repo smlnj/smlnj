@@ -26,6 +26,8 @@
  *
  *      - replace `ROTL` and `ROTR` operations on tagged words with shifts
  *
+ *      - lower `IS_POW2`
+ *
  * Note that the bulk of the work is actually done in other modules; this
  * module is responsible for detecting places where things need transforming.
  *)
@@ -75,6 +77,8 @@ structure LowerCPS : sig
 		  | cexp (C.BRANCH(P.STREQL lit, [s], _, e1, e2)) =
 		      StrEqlCnv.strEql (s, lit, cexp e1, cexp e2)
 		  | cexp (C.BRANCH(P.STREQL _, _, _, _, _)) = bug "bogus STREQL"
+		  | cexp (C.BRANCH(P.IS_POW2 sz, [v], _, e1, e2)) =
+                      raise Fail "TODO: IS_POW2"
 		  | cexp (C.BRANCH(b, xl, v, e1, e2)) =
 		      C.BRANCH(b, xl, v, cexp e1, cexp e2)
 		  | cexp (C.SETTER(s, xl, e)) =

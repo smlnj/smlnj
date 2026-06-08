@@ -87,6 +87,7 @@ structure PPCps : PPCPS =
     fun branchToString (P.CMP{oper, kind}) = numkindToString kind ^ cmpopToString oper
       | branchToString (P.FCMP{oper, size}) = numkindToString (P.FLOAT size) ^ fcmpopToString oper
       | branchToString (P.FSGN sz) = numkindToString (P.FLOAT sz) ^ "sgn"
+      | branchToString (P.IS_POW2 sz) = "ispowerof2u" ^ Int.toString sz
       | branchToString P.BOXED = "boxed"
       | branchToString P.UNBOXED = "unboxed"
       | branchToString P.PEQL = "peql"

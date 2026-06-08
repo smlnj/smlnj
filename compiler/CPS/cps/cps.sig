@@ -73,6 +73,7 @@ signature CPS =
 	  = CMP of {oper: cmpop, kind: numkind}
 	  | FCMP of {oper: fcmpop, size: int}
 	  | FSGN of int
+          | IS_POW2 of int
 	  | BOXED | UNBOXED | PEQL | PNEQ
 	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
 	 * the same length as `s` and `s` is not the empty string.

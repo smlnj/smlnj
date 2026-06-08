@@ -40,6 +40,7 @@ structure CommonOps =
       | PTREQL | PTRNEQ                 (* E: pointer equality *)
       | POLYEQL | POLYNEQ               (* E: polymorphic equality *)
       | BOXED | UNBOXED                 (* E: boxity tests *)
+      | IS_POW2 of int                  (* is the argument a power of 2? *)
       | CAST                            (* E: cast *)
       | REAL_TO_BITS of int             (* E: bitcast real of the given size to
                                          * a word of the same size
@@ -128,6 +129,7 @@ structure CommonOps =
               | POLYNEQ => "polyneq"
               | BOXED => "boxed"
               | UNBOXED => "unboxed"
+              | IS_POW2 sz => "is_power_of_two_u" ^ Int.toString sz
               | CAST => "cast"
               | REAL_TO_BITS sz => "real_to_bits_" ^ Int.toString sz
               | BITS_TO_REAL sz => "bits_to_real_" ^ Int.toString sz

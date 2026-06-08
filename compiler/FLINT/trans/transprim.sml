@@ -51,8 +51,8 @@ structure TransPrim : sig
     val lt_tup = LD.ltc_tuple
 
     val lt_int = LB.ltc_int
+    (* the largest fixed-precision int type *)
     val lt_fixed_int = LB.ltc_num Tgt.fixedIntSz
-        (* the largest fixed-precision int type *)
     val lt_bool = LB.ltc_bool
     val lt_unit = LB.ltc_unit
 
@@ -72,6 +72,9 @@ structure TransPrim : sig
 
     val trueLexp = PL.CON(trueDcon', [], unitLexp)
     val falseLexp = PL.CON(falseDcon', [], unitLexp)
+
+    (* make a pure prim expression *)
+    fun pPURE (p, kind, ty, tycs) = PL.PRIM(FP.PURE{oper=p, kind=kind}, ty, tycs)
 
     (* make a comparison prim expression *)
     fun pCMP (tst, kind, ty, tycs) = PL.PRIM(FP.CMP{oper=tst, kind=kind}, ty, tycs)
@@ -249,7 +252,7 @@ structure TransPrim : sig
 		  PL.LET(x, rhs, body(PL.VAR x))
 		end
 	(* make an application to two arguments *)
-	  fun mkApp2 (rator, a, b) = PL.APP(rator, PL.RECORD[a, b])
+	  fun mkApp2 (rator, x, y) = PL.APP(rator, PL.RECORD[x, y])
 	(* if-then-else *)
 	  fun mkCOND (a, b, c) = PL.SWITCH(a, boolsign, [
 		  (PL.DATAcon(trueDcon', [], mkv()), b),
@@ -458,7 +461,6 @@ structure TransPrim : sig
                     | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
                     | InlP.CNTTZ k => raise Fail "TODO: cntTrailingZeros"
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
-                    | InlP.IS_POW2 k => raise Fail "TODO: isPowerOf2"
                     | InlP.CEIL_LOG2 k => raise Fail "TODO: ceilLog2"
                     | InlP.MIN k => inlminmax (k, false)
                     | InlP.MAX k => inlminmax (k, true)
@@ -589,8 +591,8 @@ structure TransPrim : sig
                     | p => bug("bogus inline primop " ^ InlineOps.toString p)
                   (* end case *))
               | PO.ARITH{oper, sz} => PL.PRIM(FP.ARITH{oper=oper, sz=sz}, lt, ts)
-              | PO.PURE{oper, kind} => PL.PRIM(FP.PURE{oper=oper, kind=kind}, lt, ts)
-              | PO.CMP{oper, kind} => PL.PRIM(FP.CMP{oper=oper, kind=kind}, lt, ts)
+              | PO.PURE{oper, kind} => pPURE(oper, kind, lt, ts)
+              | PO.CMP{oper, kind} => pCMP(oper, kind, lt, ts)
               | PO.PRIM p => (case p
                   (* Precision-conversion operations involving IntInf.
                    * These need to be translated specially by providing

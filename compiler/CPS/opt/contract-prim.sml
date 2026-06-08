@@ -603,6 +603,8 @@ structure ContractPrim : sig
                   | PUREinfo(P.WRAP _, _) => SOME true
                   | _ => NONE
                 (* end case *))
+            | cond (P.IS_POW2 _, [i as NUM{ival, ...}]) =
+                SOME((ival <> 0) andalso (IntInf.andb(ival, ival-1) = 0))
             | cond (P.CMP{oper=P.LT, ...}, [VAR v, VAR w]) =
                 if v=w then SOME false else NONE
             | cond (P.CMP{oper=P.LT, kind=P.INT sz}, [NUM i, NUM j]) =

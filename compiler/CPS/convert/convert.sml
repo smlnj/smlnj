@@ -116,9 +116,9 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
    *              UTILITY FUNCTIONS FOR PROCESSING THE PRIMOPS               *
    ***************************************************************************)
 
-  (* cmpop: {oper: FP.cmpop, kind: FP.numkind} -> P.branch *)
-    fun cmpop stuff = (case stuff
-	   of {oper, kind as NK.FLOAT size} => let
+  (* mapBranch:  FP.primop -> P.branch *)
+    fun mapBranch p = (case p
+	   of FP.CMP{oper, kind as NK.FLOAT sz} => let
 		val tst = (case oper
 		      of CompareOps.GT  => P.F_GT
 		       | CompareOps.GTE => P.F_GE
@@ -128,17 +128,12 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 		       | CompareOps.NEQ => P.F_ULG
 		     (* end case *))
 		in
-		  P.FCMP{oper=tst, size=size}
+		  P.FCMP{oper=tst, size=sz}
 		end
-	    | {oper, kind} => P.CMP{oper=oper, kind=kind}
-	  (* end case *))
-
-  (* mapBranch:  FP.primop -> P.branch *)
-    fun mapBranch p = (case p
-	   of FP.CMP stuff => cmpop stuff
+            | FP.CMP{oper, kind} => P.CMP{oper=oper, kind=kind}
 	    | FP.PRIM CP.BOXED => P.BOXED
 	    | FP.PRIM CP.UNBOXED => P.UNBOXED
-(* TODO: expand FSGN using the same technique as REAL_TO_BITS *)
+            | FP.PRIM(CP.IS_POW2 sz) => P.IS_POW2 sz
 	    | FP.PRIM(CP.FSGN sz) => P.FSGN sz
 	    | FP.PRIM CP.PTREQL => P.PEQL
 	    | FP.PRIM CP.PTRNEQ => P.PNEQ
