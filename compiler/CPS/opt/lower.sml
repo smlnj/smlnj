@@ -45,7 +45,6 @@ structure LowerCPS : sig
     fun bug s = ErrorMsg.impossible ("LowerCPS: " ^ s)
 
     val ity = Target.mlValueSz
-    val tty = Target.defaultIntSz
 
     (* support for pure arithmetic operations on words (used in the
      * expansion of ROTL and ROTR on tagged types).
@@ -54,11 +53,11 @@ structure LowerCPS : sig
     fun letPure (oper, sz, args : C.value list, k : C.value -> C.cexp) = let
           val x = LV.mkLvar()
           in
-            C.PURE(pureOp(oper, sz), args, x, C.NUMt{sz = sz, tag = (sz <= tty)},
+            C.PURE(pureOp(oper, sz), args, x, C.NUMt{sz = sz, tag = (sz < ity)},
               k (C.VAR x))
           end
-    fun num (i, sz) = C.NUM{ival = IntInf.fromInt i, ty = {sz = sz, tag = (sz <= tty)} }
-    fun num' (w, sz) = C.NUM{ival = Word.toLargeInt w, ty = {sz = sz, tag = (sz <= tty)} }
+    fun num (i, sz) = C.NUM{ival = IntInf.fromInt i, ty = {sz = sz, tag = (sz < ity)} }
+    fun num' (w, sz) = C.NUM{ival = Word.toLargeInt w, ty = {sz = sz, tag = (sz < ity)} }
 
     fun transform cfun = let
 	  fun function (fk, f, formals, tl, e) = let
@@ -92,7 +91,7 @@ structure LowerCPS : sig
 		  | cexp (C.PURE(P.TRUNC_INF sz, args, v, t, e)) =
 		      IntInfCnv.truncInf (sz, args, v, t, cexp e)
 		  | cexp (C.PURE(p as P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v1, v2], x, t, e)) =
-                      if (sz <= tty)
+                      if (sz < ity)
                         then let
                           (* for rotations of tagged types, we expand to
                            *    `(v1 >> k) | ((v1 & m) << n)`
@@ -117,7 +116,7 @@ structure LowerCPS : sig
                                   rot (v2, num'(k, sz), num'(m, sz))
                                 end
                               | _ =>
-                                letPure (P.REM, sz, [v1, num(sz, sz)], fn n =>
+                                letPure (P.REM, sz, [v2, num(sz, sz)], fn n =>
                                 letPure (P.SUB, sz, [num (sz, sz), n], fn k =>
                                 letPure (P.LSHIFT, sz, [num(1, sz), k], fn tmp =>
                                 letPure (P.SUB, sz, [tmp, num(1, sz)], fn m =>
@@ -127,7 +126,7 @@ structure LowerCPS : sig
                         (* rotations of native words are handled by hardware *)
                         else C.PURE(p, [v1, v2], x, t, cexp e)
 		  | cexp (C.PURE(p as P.PURE_ARITH{oper=P.ROTR, kind=P.UINT sz}, [v1, v2], x, t, e)) =
-                      if (sz <= tty)
+                      if (sz < ity)
                         then let
                           (* for rotations of tagged types, we expand to
                            *    `(v1 >> n) | ((v1 & m) << k)`
@@ -153,7 +152,7 @@ structure LowerCPS : sig
                                   rot (v2, num'(k, sz), num'(m, sz))
                                 end
                               | _ =>
-                                letPure(P.REM, sz, [v1, num (sz, sz)], fn n =>
+                                letPure(P.REM, sz, [v2, num (sz, sz)], fn n =>
                                 letPure (P.SUB, sz, [num (sz, sz), n], fn k =>
                                 letPure (P.LSHIFT, sz, [num(1, sz), n], fn t =>
                                 letPure (P.SUB, sz, [t, num(1, sz)], fn m =>
