@@ -51,7 +51,7 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
     val wordsPerDbl' = IntInf.fromInt wordsPerDbl
 
   (* return true if integers of `sz` bits are represented as tagged values *)
-    fun isTaggedInt sz = (sz <= defaultIntSz)
+    fun isTaggedInt sz = (sz < Target.mlValueSz)
 
   (* normalize an integer size to a native machine-size *)
     fun normSz sz = if isTaggedInt sz then ity else sz

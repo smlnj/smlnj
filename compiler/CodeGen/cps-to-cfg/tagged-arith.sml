@@ -150,8 +150,9 @@ structure TaggedArith : sig
                  * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63
                  *)
                 tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
-            | (ROTL, [v1, v2]) => error [".pure: ROTL not supported on tagged words"]
-            | (ROTR, [v1, v2]) => error [".pure: ROTR not supported on tagged words"]
+            (* NOTE: `CPS/opt/lower.sml` should eliminate the following two cases *)
+            | (ROTL, _) => error [".pure: ROTL not supported on tagged words"]
+            | (ROTR, _) => error [".pure: ROTR not supported on tagged words"]
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 
