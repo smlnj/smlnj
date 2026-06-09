@@ -71,4 +71,18 @@ structure Word32Imp : WORD =
     val rotateL = W32.rotateL
     val rotateR = W32.rotateR
 
+(* TODO:
+    val countZeros : word -> int
+    val countOnes = popCount
+
+    val countLeadingZeros : word -> int
+    val countLeadingOnes : word -> int
+
+    val countTrailingZeros : word -> int
+    val countTrailingOnes : word -> int
+
+    val isPowerOf2 : word -> bool
+    val ceilLog2 = W32.ceilLog2
+*)
+
   end  (* structure Word32 *)

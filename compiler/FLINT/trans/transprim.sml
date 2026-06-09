@@ -79,8 +79,12 @@ structure TransPrim : sig
     (* make a comparison prim expression *)
     fun pCMP (tst, kind, ty, tycs) = PL.PRIM(FP.CMP{oper=tst, kind=kind}, ty, tycs)
 
+    (* default int/word kinds *)
+    val dfltIntKind = PO.INT Tgt.defaultIntSz
+    val dfltWordKind = PO.UINT Tgt.defaultIntSz
+
   (* unsigned comparison on tagged integers used for bounds checking *)
-    val pLESSU = pCMP(CmpP.LT, PO.UINT Tgt.defaultIntSz, lt_icmp, [])
+    val pLESSU = pCMP(CmpP.LT, dfltWordKind, lt_icmp, [])
 
     val lt_len = LD.ltc_poly([LD.tkc_mono], [lt_arw(LB.ltc_tv 0, lt_int)])
     val lt_upd = let
@@ -461,7 +465,20 @@ structure TransPrim : sig
                     | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
                     | InlP.CNTTZ k => raise Fail "TODO: cntTrailingZeros"
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
-                    | InlP.CEIL_LOG2 k => raise Fail "TODO: ceilLog2"
+                    | InlP.CEIL_LOG2(k as PO.UINT sz) => let
+                        (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
+                        val argt = baselt k
+                        in
+                          mkFn argt (fn w => mkApp2(
+                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltIntKind}, lt_int, []),
+                            PL.INT{ival=IntInf.fromInt sz, ty=Tgt.defaultIntSz},
+                            PL.APP(
+                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, argt, []),
+                              mkApp2(
+                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, argt, []),
+                                w,
+                                PL.INT{ival=1, ty=sz}))))
+                        end
                     | InlP.MIN k => inlminmax (k, false)
                     | InlP.MAX k => inlminmax (k, true)
                     | InlP.ABS k => inlabs k

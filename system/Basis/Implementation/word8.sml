@@ -109,7 +109,7 @@ structure Word8Imp : WORD =
     val countTrailingOnes : word -> int
 
     val isPowerOf2 : word -> bool
-    val ceilLog2 : word -> Word.word
+    val ceilLog2 = W8.ceilLog2
 *)
 
   end  (* structure Word8 *)

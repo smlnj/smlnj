@@ -83,4 +83,18 @@ structure WordImp : WORD =
     val rotateL = Word.rotateL
     val rotateR = Word.rotateR
 
+(* TODO:
+    val countZeros : word -> int
+    val countOnes = popCount
+
+    val countLeadingZeros : word -> int
+    val countLeadingOnes : word -> int
+
+    val countTrailingZeros : word -> int
+    val countTrailingOnes : word -> int
+
+    val isPowerOf2 : word -> bool
+    val ceilLog2 = Word.ceilLog2
+*)
+
   end  (* structure WordImp *)

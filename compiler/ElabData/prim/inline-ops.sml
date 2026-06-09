@@ -18,6 +18,7 @@ structure InlineOps =
       | MOD of numkind			(* integer mod *)
       | QUOT of numkind			(* integer/word quot (round toward 0) *)
       | REM of numkind			(* integer/word rem *)
+(* FIXME: the bitops should have "int" size arguments instead of numkind *)
       | LSHIFT of numkind		(* left shift *)
       | RSHIFT of numkind		(* right shift *)
       | RSHIFTL of numkind		(* right shift logical *)
