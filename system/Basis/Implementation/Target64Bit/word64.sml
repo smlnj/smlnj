@@ -1,6 +1,6 @@
 (* word64.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Implementation of Word64 for 64-bit targets.
@@ -92,7 +92,7 @@ structure Word64Imp : sig
     val countTrailingOnes : word -> int
 
     val isPowerOf2 : word -> bool
-    val ceilLog2 = W64.ceilLog2
 *)
+    val ceilLog2 = W64.ceilLog2
 
   end

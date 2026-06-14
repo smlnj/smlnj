@@ -64,7 +64,7 @@ structure TransPrim : sig
 
     val boolsign = BasicTypes.boolsign
     val (trueDcon', falseDcon') = let
-	  val lt = LD.ltc_parrow(LB.ltc_unit, LB.ltc_bool)
+	  val lt = lt_arw(LB.ltc_unit, LB.ltc_bool)
 	  fun mk (Types.DATACON{name, rep, typ,...}) = (name, rep, lt)
 	  in
 	    (mk BasicTypes.trueDcon, mk BasicTypes.falseDcon)
@@ -413,9 +413,9 @@ structure TransPrim : sig
 			      "unexpected type ", LB.lt_print primoplt, " of ", opname
 			    ])
 		      (* end case *))
-		val extra_arg_lt = LD.ltc_parrow(lt_fixed_int, res_lt)
-		val new_arg_lt = LD.ltc_tuple [orig_arg_lt, extra_arg_lt]
-		val new_lt = LD.ltc_parrow (new_arg_lt, res_lt)
+		val extra_arg_lt = lt_arw(lt_fixed_int, res_lt)
+		val new_arg_lt = lt_tup [orig_arg_lt, extra_arg_lt]
+		val new_lt = lt_arw (new_arg_lt, res_lt)
 		in
 		  mkFn orig_arg_lt (fn x =>
 		    mkApp2 (PL.PRIM(FP.PRIM primop, new_lt, []), x, coreAcc cvtName))
@@ -429,9 +429,9 @@ structure TransPrim : sig
 			      "unexpected type ", LB.lt_print primoplt, " of ", opname
 			    ])
 		      (* end case *))
-		val extra_arg_lt = LD.ltc_parrow (orig_arg_lt, lt_fixed_int)
-		val new_arg_lt = LD.ltc_tuple [orig_arg_lt, extra_arg_lt]
-		val new_lt = LD.ltc_parrow (new_arg_lt, res_lt)
+		val extra_arg_lt = lt_arw (orig_arg_lt, lt_fixed_int)
+		val new_arg_lt = lt_tup [orig_arg_lt, extra_arg_lt]
+		val new_lt = lt_arw (new_arg_lt, res_lt)
 		in
 		  mkFn orig_arg_lt (fn x =>
 		    mkApp2 (PL.PRIM(FP.PRIM primop, new_lt, []), x, coreAcc cvtName))
@@ -467,15 +467,15 @@ structure TransPrim : sig
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
                     | InlP.CEIL_LOG2(k as PO.UINT sz) => let
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
-                        val argt = baselt k
+                        val argt = LB.ltc_num sz
                         in
                           mkFn argt (fn w => mkApp2(
-                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltIntKind}, lt_int, []),
+                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltIntKind}, lt_arw(lt_ipair, lt_int), []),
                             PL.INT{ival=IntInf.fromInt sz, ty=Tgt.defaultIntSz},
                             PL.APP(
-                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, argt, []),
+                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, lt_arw(argt, lt_int), []),
                               mkApp2(
-                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, argt, []),
+                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, lt_arw(lt_tup[argt, argt], argt), []),
                                 w,
                                 PL.INT{ival=1, ty=sz}))))
                         end

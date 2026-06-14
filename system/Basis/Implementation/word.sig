@@ -88,8 +88,8 @@ signature WORD_2026 =
     val countTrailingOnes : word -> int
 
     val isPowerOf2 : word -> bool
-    val ceilLog2 : word -> Word.word
 *)
+    val ceilLog2 : word -> Word.word
 
   end
 

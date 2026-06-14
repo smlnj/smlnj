@@ -1,6 +1,6 @@
 (* word32.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -82,7 +82,7 @@ structure Word32Imp : WORD =
     val countTrailingOnes : word -> int
 
     val isPowerOf2 : word -> bool
-    val ceilLog2 = W32.ceilLog2
 *)
+    val ceilLog2 = W32.ceilLog2
 
   end  (* structure Word32 *)

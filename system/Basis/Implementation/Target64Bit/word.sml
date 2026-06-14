@@ -1,6 +1,6 @@
 (* word.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Default word structure (63 bits) for 64-bit targets.
@@ -94,7 +94,7 @@ structure WordImp : WORD =
     val countTrailingOnes : word -> int
 
     val isPowerOf2 : word -> bool
-    val ceilLog2 = Word.ceilLog2
 *)
+    val ceilLog2 = Word.ceilLog2
 
   end  (* structure WordImp *)

@@ -1,9 +1,9 @@
 (* target64-inline.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Interfaces to the compiler built-ins, infixes, etc. for 32-bit targets.
+ * Interfaces to the compiler built-ins, infixes, etc. for 64-bit targets.
  *
  * [dbm, 6/21/06] This module is compiled in the environment PrimEnv.primEnv.
  * See init.cmi
@@ -288,8 +288,8 @@ structure InlineT =
         val cntTrailingZeros : word -> int = InLine.word_cnt_t0s
         val cntTrailingOnes : word -> int  = InLine.word_cnt_t1s
         val isPowOf2 : word -> bool        = InLine.word_is_pow2
-        val ceilLog2 : word -> word        = InLine.word_ceil_log2
 *)
+        val ceilLog2 : word -> word        = InLine.word_ceil_log2
 
         val min     : word * word -> word  = InLine.word_min
         val max     : word * word -> word  = InLine.word_max
@@ -343,8 +343,8 @@ structure InlineT =
         val cntTrailingZeros : word8 -> int     = InLine.word8_cnt_t0s
         val cntTrailingOnes : word8 -> int      = InLine.word8_cnt_t1s
         val isPowOf2 : word8 -> bool            = InLine.word8_is_pow2
-        val ceilLog2 : word8 -> word            = InLine.word8_ceil_log2
 *)
+        val ceilLog2 : word8 -> word            = InLine.word8_ceil_log2
 	end (* local *)
 
 	val min     : word8 * word8 -> word8 = InLine.word8_min
@@ -399,8 +399,8 @@ structure InlineT =
         val cntTrailingZeros : word32 -> int     = InLine.word32_cnt_t0s
         val cntTrailingOnes : word32 -> int      = InLine.word32_cnt_t1s
         val isPowOf2 : word32 -> bool            = InLine.word32_is_pow2
-        val ceilLog2 : word32 -> word            = InLine.word32_ceil_log2
 *)
+        val ceilLog2 : word32 -> word            = InLine.word32_ceil_log2
 	end (* local *)
 
         val min     : word32 * word32 -> word32  = InLine.word32_min
@@ -446,8 +446,8 @@ structure InlineT =
         val cntTrailingZeros : word64 -> int     = InLine.word64_cnt_t0s
         val cntTrailingOnes : word64 -> int      = InLine.word64_cnt_t1s
         val isPowOf2 : word64 -> bool            = InLine.word64_is_pow2
-        val ceilLog2 : word64 -> word            = InLine.word64_ceil_log2
 *)
+        val ceilLog2 : word64 -> word            = InLine.word64_ceil_log2
 
         val op > : word64 * word64 -> bool	 = InLine.word64_gt
         val op >= : word64 * word64 -> bool	 = InLine.word64_ge
