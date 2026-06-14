@@ -94,53 +94,53 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 	    | _ => SELECT(i, u, x, ct, ce)
 	  (* end case *))
 
-    fun recordFL(ul,_,w,ce) =
-	  RECORD(RK_RAW64BLOCK, map (fn u => (u,OFFp 0)) ul, w, ce)
+    fun recordFL (ul, _, w, ce) =
+        RECORD(RK_RAW64BLOCK, map (fn u => (u,OFFp 0)) ul, w, ce)
 
-    fun recordNM (ul, ts, w, ce) =
-      let fun g (FLTt sz::r,u::z,l,h) =
-		mkfn(fn v => g(r, z, (VAR v,OFFp 0)::l, fn ce => h(wrapFlt(sz, u, v, ce))))
-	    | g (NUMt{sz, tag=false}::r,u::z,l,h) =
-		mkfn(fn v => g(r, z, (VAR v,OFFp 0)::l, fn ce => h(wrapInt(sz, u, v, ce))))
-	    | g (NUMt{tag=false, sz} ::_, _, _, _) =
-		raise Fail "boxed NUMt with unsupported access"
-	    | g (_::r,u::z,l,h) = g(r, z, (u,OFFp0)::l, h)
-	    | g ([],[],l,h) = (rev l, h)
-	    | g _ = bug "unexpected in recordNM in convert"
-
-	  val (nul,header) = g(ts,ul,[],fn x => x)
-       in header(RECORD(RK_RECORD,nul,w,ce))
-      end
+    fun recordNM (ul, ts, w, ce) = let
+        fun g (FLTt sz::r,u::z,l,h) =
+              mkfn(fn v => g(r, z, (VAR v,OFFp 0)::l, fn ce => h(wrapFlt(sz, u, v, ce))))
+	  | g (NUMt{sz, tag=false}::r,u::z,l,h) =
+              mkfn(fn v => g(r, z, (VAR v,OFFp 0)::l, fn ce => h(wrapInt(sz, u, v, ce))))
+	  | g (NUMt{tag=false, sz} ::_, _, _, _) =
+              raise Fail "boxed NUMt with unsupported access"
+	  | g (_::r,u::z,l,h) = g(r, z, (u,OFFp0)::l, h)
+	  | g ([],[],l,h) = (rev l, h)
+	  | g _ = bug "unexpected in recordNM in convert"
+        val (nul,header) = g (ts, ul, [], fn x => x)
+        in
+          header(RECORD(RK_RECORD,nul,w,ce))
+        end
 
   (***************************************************************************
    *              UTILITY FUNCTIONS FOR PROCESSING THE PRIMOPS               *
    ***************************************************************************)
 
-  (* mapBranch:  FP.primop -> P.branch *)
+    (* mapBranch:  FP.primop -> P.branch *)
     fun mapBranch p = (case p
-	   of FP.CMP{oper, kind as NK.FLOAT sz} => let
-		val tst = (case oper
-		      of CompareOps.GT  => P.F_GT
-		       | CompareOps.GTE => P.F_GE
-		       | CompareOps.LT  => P.F_LT
-		       | CompareOps.LTE => P.F_LE
-		       | CompareOps.EQL => P.F_EQ
-		       | CompareOps.NEQ => P.F_ULG
-		     (* end case *))
-		in
-		  P.FCMP{oper=tst, size=sz}
-		end
-            | FP.CMP{oper, kind} => P.CMP{oper=oper, kind=kind}
-	    | FP.PRIM CP.BOXED => P.BOXED
-	    | FP.PRIM CP.UNBOXED => P.UNBOXED
-            | FP.PRIM(CP.IS_POW2 sz) => P.IS_POW2 sz
-	    | FP.PRIM(CP.FSGN sz) => P.FSGN sz
-	    | FP.PRIM CP.PTREQL => P.PEQL
-	    | FP.PRIM CP.PTRNEQ => P.PNEQ
-	    | _ => bug(concat[
-		  "unexpected primop ", FP.toString p, " in mapBranch"
-		])
-	  (* end case *))
+         of FP.CMP{oper, kind as NK.FLOAT sz} => let
+            val tst = (case oper
+                 of CompareOps.GT  => P.F_GT
+                  | CompareOps.GTE => P.F_GE
+                  | CompareOps.LT  => P.F_LT
+                  | CompareOps.LTE => P.F_LE
+                  | CompareOps.EQL => P.F_EQ
+                  | CompareOps.NEQ => P.F_ULG
+                (* end case *))
+            in
+              P.FCMP{oper=tst, size=sz}
+            end
+          | FP.CMP{oper, kind} => P.CMP{oper=oper, kind=kind}
+          | FP.PRIM CP.BOXED => P.BOXED
+          | FP.PRIM CP.UNBOXED => P.UNBOXED
+          | FP.PRIM(CP.IS_POW2 sz) => P.IS_POW2 sz
+          | FP.PRIM(CP.FSGN sz) => P.FSGN sz
+          | FP.PRIM CP.PTREQL => P.PEQL
+          | FP.PRIM CP.PTRNEQ => P.PNEQ
+          | _ => bug(concat[
+                "unexpected primop ", FP.toString p, " in mapBranch"
+              ])
+        (* end case *))
 
   (* primwrap: cty -> P.pure *)
     fun primwrap (NUMt{sz, ...}) = P.WRAP(NK.INT sz)
@@ -161,57 +161,57 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 
   (* map_primop: FP.primop -> pkind *)
     fun map_primop p = (case p
-	   of FP.ARITH{oper, sz} => PKA(P.IARITH{oper=oper,sz=sz})
-	    | FP.PURE{oper, kind} => PKP(P.PURE_ARITH{oper=oper,kind=kind})
-	    | FP.PRIM(CP.TEST(from,to)) =>   PKA (P.TEST{from=from, to=to})
-	    | FP.PRIM(CP.TESTU(from,to)) =>  PKA (P.TESTU{from=from, to=to})
-	    | FP.PRIM(CP.COPY(from,to)) =>   PKP (P.COPY{from=from, to=to})
-	    | FP.PRIM(CP.EXTEND(from,to)) => PKP (P.EXTEND{from=from, to=to})
-	    | FP.PRIM(CP.TRUNC(from,to)) =>  PKP (P.TRUNC{from=from, to=to})
-	    | FP.PRIM(CP.TEST_INF to) => PKA (P.TEST_INF to)
-	    | FP.PRIM(CP.TRUNC_INF to) => PKP (P.TRUNC_INF to)
-	    | FP.PRIM(CP.COPY_INF from) => PKP (P.COPY_INF from)
-	    | FP.PRIM(CP.EXTEND_INF from) => PKP (P.EXTEND_INF from)
-	    | FP.PRIM(CP.REAL_TO_INT arg) => PKA(P.REAL_TO_INT arg)
-	    | FP.PRIM(CP.INT_TO_REAL arg) => PKP(P.INT_TO_REAL arg)
-	    | FP.PRIM(CP.SUBSCRIPTV) => PKP P.SUBSCRIPTV
-	    | FP.PRIM(CP.MAKEREF) =>    PKP P.MAKEREF
-	    | FP.PRIM(CP.LENGTH) =>     PKP P.LENGTH
-	    | FP.PRIM(CP.OBJLENGTH) =>  PKP P.OBJLENGTH
-	    | FP.PRIM(CP.GETTAG) =>     PKP P.GETTAG
-	    | FP.PRIM(CP.MKSPECIAL) =>  PKP P.MKSPECIAL
-	    | FP.PRIM(CP.CAST) =>       PKP P.CAST
-            | FP.PRIM(CP.REAL_TO_BITS sz) => PKP(P.REAL_TO_BITS sz)
-            | FP.PRIM(CP.BITS_TO_REAL sz) => PKP(P.BITS_TO_REAL sz)
-	    | FP.PRIM(CP.NEW_ARRAY0) => PKP P.NEWARRAY0
-	    | FP.PRIM(CP.GET_SEQ_DATA) => PKP P.GETSEQDATA
-	    | FP.PRIM(CP.SUBSCRIPT_REC) => PKP P.RECSUBSCRIPT
-	    | FP.PRIM(CP.SUBSCRIPT_RAW64) => PKP P.RAW64SUBSCRIPT
+         of FP.ARITH{oper, sz} =>               PKA(P.IARITH{oper=oper,sz=sz})
+          | FP.PURE{oper, kind} =>              PKP(P.PURE_ARITH{oper=oper,kind=kind})
+          | FP.PRIM(CP.TEST(from,to)) =>        PKA (P.TEST{from=from, to=to})
+          | FP.PRIM(CP.TESTU(from,to)) =>       PKA (P.TESTU{from=from, to=to})
+          | FP.PRIM(CP.COPY(from,to)) =>        PKP (P.COPY{from=from, to=to})
+          | FP.PRIM(CP.EXTEND(from,to)) =>      PKP (P.EXTEND{from=from, to=to})
+          | FP.PRIM(CP.TRUNC(from,to)) =>       PKP (P.TRUNC{from=from, to=to})
+          | FP.PRIM(CP.TEST_INF to) =>          PKA (P.TEST_INF to)
+          | FP.PRIM(CP.TRUNC_INF to) =>         PKP (P.TRUNC_INF to)
+          | FP.PRIM(CP.COPY_INF from) =>        PKP (P.COPY_INF from)
+          | FP.PRIM(CP.EXTEND_INF from) =>      PKP (P.EXTEND_INF from)
+          | FP.PRIM(CP.REAL_TO_INT arg) =>      PKA(P.REAL_TO_INT arg)
+          | FP.PRIM(CP.INT_TO_REAL arg) =>      PKP(P.INT_TO_REAL arg)
+          | FP.PRIM(CP.SUBSCRIPTV) =>           PKP P.SUBSCRIPTV
+          | FP.PRIM(CP.MAKEREF) =>              PKP P.MAKEREF
+          | FP.PRIM(CP.LENGTH) =>               PKP P.LENGTH
+          | FP.PRIM(CP.OBJLENGTH) =>            PKP P.OBJLENGTH
+          | FP.PRIM(CP.GETTAG) =>               PKP P.GETTAG
+          | FP.PRIM(CP.MKSPECIAL) =>            PKP P.MKSPECIAL
+          | FP.PRIM(CP.CAST) =>                 PKP P.CAST
+          | FP.PRIM(CP.REAL_TO_BITS sz) =>      PKP(P.REAL_TO_BITS sz)
+          | FP.PRIM(CP.BITS_TO_REAL sz) =>      PKP(P.BITS_TO_REAL sz)
+          | FP.PRIM(CP.NEW_ARRAY0) =>           PKP P.NEWARRAY0
+          | FP.PRIM(CP.GET_SEQ_DATA) =>         PKP P.GETSEQDATA
+          | FP.PRIM(CP.SUBSCRIPT_REC) =>        PKP P.RECSUBSCRIPT
+          | FP.PRIM(CP.SUBSCRIPT_RAW64) =>      PKP P.RAW64SUBSCRIPT
 
-	    | FP.PRIM(CP.SUBSCRIPT) => PKL P.SUBSCRIPT
-	    | FP.PRIM(CP.NUMSUBSCRIPT kind) => PKL(P.NUMSUBSCRIPT{kind=kind})
-	    | FP.PRIM(CP.NUMSUBSCRIPTV kind) => PKP(P.PURE_NUMSUBSCRIPT{kind=kind})
-	    | FP.PRIM(CP.DEREF) =>      PKL P.DEREF
-	    | FP.PRIM(CP.GETHDLR) =>    PKL P.GETHDLR
-	    | FP.PRIM(CP.GETVAR ) =>    PKL P.GETVAR
-	    | FP.PRIM(CP.GETSPECIAL) => PKL P.GETSPECIAL
+          | FP.PRIM(CP.SUBSCRIPT) =>            PKL P.SUBSCRIPT
+          | FP.PRIM(CP.NUMSUBSCRIPT kind) =>    PKL(P.NUMSUBSCRIPT{kind=kind})
+          | FP.PRIM(CP.NUMSUBSCRIPTV kind) =>   PKP(P.PURE_NUMSUBSCRIPT{kind=kind})
+          | FP.PRIM(CP.DEREF) =>                PKL P.DEREF
+          | FP.PRIM(CP.GETHDLR) =>              PKL P.GETHDLR
+          | FP.PRIM(CP.GETVAR ) =>              PKL P.GETVAR
+          | FP.PRIM(CP.GETSPECIAL) =>           PKL P.GETSPECIAL
 
-	    | FP.PRIM(CP.SETHDLR) => PKS P.SETHDLR
-	    | FP.PRIM(CP.NUMUPDATE kind) => PKS(P.NUMUPDATE{kind=kind})
-	    | FP.PRIM(CP.UNBOXEDUPDATE) => PKS P.UNBOXEDUPDATE
-	    | FP.PRIM(CP.UPDATE) => PKS P.UPDATE
-	    | FP.PRIM(CP.ASSIGN) => PKS P.ASSIGN
-	    | FP.PRIM(CP.UNBOXEDASSIGN) => PKS P.UNBOXEDASSIGN
-	    | FP.PRIM(CP.SETVAR) => PKS P.SETVAR
-	    | FP.PRIM(CP.SETSPECIAL) => PKS P.SETSPECIAL
+          | FP.PRIM(CP.SETHDLR) =>              PKS P.SETHDLR
+          | FP.PRIM(CP.NUMUPDATE kind) =>       PKS(P.NUMUPDATE{kind=kind})
+          | FP.PRIM(CP.UNBOXEDUPDATE) =>        PKS P.UNBOXEDUPDATE
+          | FP.PRIM(CP.UPDATE) =>               PKS P.UPDATE
+          | FP.PRIM(CP.ASSIGN) =>               PKS P.ASSIGN
+          | FP.PRIM(CP.UNBOXEDASSIGN) =>        PKS P.UNBOXEDASSIGN
+          | FP.PRIM(CP.SETVAR) =>               PKS P.SETVAR
+          | FP.PRIM(CP.SETSPECIAL) =>           PKS P.SETSPECIAL
 
-	    | FP.PRIM(CP.RAW_LOAD nk) => PKL (P.RAWLOAD{ kind = nk })
-	    | FP.PRIM(CP.RAW_STORE nk) => PKS (P.RAWSTORE{ kind = nk })
-	    | FP.PRIM(CP.RAW_RECORD{align = 64}) => PKP (P.RAWRECORD (SOME RK_RAW64BLOCK))
+          | FP.PRIM(CP.RAW_LOAD nk) =>          PKL(P.RAWLOAD{ kind = nk })
+          | FP.PRIM(CP.RAW_STORE nk) =>         PKS(P.RAWSTORE{ kind = nk })
+          | FP.PRIM(CP.RAW_RECORD{align = 64}) => PKP(P.RAWRECORD(SOME RK_RAW64BLOCK))
 
-	    | FP.MKETAG =>     PKP P.MAKEREF
-	    | _ => bug (concat["bad primop in map_primop: ", FP.toString p, "\n"])
-	  (* end case *))
+          | FP.MKETAG =>                        PKP P.MAKEREF
+          | _ => bug (concat["bad primop in map_primop: ", FP.toString p, "\n"])
+        (* end case *))
 
   (***************************************************************************
    *                  SWITCH OPTIMIZATIONS AND COMPILATIONS                  *
@@ -238,457 +238,467 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
    *                        THE MAIN FUNCTION                                *
    *                   convert : F.prog -> CPS.function                      *
    ***************************************************************************)
-    fun convert fdec =
-     let val (* {getLty= *) getlty (* , cleanUp, ...} *) = Recover.recover (fdec, true)
-	 val ctypes = map CU.ctype
-         (* result type of a FLINT function translated to a cty list *)
-	 fun res_ctys f =
-	   let val lt = getlty (F.VAR f)
-	    in if LD.ltp_fct lt then ctypes (#2(LD.ltd_fct lt))
-	       else if LD.ltp_arrow lt then ctypes (#3(LD.ltd_arrow lt))
-		    else [CU.BOGt]
-	   end
-	 fun get_cty v = CU.ctype (getlty v)
-	 fun is_float_record u =
-	   LD.ltw_tyc (getlty u,
-		       fn tc => LD.tcw_tuple (tc, fn l => all_float (map CU.ctyc l),
-					      fn _ => false),
-		       fn _ => false)
+    fun convert fdec = let
+        val (* {getLty= *) getlty (* , cleanUp, ...} *) = Recover.recover (fdec, true)
+        val ctypes = map CU.ctype
+        (* result type of a FLINT function translated to a cty list *)
+        fun res_ctys f = let
+            val lt = getlty (F.VAR f)
+            in
+              if LD.ltp_fct lt then ctypes (#2(LD.ltd_fct lt))
+              else if LD.ltp_arrow lt then ctypes (#3(LD.ltd_arrow lt))
+              else [CU.BOGt]
+            end
+        fun get_cty v = CU.ctype (getlty v)
+        fun is_float_record u = LD.ltw_tyc (
+              getlty u,
+              fn tc => LD.tcw_tuple (tc, fn l => all_float (map CU.ctyc l), fn _ => false),
+              fn _ => false)
 
-	 val bogus_cont = mkv()
-	 fun bogus_header ce =
-	   let val bogus_knownf = mkv()
-	    in FIX([(KNOWN, bogus_knownf, [mkv()], [CU.BOGt],
-		   APP(VAR bogus_knownf, [STRING "bogus"]))],
-		   FIX([(CONT, bogus_cont, [mkv()], [CU.BOGt],
-			APP(VAR bogus_knownf, [STRING "bogus"]))], ce))
-	   end
+        val bogus_cont = mkv()
+        fun bogus_header ce = let
+            val bogus_knownf = mkv()
+            in
+              FIX([
+                  (KNOWN, bogus_knownf, [mkv()], [CU.BOGt], APP(VAR bogus_knownf, [STRING "bogus"]))
+                ],
+                FIX([
+                    (CONT, bogus_cont, [mkv()], [CU.BOGt],
+                       APP(VAR bogus_knownf, [STRING "bogus"]))
+                  ], ce))
+            end
 
-	 local exception Rename
-	       val m : value LV.Tbl.hash_table =
-		   LV.Tbl.mkTable(32, Rename)
-	 in
-	 (* F.lvar -> CPS.value *)
-	 fun rename v = LV.Tbl.lookup m v handle Rename => VAR v
+        local
+          exception Rename
+          val m : value LV.Tbl.hash_table = LV.Tbl.mkTable(32, Rename)
+        in
+        (* F.lvar -> CPS.value *)
+        fun rename v = LV.Tbl.lookup m v handle Rename => VAR v
 
-	 (* F.lvar * CPS.value -> unit *)
-	 fun newname (v, w) =
-	   (case w of VAR w' => LV.sameName (v, w') | _ => ();
-	    LV.Tbl.insert m (v, w))
+        (* F.lvar * CPS.value -> unit *)
+        fun newname (v, w) = (
+            case w of VAR w' => LV.sameName (v, w') | _ => ();
+            LV.Tbl.insert m (v, w))
 
-	 (* F.lvar list * CPS.value list -> unit *)
-	 fun newnames (v::vs, w::ws) = (newname(v,w); newnames(vs, ws))
-	   | newnames ([], []) = ()
-	   | newnames _ = bug "unexpected case in newnames"
+        (* F.lvar list * CPS.value list -> unit *)
+        fun newnames (v::vs, w::ws) = (newname(v,w); newnames(vs, ws))
+          | newnames ([], []) = ()
+          | newnames _ = bug "unexpected case in newnames"
 
-	 (* isEta : cexp * value list -> value option *)
-	 fun isEta (APP(w as VAR lv, vl), ul) =
-	     (* If the function is in the global renaming table and it's
-	      * renamed to itself, then it's most likely a while loop and
-	      * should *not* be eta-reduced *)
-	     if ((case LV.Tbl.lookup m lv of
-		      VAR lv' => lv = lv'
-		    | _ => false)
-		 handle Rename => false) then NONE else
-		 let fun h (x::xs, y::ys) =
-			 if (veq(x, y)) andalso (not (veq(w, y)))
-			 then h(xs, ys) else NONE
-		       | h ([], []) = SOME w
-		       | h _ = NONE
-		 in h(ul, vl)
-		 end
-	   | isEta _ = NONE
+        (* isEta : cexp * value list -> value option *)
+        fun isEta (APP(w as VAR lv, vl), ul) =
+            (* If the function is in the global renaming table and it's
+             * renamed to itself, then it's most likely a while loop and
+             * should *not* be eta-reduced *)
+            if ((case LV.Tbl.lookup m lv of VAR lv' => lv = lv' | _ => false)
+                handle Rename => false)
+              then NONE
+              else let
+                fun h (x::xs, y::ys) =
+                    if (veq(x, y)) andalso (not (veq(w, y)))
+                    then h(xs, ys) else NONE
+                  | h ([], []) = SOME w
+                  | h _ = NONE
+                in
+                  h(ul, vl)
+                end
+          | isEta _ = NONE
 
-	 end (* local of Rename *)
+        end (* local of Rename *)
 
-	 (* preventEta : mcont -> (cexp -> cexp) * value *)
-	 fun preventEta (MCONT{cnt=c, ts=ts}) =
-	     let val vl = map mkv ts
-		 val ul = map VAR vl
-		 val b = c ul
-	     in case isEta(b, ul)
-		 of SOME w => (ident, w)
-		  | NONE => let val f = mkv()
-		    in (fn x => FIX([(CONT,f,vl,ts,b)],x), VAR f)
-		    end
-	     end (* function preventEta *)
+        (* preventEta : mcont -> (cexp -> cexp) * value *)
+        fun preventEta (MCONT{cnt=c, ts=ts}) = let
+            val vl = map mkv ts
+            val ul = map VAR vl
+            val b = c ul
+            in
+              case isEta(b, ul)
+               of SOME w => (ident, w)
+                | NONE => let
+                  val f = mkv()
+                  in
+                    (fn x => FIX([(CONT,f,vl,ts,b)],x), VAR f)
+                  end
+              (* end case *)
+            end (* function preventEta *)
 
-	 (* switch optimization *)
-	 val switch = switchGen rename
+        (* switch optimization *)
+        val switch = switchGen rename
 
-	 (* lpvar : F.value -> value *)
-	 fun lpvar (F.VAR v) = rename v
-	   | lpvar (F.INT{ival, ty}) =
-	       if (ty <= Target.defaultIntSz)
-		 then tagInt ival
-		 else boxInt(ty, ival)
-	   | lpvar (F.WORD{ival, ty}) =
-	       if (ty <= Target.defaultIntSz)
-		 then tagInt ival
-		 else boxInt(ty, ival)
-	   | lpvar (F.REAL r) = REAL r
-	   | lpvar (F.STRING s) = STRING s
+        (* lpvar : F.value -> value *)
+        fun lpvar (F.VAR v) = rename v
+          | lpvar (F.INT{ival, ty}) =
+              if (ty <= Target.defaultIntSz)
+                then tagInt ival
+                else boxInt(ty, ival)
+          | lpvar (F.WORD{ival, ty}) =
+              if (ty <= Target.defaultIntSz)
+                then tagInt ival
+                else boxInt(ty, ival)
+          | lpvar (F.REAL r) = REAL r
+          | lpvar (F.STRING s) = STRING s
 
-	 (* lpvars : F.value list -> value list *)
-	 fun lpvars vl =
-	   let fun h([], z) = rev z
-		 | h(a::r, z) = h(r, (lpvar a)::z)
-	    in h(vl, [])
-	   end
+        (* lpvars : F.value list -> value list *)
+        fun lpvars vl = let
+            fun h ([], z) = rev z
+              | h (a::r, z) = h (r, (lpvar a)::z)
+            in
+              h (vl, [])
+            end
 
-	 (* loop : F.lexp * mcont -> cexp *)
-	 fun loop' m (le, c : mcont) = let val loop = loop' m
-	 in case le
-	     of F.RET vs => appmc(c, lpvars vs)
-	      | F.LET(vs, e1, e2) =>
-		  let val kont =
-			makmc (fn ws => (newnames(vs, ws); loop(e2, c)),
-			       map (get_cty o F.VAR) vs)
-		   in loop(e1, kont)
-		  end
+        (* loop : F.lexp * mcont -> cexp *)
+        fun loop' m (le, c : mcont) = let val loop = loop' m
+        in case le
+            of F.RET vs => appmc(c, lpvars vs)
+             | F.LET(vs, e1, e2) =>
+                 let val kont =
+                       makmc (fn ws => (newnames(vs, ws); loop(e2, c)),
+                              map (get_cty o F.VAR) vs)
+                  in loop(e1, kont)
+                 end
 
-	      | F.FIX(fds, e) =>
-		(* lpfd : F.fundec -> function *)
-		let fun lpfd ((fk, f, vts, e) : F.fundec) =
-			let val k = mkv()
-                            val resTys = res_ctys f
-                            (* type of `f`'s return continuation *)
-                            val kontTy = CNTt resTys
-			    val cl = kontTy :: (map (CU.ctype o #2) vts)
-			    val kont = makmc (fn vs => APP(VAR k, vs), resTys)
-			    val (vl,body) =
-				case fk
-				 of {isrec=SOME(_,FR.LK_TAIL),...} => let
-				     (* for tail recursive loops, we create a
-				      * local function that takes its continuation
-				      * from the environment *)
-				     val f' = cplv f
-				     (* here we add a dumb entry for f' in the
-				      * global renaming table just so that isEta
-				      * can avoid eta-reducing it *)
-				     val _ = newname(f', VAR f')
-				     val vl = k::(map (cplv o #1) vts)
-				     val vl' = map #1 vts
-				     val cl' = map (CU.ctype o #2) vts
-				 in
-				     (vl,
-				      FIX([(KNOWN_TAIL, f', vl', cl',
-					    (* add the function to the tail map *)
-					    loop' (M.insert(m,f,f')) (e, kont))],
-					  APP(VAR f', map VAR (tl vl))))
-				 end
-				  | _ => (k::(map #1 vts), loop(e, kont))
-			in (ESCAPE, f, vl, cl, body)
-			end
-		in FIX(map lpfd fds, loop(e, c))
-		end
-	      | F.APP(f as F.VAR lv, vs) =>
-		(* first check if it's a recursive call to a tail loop *)
-		(case M.find(m, lv)
-		  of SOME f' => APP(VAR f', lpvars vs)
-		   | NONE =>
-		     (* code for the non-tail case.
-		      * Sadly this is *not* exceptional *)
-		     let val (hdr, F) = preventEta c
-			 val vf = lpvar f
-			 val ul = lpvars vs
-		     in hdr(APP(vf, F::ul))
-		     end)
-	      | F.APP _ => bug "unexpected APP in convert"
+             | F.FIX(fds, e) =>
+               (* lpfd : F.fundec -> function *)
+               let fun lpfd ((fk, f, vts, e) : F.fundec) =
+                       let val k = mkv()
+                           val resTys = res_ctys f
+                           (* type of `f`'s return continuation *)
+                           val kontTy = CNTt resTys
+                           val cl = kontTy :: (map (CU.ctype o #2) vts)
+                           val kont = makmc (fn vs => APP(VAR k, vs), resTys)
+                           val (vl,body) =
+                               case fk
+                                of {isrec=SOME(_,FR.LK_TAIL),...} => let
+                                    (* for tail recursive loops, we create a
+                                     * local function that takes its continuation
+                                     * from the environment *)
+                                    val f' = cplv f
+                                    (* here we add a dumb entry for f' in the
+                                     * global renaming table just so that isEta
+                                     * can avoid eta-reducing it *)
+                                    val _ = newname(f', VAR f')
+                                    val vl = k::(map (cplv o #1) vts)
+                                    val vl' = map #1 vts
+                                    val cl' = map (CU.ctype o #2) vts
+                                in
+                                    (vl,
+                                     FIX([(KNOWN_TAIL, f', vl', cl',
+                                           (* add the function to the tail map *)
+                                           loop' (M.insert(m,f,f')) (e, kont))],
+                                         APP(VAR f', map VAR (tl vl))))
+                                end
+                                 | _ => (k::(map #1 vts), loop(e, kont))
+                       in (ESCAPE, f, vl, cl, body)
+                       end
+               in FIX(map lpfd fds, loop(e, c))
+               end
+             | F.APP(f as F.VAR lv, vs) =>
+               (* first check if it's a recursive call to a tail loop *)
+               (case M.find(m, lv)
+                 of SOME f' => APP(VAR f', lpvars vs)
+                  | NONE =>
+                    (* code for the non-tail case.
+                     * Sadly this is *not* exceptional *)
+                    let val (hdr, F) = preventEta c
+                        val vf = lpvar f
+                        val ul = lpvars vs
+                    in hdr(APP(vf, F::ul))
+                    end)
+             | F.APP _ => bug "unexpected APP in convert"
 
-	      | (F.TFN _ | F.TAPP _) =>
-		  bug "unexpected TFN and TAPP in convert"
+             | (F.TFN _ | F.TAPP _) =>
+                 bug "unexpected TFN and TAPP in convert"
 
-	      | F.RECORD(FR.RK_VECTOR _, [], v, e) =>
-		  bug "zero length vectors in convert"
-	      | F.RECORD(rk, [], v, e) => let
-		  val _ = newname(v, tagInt 0)
-		  in
-		    loop(e, c)
-		  end
-	      | F.RECORD(rk, vl, v, e) =>
-		  let val ts = map get_cty vl
-		      val nvl = lpvars vl
-		      val ce = loop(e, c)
-		   in case rk
-		       of FR.RK_TUPLE =>
-			   if (all_float ts) then recordFL(nvl, ts, v, ce)
-			   else recordNM(nvl, ts, v, ce)
-			| FR.RK_VECTOR _ =>
-			   RECORD(RK_VECTOR, map (fn x => (x, OFFp0)) nvl, v, ce)
-			| _ => recordNM(nvl, ts, v, ce)
-		  end
-	      | F.SELECT(u, i, v, e) =>
-		  let val ct = get_cty (F.VAR v)
-		      val nu = lpvar u
-		      val ce = loop(e, c)
-		   in if is_float_record u then selectFL(i, nu, v, ct, ce)
-		      else selectNM(i, nu, v, ct, ce)
-		  end
+             | F.RECORD(FR.RK_VECTOR _, [], v, e) =>
+                 bug "zero length vectors in convert"
+             | F.RECORD(rk, [], v, e) => let
+                 val _ = newname(v, tagInt 0)
+                 in
+                   loop(e, c)
+                 end
+             | F.RECORD(rk, vl, v, e) =>
+                 let val ts = map get_cty vl
+                     val nvl = lpvars vl
+                     val ce = loop(e, c)
+                  in case rk
+                      of FR.RK_TUPLE =>
+                          if (all_float ts) then recordFL(nvl, ts, v, ce)
+                          else recordNM(nvl, ts, v, ce)
+                       | FR.RK_VECTOR _ =>
+                          RECORD(RK_VECTOR, map (fn x => (x, OFFp0)) nvl, v, ce)
+                       | _ => recordNM(nvl, ts, v, ce)
+                 end
+             | F.SELECT(u, i, v, e) =>
+                 let val ct = get_cty (F.VAR v)
+                     val nu = lpvar u
+                     val ce = loop(e, c)
+                  in if is_float_record u then selectFL(i, nu, v, ct, ce)
+                     else selectNM(i, nu, v, ct, ce)
+                 end
 
-	      | F.SWITCH(e,l,[a as (PL.DATAcon((_,DA.CONSTANT 0,_),_,_),_),
-			      b as (PL.DATAcon((_,DA.CONSTANT 1,_),_,_),_)],
-			 NONE) =>
-		  loop(F.SWITCH(e,l,[b,a],NONE),c)
-	      | F.SWITCH (u, sign, l, d) =>
-		  let val (header,F) = preventEta c
-		      val kont = makmc(fn vl => APP(F, vl), rttys c)
-		      val body = let
-			    val df = mkv()
-			    fun proc (cn as (PL.DATAcon(dc, _, v)), e) =
-				  (cn, loop (F.LET([v], F.RET [u], e), kont))
-			      | proc (cn, e) = (cn, loop(e, kont))
-			    val b = switch {
-				    arg = lpvar u, sign = sign,
-				    cases = map proc l,
-				    default = APP(VAR df, [tagInt 0])
-				  }
-			    in case d
-				 of NONE => b
-				  | SOME de => FIX([(CONT, df, [mkv()], [tagIntTy],
-						   loop(de, kont))], b)
-			    end
-		   in header(body)
-		  end
-	      | F.CON(dc, ts, u, v, e) =>
-		  bug "unexpected case CON in cps convert"
+             | F.SWITCH(e,l,[a as (PL.DATAcon((_,DA.CONSTANT 0,_),_,_),_),
+                             b as (PL.DATAcon((_,DA.CONSTANT 1,_),_,_),_)],
+                        NONE) =>
+                 loop(F.SWITCH(e,l,[b,a],NONE),c)
+             | F.SWITCH (u, sign, l, d) =>
+                 let val (header,F) = preventEta c
+                     val kont = makmc(fn vl => APP(F, vl), rttys c)
+                     val body = let
+                           val df = mkv()
+                           fun proc (cn as (PL.DATAcon(dc, _, v)), e) =
+                                 (cn, loop (F.LET([v], F.RET [u], e), kont))
+                             | proc (cn, e) = (cn, loop(e, kont))
+                           val b = switch {
+                                   arg = lpvar u, sign = sign,
+                                   cases = map proc l,
+                                   default = APP(VAR df, [tagInt 0])
+                                 }
+                           in case d
+                                of NONE => b
+                                 | SOME de => FIX([(CONT, df, [mkv()], [tagIntTy],
+                                                  loop(de, kont))], b)
+                           end
+                  in header(body)
+                 end
+             | F.CON(dc, ts, u, v, e) =>
+                 bug "unexpected case CON in cps convert"
 
 (* FIXME: we should use continuations, not functions, as handlers *)
-	      | F.RAISE(u, lts) =>
-		  let (* execute the continuation for side effects *)
-		      val _ = appmc(c, (map (fn _ => VAR(mkv())) lts))
-		      val h = mkv()
-		   in LOOKER(P.GETHDLR, [], h, FUNt,
-			     APP(VAR h,[VAR bogus_cont,lpvar u]))
-		  end
-	      | F.HANDLE(e,u) => let (* recover type from u *)
-		  val (hdr, F) = preventEta c
-                  val h = mkv() (* the current handler *)
-                  val kont = makmc (
-                        fn vl => SETTER(P.SETHDLR, [VAR h], APP(F, vl)),
-                        rttys c)
-                  val body = let
-                        val h' = mkv() (* the new handler *)
-                        val k = mkv() (* the new handler's return cont *)
-                        val v = mkv() (* the new handler's exn argument *)
-                        in
-                          (* NOTE: `k` will be bound to `bogus_cont`, so we give
-                           * it a bogus continuation type.
-                           *)
-                          FIX([(ESCAPE, h', [k, v], [bogCNTt, CU.BOGt],
-                              SETTER(P.SETHDLR, [VAR h], APP(lpvar u, [F, VAR v])))],
-                            SETTER(P.SETHDLR, [VAR h'], loop(e, kont)))
-			end
-                  in
-                    LOOKER(P.GETHDLR, [], h, FUNt, hdr(body))
-		  end
+             | F.RAISE(u, lts) =>
+                 let (* execute the continuation for side effects *)
+                     val _ = appmc(c, (map (fn _ => VAR(mkv())) lts))
+                     val h = mkv()
+                  in LOOKER(P.GETHDLR, [], h, FUNt,
+                            APP(VAR h,[VAR bogus_cont,lpvar u]))
+                 end
+             | F.HANDLE(e,u) => let (* recover type from u *)
+                 val (hdr, F) = preventEta c
+                 val h = mkv() (* the current handler *)
+                 val kont = makmc (
+                       fn vl => SETTER(P.SETHDLR, [VAR h], APP(F, vl)),
+                       rttys c)
+                 val body = let
+                       val h' = mkv() (* the new handler *)
+                       val k = mkv() (* the new handler's return cont *)
+                       val v = mkv() (* the new handler's exn argument *)
+                       in
+                         (* NOTE: `k` will be bound to `bogus_cont`, so we give
+                          * it a bogus continuation type.
+                          *)
+                         FIX([(ESCAPE, h', [k, v], [bogCNTt, CU.BOGt],
+                             SETTER(P.SETHDLR, [VAR h], APP(lpvar u, [F, VAR v])))],
+                           SETTER(P.SETHDLR, [VAR h'], loop(e, kont)))
+                       end
+                 in
+                   LOOKER(P.GETHDLR, [], h, FUNt, hdr(body))
+                 end
 
-                (* NOTE: the `'a cont` type is actually represented as a CPS
-                 * function, not a continuation.
-                 *)
-	      | F.PRIMOP((_,p as (FP.PRIM CP.CALLCC | FP.PRIM CP.CAPTURE),_,_), [f], v, e) => let
-                  (* `F` is the continuation of the `callcc` application
-                   * that evaluates `e`
-                   *)
-                  val (kont_decs, F) = let
-                        val k = mkv()
-                        val ct = get_cty f
-                        in
-                          ([(CONT, k, [v], [ct], loop(e, c))], VAR k)
-			end
-                  (* `hdr1` restores the exception handler (for `callcc`)
-                   * `hdr2` gets the handler and binds it to `h` (for `callcc`)
-                   * The `capture` form ignores the exception handler
-                   *)
-                  val (hdr1,hdr2) = (case p
-                         of FP.PRIM CP.CALLCC =>
-                             mkfn(fn h =>
-                              (fn e => SETTER(P.SETHDLR, [VAR h], e),
-                               fn e => LOOKER(P.GETHDLR, [], h, CU.BOGt, e)))
-                          | _ => (ident, ident)
-                        (* end case *))
-                  (* For `callcc`, `k` is bound to an escaping function that
-                   * restores the exception handler and then calls `F`.  In
-                   * the case of `capture`, it just calls `F`.
-                   *)
-                  val (ccont_decs, ccont_var) = let
-			val k = mkv() (* captured continuation *)
-                        val x = mkv()
-                        in
-                          ([(ESCAPE, k, [mkv(), x], [bogCNTt, CU.BOGt],
-                              hdr1(APP(F, [VAR x])))
-                            ], k)
-			end
-                  in
-                    (* here we bind `F`, `h`, and `k` and then call the argument
-                     * to `callcc`/`capture` with `F` as the return continuation
-                     * and `k` as the argument.
-                     *)
-                    FIX(kont_decs,
-			hdr2(FIX(ccont_decs,
-                            APP(lpvar f, [F, VAR ccont_var]))))
-		  end
+               (* NOTE: the `'a cont` type is actually represented as a CPS
+                * function, not a continuation.
+                *)
+             | F.PRIMOP((_,p as (FP.PRIM CP.CALLCC | FP.PRIM CP.CAPTURE),_,_), [f], v, e) => let
+                 (* `F` is the continuation of the `callcc` application
+                  * that evaluates `e`
+                  *)
+                 val (kont_decs, F) = let
+                       val k = mkv()
+                       val ct = get_cty f
+                       in
+                         ([(CONT, k, [v], [ct], loop(e, c))], VAR k)
+                       end
+                 (* `hdr1` restores the exception handler (for `callcc`)
+                  * `hdr2` gets the handler and binds it to `h` (for `callcc`)
+                  * The `capture` form ignores the exception handler
+                  *)
+                 val (hdr1,hdr2) = (case p
+                        of FP.PRIM CP.CALLCC =>
+                            mkfn(fn h =>
+                             (fn e => SETTER(P.SETHDLR, [VAR h], e),
+                              fn e => LOOKER(P.GETHDLR, [], h, CU.BOGt, e)))
+                         | _ => (ident, ident)
+                       (* end case *))
+                 (* For `callcc`, `k` is bound to an escaping function that
+                  * restores the exception handler and then calls `F`.  In
+                  * the case of `capture`, it just calls `F`.
+                  *)
+                 val (ccont_decs, ccont_var) = let
+                       val k = mkv() (* captured continuation *)
+                       val x = mkv()
+                       in
+                         ([(ESCAPE, k, [mkv(), x], [bogCNTt, CU.BOGt],
+                             hdr1(APP(F, [VAR x])))
+                           ], k)
+                       end
+                 in
+                   (* here we bind `F`, `h`, and `k` and then call the argument
+                    * to `callcc`/`capture` with `F` as the return continuation
+                    * and `k` as the argument.
+                    *)
+                   FIX(kont_decs,
+                       hdr2(FIX(ccont_decs,
+                           APP(lpvar f, [F, VAR ccont_var]))))
+                 end
 
-                (* [[ let v = isolate f in e ]]
-                 *      ==>
-                 *              fix h (_, x) = bogus_cont(x)
-                 *              fix v (_, x) =
-                 *                  do set_hdlr h
-                 *                  in f (bogus_kont, x)
-                 *              in [[ e ]]
-                 *)
-	      | F.PRIMOP((_,FP.PRIM CP.ISOLATE,lt,ts), [f], v, e) => let
-		  val (exndecs, exnvar) = let
-			val h = mkv() and x = mkv()
-                        in
-                          ([(ESCAPE, h, [mkv(), x], [bogCNTt, CU.BOGt],
-                            APP(VAR bogus_cont, [VAR x]))], h)
-			end
-                  val newfdecs = let
-			val nf = v and x = mkv()
-                        in
-                          [(ESCAPE, v, [mkv(), x], [bogCNTt, CU.BOGt],
-                            SETTER(P.SETHDLR, [VAR exnvar],
-                              APP(lpvar f, [VAR bogus_cont, VAR x])))]
-			end
-                  in
-                    FIX(exndecs, FIX(newfdecs, loop(e, c)))
-		  end
+               (* [[ let v = isolate f in e ]]
+                *      ==>
+                *              fix h (_, x) = bogus_cont(x)
+                *              fix v (_, x) =
+                *                  do set_hdlr h
+                *                  in f (bogus_kont, x)
+                *              in [[ e ]]
+                *)
+             | F.PRIMOP((_,FP.PRIM CP.ISOLATE,lt,ts), [f], v, e) => let
+                 val (exndecs, exnvar) = let
+                       val h = mkv() and x = mkv()
+                       in
+                         ([(ESCAPE, h, [mkv(), x], [bogCNTt, CU.BOGt],
+                           APP(VAR bogus_cont, [VAR x]))], h)
+                       end
+                 val newfdecs = let
+                       val nf = v and x = mkv()
+                       in
+                         [(ESCAPE, v, [mkv(), x], [bogCNTt, CU.BOGt],
+                           SETTER(P.SETHDLR, [VAR exnvar],
+                             APP(lpvar f, [VAR bogus_cont, VAR x])))]
+                       end
+                 in
+                   FIX(exndecs, FIX(newfdecs, loop(e, c)))
+                 end
 
-	      | F.PRIMOP(po as (_,FP.PRIM CP.THROW,_,_), [u], v, e) =>
-		  (newname(v, lpvar u); loop(e, c))
-    (*            PURE(P.WRAP, [lpvar u], v, FUNt, c(VAR v))          *)
+             | F.PRIMOP(po as (_,FP.PRIM CP.THROW,_,_), [u], v, e) =>
+                 (newname(v, lpvar u); loop(e, c))
+   (*            PURE(P.WRAP, [lpvar u], v, FUNt, c(VAR v))          *)
 
-	      | F.PRIMOP(po as (_,FP.WCAST,_,_), [u], v, e) =>
-		  (newname(v, lpvar u); loop(e, c))
+             | F.PRIMOP(po as (_,FP.WCAST,_,_), [u], v, e) =>
+                 (newname(v, lpvar u); loop(e, c))
 
-	      | F.PRIMOP(po as (_,FP.WRAP,_,_), [u], v, e) =>
-		  let val ct = CU.ctyc(FU.getWrapTyc po)
-		   in PURE(primwrap ct, [lpvar u], v, CU.BOGt, loop(e, c))
-		  end
-	      | F.PRIMOP(po as (_,FP.UNWRAP,_,_), [u], v, e) =>
-		  let val ct = CU.ctyc(FU.getUnWrapTyc po)
-		   in PURE(primunwrap ct, [lpvar u], v, ct, loop(e, c))
-		  end
+             | F.PRIMOP(po as (_,FP.WRAP,_,_), [u], v, e) =>
+                 let val ct = CU.ctyc(FU.getWrapTyc po)
+                  in PURE(primwrap ct, [lpvar u], v, CU.BOGt, loop(e, c))
+                 end
+             | F.PRIMOP(po as (_,FP.UNWRAP,_,_), [u], v, e) =>
+                 let val ct = CU.ctyc(FU.getUnWrapTyc po)
+                  in PURE(primunwrap ct, [lpvar u], v, ct, loop(e, c))
+                 end
 
-	      | F.PRIMOP(po as (_, FP.MARKEXN,_,_), [x,m], v, e) =>
-		  let val bty = LB.ltc_void
-		      val ety = LD.ltc_tuple[bty,bty,bty]
-		      val (xx,x0,x1,x2) = (mkv(),mkv(),mkv(),mkv())
-		      val (y,z,z') = (mkv(),mkv(),mkv())
-		   in PURE(P.UNBOX, [lpvar x], xx, CU.ctype ety,
-			SELECT(0,VAR xx,x0,CU.BOGt,
-			  SELECT(1,VAR xx,x1,CU.BOGt,
-			    SELECT(2,VAR xx,x2,CU.BOGt,
-			      RECORD(RK_RECORD,[(lpvar m, OFFp0),
-						(VAR x2, OFFp0)], z,
-				     PURE(P.BOX,[VAR z],z',CU.BOGt,
-				       RECORD(RK_RECORD,[(VAR x0,OFFp0),
-							 (VAR x1,OFFp0),
-							 (VAR z', OFFp0)],
-					      y,
-					  PURE(P.BOX,[VAR y],v,CU.BOGt,
-					       loop(e,c)))))))))
-		  end
+             | F.PRIMOP(po as (_, FP.MARKEXN,_,_), [x,m], v, e) =>
+                 let val bty = LB.ltc_void
+                     val ety = LD.ltc_tuple[bty,bty,bty]
+                     val (xx,x0,x1,x2) = (mkv(),mkv(),mkv(),mkv())
+                     val (y,z,z') = (mkv(),mkv(),mkv())
+                  in PURE(P.UNBOX, [lpvar x], xx, CU.ctype ety,
+                       SELECT(0,VAR xx,x0,CU.BOGt,
+                         SELECT(1,VAR xx,x1,CU.BOGt,
+                           SELECT(2,VAR xx,x2,CU.BOGt,
+                             RECORD(RK_RECORD,[(lpvar m, OFFp0),
+                                               (VAR x2, OFFp0)], z,
+                                    PURE(P.BOX,[VAR z],z',CU.BOGt,
+                                      RECORD(RK_RECORD,[(VAR x0,OFFp0),
+                                                        (VAR x1,OFFp0),
+                                                        (VAR z', OFFp0)],
+                                             y,
+                                         PURE(P.BOX,[VAR y],v,CU.BOGt,
+                                              loop(e,c)))))))))
+                 end
 
-	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL NONE),_,_), _::_::a::_,v,e) => (
-		(* code generated here should never be executed anyway,
-		 * so we just fake it... *)
-		  print "*** pro-forma raw-ccall\n";
-		  newname (v, lpvar a); loop(e,c))
+             | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL NONE),_,_), _::_::a::_,v,e) => (
+               (* code generated here should never be executed anyway,
+                * so we just fake it... *)
+                 print "*** pro-forma raw-ccall\n";
+                 newname (v, lpvar a); loop(e,c))
 
-	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL(SOME i)), lt, ts), f::a::_::_, v, e) => let
-		    val { c_proto, ml_args, ml_res_opt, reentrant } = i
-		    fun cty CP.CCR64 = FLTt 64		(* REAL32: FIXME *)
-		      | cty CP.CCI32 = boxIntTy 32	(* 64BIT: FIXME *)
-		      | cty CP.CCML = CU.BOGt
-		      | cty CP.CCI64 = CU.BOGt	(* 64BIT: FIXME *)
-		    val a' = lpvar a
-		    fun rcc args = let
-			val al = map VAR args
-			val (al,linkage) = (case f
-			       of F.STRING linkage => (al, linkage)
-			        | _  => (lpvar f :: al, ""))
-		    in  case ml_res_opt
-			 of NONE =>
-			    RCC (reentrant, linkage, c_proto, al, [(v, tagIntTy)], loop (e, c))
+             | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL(SOME i)), lt, ts), f::a::_::_, v, e) => let
+                   val { c_proto, ml_args, ml_res_opt, reentrant } = i
+                   fun cty CP.CCR64 = FLTt 64		(* REAL32: FIXME *)
+                     | cty CP.CCI32 = boxIntTy 32	(* 64BIT: FIXME *)
+                     | cty CP.CCML = CU.BOGt
+                     | cty CP.CCI64 = CU.BOGt	(* 64BIT: FIXME *)
+                   val a' = lpvar a
+                   fun rcc args = let
+                       val al = map VAR args
+                       val (al,linkage) = (case f
+                              of F.STRING linkage => (al, linkage)
+                               | _  => (lpvar f :: al, ""))
+                   in  case ml_res_opt
+                        of NONE =>
+                           RCC (reentrant, linkage, c_proto, al, [(v, tagIntTy)], loop (e, c))
 (* 64BIT: this code implements the fake 64-bit integers that are used on 32-bit targets *)
-			  | SOME CP.CCI64 =>
-			    let val (v1, v2) = (mkv (), mkv ())
-			    in
-			      RCC (reentrant, linkage, c_proto, al,
-				   [(v1, boxIntTy 32), (v2, boxIntTy 32)],
-				   recordNM([VAR v1, VAR v2],[boxIntTy 32, boxIntTy 32],
-					    v, loop (e, c)))
-			    end
-			  | SOME rt => let
-				val v' = mkv ()
-				val res_cty = cty rt
-			    in
-				RCC (reentrant, linkage, c_proto, al, [(v', res_cty)],
-				     PURE(primwrap res_cty, [VAR v'], v, CU.BOGt,
-					  loop (e, c)))
-			    end
-		    end
-		    val sel = if is_float_record a then selectFL else selectNM
-		    fun build ([], rvl, _) = rcc (rev rvl)
-		      | build (ft :: ftl, rvl, i) = let
-			    val t = cty ft
-			    val v = mkv ()
-			in
-			    sel (i, a', v, t, build (ftl, v :: rvl, i + 1))
-			end
-		in
-		    case ml_args of
-			[ft] => let
-			    (* if there is precisely one arg, then it will not
-			     * come packaged into a record *)
-			    val t = cty ft
-			    val v = mkv ()
-			in
-			    PURE (primunwrap t, [a'], v, t, rcc [v])
-			end
-		      | _ => build (ml_args, [], 0)
-		end
+                         | SOME CP.CCI64 =>
+                           let val (v1, v2) = (mkv (), mkv ())
+                           in
+                             RCC (reentrant, linkage, c_proto, al,
+                                  [(v1, boxIntTy 32), (v2, boxIntTy 32)],
+                                  recordNM([VAR v1, VAR v2],[boxIntTy 32, boxIntTy 32],
+                                           v, loop (e, c)))
+                           end
+                         | SOME rt => let
+                               val v' = mkv ()
+                               val res_cty = cty rt
+                           in
+                               RCC (reentrant, linkage, c_proto, al, [(v', res_cty)],
+                                    PURE(primwrap res_cty, [VAR v'], v, CU.BOGt,
+                                         loop (e, c)))
+                           end
+                   end
+                   val sel = if is_float_record a then selectFL else selectNM
+                   fun build ([], rvl, _) = rcc (rev rvl)
+                     | build (ft :: ftl, rvl, i) = let
+                           val t = cty ft
+                           val v = mkv ()
+                       in
+                           sel (i, a', v, t, build (ftl, v :: rvl, i + 1))
+                       end
+               in
+                   case ml_args of
+                       [ft] => let
+                           (* if there is precisely one arg, then it will not
+                            * come packaged into a record *)
+                           val t = cty ft
+                           val v = mkv ()
+                       in
+                           PURE (primunwrap t, [a'], v, t, rcc [v])
+                       end
+                     | _ => build (ml_args, [], 0)
+               end
 
-	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL _),_,_),_,_,_) => bug "bad raw_ccall"
+             | F.PRIMOP ((_, FP.PRIM(CP.RAW_CCALL _),_,_),_,_,_) => bug "bad raw_ccall"
 
-	      | F.PRIMOP ((_, FP.PRIM(CP.RAW_RECORD _),_,_),[x as F.VAR _],v,e) =>
-		(* code generated here should never be executed anyway,
-		 * so we just fake it... *)
-		(print "*** pro-forma raw-record\n";
-		 newname (v, lpvar x); loop(e,c))
+             | F.PRIMOP ((_, FP.PRIM(CP.RAW_RECORD _),_,_),[x as F.VAR _],v,e) =>
+               (* code generated here should never be executed anyway,
+                * so we just fake it... *)
+               (print "*** pro-forma raw-record\n";
+                newname (v, lpvar x); loop(e,c))
 
-	    (* conversions between runtime-system pointers and words *)
-	      | F.PRIMOP((_, FP.PRIM CP.CPTR_TO_WORD, _, _), [arg], res, e) =>
-		  PURE(P.CAST, [lpvar arg], res, addrTy,
-		    loop(e, c))
-	      | F.PRIMOP((_, FP.PRIM CP.WORD_TO_CPTR, _, _), [arg], res, e) =>
-		  PURE(P.CAST, [lpvar arg], res, PTRt VPT,
-		    loop(e, c))
+           (* conversions between runtime-system pointers and words *)
+             | F.PRIMOP((_, FP.PRIM CP.CPTR_TO_WORD, _, _), [arg], res, e) =>
+                 PURE(P.CAST, [lpvar arg], res, addrTy,
+                   loop(e, c))
+             | F.PRIMOP((_, FP.PRIM CP.WORD_TO_CPTR, _, _), [arg], res, e) =>
+                 PURE(P.CAST, [lpvar arg], res, PTRt VPT,
+                   loop(e, c))
 
-	      | F.PRIMOP(po as (_,p,lt,ts), ul, v, e) =>
-		  let val ct =
-			case (#3(LD.ltd_arrow(LE.lt_pinst (lt, ts))))
-			 of [x] => CU.ctype x
-			  | _ => bug "unexpected case in F.PRIMOP"
-		      val vl = lpvars ul
-		   in case map_primop p
-		       of PKS i => let val _ = newname(v, tagInt 0)
-				    in SETTER(i, vl, loop(e,c))
-				   end
-			| PKA i => ARITH(i, vl, v, ct, loop(e,c))
-			| PKL i => LOOKER(i, vl, v, ct, loop(e,c))
-			| PKP i => PURE(i, vl, v, ct, loop(e,c))
-		  end
+             | F.PRIMOP(po as (_,p,lt,ts), ul, v, e) =>
+                 let val ct =
+                       case (#3(LD.ltd_arrow(LE.lt_pinst (lt, ts))))
+                        of [x] => CU.ctype x
+                         | _ => bug "unexpected case in F.PRIMOP"
+                     val vl = lpvars ul
+                  in case map_primop p
+                      of PKS i => let val _ = newname(v, tagInt 0)
+                                   in SETTER(i, vl, loop(e,c))
+                                  end
+                       | PKA i => ARITH(i, vl, v, ct, loop(e,c))
+                       | PKL i => LOOKER(i, vl, v, ct, loop(e,c))
+                       | PKP i => PURE(i, vl, v, ct, loop(e,c))
+                 end
 
-	      | F.BRANCH(po as (_,p,_,_), ul, e1, e2) =>
-		  let val (hdr, F) = preventEta c
-		      val kont = makmc(fn vl => APP(F, vl), rttys c)
-		   in hdr(BRANCH(mapBranch p, lpvars ul, mkv(),
-				 loop(e1, kont), loop(e2, kont)))
-		  end
-	 end
+             | F.BRANCH(po as (_,p,_,_), ul, e1, e2) =>
+                 let val (hdr, F) = preventEta c
+                     val kont = makmc(fn vl => APP(F, vl), rttys c)
+                  in hdr(BRANCH(mapBranch p, lpvars ul, mkv(),
+                                loop(e1, kont), loop(e2, kont)))
+                 end
+        end
 
 	(* processing the top-level fundec *)
 	val (fk, f, vts, be) = fdec
@@ -700,7 +710,8 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
 
 	val vl = k::(map #1 vts)
 	val cl = kontTy::(map (CU.ctype o #2) vts)
-     in (ESCAPE, f, vl, cl, bogus_header body)
-    end (* function convert *)
+        in
+          (ESCAPE, f, vl, cl, bogus_header body)
+        end (* function convert *)
 
   end (* functor Convert *)
