@@ -98,6 +98,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/345[Fix missing case in `FLINT/reify`]
 | [.bugid]#346#
 | {pull-base}/346[Successor ML: type annotations on record puns]
+| [.bugid]#354#
+| {issue-base}/354[Unexpected `Overflow` exception]
 |=======
 
 We also fixed the following bugs that did not have issues
