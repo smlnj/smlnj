@@ -477,8 +477,16 @@ structure TransPrim : sig
                     | InlP.LSHIFT k => inlineLogicalShift (lshiftOp, k)
                     | InlP.RSHIFT k => inlineArithmeticShiftRight k
                     | InlP.RSHIFTL k => inlineLogicalShift (rshiftlOp, k)
-                    | InlP.CNTZ k => raise Fail "TODO: cntZeros"
-                    | InlP.CNTO k => raise Fail "TODO: cntOnes"
+                    | InlP.CNTZ(PO.UINT sz) => raise Fail "TODO: cntZeros"
+                    | InlP.CNTO(PO.UINT sz) => let
+                        fun count (w, sz) = PL.APP(
+                              pPURE(PureP.CNTPOP, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
+                              w)
+                        in
+                          mkFn (LB.ltc_num sz) (fn w => if sz < Tgt.defaultIntSz
+                            then count (promote sz w, Tgt.defaultIntSz)
+                            else count (w, sz))
+                        end
                     | InlP.CNTLZ(PO.UINT sz) => let
                         fun count (w, sz) = PL.APP(
                               pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),

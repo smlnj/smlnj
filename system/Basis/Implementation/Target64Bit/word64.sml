@@ -82,10 +82,10 @@ structure Word64Imp : sig
     val rotateR = W64.rotateR
 
 (* TODO:
-    val countZeros : word -> int
-    val countOnes = popCount
-
+    val countZeros = W64.cntZeros
 *)
+    val countOnes = W64.cntOnes
+
     val countLeadingZeros = W64.cntLeadingZeros
 (*
     val countLeadingOnes : word -> int

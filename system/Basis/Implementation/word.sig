@@ -79,9 +79,9 @@ signature WORD_2026 =
     val rotateR : word * Word.word -> word
 (* TODO *
     val countZeros : word -> int
+*)
     val countOnes : word -> int
 
-*)
     val countLeadingZeros : word -> int
 (*
     val countLeadingOnes : word -> int

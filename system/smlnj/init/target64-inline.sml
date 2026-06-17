@@ -282,8 +282,8 @@ structure InlineT =
         val rotateL : word * word -> word  = InLine.word_rotl
 (*
         val cntZeros : word -> int         = InLine.word_cnt_zeros
-        val cntOnes : word -> int          = InLine.word_cnt_ones
 *)
+        val cntOnes : word -> int          = InLine.word_cnt_ones
         val cntLeadingZeros : word -> int  = InLine.word_cnt_leading_zeros
 (*
         val cntLeadingOnes : word -> int   = InLine.word_cnt_leading_ones
@@ -339,8 +339,8 @@ structure InlineT =
         val rotateL : word8 * word -> word8     = InLine.word8_rotl
 (*
         val cntZeros : word8 -> int             = InLine.word8_cnt_zeros
-        val cntOnes : word8 -> int              = InLine.word8_cnt_ones
 *)
+        val cntOnes : word8 -> int              = InLine.word8_cnt_ones
         val cntLeadingZeros : word8 -> int      = InLine.word8_cnt_leading_zeros
 (*
         val cntLeadingOnes : word8 -> int       = InLine.word8_cnt_leading_ones
@@ -397,8 +397,8 @@ structure InlineT =
         val rotateL : word32 * word -> word32    = InLine.word32_rotl
 (*
         val cntZeros : word32 -> int             = InLine.word32_cnt_zeros
-        val cntOnes : word32 -> int              = InLine.word32_cnt_ones
 *)
+        val cntOnes : word32 -> int              = InLine.word32_cnt_ones
         val cntLeadingZeros : word32 -> int      = InLine.word32_cnt_leading_zeros
 (*
         val cntLeadingOnes : word32 -> int       = InLine.word32_cnt_leading_ones
@@ -446,8 +446,8 @@ structure InlineT =
         val rotateL : word64 * word -> word64    = InLine.word64_rotl
 (*
         val cntZeros : word64 -> int             = InLine.word64_cnt_zeros
-        val cntOnes : word64 -> int              = InLine.word64_cnt_ones
 *)
+        val cntOnes : word64 -> int              = InLine.word64_cnt_ones
         val cntLeadingZeros : word64 -> int      = InLine.word64_cnt_leading_zeros
 (*
         val cntLeadingOnes : word64 -> int       = InLine.word64_cnt_leading_ones
