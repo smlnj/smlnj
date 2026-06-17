@@ -38,6 +38,9 @@ structure TaggedArith : sig
 
     fun var x = C.VAR{name=x}
 
+    (* maximum tagged signed integer *)
+    val maxInt = IntInf.<<(1, Word.fromInt Target.defaultIntSz - 0w1) - 1
+
   (* CFG integer constants *)
     fun num iv = C.NUM{iv = iv, sz = ity}
     fun w2Num iv = num(Word.toLargeInt iv)
@@ -68,7 +71,7 @@ structure TaggedArith : sig
 (* QUESTION: if ival is the maximum tagged word value, then ival+ival+2 is 0w0 in
  * the native integer size.  Does this cause problems?
  *)
-		pureOp (P.SUB, ity, [num (ival+ival+2), comp v2])
+                pureOp (P.SUB, ity, [num (ival+ival+2), comp v2])
 	    | (SUB, [v1, NUM{ival, ...}]) =>
 		pureOp (P.SUB, ity, [comp v1, num (ival+ival)])
 	    | (SUB, [v1, v2]) =>
@@ -192,7 +195,10 @@ structure TaggedArith : sig
 	     of (IADD, [NUM{ival, ...}, b]) => continue (P.IADD, [num(ival+ival), comp b])
 	      | (IADD, [a, NUM{ival, ...}]) => continue (P.IADD, [comp a, num(ival+ival)])
 	      | (IADD, [a, b]) => continue (P.IADD, [comp a, stripTag(comp b)])
-	      | (ISUB, [NUM{ival, ...}, b]) => continue (P.ISUB, [num(ival+ival+2), comp b])
+	      | (ISUB, [NUM{ival, ...}, b]) =>
+                  if (ival = maxInt)
+                    then continue (P.ISUB, [num(ival+ival+1), stripTag(comp b)])
+                    else continue (P.ISUB, [num(ival+ival+2), comp b])
 	      | (ISUB, [a, NUM{ival, ...}]) => continue (P.ISUB, [comp a, num(ival+ival)])
 	      | (ISUB, [a, b]) => tagResult (P.ISUB, [comp a, comp b])
 	      | (IMUL, [NUM{ival=m, ...}, NUM{ival=n, ...}]) =>
