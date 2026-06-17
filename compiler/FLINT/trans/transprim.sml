@@ -79,6 +79,9 @@ structure TransPrim : sig
     (* make a comparison prim expression *)
     fun pCMP (tst, kind, ty, tycs) = PL.PRIM(FP.CMP{oper=tst, kind=kind}, ty, tycs)
 
+    (* make a common prim expression *)
+    fun pPRIM (p, ty, tycs) = PL.PRIM(FP.PRIM p, ty, tycs)
+
     (* default int/word kinds *)
     val dfltIntKind = PO.INT Tgt.defaultIntSz
     val dfltWordKind = PO.UINT Tgt.defaultIntSz
@@ -465,19 +468,30 @@ structure TransPrim : sig
                     | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
                     | InlP.CNTTZ k => raise Fail "TODO: cntTrailingZeros"
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
-                    | InlP.CEIL_LOG2(k as PO.UINT sz) => let
+                    | InlP.CEIL_LOG2(PO.UINT sz) => let
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
                         val argt = LB.ltc_num sz
+                        val (argt', sz', argCopy) = if sz < Tgt.defaultIntSz
+                              then let
+                                (* we promote smaller integer types to the default size *)
+                                fun copy arg = PL.APP(
+                                      pPRIM(CP.COPY(sz, Tgt.defaultIntSz), lt_arw(argt, lt_int), []),
+                                      arg)
+                                in
+                                  (lt_int, Tgt.defaultIntSz, copy)
+                                end
+                              else (argt, sz, Fn.id)
+                        val k = PO.UINT sz'
                         in
                           mkFn argt (fn w => mkApp2(
-                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltIntKind}, lt_arw(lt_ipair, lt_int), []),
-                            PL.INT{ival=IntInf.fromInt sz, ty=Tgt.defaultIntSz},
+                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltWordKind}, lt_arw(lt_ipair, lt_int), []),
+                            PL.INT{ival=IntInf.fromInt sz', ty=Tgt.defaultIntSz},
                             PL.APP(
-                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, lt_arw(argt, lt_int), []),
+                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, lt_arw(argt', lt_int), []),
                               mkApp2(
-                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, lt_arw(lt_tup[argt, argt], argt), []),
-                                w,
-                                PL.INT{ival=1, ty=sz}))))
+                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, lt_arw(lt_tup[argt', argt'], argt'), []),
+                                argCopy w,
+                                PL.INT{ival=1, ty=sz'}))))
                         end
                     | InlP.MIN k => inlminmax (k, false)
                     | InlP.MAX k => inlminmax (k, true)
