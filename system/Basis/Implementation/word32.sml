@@ -75,7 +75,9 @@ structure Word32Imp : WORD =
     val countZeros : word -> int
     val countOnes = popCount
 
-    val countLeadingZeros : word -> int
+*)
+    val countLeadingZeros = W32.cntLeadingZeros
+(*
     val countLeadingOnes : word -> int
 
     val countTrailingZeros : word -> int

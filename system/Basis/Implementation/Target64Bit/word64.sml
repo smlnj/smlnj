@@ -85,7 +85,9 @@ structure Word64Imp : sig
     val countZeros : word -> int
     val countOnes = popCount
 
-    val countLeadingZeros : word -> int
+*)
+    val countLeadingZeros = W64.cntLeadingZeros
+(*
     val countLeadingOnes : word -> int
 
     val countTrailingZeros : word -> int

@@ -82,12 +82,27 @@ structure TransPrim : sig
     (* make a common prim expression *)
     fun pPRIM (p, ty, tycs) = PL.PRIM(FP.PRIM p, ty, tycs)
 
+    (* integers *)
+    fun pINT (n, sz) = PL.INT{ival = IntInf.fromInt n, ty = sz}
+
     (* default int/word kinds *)
     val dfltIntKind = PO.INT Tgt.defaultIntSz
     val dfltWordKind = PO.UINT Tgt.defaultIntSz
 
   (* unsigned comparison on tagged integers used for bounds checking *)
     val pLESSU = pCMP(CmpP.LT, dfltWordKind, lt_icmp, [])
+
+    (* subtraction of unsigned integers *)
+    val pSUBU = pPURE(PureP.SUB, dfltWordKind, lt_arw(lt_ipair, lt_int), [])
+
+    (* promote words to the default size *)
+    fun promote fromSz = let
+          val argt = LB.ltc_num fromSz
+          in
+            fn arg => PL.APP(
+                pPRIM(CP.COPY(fromSz, Tgt.defaultIntSz), lt_arw(argt, lt_int), []),
+                arg)
+          end
 
     val lt_len = LD.ltc_poly([LD.tkc_mono], [lt_arw(LB.ltc_tv 0, lt_int)])
     val lt_upd = let
@@ -212,9 +227,9 @@ structure TransPrim : sig
           end
 
   (* shift primops *)
-    fun rshiftOp k = PL.PRIM(FP.PURE{oper=PureP.RSHIFT, kind=k}, shiftTy k, [])
-    fun rshiftlOp k = PL.PRIM(FP.PURE{oper=PureP.RSHIFTL, kind=k}, shiftTy k, [])
-    fun lshiftOp k = PL.PRIM(FP.PURE{oper=PureP.LSHIFT, kind=k}, shiftTy k, [])
+    fun rshiftOp k = pPURE(PureP.RSHIFT, k, shiftTy k, [])
+    fun rshiftlOp k = pPURE(PureP.RSHIFTL, k, shiftTy k, [])
+    fun lshiftOp k = pPURE(PureP.LSHIFT, k, shiftTy k, [])
 
   (* zero literal for given word type *)
     fun lword0 (PO.UINT sz) = PL.WORD{ival = 0, ty = sz}
@@ -240,7 +255,7 @@ structure TransPrim : sig
     val extendInf = pickName ("extend32Inf", "extend64Inf")
     end (* local *)
 
-  (* trans : Primop.primop * Lty.lty * Lty.tyc list
+  (* trans : Primop.primop * Lty.lty * Lty.tyc list -> PLambda.lexp
    *
    * Translate Absyn primop to PLambda form using given
    * intrinsic PLambda type and type parameters
@@ -464,7 +479,18 @@ structure TransPrim : sig
                     | InlP.RSHIFTL k => inlineLogicalShift (rshiftlOp, k)
                     | InlP.CNTZ k => raise Fail "TODO: cntZeros"
                     | InlP.CNTO k => raise Fail "TODO: cntOnes"
-                    | InlP.CNTLZ k => raise Fail "TODO: cntLeadingZeros"
+                    | InlP.CNTLZ(PO.UINT sz) => let
+                        fun count (w, sz) = PL.APP(
+                              pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
+                              w)
+                        in
+                          mkFn (LB.ltc_num sz) (fn w => if sz < Tgt.defaultIntSz
+                            then mkApp2(
+                              pSUBU,
+                              count (promote sz w, Tgt.defaultIntSz),
+                              pINT(Tgt.defaultIntSz - sz, Tgt.defaultIntSz))
+                            else count (w, sz))
+                        end
                     | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
                     | InlP.CNTTZ k => raise Fail "TODO: cntTrailingZeros"
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
@@ -472,24 +498,18 @@ structure TransPrim : sig
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
                         val argt = LB.ltc_num sz
                         val (argt', sz', argCopy) = if sz < Tgt.defaultIntSz
-                              then let
-                                (* we promote smaller integer types to the default size *)
-                                fun copy arg = PL.APP(
-                                      pPRIM(CP.COPY(sz, Tgt.defaultIntSz), lt_arw(argt, lt_int), []),
-                                      arg)
-                                in
-                                  (lt_int, Tgt.defaultIntSz, copy)
-                                end
+                              (* we promote smaller integer types to the default size *)
+                              then (lt_int, Tgt.defaultIntSz, promote sz)
                               else (argt, sz, Fn.id)
                         val k = PO.UINT sz'
                         in
                           mkFn argt (fn w => mkApp2(
-                            PL.PRIM(FP.PURE{oper=PureP.SUB, kind=dfltWordKind}, lt_arw(lt_ipair, lt_int), []),
-                            PL.INT{ival=IntInf.fromInt sz', ty=Tgt.defaultIntSz},
+                            pSUBU,
+                            pINT(sz', Tgt.defaultIntSz),
                             PL.APP(
-                              PL.PRIM(FP.PURE{oper=PureP.CNTLZ, kind=k}, lt_arw(argt', lt_int), []),
+                              pPURE(PureP.CNTLZ, k, lt_arw(argt', lt_int), []),
                               mkApp2(
-                                PL.PRIM(FP.PURE{oper=PureP.SUB, kind=k}, lt_arw(lt_tup[argt', argt'], argt'), []),
+                                pPURE(PureP.SUB, k, lt_arw(lt_tup[argt', argt'], argt'), []),
                                 argCopy w,
                                 PL.INT{ival=1, ty=sz'}))))
                         end
