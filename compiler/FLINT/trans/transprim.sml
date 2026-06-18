@@ -298,6 +298,16 @@ structure TransPrim : sig
 			  lword0 kind,
 			  mkApp2(shiftOp kind, w, cnt)))))
 		end
+        (* inline expand a population counting operation *)
+          fun inlPopCount sz w = let
+                fun count (w, sz) = PL.APP(
+                      pPURE(PureP.CNTPOP, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
+                      w)
+                in
+                  if sz < Tgt.defaultIntSz
+                    then count (promote sz w, Tgt.defaultIntSz)
+                    else count (w, sz)
+                end
 	(* inline expand an arithmetic-shift-right operation; for this operation, we need
 	 * some care to get the sign bit extension correct.  If the size of the value
 	 * being shifted is less than the default integer size, then we shift it left first
@@ -477,16 +487,15 @@ structure TransPrim : sig
                     | InlP.LSHIFT k => inlineLogicalShift (lshiftOp, k)
                     | InlP.RSHIFT k => inlineArithmeticShiftRight k
                     | InlP.RSHIFTL k => inlineLogicalShift (rshiftlOp, k)
-                    | InlP.CNTZ(PO.UINT sz) => raise Fail "TODO: cntZeros"
-                    | InlP.CNTO(PO.UINT sz) => let
-                        fun count (w, sz) = PL.APP(
-                              pPURE(PureP.CNTPOP, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
-                              w)
-                        in
-                          mkFn (LB.ltc_num sz) (fn w => if sz < Tgt.defaultIntSz
-                            then count (promote sz w, Tgt.defaultIntSz)
-                            else count (w, sz))
-                        end
+                    | InlP.CNTZ(PO.UINT sz) =>
+                        (* CNTZ(w) = sz - CNTO(w) *)
+                        mkFn
+                          (LB.ltc_num sz)
+                          (fn w => mkApp2(
+                            pPURE(PureP.SUB, dfltIntKind, lt_arw(lt_ipair, lt_int), []),
+                            pINT (sz, Tgt.defaultIntSz),
+                            inlPopCount sz w))
+                    | InlP.CNTO(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlPopCount sz)
                     | InlP.CNTLZ(PO.UINT sz) => let
                         fun count (w, sz) = PL.APP(
                               pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),

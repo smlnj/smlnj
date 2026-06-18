@@ -63,17 +63,11 @@ structure Word32Imp : WORD =
     val scan = NumScan32.scanWord
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
-
-    val popCount = W32PopCount.popCount
-
   (* added for Basis Library proposal 2026-001 *)
     val rotateL = W32.rotateL
     val rotateR = W32.rotateR
 
-(*
     val countZeros = W32.cntZeros
-*)
     val countOnes = W32.cntOnes
 
     val countLeadingZeros = W32.cntLeadingZeros

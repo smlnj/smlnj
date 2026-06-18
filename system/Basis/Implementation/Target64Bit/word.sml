@@ -75,17 +75,11 @@ structure WordImp : WORD =
 	  end
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
-
-    fun popCount w = W64PopCount.popCount (Word.toLarge w)
-
   (* added for Basis Library proposal 2026-001 *)
     val rotateL = Word.rotateL
     val rotateR = Word.rotateR
 
-(* TODO:
     val countZeros = Word.cntZeros
-*)
     val countOnes = Word.cntOnes
 
     val countLeadingZeros = Word.cntLeadingZeros

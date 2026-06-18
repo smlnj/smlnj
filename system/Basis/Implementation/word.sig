@@ -62,24 +62,14 @@ signature WORD_2004 =
 
   end
 
-(* includes Basis Library proposal 2016-001 *)
-signature WORD_2016 =
-  sig
-    include WORD_2004
-
-    val popCount : word -> int
-
-  end
-
 signature WORD_2026 =
   sig
     include WORD_2004
 
     val rotateL : word * Word.word -> word
     val rotateR : word * Word.word -> word
-(*
+
     val countZeros : word -> int
-*)
     val countOnes : word -> int
 
     val countLeadingZeros : word -> int

@@ -73,17 +73,11 @@ structure Word64Imp : sig
     val scan = NumScan64.scanWord
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
-
-    val popCount = W64PopCount.popCount
-
   (* added for Basis Library proposal 2026-001 *)
     val rotateL = W64.rotateL
     val rotateR = W64.rotateR
 
-(*
     val countZeros = W64.cntZeros
-*)
     val countOnes = W64.cntOnes
 
     val countLeadingZeros = W64.cntLeadingZeros

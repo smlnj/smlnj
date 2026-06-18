@@ -80,27 +80,11 @@ structure Word8Imp : WORD =
 	  end
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
-
-    fun popCount w = let
-        (* pop count of each 2 bits into those 2 bits *)
-          val w = w - W8.andb(W8.rshiftl(w, 0w1), 0wx55)
-        (* pop count of each 4 bits into those 4 bits *)
-          val w = W8.andb(w, 0wx33) + W8.andb(W8.rshiftl(w, 0w2), 0wx33)
-        (* pop count of each 8 bits into those 8 bits *)
-          val w = w + W8.rshiftl(w, 0w4)
-	  in
-          (* mask out result *)
-	    W8.toIntX (W8.andb(w, 0wx0F))
-	  end
-
   (* added for Basis Library proposal 2026-001 *)
     val rotateL  : word * Word.word -> word = W8.rotateL
     val rotateR : word * Word.word -> word = W8.rotateR
 
-(*
     val countZeros = W8.cntZeros
-*)
     val countOnes = W8.cntOnes
 
     val countLeadingZeros = W8.cntLeadingZeros
