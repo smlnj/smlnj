@@ -147,12 +147,19 @@ structure TaggedArith : sig
                  * we know that the argument is not zero!
                  *)
                 tag(pureOp (P.CNTLZ, ity, [comp v]))
-            | (CNTTZ, [v]) =>
+            | (CNTTZ, [v]) => if (sz < Target.defaultIntSz)
+                (* CNTTZ(v) == CNTTZ((1 << sz) | (v >> 1)) *)
+                then tag(pureOp(P.CNTTZ, ity, [
+                    pureOp(P.ORB, ity, [
+                        num(IntInf.<<(1, Word.fromInt sz)),
+                        untagUInt (comp v)
+                      ])
+                  ]))
                 (* rotate the argument right by one; this puts the tag bit into
                  * the high-order bit, so the count for zero will return the correct
-                 * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63
+                 * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63)
                  *)
-                tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
+                else tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
             (* NOTE: `CPS/opt/lower.sml` should eliminate the following two cases *)
             | (ROTL, _) => error [".pure: ROTL not supported on tagged words"]
             | (ROTR, _) => error [".pure: ROTR not supported on tagged words"]

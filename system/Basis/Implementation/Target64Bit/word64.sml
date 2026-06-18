@@ -81,20 +81,22 @@ structure Word64Imp : sig
     val rotateL = W64.rotateL
     val rotateR = W64.rotateR
 
-(* TODO:
+(*
     val countZeros = W64.cntZeros
 *)
     val countOnes = W64.cntOnes
 
     val countLeadingZeros = W64.cntLeadingZeros
 (*
-    val countLeadingOnes : word -> int
-
-    val countTrailingZeros : word -> int
-    val countTrailingOnes : word -> int
-
-    val isPowerOf2 : word -> bool
+    val countLeadingOnes = W64.cntLeadingOnes
 *)
+
+    val countTrailingZeros = W64.cntTrailingZeros
+(*
+    val countTrailingOnes = W64.cntTrailingOnes
+*)
+
+    val isPowerOf2 = W64.isPowOf2
     val ceilLog2 = W64.ceilLog2
 
   end

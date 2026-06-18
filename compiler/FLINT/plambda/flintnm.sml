@@ -113,13 +113,14 @@ fun flint_prim (po as (d, p, lt, ts), vs, v, e) = let
         case p
          of PO.CMP _ => branch ()
           | PO.PRIM p' => (case p'
-               of CP.BOXED => branch ()
-                | CP.UNBOXED => branch ()
-                | CP.FSGN _ => branch ()
+               of CP.FSGN _ => branch ()
                 | CP.PTREQL => branch ()
                 | CP.PTRNEQ => branch ()
                 | CP.POLYEQL => branch ()
                 | CP.POLYNEQ => branch ()
+                | CP.BOXED => branch ()
+                | CP.UNBOXED => branch ()
+                | CP.IS_POW2 _ => branch ()
                 | CP.GETHDLR => prim0 ()
                 | CP.GETVAR => prim0 ()
                 | _ => default ()

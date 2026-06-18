@@ -500,7 +500,14 @@ structure TransPrim : sig
                             else count (w, sz))
                         end
                     | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
-                    | InlP.CNTTZ k => raise Fail "TODO: cntTrailingZeros"
+                    | InlP.CNTTZ(PO.UINT sz) => let
+                        val argt = LB.ltc_num sz
+                        in
+                          mkFn argt (fn w =>
+                            PL.APP(
+                              pPURE(PureP.CNTTZ, PO.UINT sz, lt_arw(argt, lt_int), []),
+                              w))
+                        end
                     | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
                     | InlP.CEIL_LOG2(PO.UINT sz) => let
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)

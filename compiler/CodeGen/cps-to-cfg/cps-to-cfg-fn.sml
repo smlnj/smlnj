@@ -53,6 +53,9 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
   (* return true if integers of `sz` bits are represented as tagged values *)
     fun isTaggedInt sz = (sz < Target.mlValueSz)
 
+  (* return true if integers of `sz` bits are represented as native values *)
+    fun isNativeInt sz = (sz = Target.mlValueSz)
+
   (* normalize an integer size to a native machine-size *)
     fun normSz sz = if isTaggedInt sz then ity else sz
 
@@ -70,6 +73,7 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
   (* some useful constants *)
     fun zero sz = szNum sz 0
     val one = num 1
+    val two = num 2
     fun allOnes sz = num(ConstArith.bNot(sz, 0)) (* sz-wide 1's *)
     val signBit = num(IntInf.<<(1, Word.fromInt ity - 0w1))
 
@@ -695,6 +699,20 @@ C.NUMt{sz=sz}
 		    | (P.FCMP{oper, size}, _) =>
 			mkBr (TP.FCMP{oper=oper, sz=size})
 		    | (P.FSGN sz, _) => mkBr (TP.FSGN sz)
+                    | (P.IS_POW2 sz, [v]) => let
+                        fun branch (arg, cnt) = C.BRANCH(
+                              TP.CMP{oper=P.EQL, signed=false, sz=ity},
+                              [pureOp(TP.CNTPOP, ity, [arg]), cnt],
+                              unkProb, k1, k2)
+                        in
+                          if isNativeInt sz
+                            (* for native numbers, one bit set ==> power of two *)
+                            then branch (genV v, one)
+                          (* for tagged numbers, two bits set ==> power of two *)
+                          else if (sz = defaultIntSz)
+                            then branch (genV v, two)
+                            else branch (zeroExtend(sz, genV v), two)
+                        end
 		    | (P.BOXED, [v]) => boxedTest (genV v, k1, k2)
 		    | (P.UNBOXED, [v]) => boxedTest (genV v, k2, k1)
 		    | (P.PEQL, _) => mkBr TP.PEQL

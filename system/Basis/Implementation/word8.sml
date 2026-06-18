@@ -98,20 +98,22 @@ structure Word8Imp : WORD =
     val rotateL  : word * Word.word -> word = W8.rotateL
     val rotateR : word * Word.word -> word = W8.rotateR
 
-(* TODO:
+(*
     val countZeros = W8.cntZeros
 *)
     val countOnes = W8.cntOnes
 
     val countLeadingZeros = W8.cntLeadingZeros
 (*
-    val countLeadingOnes : word -> int
-
-    val countTrailingZeros : word -> int
-    val countTrailingOnes : word -> int
-
-    val isPowerOf2 : word -> bool
+    val countLeadingOnes = W8.cntLeadingOnes
 *)
+
+    val countTrailingZeros = W8.cntTrailingZeros
+(*
+    val countTrailingOnes = W8.cntTrailingOnes
+*)
+
+    val isPowerOf2 = W8.isPowOf2
     val ceilLog2 = W8.ceilLog2
 
   end  (* structure Word8 *)
