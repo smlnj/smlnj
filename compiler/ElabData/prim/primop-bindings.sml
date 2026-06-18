@@ -143,25 +143,25 @@ structure PrimopBindings : sig
 	    arith_ww_w("orb", PureP.ORB) :-:
 	    arith_ww_w("xorb", PureP.XORB) :-:
 	    arith_ww_w("andb", PureP.ANDB) :-:
-	    shift("rshift", P.INLINE(InlP.RSHIFT nk)) :-:
-	    shift("rshiftl", P.INLINE(InlP.RSHIFTL nk)) :-:
-	    shift("lshift", P.INLINE(InlP.LSHIFT nk)) :-:
+	    shift("rshift", P.INLINE(InlP.RSHIFT sz)) :-:
+	    shift("rshiftl", P.INLINE(InlP.RSHIFTL sz)) :-:
+	    shift("lshift", P.INLINE(InlP.LSHIFT sz)) :-:
 	    shift("raw_rshift", P.PURE{oper=PureP.RSHIFT, kind=nk}) :-:
 	    shift("raw_rshiftl", P.PURE{oper=PureP.RSHIFTL, kind=nk}) :-:
 	    shift("raw_lshift", P.PURE{oper=PureP.LSHIFT, kind=nk}) :-:
 	    mk("notb", w_w, P.PURE{oper=PureP.NOTB, kind=nk}) :-:
-	    mk("cnt_ones", w_i, P.INLINE(InlP.CNTO nk)) :-:
-	    mk("cnt_zeros", w_i, P.INLINE(InlP.CNTZ nk)) :-:
+	    mk("cnt_ones", w_i, P.INLINE(InlP.CNTO sz)) :-:
+	    mk("cnt_zeros", w_i, P.INLINE(InlP.CNTZ sz)) :-:
 (* QUESTION: do we want separate "inline" versions of the bit counting operators
  * that check for zero and a "raw" version that doesn't, or are we good with
  * a single form?.
  *)
-	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLO nk)) :-:
-	    mk("cnt_leading_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
-	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTTO nk)) :-:
-	    mk("cnt_trailing_zeros", w_i, P.INLINE(InlP.CNTLZ nk)) :-:
+	    mk("cnt_leading_ones", w_i, P.INLINE(InlP.CNTLO sz)) :-:
+	    mk("cnt_leading_zeros", w_i, P.INLINE(InlP.CNTLZ sz)) :-:
+	    mk("cnt_trailing_ones", w_i, P.INLINE(InlP.CNTTO sz)) :-:
+	    mk("cnt_trailing_zeros", w_i, P.INLINE(InlP.CNTLZ sz)) :-:
             mk("is_pow2", w_b, P.PRIM(CP.IS_POW2 sz)) :-:
-            mk("ceil_log2", ar(wty, BT.wordTy), P.INLINE(InlP.CEIL_LOG2 nk)) :-:
+            mk("ceil_log2", ar(wty, BT.wordTy), P.INLINE(InlP.CEIL_LOG2 sz)) :-:
 	    shift("rotl", P.PURE{oper=PureP.ROTL, kind=nk}) :-:
 	    shift("rotr", P.PURE{oper=PureP.ROTR, kind=nk}) :-:
 	    cmp("lt", CmpP.LT) :-:

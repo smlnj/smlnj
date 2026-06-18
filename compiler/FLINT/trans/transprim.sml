@@ -282,11 +282,9 @@ structure TransPrim : sig
 		],
 		NONE)
 	(* inline expand a checked logical shift operation (right or left) *)
-	  fun inlineLogicalShift (shiftOp, kind) = let
-		val shiftLimit = (case kind
-		       of PO.UINT lim => PL.WORD{ival = IntInf.fromInt lim, ty = Tgt.defaultIntSz}
-			| _ => bug "unexpected kind in inlineShift"
-		      (* end case *))
+	  fun inlineLogicalShift (shiftOp, sz) = let
+                val kind = PO.UINT sz
+		val shiftLimit = PL.WORD{ival = IntInf.fromInt sz, ty = Tgt.defaultIntSz}
 		val argt = lt_tup [baselt kind, lt_int]
 		val cmpShiftAmt = pCMP(CmpP.LTE, PO.UINT Tgt.defaultIntSz, lt_icmp, [])
 		in
@@ -325,7 +323,8 @@ structure TransPrim : sig
 	 * produce the final result.  We use two shifts so that the resulting high bits will
 	 * be zeros.
 	 *)
-	  fun inlArithmeticShiftRight (kind as PO.UINT sz) = let
+	  fun inlArithmeticShiftRight sz = let
+                val kind = PO.UINT sz
 		fun lword n = PL.WORD{ival = Int.toLarge n, ty = Tgt.defaultIntSz}
 		val shiftLimit = lword sz
 		val shiftWidth = lword Tgt.defaultIntSz
@@ -494,10 +493,10 @@ structure TransPrim : sig
                     | InlP.REM(k as (PO.INT sz)) =>
                         inldiv (k, FP.ARITH{oper=ArithP.IREM, sz=sz}, lt, ts)
                     | InlP.REM k => inldiv (k, FP.PURE{oper=PureP.REM, kind=k}, lt, ts)
-                    | InlP.LSHIFT k => inlineLogicalShift (lshiftOp, k)
-                    | InlP.RSHIFT k => inlArithmeticShiftRight k
-                    | InlP.RSHIFTL k => inlineLogicalShift (rshiftlOp, k)
-                    | InlP.CNTZ(PO.UINT sz) =>
+                    | InlP.LSHIFT sz => inlineLogicalShift (lshiftOp, sz)
+                    | InlP.RSHIFT sz => inlArithmeticShiftRight sz
+                    | InlP.RSHIFTL sz => inlineLogicalShift (rshiftlOp, sz)
+                    | InlP.CNTZ sz =>
                         (* CNTZ(w) = sz - CNTO(w) *)
                         mkFn
                           (LB.ltc_num sz)
@@ -505,9 +504,9 @@ structure TransPrim : sig
                               pPURE(PureP.SUB, dfltIntKind, lt_arw(lt_ipair, lt_int), []),
                               pINT (sz, Tgt.defaultIntSz),
                               inlPopCount sz w))
-                    | InlP.CNTO(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlPopCount sz)
-                    | InlP.CNTLZ(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlCntLZ sz)
-                    | InlP.CNTLO(PO.UINT sz) => let
+                    | InlP.CNTO sz => mkFn (LB.ltc_num sz) (inlPopCount sz)
+                    | InlP.CNTLZ sz => mkFn (LB.ltc_num sz) (inlCntLZ sz)
+                    | InlP.CNTLO sz => let
                         val argt = LB.ltc_num sz
                         in
                           mkFn argt (fn w =>
@@ -516,8 +515,8 @@ structure TransPrim : sig
                                 pPURE(PureP.NOTB, PO.UINT sz, lt_arw(argt, argt), []),
                                 w)))
                         end
-                    | InlP.CNTTZ(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlCntTZ sz)
-                    | InlP.CNTTO(PO.UINT sz) => let
+                    | InlP.CNTTZ sz => mkFn (LB.ltc_num sz) (inlCntTZ sz)
+                    | InlP.CNTTO sz => let
                         val argt = LB.ltc_num sz
                         in
                           mkFn argt (fn w =>
@@ -526,7 +525,7 @@ structure TransPrim : sig
                                 pPURE(PureP.NOTB, PO.UINT sz, lt_arw(argt, argt), []),
                                 w)))
                         end
-                    | InlP.CEIL_LOG2(PO.UINT sz) => let
+                    | InlP.CEIL_LOG2 sz => let
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
                         val argt = LB.ltc_num sz
                         val (argt', sz', argCopy) = if sz < Tgt.defaultIntSz
