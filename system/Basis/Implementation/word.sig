@@ -76,9 +76,7 @@ signature WORD_2026 =
     val countLeadingOnes : word -> int
 
     val countTrailingZeros : word -> int
-(*
     val countTrailingOnes : word -> int
-*)
 
     val isPowerOf2 : word -> bool
     val ceilLog2 : word -> Word.word

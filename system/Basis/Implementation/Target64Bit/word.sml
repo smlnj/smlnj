@@ -86,9 +86,7 @@ structure WordImp : WORD =
     val countLeadingOnes = Word.cntLeadingOnes
 
     val countTrailingZeros = Word.cntTrailingZeros
-(*
     val countTrailingOnes = Word.cntTrailingOnes
-*)
 
     val isPowerOf2 = Word.isPowOf2
     val ceilLog2 = Word.ceilLog2

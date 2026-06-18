@@ -313,6 +313,11 @@ structure TransPrim : sig
                 PL.APP(
                   pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
                   w)
+        (* inline expand a count-trailing-zeros operation *)
+          fun inlCntTZ sz w =
+                PL.APP(
+                  pPURE(PureP.CNTTZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
+                  w)
 	(* inline expand an arithmetic-shift-right operation; for this operation, we need
 	 * some care to get the sign bit extension correct.  If the size of the value
 	 * being shifted is less than the default integer size, then we shift it left first
@@ -511,15 +516,16 @@ structure TransPrim : sig
                                 pPURE(PureP.NOTB, PO.UINT sz, lt_arw(argt, argt), []),
                                 w)))
                         end
-                    | InlP.CNTTZ(PO.UINT sz) => let
+                    | InlP.CNTTZ(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlCntTZ sz)
+                    | InlP.CNTTO(PO.UINT sz) => let
                         val argt = LB.ltc_num sz
                         in
                           mkFn argt (fn w =>
-                            PL.APP(
-                              pPURE(PureP.CNTTZ, PO.UINT sz, lt_arw(argt, lt_int), []),
-                              w))
+                            inlCntTZ sz
+                              (PL.APP(
+                                pPURE(PureP.NOTB, PO.UINT sz, lt_arw(argt, argt), []),
+                                w)))
                         end
-                    | InlP.CNTTO k => raise Fail "TODO: cntTrailingOnes"
                     | InlP.CEIL_LOG2(PO.UINT sz) => let
                         (* CEIL_LOG2(x) == sz - CNTLZ(x-1) *)
                         val argt = LB.ltc_num sz

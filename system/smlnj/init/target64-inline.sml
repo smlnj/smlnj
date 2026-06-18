@@ -286,9 +286,7 @@ structure InlineT =
         val cntLeadingZeros : word -> int  = InLine.word_cnt_leading_zeros
         val cntLeadingOnes : word -> int   = InLine.word_cnt_leading_ones
         val cntTrailingZeros : word -> int = InLine.word_cnt_trailing_zeros
-(*
         val cntTrailingOnes : word -> int  = InLine.word_cnt_trailing_ones
-*)
         val isPowOf2 : word -> bool        = InLine.word_is_pow2
         val ceilLog2 : word -> word        = InLine.word_ceil_log2
 
@@ -342,9 +340,7 @@ structure InlineT =
         val cntLeadingZeros : word8 -> int      = InLine.word8_cnt_leading_zeros
         val cntLeadingOnes : word8 -> int       = InLine.word8_cnt_leading_ones
         val cntTrailingZeros : word8 -> int     = InLine.word8_cnt_trailing_zeros
-(*
         val cntTrailingOnes : word8 -> int      = InLine.word8_cnt_trailing_ones
-*)
         val isPowOf2 : word8 -> bool            = InLine.word8_is_pow2
         val ceilLog2 : word8 -> word            = InLine.word8_ceil_log2
 	end (* local *)
@@ -399,9 +395,7 @@ structure InlineT =
         val cntLeadingZeros : word32 -> int      = InLine.word32_cnt_leading_zeros
         val cntLeadingOnes : word32 -> int       = InLine.word32_cnt_leading_ones
         val cntTrailingZeros : word32 -> int     = InLine.word32_cnt_trailing_zeros
-(*
         val cntTrailingOnes : word32 -> int      = InLine.word32_cnt_trailing_ones
-*)
         val isPowOf2 : word32 -> bool            = InLine.word32_is_pow2
         val ceilLog2 : word32 -> word            = InLine.word32_ceil_log2
 	end (* local *)
@@ -447,9 +441,7 @@ structure InlineT =
         val cntLeadingZeros : word64 -> int      = InLine.word64_cnt_leading_zeros
         val cntLeadingOnes : word64 -> int       = InLine.word64_cnt_leading_ones
         val cntTrailingZeros : word64 -> int     = InLine.word64_cnt_trailing_zeros
-(*
         val cntTrailingOnes : word64 -> int      = InLine.word64_cnt_trailing_ones
-*)
         val isPowOf2 : word64 -> bool            = InLine.word64_is_pow2
         val ceilLog2 : word64 -> word            = InLine.word64_ceil_log2
 
