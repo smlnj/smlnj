@@ -71,9 +71,7 @@ structure Word32Imp : WORD =
     val countOnes = W32.cntOnes
 
     val countLeadingZeros = W32.cntLeadingZeros
-(*
     val countLeadingOnes = W32.cntLeadingOnes
-*)
 
     val countTrailingZeros = W32.cntTrailingZeros
 (*

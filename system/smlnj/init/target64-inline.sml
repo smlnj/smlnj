@@ -284,9 +284,7 @@ structure InlineT =
         val cntZeros : word -> int         = InLine.word_cnt_zeros
         val cntOnes : word -> int          = InLine.word_cnt_ones
         val cntLeadingZeros : word -> int  = InLine.word_cnt_leading_zeros
-(*
         val cntLeadingOnes : word -> int   = InLine.word_cnt_leading_ones
-*)
         val cntTrailingZeros : word -> int = InLine.word_cnt_trailing_zeros
 (*
         val cntTrailingOnes : word -> int  = InLine.word_cnt_trailing_ones
@@ -342,9 +340,7 @@ structure InlineT =
         val cntZeros : word8 -> int             = InLine.word8_cnt_zeros
         val cntOnes : word8 -> int              = InLine.word8_cnt_ones
         val cntLeadingZeros : word8 -> int      = InLine.word8_cnt_leading_zeros
-(*
         val cntLeadingOnes : word8 -> int       = InLine.word8_cnt_leading_ones
-*)
         val cntTrailingZeros : word8 -> int     = InLine.word8_cnt_trailing_zeros
 (*
         val cntTrailingOnes : word8 -> int      = InLine.word8_cnt_trailing_ones
@@ -401,9 +397,7 @@ structure InlineT =
         val cntZeros : word32 -> int             = InLine.word32_cnt_zeros
         val cntOnes : word32 -> int              = InLine.word32_cnt_ones
         val cntLeadingZeros : word32 -> int      = InLine.word32_cnt_leading_zeros
-(*
         val cntLeadingOnes : word32 -> int       = InLine.word32_cnt_leading_ones
-*)
         val cntTrailingZeros : word32 -> int     = InLine.word32_cnt_trailing_zeros
 (*
         val cntTrailingOnes : word32 -> int      = InLine.word32_cnt_trailing_ones
@@ -451,9 +445,7 @@ structure InlineT =
         val cntZeros : word64 -> int             = InLine.word64_cnt_zeros
         val cntOnes : word64 -> int              = InLine.word64_cnt_ones
         val cntLeadingZeros : word64 -> int      = InLine.word64_cnt_leading_zeros
-(*
         val cntLeadingOnes : word64 -> int       = InLine.word64_cnt_leading_ones
-*)
         val cntTrailingZeros : word64 -> int     = InLine.word64_cnt_trailing_zeros
 (*
         val cntTrailingOnes : word64 -> int      = InLine.word64_cnt_trailing_ones

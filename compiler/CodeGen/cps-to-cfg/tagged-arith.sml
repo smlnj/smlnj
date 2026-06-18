@@ -36,6 +36,9 @@ structure TaggedArith : sig
     fun pureOp (rator, sz, args) =
 	  C.PURE{oper=P.PURE_ARITH{oper=rator, sz=sz}, args=args}
 
+    fun zExt (from, to, arg) =
+          C.PURE{oper=P.EXTEND{signed=false, from=from, to=to}, args=[arg]}
+
     fun var x = C.VAR{name=x}
 
     (* maximum tagged signed integer *)
@@ -142,11 +145,16 @@ structure TaggedArith : sig
             | (CNTPOP, [v]) =>
                 (* untag argument and then count ones *)
                 tag(pureOp (P.CNTPOP, ity, [untagUInt (comp v)]))
-            | (CNTLZ, [v]) =>
-                (* the tagging does not affect the leading-zero count; plus,
-                 * we know that the argument is not zero!
+            | (CNTLZ, [v]) => if (sz < Target.defaultIntSz)
+                (* for smaller sizes, we need to adjust the result *)
+                then tag(pureOp (P.SUB, ity, [
+                    pureOp (P.CNTLZ, ity, [zExt(sz, ity, comp v)]),
+                    num(IntInf.fromInt(Target.defaultIntSz - sz))
+                  ]))
+                (* for default ints, the tagging does not affect the
+                 * leading-zero count; plus we know that the argument is not zero!
                  *)
-                tag(pureOp (P.CNTLZ, ity, [comp v]))
+                else tag(pureOp (P.CNTLZ, ity, [comp v]))
             | (CNTTZ, [v]) => if (sz < Target.defaultIntSz)
                 (* CNTTZ(v) == CNTTZ((1 << sz) | (v >> 1)) *)
                 then tag(pureOp(P.CNTTZ, ity, [

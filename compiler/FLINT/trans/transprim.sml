@@ -308,6 +308,11 @@ structure TransPrim : sig
                     then count (promote sz w, Tgt.defaultIntSz)
                     else count (w, sz)
                 end
+        (* inline expand a count-leading-zeros operation *)
+          fun inlCntLZ sz w =
+                PL.APP(
+                  pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
+                  w)
 	(* inline expand an arithmetic-shift-right operation; for this operation, we need
 	 * some care to get the sign bit extension correct.  If the size of the value
 	 * being shifted is less than the default integer size, then we shift it left first
@@ -315,7 +320,7 @@ structure TransPrim : sig
 	 * produce the final result.  We use two shifts so that the resulting high bits will
 	 * be zeros.
 	 *)
-	  fun inlineArithmeticShiftRight (kind as PO.UINT sz) = let
+	  fun inlArithmeticShiftRight (kind as PO.UINT sz) = let
 		fun lword n = PL.WORD{ival = Int.toLarge n, ty = Tgt.defaultIntSz}
 		val shiftLimit = lword sz
 		val shiftWidth = lword Tgt.defaultIntSz
@@ -485,30 +490,27 @@ structure TransPrim : sig
                         inldiv (k, FP.ARITH{oper=ArithP.IREM, sz=sz}, lt, ts)
                     | InlP.REM k => inldiv (k, FP.PURE{oper=PureP.REM, kind=k}, lt, ts)
                     | InlP.LSHIFT k => inlineLogicalShift (lshiftOp, k)
-                    | InlP.RSHIFT k => inlineArithmeticShiftRight k
+                    | InlP.RSHIFT k => inlArithmeticShiftRight k
                     | InlP.RSHIFTL k => inlineLogicalShift (rshiftlOp, k)
                     | InlP.CNTZ(PO.UINT sz) =>
                         (* CNTZ(w) = sz - CNTO(w) *)
                         mkFn
                           (LB.ltc_num sz)
                           (fn w => mkApp2(
-                            pPURE(PureP.SUB, dfltIntKind, lt_arw(lt_ipair, lt_int), []),
-                            pINT (sz, Tgt.defaultIntSz),
-                            inlPopCount sz w))
+                              pPURE(PureP.SUB, dfltIntKind, lt_arw(lt_ipair, lt_int), []),
+                              pINT (sz, Tgt.defaultIntSz),
+                              inlPopCount sz w))
                     | InlP.CNTO(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlPopCount sz)
-                    | InlP.CNTLZ(PO.UINT sz) => let
-                        fun count (w, sz) = PL.APP(
-                              pPURE(PureP.CNTLZ, PO.UINT sz, lt_arw(LB.ltc_num sz, lt_int), []),
-                              w)
+                    | InlP.CNTLZ(PO.UINT sz) => mkFn (LB.ltc_num sz) (inlCntLZ sz)
+                    | InlP.CNTLO(PO.UINT sz) => let
+                        val argt = LB.ltc_num sz
                         in
-                          mkFn (LB.ltc_num sz) (fn w => if sz < Tgt.defaultIntSz
-                            then mkApp2(
-                              pSUBU,
-                              count (promote sz w, Tgt.defaultIntSz),
-                              pINT(Tgt.defaultIntSz - sz, Tgt.defaultIntSz))
-                            else count (w, sz))
+                          mkFn argt (fn w =>
+                            inlCntLZ sz
+                              (PL.APP(
+                                pPURE(PureP.NOTB, PO.UINT sz, lt_arw(argt, argt), []),
+                                w)))
                         end
-                    | InlP.CNTLO k => raise Fail "TODO: cntLeadingOnes"
                     | InlP.CNTTZ(PO.UINT sz) => let
                         val argt = LB.ltc_num sz
                         in

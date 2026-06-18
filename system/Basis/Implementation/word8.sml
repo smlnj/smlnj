@@ -88,9 +88,7 @@ structure Word8Imp : WORD =
     val countOnes = W8.cntOnes
 
     val countLeadingZeros = W8.cntLeadingZeros
-(*
     val countLeadingOnes = W8.cntLeadingOnes
-*)
 
     val countTrailingZeros = W8.cntTrailingZeros
 (*
