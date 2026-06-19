@@ -104,6 +104,19 @@ Here is an update to the entry
 //====================================================================
 //== Recent updates
 
+//====================================================================
+== Version 2026.2; 2026/06/18
+
+//--------------------------------------------------------------------
+[2026-06-18]::
++
+Implemented inline bit operations for words as described in the Basis
+Library proposal
+https://github.com/SMLFamily/BasisLibrary/wiki/2026-001-Additional-Bitops-for-WORD-signature[2026-001]
+(Additional Bitops for WORD signature).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
 //--------------------------------------------------------------------
 [2026-06-07]::
 Updated `ElabData/pickle/pickmod.sml` and `ElabData/pickle/unpickmod.sml`
