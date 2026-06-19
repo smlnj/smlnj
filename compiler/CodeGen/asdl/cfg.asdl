@@ -296,6 +296,11 @@ view Cpp {
         llvm::Type *toLLVM (smlnj::cfgcg::Context *cxt);
 %%
 
+-- c_proto
+    { CTypes.c_proto } <= public_code %%
+        llvm::FunctionType *toLLVM (smlnj::cfgcg::Context *cxt);
+%%
+
 -- alloc
     { CFG_Prim.alloc }  <= public_code %%
         virtual llvm::Value *codegen (smlnj::cfgcg::Context *cxt, Args_t const &args) = 0;
