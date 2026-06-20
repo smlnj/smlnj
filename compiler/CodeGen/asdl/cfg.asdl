@@ -244,7 +244,8 @@ module CFG (
           bool reentrant,               -- true for reentrant calls
           string linkage,               -- ??
           CTypes.c_proto proto,         -- function prototype
-          exp* args,                    -- arguments
+          exp cfn,                      -- the C function
+          exp* args,                    -- the arguments
           param* results,               -- result variables (with types)
           param* live,                  -- live variables across call (with types)
           stm k)                        -- the continuation

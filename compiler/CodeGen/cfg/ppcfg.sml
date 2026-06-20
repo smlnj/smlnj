@@ -276,11 +276,12 @@ structure PPCfg : sig
                       say (String.concatWithMap "," LV.lvarName newRoots);
                       say ")\n";
                       pr stm)
-                  | C.RCC{reentrant, linkage, proto, args, results, live, k} => (
+                  | C.RCC{reentrant, linkage, proto, cfn, args, results, live, k} => (
                       if reentrant
                         then say "reentrant c_call "
                         else say "c_call ";
                       if linkage = "" then () else (say linkage; say " ");
+		      say(expToString cfn);
                       sayList (fn e => say(expToString e)) args;
                       say " -> "; sayList sayParam results; say "\n";
 (* FIXME: print live set too *)
