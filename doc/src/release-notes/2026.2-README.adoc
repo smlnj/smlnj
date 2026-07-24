@@ -112,6 +112,9 @@ repository):
 * Fixed {legacy-issue-base}/368[Legacy Issue #368
   ("bogus overflow fault" in code using functors)]
 
+* Fixed {legacy-issue-base}/378[Legacy Issue #378
+  (SML/NJ crashes when `environ` is too big)]
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
