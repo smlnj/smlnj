@@ -1,6 +1,7 @@
-/* execp.c
+/*! \file execp.c
  *
- * COPYRIGHT (c) 1995 by AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  */
 
 #include "ml-base.h"
@@ -33,7 +34,7 @@ ml_val_t _ml_P_Process_execp (ml_state_t *msp, ml_val_t arg)
     for (p = arglst;  p != LIST_nil;  p = LIST_tl(p)) {
         *cp++ = STR_MLtoC(LIST_hd(p));
     }
-    *cp++ = 0;  /* terminate the argv[] */
+    *cp++ = NIL(char);  /* terminate the argv[] */
 
     sts = execvp(STR_MLtoC(file), argv);
 
