@@ -22,7 +22,7 @@ local
   structure PL = PLambda
   structure F = FLINT
   structure FU = FlintUtil
-  structure PO = Primop
+  structure PO = FPrimOps
   structure PU = PrintUtil
   structure PP = PrettyPrint
   structure PPU = PPUtil
@@ -298,7 +298,7 @@ in
 	    case d
 	      of NONE => PP.string ppstrm "IF PRIMOP("
 	       | _ => PP.string ppstrm "IF GENOP(";
-	    PP.string ppstrm (PrimopUtil.toString primop);  PP.string ppstrm ", ";
+	    PP.string ppstrm (PO.toString primop);  PP.string ppstrm ", ";
 	    ppLty ppstrm lty;  PP.string ppstrm ", ";
 	    ppTycList ppstrm tycs;  PP.string ppstrm ") ";
 	    ppValList ppstrm values;
@@ -343,7 +343,7 @@ in
 	  ppLexp ppstrm (body, pd-1);
          PP.closeBox ppstrm)
 
-      | ppLexp ppstrm (F.PRIMOP ((d, primop, lty, tycs), values, lvar, body), pd) =
+      | ppLexp ppstrm (F.PRIMOP((d, primop, lty, tycs), values, lvar, body), pd) =
 	 (* <lvar> = PRIM(<primop>, <lty>, [<tycs>]) [<values>]
 	  * <body>
 	  *)
@@ -352,7 +352,7 @@ in
           (case d
 	     of NONE => PP.string ppstrm " = PRIMOP("
               | _ => PP.string ppstrm " = GENOP(" );
-	  PP.string ppstrm (PrimopUtil.toString primop);  PP.string ppstrm ", ";
+	  PP.string ppstrm (PO.toString primop);  PP.string ppstrm ", ";
 	  ppLty ppstrm lty;  PP.string ppstrm ", ";
 	  ppTycList ppstrm tycs;  PP.string ppstrm ") ";
 	  ppValList ppstrm values;

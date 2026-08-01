@@ -34,7 +34,7 @@ Group
 	(* stuff that lived (or should have) in Frontend (aka GenericVC) *)
 	structure Control
 	structure ArithOps
-	structure Primop
+	structure PrimOps
 	structure PrimopBind
 	structure PrimopBindings
 	structure PrimEnv
@@ -181,6 +181,8 @@ FLINT/flint/printflint.sml
 FLINT/flint/ppflint.sig
 FLINT/flint/ppflint.sml
 FLINT/flint/tvarcvt.sml
+FLINT/prim/prim.sig
+FLINT/prim/prim.sml
 FLINT/kernel/lty.sig
 FLINT/kernel/lty.sml
 FLINT/kernel/ltykernel.sig

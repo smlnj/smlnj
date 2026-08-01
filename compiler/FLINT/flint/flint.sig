@@ -41,7 +41,7 @@ signature FLINT =
     withtype fundec = FunRecMeta.fkind * LambdaVar.lvar * (LambdaVar.lvar * Lty.lty) list * lexp
     and tfundec = FunRecMeta.tfkind * LambdaVar.lvar * (Lty.tvar * Lty.tkind) list * lexp
     and dict = {default: LambdaVar.lvar, table: (Lty.tyc list * LambdaVar.lvar) list}
-    and primop = dict option * Primop.primop * Lty.lty * Lty.tyc list
+    and primop = dict option * FPrimOps.t * Lty.lty * Lty.tyc list
 	(* Invariant: primop's lty is always fully closed *)
 
     type prog = fundec  (* was "lvar * lty * lexp" *)

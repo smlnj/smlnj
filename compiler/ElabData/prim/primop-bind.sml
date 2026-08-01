@@ -14,18 +14,15 @@ structure PrimopBind :> sig
 
     type primop_bind
 
-    val mk : string * Types.ty * Primop.primop -> primop_bind
+    val mk : string * Types.ty * PrimOps.t -> primop_bind
 
     val nameOf : primop_bind -> string
     val typeOf : primop_bind -> Types.ty
-    val defnOf : primop_bind -> Primop.primop
+    val defnOf : primop_bind -> PrimOps.t
 
   end = struct
 
-    structure T = Types
-    structure P = Primop
-
-    type primop_bind = string * T.ty * P.primop
+    type primop_bind = string * Types.ty * PrimOps.t
 
     fun mk arg = arg
 

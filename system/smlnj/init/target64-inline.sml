@@ -1,9 +1,9 @@
 (* target64-inline.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Interfaces to the compiler built-ins, infixes, etc. for 32-bit targets.
+ * Interfaces to the compiler built-ins, infixes, etc. for 64-bit targets.
  *
  * [dbm, 6/21/06] This module is compiled in the environment PrimEnv.primEnv.
  * See init.cmi
@@ -281,16 +281,14 @@ structure InlineT =
         val rotateR : word * word -> word  = InLine.word_rotr
         val rotateL : word * word -> word  = InLine.word_rotl
 
-(*
-        val cntZeros : word -> int         = InLine.word_cnt_0s
-        val cntOnes : word -> int          = InLine.word_cnt_1s
-        val cntLeadingZeros : word -> int  = InLine.word_cnt_l0s
-        val cntLeadingOnes : word -> int   = InLine.word_cnt_l1s
-        val cntTrailingZeros : word -> int = InLine.word_cnt_t0s
-        val cntTrailingOnes : word -> int  = InLine.word_cnt_t1s
+        val cntZeros : word -> int         = InLine.word_cnt_zeros
+        val cntOnes : word -> int          = InLine.word_cnt_ones
+        val cntLeadingZeros : word -> int  = InLine.word_cnt_leading_zeros
+        val cntLeadingOnes : word -> int   = InLine.word_cnt_leading_ones
+        val cntTrailingZeros : word -> int = InLine.word_cnt_trailing_zeros
+        val cntTrailingOnes : word -> int  = InLine.word_cnt_trailing_ones
         val isPowOf2 : word -> bool        = InLine.word_is_pow2
         val ceilLog2 : word -> word        = InLine.word_ceil_log2
-*)
 
         val min     : word * word -> word  = InLine.word_min
         val max     : word * word -> word  = InLine.word_max
@@ -334,6 +332,17 @@ structure InlineT =
 	val chkRshift : word8 * word -> word8	= InLine.word8_rshift
 	val chkRshiftl : word8 * word -> word8	= InLine.word8_rshiftl
 	val chkLshift : word8 * word -> word8	= w8adapt InLine.word8_lshift
+        val rotateR : word8 * word -> word8     = InLine.word8_rotr
+        val rotateL : word8 * word -> word8     = InLine.word8_rotl
+
+        val cntZeros : word8 -> int             = InLine.word8_cnt_zeros
+        val cntOnes : word8 -> int              = InLine.word8_cnt_ones
+        val cntLeadingZeros : word8 -> int      = InLine.word8_cnt_leading_zeros
+        val cntLeadingOnes : word8 -> int       = InLine.word8_cnt_leading_ones
+        val cntTrailingZeros : word8 -> int     = InLine.word8_cnt_trailing_zeros
+        val cntTrailingOnes : word8 -> int      = InLine.word8_cnt_trailing_ones
+        val isPowOf2 : word8 -> bool            = InLine.word8_is_pow2
+        val ceilLog2 : word8 -> word            = InLine.word8_ceil_log2
 	end (* local *)
 
 	val min     : word8 * word8 -> word8 = InLine.word8_min
@@ -378,6 +387,17 @@ structure InlineT =
 	val chkRshift  : word32 * word -> word32 = InLine.word32_rshift
 	val chkRshiftl : word32 * word -> word32 = InLine.word32_rshiftl
 	val chkLshift  : word32 * word -> word32 = w32adapt InLine.word32_lshift
+        val rotateR : word32 * word -> word32    = InLine.word32_rotr
+        val rotateL : word32 * word -> word32    = InLine.word32_rotl
+
+        val cntZeros : word32 -> int             = InLine.word32_cnt_zeros
+        val cntOnes : word32 -> int              = InLine.word32_cnt_ones
+        val cntLeadingZeros : word32 -> int      = InLine.word32_cnt_leading_zeros
+        val cntLeadingOnes : word32 -> int       = InLine.word32_cnt_leading_ones
+        val cntTrailingZeros : word32 -> int     = InLine.word32_cnt_trailing_zeros
+        val cntTrailingOnes : word32 -> int      = InLine.word32_cnt_trailing_ones
+        val isPowOf2 : word32 -> bool            = InLine.word32_is_pow2
+        val ceilLog2 : word32 -> word            = InLine.word32_ceil_log2
 	end (* local *)
 
         val min     : word32 * word32 -> word32  = InLine.word32_min
@@ -416,16 +436,14 @@ structure InlineT =
         val rotateR : word64 * word -> word64    = InLine.word64_rotr
         val rotateL : word64 * word -> word64    = InLine.word64_rotl
 
-(*
-        val cntZeros : word64 -> int             = InLine.word_cnt_0s
-        val cntOnes : word64 -> int              = InLine.word_cnt_1s
-        val cntLeadingZeros : word64 -> int      = InLine.word_cnt_l0s
-        val cntLeadingOnes : word64 -> int       = InLine.word_cnt_l1s
-        val cntTrailingZeros : word64 -> int     = InLine.word_cnt_t0s
-        val cntTrailingOnes : word64 -> int      = InLine.word_cnt_t1s
-        val isPowOf2 : word64 -> bool            = InLine.word_is_pow2
-        val ceilLog2 : word64 -> word            = InLine.word_ceil_log2
-*)
+        val cntZeros : word64 -> int             = InLine.word64_cnt_zeros
+        val cntOnes : word64 -> int              = InLine.word64_cnt_ones
+        val cntLeadingZeros : word64 -> int      = InLine.word64_cnt_leading_zeros
+        val cntLeadingOnes : word64 -> int       = InLine.word64_cnt_leading_ones
+        val cntTrailingZeros : word64 -> int     = InLine.word64_cnt_trailing_zeros
+        val cntTrailingOnes : word64 -> int      = InLine.word64_cnt_trailing_ones
+        val isPowOf2 : word64 -> bool            = InLine.word64_is_pow2
+        val ceilLog2 : word64 -> word            = InLine.word64_ceil_log2
 
         val op > : word64 * word64 -> bool	 = InLine.word64_gt
         val op >= : word64 * word64 -> bool	 = InLine.word64_ge

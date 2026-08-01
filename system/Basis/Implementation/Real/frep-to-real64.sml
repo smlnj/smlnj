@@ -27,24 +27,8 @@ structure FRepToReal64 : sig
     (* bitcast a Word64.word to a Real64.real *)
     val fromBits = InlineT.Real64.fromBits
 
-(* the following should be part of the WORD signature *)
     (* count the leading zeros in a Word64.word value *)
-    fun nlz (w : Word64.word) : word = let
-          fun step (x, n, k) = let
-                val y = W64.rshiftl(x, k)
-                in
-                  if (y <> 0w0) then (n - k, y) else (n, x)
-                end
-          val (n, x) = step (w, 0w64, 0w32)
-          val (n, x) = step (x, n, 0w16)
-          val (n, x) = step (x, n, 0w8)
-          val (n, x) = step (x, n, 0w4)
-          val (n, x) = step (x, n, 0w2)
-          in
-            if (W64.rshiftl(x, 0w1) <> 0w0)
-              then n - 0w2
-              else n - W.fromLarge x
-          end
+    fun nlz w = W.fromInt(W64.cntLeadingZeros w)
 
 (*+DEBUG**
     fun w128ToString (hi, lo) = concat[

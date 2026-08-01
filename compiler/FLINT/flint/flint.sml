@@ -46,7 +46,7 @@ structure FLINT : FLINT =
     withtype fundec = FR.fkind * LV.lvar * (LV.lvar * LT.lty) list * lexp
     and tfundec = FR.tfkind * LV.lvar * (LT.tvar * LT.tkind) list * lexp
     and dict = {default: LV.lvar, table: (LT.tyc list * LV.lvar) list}
-    and primop = dict option * Primop.primop * LT.lty * LT.tyc list
+    and primop = dict option * FPrimOps.t * LT.lty * LT.tyc list
 	    (* Invariant: primop's lty is always fully closed *)
 
     type prog = fundec  (* was "lvar * lty * lexp" *)

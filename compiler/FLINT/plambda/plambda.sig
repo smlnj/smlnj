@@ -43,8 +43,8 @@ signature PLAMBDA =
       | WORD of int IntConst.t
       | REAL of int RealConst.t
       | STRING of string
-      | PRIM of Primop.primop * Lty.lty * Lty.tyc list
-      | GENOP of dict * Primop.primop * Lty.lty * Lty.tyc list
+      | PRIM of FPrimOps.t * Lty.lty * Lty.tyc list
+      | GENOP of dict * FPrimOps.t * Lty.lty * Lty.tyc list
 
       | FN of LambdaVar.lvar * Lty.lty * lexp
       | FIX of LambdaVar.lvar list * Lty.lty list * lexp list * lexp

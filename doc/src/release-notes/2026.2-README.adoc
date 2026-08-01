@@ -1,7 +1,7 @@
 // A template for creating release notes for a version
 //
-:version: @VERSION@
-:date: @DATE@
+:version: 2026.2-rc1
+:date: June 18, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -62,7 +62,12 @@ FILES::
 
 === Basis Library
 
+* implemented various bit-level operations on words as described in ...
+
 === SML/NJ Library
+
+* added the `Trilean` structure, which implements a three-valued logic
+  that is useful for some program analyses
 
 === Successor ML
 

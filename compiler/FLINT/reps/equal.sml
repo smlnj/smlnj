@@ -30,7 +30,8 @@ structure Equal : EQUAL =
     structure LB = LtyBasic
     structure LE = LtyExtern
     structure PT = PrimTyc
-    structure PO = Primop
+    structure PO = FPrimOps
+    structure CP = CommonOps
     structure PL = PLambda
     structure PP = PrettyPrint
     structure FU = FlintUtil
@@ -115,14 +116,14 @@ structure Equal : EQUAL =
                         in
                           case PT.numSize prim  (* is it a PT_NUM? *)
                            of SOME sz =>
-                              F.BRANCH((NONE, PrimopUtil.mkIEQL sz, numeqty sz, []), [x,y], te, fe)
+                              F.BRANCH((NONE, PO.mkIEQL sz, numeqty sz, []), [x,y], te, fe)
                             | NONE => if PT.pt_eq(prim, PT.ptc_string)
                                 then branch(F.APP(F.VAR seqv, [x,y]), te, fe)
                                 else raise Poly
                           (* end case *)
                         end
                     else if LK.tc_eqv(tc,LB.tcc_bool)
-                      then F.BRANCH((NONE, PrimopUtil.IEQL, booleqty, []), [x,y], te, fe)
+                      then F.BRANCH((NONE, PO.IEQL, booleqty, []), [x,y], te, fe)
                     else if (LD.tcp_app tc)
                       then let
                         val (t, _) = LD.tcd_app tc
@@ -132,7 +133,7 @@ structure Equal : EQUAL =
                               val prim = LD.tcd_prim t
                               in
                                 if PT.pt_eq(prim, PT.ptc_ref)
-                                  then F.BRANCH((NONE, PO.PTREQL, eqTy tc, []), [x,y], te, fe)
+                                  then F.BRANCH((NONE, PO.PRIM CP.PTREQL, eqTy tc, []), [x,y], te, fe)
                                   else raise Poly
                               end
                             else raise Poly
@@ -151,7 +152,7 @@ structure Equal : EQUAL =
 
     fun equal_branch ((d, p, lt, ts): F.primop, vs: F.value list, e1, e2) : F.lexp = (
           case (d, p, ts, vs)
-           of (SOME{default=pv, table=[(_,sv)]}, PO.POLYEQL, [tc], [x, y]) =>
+           of (SOME{default=pv, table=[(_,sv)]}, PO.PRIM CP.POLYEQL, [tc], [x, y]) =>
                 equal (pv, sv) (tc, x, y, e1, e2)
             | _ => bug "unexpected case in equal_branch"
           (* end case *))

@@ -17,7 +17,7 @@ local
   structure LK = LtyKernel
   structure LB = LtyBasic
   structure LKC = LtyKindChk
-  structure PO = Primop     (* really should not refer to this *)
+  structure PO = FPrimOps     (* really should not refer to this *)
   structure PP = PrettyPrint
   structure PU = PPUtil
 
@@ -231,26 +231,28 @@ fun ltd_rkind (lt, i) = lt_select (lt, i, "ltyextern.sml#279")
 (****************************************************************************
  *             UTILITY FUNCTIONS USED BY POST-REPRESENTATION ANALYSIS       *
  ****************************************************************************)
-(* tc_upd_prim : LT.tyc -> PO.primop *)
-(** find out what is the appropriate primop given a tyc *)
-fun tc_upd_prim tc =
-  let fun h(LT.TC_PRIM pt) = if PT.ubxupd pt then PO.UNBOXEDUPDATE else PO.UPDATE
-        | h(LT.TC_TUPLE _ | LT.TC_ARROW _) = PO.UPDATE
-        | h(LT.TC_FIX{family={size=1,gen=tc,params=ts,...},index=0}) =
-            let val ntc = case ts of [] => tc
-                                   | _ => LD.tcc_app(tc, ts)
-             in (case (LK.tc_whnm_out ntc)
-                  of LT.TC_FN([k],b) => h (LK.tc_whnm_out b)
-                   | _ => PO.UPDATE)
+(* tc_unboxed_upd : Lty.tyc -> bool *)
+(** given a tyc can we use an "unboxed" update (i.e., no store-list allocation) *)
+fun tc_unboxed_upd tc = let
+      fun h (LT.TC_PRIM pt) = PT.ubxupd pt
+        | h (LT.TC_TUPLE _ | LT.TC_ARROW _) = false
+        | h (LT.TC_FIX{family={size=1,gen=tc,params=ts,...},index=0}) = let
+            val ntc = case ts of [] => tc | _ => LD.tcc_app(tc, ts)
+            in
+              case (LK.tc_whnm_out ntc)
+               of LT.TC_FN([k],b) => h (LK.tc_whnm_out b)
+                | _ => false
             end
-        | h(LT.TC_SUM tcs) =
-            let fun g (a::r) = if LK.tc_eqv(a, LB.tcc_unit) then g r else false
-                  | g [] = true
-             in if (g tcs) then PO.UNBOXEDUPDATE else PO.UPDATE
+        | h (LT.TC_SUM tcs) = let
+            fun g (a::r) = if LK.tc_eqv(a, LB.tcc_unit) then g r else false
+              | g [] = true
+            in
+              g tcs
             end
-        | h _ = PO.UPDATE
-   in h(LK.tc_whnm_out tc)
-  end
+        | h _ = false
+     in
+      h (LK.tc_whnm_out tc)
+    end
 
 (** tk_lty : tkind -> lty --- finds out the corresponding type for a tkind *)
 fun tk_lty tk =

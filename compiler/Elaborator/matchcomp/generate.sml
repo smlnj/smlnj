@@ -3,7 +3,7 @@
 
 (* generation of "code" (in the form of PLambda.lexp) from decision trees (type dectree) *)
 
-structure Generate = 
+structure Generate =
 struct
 
 local
@@ -15,7 +15,6 @@ local
   structure AS = Absyn
   structure AU = AbsynUtil
   structure EU = ElabUtil
-  structure PO = Primop
   structure P = Paths
   structure MC = MCCommon
   structure MU = MCUtil
@@ -79,7 +78,7 @@ local
 	(fn ppstrm => (PP.string ppstrm (msg^": "); PPType.ppType StaticEnv.empty ppstrm ty))
 
   fun timeIt x = TimeIt.timeIt (!stats) x
-			       
+
   (* intCon : int -> AS.con *)
   fun intCon n = AS.INTcon {ival = IntInf.fromInt n, ty = Target.defaultIntSz}
 
@@ -117,7 +116,7 @@ fun generate (decTree: MC.dectree, ruleMap: Preprocessing.ruleMap, allRules: rul
 	      | wrapSuffix (suffix, exp) =
 		(saynl ("relativeExp:wrapSuffix suffix: " ^ P.pathToString suffix);
 		 bug "wrapSuffix")
-	    val suffix' = 
+	    val suffix' =
 		case suffix
 		 of P.DC(AS.VLENcon _):: _ => tl suffix
 		  | _ => suffix
@@ -229,7 +228,7 @@ fun generate (decTree: MC.dectree, ruleMap: Preprocessing.ruleMap, allRules: rul
 			    end)
 		end
             | MC.FAIL =>
-		let val failExp = 
+		let val failExp =
 			(case failExnOp
 			  of NONE => EU.varToExp rootvar
 			   | SOME datacon => AS.CONexp(datacon, nil))

@@ -43,7 +43,7 @@ structure PPCfg : sig
 
     val numkindToString = String.concat o numkind2s
 
-    val cmpopToString = ArithOps.cmpopToString
+    val cmpopToString = CompareOps.toString
     val fcmpopToString = PPCps.fcmpopToString
 
     fun arithopToString oper = (case oper

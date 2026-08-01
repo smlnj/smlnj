@@ -125,7 +125,7 @@ fun recover (fdec: prog, postRep : bool) =
 		      let val _ = lpe e1
 		       in lpe e2
 		      end
-		  | lpe (PRIMOP((_,Primop.WCAST, lt, []), _, v, e)) =
+		  | lpe (PRIMOP((_,FPrimOps.WCAST, lt, []), _, v, e)) =
 		      if postRep
 		      then (case LD.ltd_fct lt
 			      of ([_],[r]) => (addv(v, r); lpe e)

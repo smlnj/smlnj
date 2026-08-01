@@ -221,7 +221,7 @@ structure TvarCvt :> TVARCVT =
 
 		fun cvtPrimop ((dictOpt, po, lty, tycs) : F.primop) : F.primop =
 		    let val lty' = ltSubst lty
-			val _ = dbsay ("@@@ cvtPrimop: "^PrimopUtil.toString po^"\n")
+			val _ = dbsay (concat["@@@ cvtPrimop: ", FPrimOps.toString po, "\n"])
 			val _ = (dbsay "  @@@ lty = "; ppLty lty)
 			val _ = (dbsay "  @@@ lty' = "; ppLty lty')
 		    in (Option.map cvtDict dictOpt, po, lty', map tcSubst tycs)

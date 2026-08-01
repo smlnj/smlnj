@@ -31,16 +31,16 @@ structure CPS : CPS =
     structure P =
       struct
       (* numkind includes kind and size *)
-	datatype numkind = INT of int | UINT of int | FLOAT of int
+	datatype numkind = datatype NumKind.t
 
       (* integer arithmetic operations that may overflow *)
-	datatype arithop = datatype ArithOps.arithop
+	datatype arithop = datatype ArithOps.t
 
       (* pure arithmetic operations that cannot overflow *)
-	datatype pureop = datatype ArithOps.pureop
+	datatype pureop = datatype PureOps.t
 
       (* generic comparison operations *)
-	datatype cmpop = datatype ArithOps.cmpop
+	datatype cmpop = datatype CompareOps.t
 
       (* fcmpop conforms to the IEEE std 754 predicates. *)
 	datatype fcmpop
@@ -54,6 +54,7 @@ structure CPS : CPS =
 	  = CMP of {oper: cmpop, kind: numkind}
 	  | FCMP of {oper: fcmpop, size: int}
 	  | FSGN of int
+          | IS_POW2 of int
 	  | BOXED | UNBOXED | PEQL | PNEQ
 	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
 	 * the same length as `s` and `s` is not the empty string.
