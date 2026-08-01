@@ -180,8 +180,8 @@ structure CProto : sig
         in
           (* Get argument types and result type; decode them.
            * Construct the corresponding CTypes.c_proto value. *)
-          case getDomainRange fty of
-              NONE => bad ()
+          case getDomainRange fty
+           of NONE => bad ()
             | SOME (d, r) =>
               let val (conv, argTys, argsML) =
                       (case getConv d of
