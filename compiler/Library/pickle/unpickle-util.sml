@@ -123,9 +123,7 @@ signature UNPICKLE_UTIL =
 
     (* making readers for some common types *)
     val r_int : session -> int reader
-    val r_int32 : session -> Int32.int reader
     val r_word : session -> word reader
-    val r_word32 : session -> Word32.word reader
     val r_bool : session -> bool reader
     val r_string : session -> string reader
     val r_intinf : session -> IntInf.int reader
@@ -298,9 +296,7 @@ structure UnpickleUtil :> UNPICKLE_UTIL = struct
 	fun f2r f_x (s: session) = f_x (#read (#getter s))
     in
 	val r_int = f2r f_int
-	val r_int32 = f2r f_int32
 	val r_word = f2r f_word
-	val r_word32 = f2r f_word32
     end
 
     fun r_lazy session r () = let

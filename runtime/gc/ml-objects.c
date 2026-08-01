@@ -68,12 +68,25 @@ ml_val_t ML_CString (ml_state_t *msp, const char *v)
  */
 ml_val_t ML_CStringList (ml_state_t *msp, char **strs)
 {
-/** NOTE: we should do something about possible GC!!! **/
-    int         i;
+    int         i, j;
     ml_val_t    p, s;
+    Word_t      nbytes;
 
     for (i = 0;  strs[i] != NIL(char *);  i++)
         continue;
+
+    /* Make sure we have enough space to allocate the list */
+    nbytes = i * (3 * WORD_SZB);
+    for (j = 0;  j < i;  j++) {
+        size_t len = strlen(strs[j]);
+        Word_t nwords = BYTES_TO_WORDS(len + 1);
+        if (len > 0 && nwords <= SMALL_OBJ_SZW) {
+            nbytes += WORD_SZB * (nwords + 1); /* +1 for the descriptor word */
+        }
+    }
+    if (NeedGC (msp, nbytes)) {
+        InvokeGC (msp, 0);
+    }
 
     p = LIST_nil;
     while (i-- > 0) {

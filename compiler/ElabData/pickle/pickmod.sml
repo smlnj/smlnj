@@ -1,6 +1,6 @@
 (* pickmod.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The revised pickler using the new "generic" pickling facility.
@@ -71,8 +71,8 @@ local
 in
   structure PickMod :> PICKMOD = struct
 
-    datatype context =
-	INITIAL of ModuleId.tmap
+    datatype context
+      = INITIAL of ModuleId.tmap
       | REHASH of PersStamps.persstamp
       | LIBRARY of ((int * Symbol.symbol) option * ModuleId.tmap) list
 
@@ -120,20 +120,69 @@ in
     val emptyMap = { dt = DTMap.empty, mb = MBMap.empty, mi = MI.emptyUmap }
 
     (* type info *)
-    val (NK, AO, PAO, CO, PO, CS, A, CR, LT, TC,
-	 TK, V, C, E, FK, RK, ST, MI, EQP, TYCKIND,
-	 DTI, DTF, TYCON, T, PI, VAR, SD, SG, FSG, SP,
-	 STR, F, STE, TCE, STRE, FE, EE, ED, EEV, FX,
-	 EN, B, DCON, DICT, FPRIM, FUNDEC, TFUNDEC, DATACON, DTMEM, NRD,
-         OVERLD, FCTC, SEN, FEN, SPATH, IPATH, STRID, FCTID, CCI, CTYPE,
-         CCALL_TYPE, SPE, TSI) =
-	( 1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
-	 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-	 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-	 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
-	 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
-         61, 62, 63)
+    val NK = 1          (* datatype NumKind.t *)
+    val AO = 2          (* datatype ArithOps.t *)
+    val PAO = 3         (* datatype PureOps.t *)
+    val CO = 4          (* datatype CompareOps.t *)
+    val PO = 5          (* datatype PrimOps.t *)
+    val CS = 6          (* datatype Access.consig *)
+    val A = 7           (* datatype Access.access *)
+    val CR = 8          (* datatype Access.conrep *)
+    val LT = 9          (* unused *)
+    val TC = 10         (* unused *)
+    val TK = 11         (* unused *)
+    val V = 12          (* unused *)
+    val C = 13          (* unused *)
+    val E = 14          (* unused *)
+    val FK = 15         (* unused *)
+    val RK = 16         (* unused *)
+    val ST = 17         (* datatype Stamps.stamp *)
+    val MI = 18         (* unused *)
+    val EQP = 19        (* datatype Types.eqprop *)
+    val TYCKIND = 20    (* datatype Types.tyckind *)
+    val DTI = 21        (* {stamps, freetycs, family} *)
+    val DTF = 22        (* type Types.dtypeFamily *)
+    val TYCON = 23      (* datatype Types.tycon *)
+    val T = 24          (* datatype Types.ty *)
+    val PI = 25         (* datatype PrimopId.prim_id *)
+    val VAR = 26        (* datatype Variable.var *)
+    val SD = 27         (* datatype Modules.strDef *)
+    val SG = 28         (* datatype Modules.Signature *)
+    val FSG = 29        (* datatype Modules.fctSig *)
+    val SP = 30         (* datatype Modules.spec *)
+    val STR = 31        (* datatype Modules.Structure *)
+    val F = 32          (* datatype Modules.Functor *)
+    val STE = 33        (* datatype Modules.stampExp *)
+    val TCE = 34        (* datatype Modules.tycExp *)
+    val STRE = 35       (* datatype Modules.strExp *)
+    val FE = 36         (* datatype Modules.fctExp *)
+    val EE = 37         (* datatype Modules.entityExp *)
+    val ED = 38         (* datatype Modules.entityDec *)
+    val EEV = 39        (* datatype Modules.entityEnv *)
+    val FX = 40         (* datatype Fixity.fixity *)
+    val EN = 41         (* datatype Modules.entity *)
+    val B = 42          (* datatype Bindings.binding *)
+    val DCON = 43       (* unused *)
+    val DICT = 44       (* unused *)
+    val FPRIM = 45      (* unused *)
+    val FUNDEC = 46     (* unused *)
+    val TFUNDEC = 47    (* unused *)
+    val DATACON = 48    (* datatype Types.datacon *)
+    val DTMEM = 49      (* type Types.dtmember *)
+    val NRD = 50        (* type Types.dconDesc *)
+    val OVERLD = 51     (* unused *)
+    val FCTC = 52       (* datatype Modules.fctClosure *)
+    val SEN = 53        (* type Modules.strEntity *)
+    val FEN = 54        (* type Modules.fctEntity *)
+    val SPATH = 55      (* datatype SymPath.path *)
+    val IPATH = 56      (* datatype InvPath.path *)
+    val STRID = 57      (* type ModuleId.strId *)
+    val FCTID = 58      (* type ModuleId.fctId *)
+    val CCI = 59        (* C call info *)
+    val CTYPE = 60      (* datatype CTypes.c_type *)
+    val CCALL_TYPE = 61 (* datatype CommonOps.ccall_type *)
+    val SPE = 62        (* datatype PrimId.str_prim_elem *)
+    val TSI = 63        (* datatype Modules.tycSpecInfo *)
 
     (* this is a bit awful...
      * (we really ought to have syntax for "functional update") *)
@@ -204,6 +253,53 @@ in
 	    cvt
 	  end
 
+    fun ctype t = let
+	val op $ = PU.$ CTYPE
+	fun ?n = String.str (Char.chr n)
+	fun %?n = ?n $ []
+        in
+          case t
+           of CTypes.C_void => %?0
+            | CTypes.C_float => %?1
+            | CTypes.C_double => %?2
+            | CTypes.C_long_double => %?3
+            | CTypes.C_unsigned CTypes.I_char => %?4
+            | CTypes.C_unsigned CTypes.I_short => %?5
+            | CTypes.C_unsigned CTypes.I_int => %?6
+            | CTypes.C_unsigned CTypes.I_long => %?7
+            | CTypes.C_unsigned CTypes.I_long_long => %?8
+            | CTypes.C_signed CTypes.I_char => %?9
+            | CTypes.C_signed CTypes.I_short => %?10
+            | CTypes.C_signed CTypes.I_int => %?11
+            | CTypes.C_signed CTypes.I_long => %?12
+            | CTypes.C_signed CTypes.I_long_long => %?13
+            | CTypes.C_PTR => %?14
+            | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
+            | CTypes.C_STRUCT l => ?21 $ [list ctype l]
+            | CTypes.C_UNION l => ?22 $ [list ctype l]
+        end
+
+    fun ccall_type t = let
+        val op $ = PU.$ CCALL_TYPE
+        in
+          case t
+           of P.CCI32 => "\000" $ []
+            | P.CCI64 => "\001" $ []
+            | P.CCR64 => "\002" $ []
+            | P.CCML  => "\003" $ []
+        end
+
+    fun ccall_info { c_proto = { conv, retTy, paramTys },
+		     ml_args, ml_res_opt, reentrant } = let
+	val op $ = PU.$ CCI
+        in
+          "C" $ [
+              string conv, ctype retTy, list ctype paramTys,
+              list ccall_type ml_args, option ccall_type ml_res_opt,
+              bool reentrant
+            ]
+        end
+
     fun numkind arg = let
 	val op $ = PU.$ NK
 	fun nk (P.INT i) = "A" $ [int i]
@@ -265,51 +361,6 @@ in
 	in
 	  cmpopc oper $ []
 	end
-
-    fun ctype t = let
-	val op $ = PU.$ CTYPE
-	fun ?n = String.str (Char.chr n)
-	fun %?n = ?n $ []
-    in
-	case t of
-	    CTypes.C_void => %?0
-	  | CTypes.C_float => %?1
-	  | CTypes.C_double => %?2
-	  | CTypes.C_long_double => %?3
-	  | CTypes.C_unsigned CTypes.I_char => %?4
-	  | CTypes.C_unsigned CTypes.I_short => %?5
-	  | CTypes.C_unsigned CTypes.I_int => %?6
-	  | CTypes.C_unsigned CTypes.I_long => %?7
-	  | CTypes.C_unsigned CTypes.I_long_long => %?8
-	  | CTypes.C_signed CTypes.I_char => %?9
-	  | CTypes.C_signed CTypes.I_short => %?10
-	  | CTypes.C_signed CTypes.I_int => %?11
-	  | CTypes.C_signed CTypes.I_long => %?12
-	  | CTypes.C_signed CTypes.I_long_long => %?13
-	  | CTypes.C_PTR => %?14
-	  | CTypes.C_ARRAY (t, i) => ?20 $ [ctype t, int i]
-	  | CTypes.C_STRUCT l => ?21 $ [list ctype l]
-	  | CTypes.C_UNION l => ?22 $ [list ctype l]
-    end
-
-    fun ccall_type t =
-    let val op $ = PU.$ CCALL_TYPE
-    in  case t of
-          P.CCI32 => "\000" $ []
-        | P.CCI64 => "\001" $ []
-        | P.CCR64 => "\002" $ []
-        | P.CCML  => "\003" $ []
-    end
-
-    fun ccall_info { c_proto = { conv, retTy, paramTys },
-		     ml_args, ml_res_opt, reentrant } = let
-	val op $ = PU.$ CCI
-    in
-	"C" $ [string conv, ctype retTy, list ctype paramTys,
-	       list ccall_type ml_args, option ccall_type ml_res_opt,
-               bool reentrant
-              ]
-    end
 
     fun primop p = let
 	val op $ = PU.$ PO
@@ -638,7 +689,7 @@ in
 	and dtypeInfo x = let
 	    val op $ = PU.$ DTI
 	    fun dti_raw (ss, family, freetycs) =
-		"a" $ [list stamp (Vector.foldr (op ::) [] ss),
+		"a" $ [list stamp (Vector.toList ss),
 		       dtFamily family, list tycon freetycs]
 	in
 	    share (DTs (Vector.sub (#1 x, 0))) dti_raw x
@@ -647,8 +698,7 @@ in
 	and dtFamily x = let
 	    val op $ = PU.$ DTF
 	    fun dtf_raw { mkey, members, properties } =
-		"b" $ [stamp mkey,
-		       list dtmember (Vector.foldr (op ::) [] members)]
+		"b" $ [stamp mkey, list dtmember (Vector.toList members)]
 	in
 	    share (MBs (#mkey x)) dtf_raw x
 	end

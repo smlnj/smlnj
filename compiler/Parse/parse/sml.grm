@@ -264,6 +264,9 @@ rule	: pat DARROW exp        (Rule{pat=pat, exp=markexp(exp,expleft,expright)})
 		(* 	EXPRESSIONS	*)
 
 elabel	: selector EQUALOP exp	(selector,exp)
+	| id COLON ty		(labSymbol id,
+				 ConstraintExp{expr=VarExp [varSymbol id],
+					       constraint=ty})
 	| id			(labSymbol id, VarExp [varSymbol id])
 
 elabels : elabel COMMA elabels	(elabel :: elabels)

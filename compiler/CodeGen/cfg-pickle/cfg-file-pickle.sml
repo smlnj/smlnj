@@ -127,7 +127,7 @@ structure CTypesFilePickle : CTYPES_PICKLE
           end
   end
 
-structure CFG_PrimFilePickle : CFG__PRIM_PICKLE
+structure CFG_PrimFilePickle : CFG_PRIM_PICKLE
   where type instream = ASDLFilePickle.instream
   where type outstream = ASDLFilePickle.outstream = struct
     type instream = ASDLFilePickle.instream
@@ -756,6 +756,7 @@ structure CFGFilePickle : CFGPICKLE
               val reentrant = ASDLFilePickle.readBool inS
               val linkage = ASDLFilePickle.readString inS
               val proto = CTypesFilePickle.read_c_proto inS
+              val cfn = read_exp inS
               val args = readSeq read_exp inS
               val results = readSeq read_param inS
               val live = readSeq read_param inS
@@ -766,6 +767,7 @@ structure CFGFilePickle : CFGPICKLE
                     reentrant = reentrant,
                     linkage = linkage,
                     proto = proto,
+                    cfn = cfn,
                     args = args,
                     results = results,
                     live = live,
@@ -899,11 +901,12 @@ structure CFGFilePickle : CFGPICKLE
               writeSeq write_exp (outS, x0);
               writeSeq LambdaVarFilePickle.write_lvar (outS, x1);
               write_stm (outS, x2))
-            | CFG.RCC{reentrant, linkage, proto, args, results, live, k} => (
+            | CFG.RCC{reentrant, linkage, proto, cfn, args, results, live, k} => (
               ASDLFilePickle.writeTag8 (outS, 0w11);
               ASDLFilePickle.writeBool (outS, reentrant);
               ASDLFilePickle.writeString (outS, linkage);
               CTypesFilePickle.write_c_proto (outS, proto);
+              write_exp (outS, cfn);
               writeSeq write_exp (outS, args);
               writeSeq write_param (outS, results);
               writeSeq write_param (outS, live);

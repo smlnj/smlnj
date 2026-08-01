@@ -126,7 +126,7 @@ structure CTypesMemoryPickle : CTYPES_PICKLE
           end
   end
 
-structure CFG_PrimMemoryPickle : CFG__PRIM_PICKLE
+structure CFG_PrimMemoryPickle : CFG_PRIM_PICKLE
   where type instream = ASDLMemoryPickle.instream
   where type outstream = ASDLMemoryPickle.outstream = struct
     type instream = ASDLMemoryPickle.instream
@@ -758,6 +758,7 @@ structure CFGMemoryPickle : CFGPICKLE
               val reentrant = ASDLMemoryPickle.readBool inS
               val linkage = ASDLMemoryPickle.readString inS
               val proto = CTypesMemoryPickle.read_c_proto inS
+              val cfn = read_exp inS
               val args = readSeq read_exp inS
               val results = readSeq read_param inS
               val live = readSeq read_param inS
@@ -768,6 +769,7 @@ structure CFGMemoryPickle : CFGPICKLE
                     reentrant = reentrant,
                     linkage = linkage,
                     proto = proto,
+                    cfn = cfn,
                     args = args,
                     results = results,
                     live = live,
@@ -901,11 +903,12 @@ structure CFGMemoryPickle : CFGPICKLE
               writeSeq write_exp (outS, x0);
               writeSeq LambdaVarMemoryPickle.write_lvar (outS, x1);
               write_stm (outS, x2))
-            | CFG.RCC{reentrant, linkage, proto, args, results, live, k} => (
+            | CFG.RCC{reentrant, linkage, proto, cfn, args, results, live, k} => (
               ASDLMemoryPickle.writeTag8 (outS, 0w11);
               ASDLMemoryPickle.writeBool (outS, reentrant);
               ASDLMemoryPickle.writeString (outS, linkage);
               CTypesMemoryPickle.write_c_proto (outS, proto);
+              write_exp (outS, cfn);
               writeSeq write_exp (outS, args);
               writeSeq write_param (outS, results);
               writeSeq write_param (outS, live);

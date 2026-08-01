@@ -44,6 +44,8 @@ FILES::
 
 === Compiler
 
+* The printing of real results in the REPL has been improved.
+
 === CM
 
 === LLVM
@@ -90,15 +92,28 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/342[Fix relocation issues causing MLton crash]
 | [.bugid]#343#
 | {issue-base}/343[Comparison of `Word8Vector.vector`s results in polymorphic equality]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
+| [.bugid]#344#
+| {issue-base}/344[Spurious "calling polyEqual" warnings]
+| [.bugid]#345#
+| {pull-base}/345[Fix missing case in `FLINT/reify`]
+| [.bugid]#346#
+| {pull-base}/346[Successor ML: type annotations on record puns]
+| [.bugid]#354#
+| {issue-base}/354[Unexpected `Overflow` exception]
 |=======
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* Fixed {legacy-issue-base}/353[Legacy Issue #353
+  (Inconsistent datatype representation causes segfault)]
+
+* Fixed {legacy-issue-base}/368[Legacy Issue #368
+  ("bogus overflow fault" in code using functors)]
+
+* Fixed {legacy-issue-base}/378[Legacy Issue #378
+  (SML/NJ crashes when `environ` is too big)]
 
 == Supported systems
 

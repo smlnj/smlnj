@@ -23,7 +23,7 @@ signature CTYPES_PICKLE = sig
     val read_c_proto : instream -> CTypes.c_proto
   end
 
-signature CFG__PRIM_PICKLE = sig
+signature CFG_PRIM_PICKLE = sig
     type instream
     type outstream
     val write_numkind : outstream * CFG_Prim.numkind -> unit
