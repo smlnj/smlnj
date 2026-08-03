@@ -65,7 +65,7 @@ structure PPCps : PPCPS =
 
     val arithopToString = ArithOps.toString
 
-    val pureopToString = ArithOps.pureopToString
+    val pureopToString = PureOps.toString
 
     val cmpopToString = CompareOps.toString
 

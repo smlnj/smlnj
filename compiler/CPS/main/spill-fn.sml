@@ -757,7 +757,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          *    the rewritten list of arguments
          *    a function for inserting selects.
          *)
-        fun emitReloads vs = let
+        fun emitReloads (vs : CPS.value list) : CPS.value list * (CPS.cexp -> CPS.cexp) = let
             fun g ([], vs', f) = (rev vs', f)
               | g ((v as CPS.VAR x)::vs, vs', f) = (case findSpill x
                  of NONE => g(vs, v::vs', f)
