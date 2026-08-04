@@ -49,6 +49,7 @@ is
 	types/overloadvar.sml
 	types/overload.sml
 	types/typecheck.sml
+        types/diagnostic.sml
 
         modules/sigmatch.sig
 	modules/sigmatch.sml
