@@ -115,6 +115,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
     structure U   = CPSUtil
     structure LV  = LambdaVar
     structure H   = LV.Tbl     (* For mapping from lvar *)
+    structure S   = LV.HSet
 
     val debug_cps_spill = Control_CG.debugSpill
     val debug_cps_spill_info = Control_CG.debugSpillInfo
@@ -143,24 +144,17 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
     (*
      * The following data structure groups together type specific functions.
      *)
-    datatype type_info = TYPE_INFO of {
-          maxLive  : int,             (* max live values allowed *)
-          isVar   : CPS.lvar -> bool, (* is variable a candidate for spilling? *)
-          itemSize : int              (* number of words per item *)
-        }
+    datatype type_info = TINFO of {
+        isFlt   : bool,                 (* true for floating-point type *)
+        maxLive : int,                  (* max live values allowed *)
+        isVar   : CPS.lvar -> bool      (* is variable a candidate for spilling? *)
+      }
 
-    datatype spill_candidate = SPILL_CANDIDATE of {
-          lvar : CPS.lvar,
-          cty  : CPS.cty,
-          rank : int          (* distance to next use *)
-        }
-
-    fun compare (
-          SPILL_CANDIDATE{rank=r1,lvar=v1,...}, SPILL_CANDIDATE{rank=r2,lvar=v2,...}
-        ) = (case Int.compare(r1,r2)
-           of EQUAL => LV.compare(v1,v2)
-            | ord   => ord
-          (* end case *))
+    datatype spill_candidate = SC of {
+        lvar : CPS.lvar,
+        cty  : CPS.cty,
+        rank : int                      (* distance to next use *)
+      }
 
     (* Cheap set representation *)
     structure SimpleSet = struct
@@ -170,7 +164,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         val op -- = Set.difference
         val O     = Set.empty
         val card  = Set.numItems     (* cardinality *)
-        fun rmv(S, x) = Set.subtract(S, x)
+        val rmv   = Set.subtract
       end
 
    (* Spill candidates set representation; this one has to be ranked *)
@@ -178,26 +172,28 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         structure Set = RedBlackSetFn (
           struct
             type ord_key = spill_candidate
-            val compare = compare
+            fun compare (SC{rank=r1,lvar=v1,...}, SC{rank=r2,lvar=v2,...}) = (
+                  case Int.compare(r1,r2)
+                   of EQUAL => LV.compare(v1,v2)
+                    | order   => order
+                  (* end case *))
           end)
         exception Item of Set.item
         (* as priority queue *)
-        fun next S =
-           Set.foldr (fn (x,_) => raise Item x) NONE S
-           handle Item x => SOME(x, Set.delete(S, x))
+        fun next S = let
+              val x = Set.maxItem S
+              in
+                SOME(x, Set.delete(S, x))
+              end
+                handle _ => NONE
         (* Abbreviations for set operations *)
         val op \/ = Set.union
         val op /\ = Set.intersection
         val op -- = Set.difference
         val O     = Set.empty
         val card  = Set.numItems     (* cardinality *)
-        fun rmv(S, x) = Set.delete(S, x) handle _ => S
+        val rmv   = Set.subtract
       end
-
-(* FIXME: should use the variable type for this purpose *)
-    (* map record kind to CPS type that serves as the argument to the RAWUPDATE primop *)
-    fun rkToCty (CPS.RK_FCONT | CPS.RK_RAW64BLOCK) = CPS.FLTt 64  (* REAL32: FIXME *)
-      | rkToCty _ = U.BOGt
 
     fun splittable CPS.RK_VECTOR = false (* not supported in backend (yet) *)
       | splittable _             = true
@@ -221,7 +217,8 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
   (*------------------------------------------------------------------------
    * markFpAndRec
    * =============
-   * Mark all floating point variables and return a hash table
+   * Return a hash set of the floating-point variables and a hash table that
+   * maps variables that are bound to heap allocations to a use count.
    *
    * This is needed because we do spilling of integer and floating
    * point stuff separately.
@@ -232,9 +229,9 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
       val (funKind, f, args, argTypes, body) = cpsFun : CPS.function
       open SimpleSet
       exception FloatSet
-      val floatSet = H.mkTable(32,FloatSet)
-      val addToFloatSet = H.insert floatSet
-      fun fp (r, CPS.FLTt _) = addToFloatSet(r, true)
+      val floatSet = S.mkEmpty 32
+      val addToFloatSet = S.addc floatSet
+      fun fp (r, CPS.FLTt _) = addToFloatSet r
         | fp (r ,_) = ()
       exception RecordSet
       val recordSet = H.mkTable(32,RecordSet)
@@ -301,7 +298,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
      *
      * This function takes O(N log N) time and O(N) space.
      *-------------------------------------------------------------------------*)
-    fun needsSpilling (TYPE_INFO{maxLive, isVar, ...}) cpsFun = let
+    fun needsSpilling (TINFO{maxLive, isVar, ...}) cpsFun = let
         val (funKind, f, args, argTypes, body) = cpsFun : CPS.function
         open SimpleSet
         exception TooMany
@@ -319,8 +316,8 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         (* This function inserts lvars of the current type into set S *)
         fun uses (vs, S) = let
               fun f ((CPS.VAR x)::vs,S) = f(vs, if isVar x then Set.add(S,x) else S)
-                | f(_::vs,S) = f(vs,S)
-                | f([],S) = check S
+                | f (_::vs,S) = f(vs,S)
+                | f ([],S) = check S
               in
                 f(vs,S)
               end
@@ -395,14 +392,19 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
      *
      * This function takes a total of O(N log N) time and O(N) space.
      *-------------------------------------------------------------------------*)
-    fun linearScan (TYPE_INFO{maxLive, isVar, itemSize, ...}) cpsFun = let
+    fun linearScan (TINFO{isFlt, maxLive, isVar}) cpsFun = let
         val (funKind, f, args, argTypes, body) = cpsFun : CPS.function
         open RankedSet
 
         val () = dump("before", cpsFun)
 
+        (* split-record element type *)
+        val recElemTy = if isFlt
+              then CPS.FLTt 64 (* REAL32: FIXME *)
+              else U.BOGt
+
         (* Information about each lvar *)
-        datatype lvar_info = LVAR_INFO of {
+        datatype lvar_info = LVINFO of {
              useCount   : int ref,  (* number of uses in this function *)
              defPoint   : int,      (* level of definition *)
              defBlock   : int,      (* block of definition *)
@@ -415,15 +417,15 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
               then pr["CPS Spill: linearScan\n"]
               else ()
 
-        val lvarInfo = H.mkTable(32,LvarInfo)
+        val lvarInfo = H.mkTable(32, LvarInfo)
         val lookupLvar = H.lookup lvarInfo
 
         fun spillCand v = let
-            val LVAR_INFO{nearestUse, useCount, defPoint, cty, ...} = lookupLvar v
+            val LVINFO{nearestUse, useCount, defPoint, cty, ...} = lookupLvar v
             val dist = !nearestUse - defPoint
             val rank = dist (* for now *)
             in
-              SPILL_CANDIDATE{lvar=v, cty=cty, rank=rank}
+              SC{lvar=v, cty=cty, rank=rank}
             end
 
         (*----------------------------------------------------------------------
@@ -437,7 +439,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
             val infinity = 10000000
             val enterLvar = H.insert lvarInfo
             fun def (v,t,b,n) = enterLvar(v,
-                  LVAR_INFO{
+                  LVINFO{
                       useCount=ref 0,
                       defPoint=n,
                       defBlock=b,
@@ -447,7 +449,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
 
             fun use (CPS.VAR v, n) = if isVar v
                   then let
-                    val LVAR_INFO{useCount, nearestUse, ...} = lookupLvar v
+                    val LVINFO{useCount, nearestUse, ...} = lookupLvar v
                     in
                       useCount := !useCount + 1;
                       nearestUse := Int.min(!nearestUse, n)
@@ -525,18 +527,18 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         (*
          * This function finds up to m good spill candidates from the live set
          *)
-        fun findGoodSpills(0, L, spOff) = (L, spOff)
-          | findGoodSpills(m, L, spOff) = (case next L
+        fun findGoodSpills (0, L, spOff) = (L, spOff)
+          | findGoodSpills (m, L, spOff) = (case next L
              of NONE => (L, spOff) (* no more spill candidates! *)
-              | SOME(SPILL_CANDIDATE{lvar, cty, rank, ...}, L) => let
+              | SOME(SC{lvar, cty, rank, ...}, L) => let
                   val offset = spOff
-                  val (_,spRecExp) = genSpillRec()
+                  val (_, spRecExp) = genSpillRec()
                   val () = enterSpill (lvar, (spRecExp,offset,cty))
                   fun inc (spOff, cty) = spOff + 1
                   in
                     (* okay; it's actually live and hasn't been spilled! *)
                     if !debug_cps_spill
-                      then pr["Spilling ",LV.lvarName lvar," rank=",i2s rank,"\n"]
+                      then pr["Spilling ", LV.lvarName lvar, " rank=", i2s rank, "\n"]
                       else ();
                     findGoodSpills(m-1, L, inc(spOff, cty))
                   end
@@ -548,20 +550,20 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          *  2. if it has >= MAX_RECORD_LEN live lvars as arguments
          *  3. All its arguments are defined in the same block as the record.
          *)
-        fun shouldSplitRecord (rk,vl,b) = let
+        fun shouldSplitRecord (rk, vl, b) = let
             fun okPath (CPS.SELp(i,p)) = okPath p
               | okPath (CPS.OFFp 0) = true
               | okPath _ = false
-            fun f([], n) = n >= MAX_RECORD_LEN
-              | f((CPS.VAR v,p)::vl, n) =
-                let val LVAR_INFO{defBlock, ...} = lookupLvar v
-                in  defBlock = b andalso okPath p andalso
-                       (if isVar v andalso not(isSpilled v)
-                        then f(vl, n+1)
-                        else f(vl, n)
-                       )
+            fun f ([], n) = n >= MAX_RECORD_LEN
+              | f ((CPS.VAR v,p)::vl, n) = let
+                val LVINFO{defBlock, ...} = lookupLvar v
+                in
+                  defBlock = b andalso okPath p andalso
+                    (if isVar v andalso not(isSpilled v)
+                     then f(vl, n+1)
+                     else f(vl, n))
                 end
-              | f((_,CPS.OFFp 0)::vl, n) = f(vl, n)
+              | f ((_,CPS.OFFp 0)::vl, n) = f(vl, n)
               | f _ = false
             in
               SPLIT_LARGE_RECORDS andalso splittable rk andalso f(vl, 0)
@@ -594,11 +596,11 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          * Enter the appropriate info to all its arguments.
          *)
         fun splitRecordConstruction (rk, vl, w) = let
-            fun f(i, (CPS.VAR v,offp)::vl, vars, consts) =
-                  f(i+1, vl, (i,v,offp)::vars, consts)
-              | f(i, (c,CPS.OFFp 0)::vl, vars, consts) =
-                 f(i+1, vl, vars, (i,c)::consts)
-              | f(_, [], vars, consts) = (vars, consts)
+            fun f (i, (CPS.VAR v,offp)::vl, vars, consts) =
+                f(i+1, vl, (i,v,offp)::vars, consts)
+              | f (i, (c,CPS.OFFp 0)::vl, vars, consts) =
+                f(i+1, vl, vars, (i,c)::consts)
+              | f (_, [], vars, consts) = (vars, consts)
               | f _ = error "CPS Spill.splitRecordConstruction"
             val (vars, consts) = f(0, vl, [], [])
             val n = length vars
@@ -610,7 +612,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
                   else ()
             val len = length vl
             val numVars = ref n
-            fun enter(i, v, path) = let
+            fun enter (i, v, path) = let
                 val item = SPLIT_RECORD_ITEM{
                         record  = w,
                         kind    = rk,
@@ -625,7 +627,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
                 end
             in
               app enter vars;
-              markSplitRecord(w,true)
+              markSplitRecord(w, true)
             end (* splitRecordConstruction *)
 
         (*-----------------------------------------------------------------
@@ -643,17 +645,17 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          *
          * This phase takes O(N log N) time and O(N) space
          *-----------------------------------------------------------------*)
-        fun scan(e, b, spOff) = let
+        fun scan (e, b, spOff) = let
             (* add uses to live set *)
-            fun addUses([], L) = L
-              | addUses(CPS.VAR v::vs, L) =
-                addUses(vs, if isVar v andalso not(isSpilled v) then
+            fun addUses ([], L) = L
+              | addUses (CPS.VAR v::vs, L) =
+                addUses (vs, if isVar v andalso not(isSpilled v) then
                                 Set.add(L, spillCand v) else L)
 
-              | addUses(_::vs, L) = addUses(vs, L)
+              | addUses (_::vs, L) = addUses(vs, L)
 
             (* This function kills a definition *)
-            fun kill(w, L) = if isVar w then rmv(L, spillCand w) else L
+            fun kill (w, L) = if isVar w then rmv(L, spillCand w) else L
 
             (* This function find things to spill *)
             fun genSpills (L, spOff) = let
@@ -705,10 +707,10 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
                 end (* scanStmt *)
 
             (* This function scans record constructors *)
-            fun scanRec(rk, vl, w, e) = let
-                val (L,spOff)  = scan(e,b,spOff) (* do continuation *)
+            fun scanRec (rk, vl, w, e) = let
+                val (L, spOff) = scan(e, b, spOff) (* do continuation *)
                 val (L, spOff) = if shouldSplitRecord(rk, vl, b)
-                      then (splitRecordConstruction(rk, vl, w); (L,spOff))
+                      then (splitRecordConstruction(rk, vl, w); (L, spOff))
                       else let
                         val L = kill(w, L)
                         val L = addUses(map #1 vl, L)
@@ -800,10 +802,10 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         (*
          * Emit spill record code
          *)
-        fun createSpillRecord(0, e) = e
-          | createSpillRecord(numSpills, e) = let
-            val (spillRecLvar,_) = genSpillRec()
-            val m = numSpills * itemSize
+        fun createSpillRecord (0, e) = e
+          | createSpillRecord (numSpills, e) = let
+            val (spillRecLvar, _) = genSpillRec()
+            val m = numSpills
             val e = CPS.PURE(P.RAWRECORD NONE, [tagInt m], spillRecLvar, U.BOGt, e)
             in
               currentSpillRecord := NONE; (* clear *)
@@ -831,7 +833,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          *)
         fun initRecordItem (record, rk, offset, v, path, e) = let
               fun e' x = CPS.SETTER(
-                    P.RAWUPDATE(rkToCty rk),
+                    P.RAWUPDATE recElemTy,
                     [CPS.VAR record, tagInt offset, CPS.VAR x],
                     e)
               in
@@ -844,7 +846,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         fun createRecord (record, rk, len, consts, e) = let
 (* FIXME: note that `rk` can be RK_RECORD or RK_CONT, which is kind of bogus. *)
             val e = emitSpill(record, e)
-            val p = P.RAWUPDATE(rkToCty rk)
+            val p = P.RAWUPDATE recElemTy
             fun init((i, c),e) = CPS.SETTER(p,[CPS.VAR record, tagInt i, c], e)
             val e = foldr init e consts
             in
@@ -857,7 +859,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
          * If so, generate code.
          *
          *)
-        fun assignToSplitRecord(v, e) = (case findSplitRecordArg v
+        fun assignToSplitRecord (v, e) = (case findSplitRecordArg v
              of SOME inits => let
                 fun gen (SPLIT_RECORD_ITEM{
                       record, kind, len, offset, path, numVars, consts, ...
@@ -988,34 +990,31 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
         (*
          * Perform spilling.
          *)
-        fun spillIt type_info cpsFun = let
-            val {needsSpilling, bandwidth, ...} = needsSpilling type_info cpsFun
+        fun spillIt typeInfo cpsFun = let
+            val {needsSpilling, bandwidth, ...} = needsSpilling typeInfo cpsFun
             in
               if !debug_cps_spill_info
-                then pr["CPS Spill bandwidth=",i2s bandwidth,"\n"]
+                then pr["CPS Spill bandwidth=", i2s bandwidth, "\n"]
                 else ();
               if needsSpilling
-                then linearScan type_info cpsFun
+                then linearScan typeInfo cpsFun
                 else cpsFun
             end
         (*
          * If we have unboxed floats then we have to distinguish between
          * fpr and gpr registers.
          *)
-        val (fpTable,recordTable) = markFpAndRec cpsFun (* collect fp type info *)
+        val (fpSet, recordTable) = markFpAndRec cpsFun (* collect fp type info *)
 
         val isMoveableRec = H.inDomain recordTable
 
         val cpsFun = if MachSpec.unboxedFloats
               then let
-                val isFP = H.inDomain fpTable
+                fun isFP r = S.member(fpSet, r)
                 fun isGP r = not(isFP r) andalso not(isMoveableRec r)
 (* REAL32: FIXME *)
-                val fp = TYPE_INFO{
-                      isVar = isFP, maxLive = maxfpfree,
-                      itemSize = if Target.is64 then 1 else 2
-                    }
-                val gp = TYPE_INFO{isVar=isGP, maxLive=maxgpfree, itemSize=1}
+                val fp = TINFO{isFlt = true, isVar = isFP, maxLive = maxfpfree}
+                val gp = TINFO{isFlt = false, isVar = isGP, maxLive = maxgpfree}
                 val cpsFun = spillIt fp cpsFun (* do fp spills first *)
                 val cpsFun = spillIt gp cpsFun (* do gp spills *)
                 in
@@ -1024,7 +1023,7 @@ functor SpillFn (MachSpec : MACH_SPEC) : SPILL =
               else let
                 fun isGP r = not(isMoveableRec r)
                 in
-                  spillIt (TYPE_INFO{isVar=isGP, maxLive=maxgpfree, itemSize=1}) cpsFun
+                  spillIt (TINFO{isFlt = false, isVar=isGP, maxLive=maxgpfree}) cpsFun
                 end
         in
           cpsFun
