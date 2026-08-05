@@ -174,12 +174,8 @@ SayDebug("[%2d]: RAW64L(%d) [...]\n", pc-5, n);
 	    spaceReq = CONS_SZB + 2 * WORD_SZB + 8 * n;
 /* FIXME: for large objects, we should be allocating them in the 1st generation */
 	    GC_CHECK;
-#ifdef ALIGN_REALDS
-	  /* Force REALD_SZB alignment (descriptor is off by one word) */
-	    msp->ml_allocPtr = (ml_val_t *)((Addr_t)(msp->ml_allocPtr) | WORD_SZB);
-#endif
 	    j = 2*n; /* number of words */
-	    ML_AllocWrite (msp, 0, MAKE_DESC(j, DTAG_raw64));
+	    ML_AllocWrite (msp, 0, MAKE_DESC(j, DTAG_raw));
 	    res = ML_Alloc (msp, j);
 	    for (j = 0;  j < n;  j++) {
 		PTR_MLtoC(double, res)[j] = GetDouble(&(lits[pc]));  pc += 8;

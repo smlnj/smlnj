@@ -133,9 +133,6 @@ STATIC_INLINE ml_val_t ML_AllocSeqHdr (ml_state_t *msp, ml_val_t desc, ml_val_t 
 STATIC_INLINE ml_val_t ML_AllocReal64 (ml_state_t *msp, double d)
 {
     ml_val_t *p = msp->ml_allocPtr;
-#ifdef ALIGN_REALDS
-    p = (ml_val_t *)((Addr_t)p | WORD_SZB);
-#endif
     *p++ = DESC_reald;
     *(double *)p = d;
     msp->ml_allocPtr = p + REALD_SZW;

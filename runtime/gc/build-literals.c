@@ -677,9 +677,6 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 #endif
 	    REAL64_ALLOC(msp, res, GetR64Arg(&(code[pc])));  pc += 8;
 	    availSpace -= WORD_SZB + REALD_SZB;
-#ifdef ALIGN_REALDS
-	    availSpace -= WORD_SZB;
-#endif
 	    break;
 
 	  case RVEC32:
@@ -834,13 +831,9 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 	    spaceReq = 8*(arg.uArg+1);
 /* FIXME: for large objects, we should be allocating them in the 1st generation */
 	    GC_CHECK;
-#ifdef ALIGN_REALDS
-	  /* Force REALD_SZB alignment (descriptor is off by one word) */
-	    msp->ml_allocPtr = (ml_val_t *)((Addr_t)(msp->ml_allocPtr) | WORD_SZB);
-#endif
 	  /* ui is the number of words */
 	    ui = WORD64_SZW * arg.uArg;
-	    ML_AllocWrite (msp, 0, MAKE_DESC(ui, DTAG_raw64));
+	    ML_AllocWrite (msp, 0, MAKE_DESC(ui, DTAG_raw));
 	    res = ML_Alloc (msp, ui);
 	    for (ui = 0;  ui < arg.uArg;  ui++) {
 		PTR_MLtoC(double, res)[ui] = GetR64Arg(&(code[pc]));

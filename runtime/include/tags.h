@@ -48,7 +48,6 @@
 #define DTAG_arr_data	HEXLIT(3)	/* polymorphic array data */
 #define DTAG_ref	DTAG_arr_data	/* reference cell */
 #define DTAG_raw	HEXLIT(4)	/* word-size aligned non-pointer data */
-#define DTAG_raw64	HEXLIT(5)	/* 64-bit aligned non-pointer data */
 #define DTAG_special	HEXLIT(6)	/* Special object; length is kind */
 #define DTAG_extern	HEXLIT(10)	/* external symbol reference (used in */
 					/* exported heap images) */
@@ -85,7 +84,7 @@
 #define DESC_pair	MAKE_DESC(2, DTAG_record)
 #define DESC_exn	MAKE_DESC(3, DTAG_record)
 #define DESC_ref	MAKE_DESC(1, DTAG_ref)
-#define DESC_reald	MAKE_DESC(REALD_SZW, DTAG_raw64)
+#define DESC_reald	MAKE_DESC(REALD_SZW, DTAG_raw)
 #define DESC_word64	MAKE_DESC(WORD64_SZW, DTAG_raw)
 #define DESC_polyvec	MAKE_DESC(SEQ_poly, DTAG_vec_hdr)
 #define DESC_polyarr	MAKE_DESC(SEQ_poly, DTAG_arr_hdr)
