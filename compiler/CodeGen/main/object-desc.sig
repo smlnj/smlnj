@@ -1,6 +1,6 @@
 (* object-desc.sig
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Abstract interface to the encoding of object description headers.
@@ -52,5 +52,3 @@ signature OBJECT_DESC =
     val special_nulled_weak : IntInf.int
 
   end;
-
-

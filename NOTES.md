@@ -30,10 +30,10 @@ The following steps were taken to make the changes
     git push origin tag rm-raw64-tag
     ```
 
-* Remove the `DTAG_raw64` descriptor tag from the runtime system.  This change
+* [**DONE**] Remove the `DTAG_raw64` descriptor tag from the runtime system.  This change
   can only be done once we have binfiles that do not use that descriptor tag.
 
-* tag this check point
+* [**DONE**] tag this check point
     ``` console
     git tag -a rm-runtime-raw64-tag -m "tag_raw64 removed from runtime system"
     git push origin tag rm-runtime-raw64-tag
