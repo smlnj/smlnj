@@ -608,7 +608,7 @@ fun genintinfswitch (subject: lexp, cases, default) =
 	      (* end case *))
 	fun gen () =
 	      (case split (cases, [], [])
-		 of ([], largeints) => build largeints
+		 of ([], largeints) => LET (sv, subject, build largeints)
 		  | (smallints, largeints) =>
 		      let val iv = mkv ()
 		       in LET (sv, subject,
