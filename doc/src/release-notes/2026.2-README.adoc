@@ -1,7 +1,7 @@
 // A template for creating release notes for a version
 //
-:version: 2026.2-rc1
-:date: June 18, 2026
+:version: 2026.2
+:date: August 7, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -36,15 +36,17 @@ FILES::
 
 == Summary
 
-// **** summary description of release
+This release fixes a number of bugs; adds support for additional bit-level
+operations on words, and includes various improvements in the system's
+internals.
 
 == Details
-
-// **** details: include those sections that are relevant
 
 === Compiler
 
 * The printing of real results in the REPL has been improved.
+
+*
 
 === CM
 
@@ -62,7 +64,9 @@ FILES::
 
 === Basis Library
 
-* implemented various bit-level operations on words as described in ...
+* Implemented inline bit operations for words as described in the Basis Library proposal
+  https://github.com/SMLFamily/BasisLibrary/wiki/2026-001-Additional-Bitops-for-WORD-signature[2026-001
+  (Additional Bitops for WORD signature)].
 
 === SML/NJ Library
 
@@ -103,6 +107,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/345[Fix missing case in `FLINT/reify`]
 | [.bugid]#346#
 | {pull-base}/346[Successor ML: type annotations on record puns]
+| [.bugid]#352#
+| {issue-base}/352[Pattern-matching for `IntInf` literals generates ill-formed FLINT]
 | [.bugid]#354#
 | {issue-base}/354[Unexpected `Overflow` exception]
 |=======
@@ -143,8 +149,9 @@ tested some of them:
 | | macOS 12 (Monterey) |
 | | macOS 13 (Ventura) |
 | | macOS 14 (Sonoma) |
-| | macOS 15 (Sequoia) | Tested
+| | macOS 15 (Sequoia) |
 | | macOS 26 (Tahoe) | Tested
+| | macOS 27 (Golden Gate) |
 | | Linux |
 | {nbsp} | |
 |=======
