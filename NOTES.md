@@ -3,7 +3,10 @@
 This branch is for introducing a new "mixed" record representation
 to represent closures over variables that are floats or native ints
 
-The following steps were taken to make the changes
+## Removing the `raw64` Object Tag
+
+The following steps were taken to remove the (now redundant) `raw64` object
+tag from the system.
 
 * [**DONE**] Remove the `tag_raw64` tag value from the `ObjectDesc :> OBJECT_DESC`
     structure and the `RK_RAW64BLOCK` constructor from the `CPS.record_kind`
@@ -39,6 +42,11 @@ The following steps were taken to make the changes
     git push origin tag rm-runtime-raw64-tag
     ```
 
-* Now we are ready to add support for mixed records to the runtime system.
+Now we are ready to add support for mixed records to the runtime system.
 
-... to be continued ...
+## Adding Mixed-Record Support to the Runtime
+
+Issues:
+* partition the length field of the descriptor into total length and pointer length
+* add a new arena for mixed records, since (unlike for records), scanning them requires
+  examining the object descriptors
