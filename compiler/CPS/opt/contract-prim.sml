@@ -408,7 +408,7 @@ structure ContractPrim : sig
                 val n = ival mod sz'
                 in
                   if (n = 0) then Val v
-                  else if (sz' <> n) then Pure(p, [v, mkNum (sz, n)])
+                  else if (sz' <> n) then Pure(p, [v, tagInt' n])
                   else None
                 end
             (***** ROTR *****)

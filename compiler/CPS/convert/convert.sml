@@ -85,16 +85,16 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
       | all_float (_::r) = false
       | all_float [] = true
 
-    fun selectFL(i,u,x,ct,ce) = SELECT(i,u,x,ct,ce)
+    fun selectFL (i,u,x,ct,ce) = SELECT(i,u,x,ct,ce)
 
-    fun selectNM(i,u,x,ct,ce) = (case ct
+    fun selectNM (i,u,x,ct,ce) = (case ct
 	   of FLTt sz => mkfn(fn v => SELECT(i, u, v, CU.BOGt, unwrapFlt(sz, VAR v, x, ce)))
 	    | NUMt{sz, tag=false} =>
 		mkfn(fn v => SELECT(i, u, v, CU.BOGt, unwrapInt(sz, VAR v, x, ce)))
 	    | _ => SELECT(i, u, x, ct, ce)
 	  (* end case *))
 
-    fun recordFL(ul,_,w,ce) =
+    fun recordFL (ul,_,w,ce) =
 	  RECORD(RK_RAWBLOCK, map (fn u => (u,OFFp 0)) ul, w, ce)
 
     fun recordNM (ul, ts, w, ce) = let

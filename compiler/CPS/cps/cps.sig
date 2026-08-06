@@ -167,7 +167,7 @@ signature CPS =
     datatype cexp
       = RECORD of record_kind * (value * accesspath) list * lvar * cexp
       | SELECT of int * value * lvar * cty * cexp
-      | OFFSET of int * value * lvar * cexp
+      | OFFSET of int * value * lvar * cexp     (* DEPRECATED *)
       | APP of value * value list
       | FIX of function list * cexp
 (* FIXME: SWITCH is currently restricted to tagged integers, should also support boxed ints *)
