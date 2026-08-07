@@ -34,7 +34,7 @@ ml_val_t _ml_P_Process_exec (ml_state_t *msp, ml_val_t arg)
     for (p = arglst;  p != LIST_nil;  p = LIST_tl(p)) {
         *cp++ = STR_MLtoC(LIST_hd(p));
     }
-    *cp++ = NIL(char);  /* terminate the argv[] */
+    *cp++ = NIL(char *);  /* terminate the argv[] */
 
     sts = execv(STR_MLtoC(path), argv);
     CHK_RETURN (msp, sts)

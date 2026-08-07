@@ -35,13 +35,13 @@ ml_val_t _ml_P_Process_exece (ml_state_t *msp, ml_val_t arg)
     for (p = arglst;  p != LIST_nil;  p = LIST_tl(p)) {
         *cp++ = STR_MLtoC(LIST_hd(p));
     }
-    *cp++ = NIL(char);  /* terminate the argv[] */
+    *cp++ = NIL(char *);  /* terminate the argv[] */
 
     envp = cp;
     for (p = envlst;  p != LIST_nil;  p = LIST_tl(p)) {
         *cp++ = STR_MLtoC(LIST_hd(p));
     }
-    *cp++ = NIL(char);  /* terminate the envp[] */
+    *cp++ = NIL(char *);  /* terminate the envp[] */
 
     sts = execve(STR_MLtoC(path), argv, envp);
 
