@@ -763,19 +763,6 @@ PVT ml_val_t MajorGC_ForwardObj (heap_t *heap, aid_t maxAid, ml_val_t v, aid_t i
 	  case DTAG_raw:
 	    len = GET_LEN(desc);
 	    break;
-	  case DTAG_raw64:
-	    len = GET_LEN(desc);
-#ifdef ALIGN_REALDS
-#  ifdef CHECK_HEAP
-	    if (((Addr_t)arena->nextw & WORD_SZB) == 0) {
-		*(arena->nextw) = (ml_val_t)0;
-		arena->nextw++;
-	    }
-#  else
-	    arena->nextw = (ml_val_t *)(((Addr_t)arena->nextw) | WORD_SZB);
-#  endif
-#endif
-	    break;
 	  default:
 	    Die ("bad string tag %d, obj = %p, desc = %p",
 		GET_TAG(desc), obj, desc);

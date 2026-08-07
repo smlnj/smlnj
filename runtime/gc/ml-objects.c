@@ -196,33 +196,19 @@ void ML_ShrinkRaw (ml_state_t *msp, ml_val_t v, Word_t nWords)
 ml_val_t ML_AllocRaw64 (ml_state_t *msp, Word_t nelems)
 {
     Word_t      nwords = DOUBLES_TO_WORDS(nelems);
-    ml_val_t    desc = MAKE_DESC(nwords, DTAG_raw64);
+    ml_val_t    desc = MAKE_DESC(nwords, DTAG_raw);
     ml_val_t    res;
     Word_t      szb;
 
     if (nwords > SMALL_OBJ_SZW) {
         arena_t *ap = msp->ml_heap->gen[0]->arena[STRING_INDX];
         szb = WORD_SZB*(nwords + 1);
-#ifdef ALIGN_REALDS
-        szb += WORD_SZB;  /* alignment padding */
-#endif
         IFGC (ap, szb+msp->ml_heap->allocSzB) {
           /* we need to do a GC */
             ap->reqSizeB += szb;
             InvokeGC (msp, 1);
             ap->reqSizeB = 0;
         }
-#ifdef ALIGN_REALDS
-      /* Force REALD_SZB alignment (descriptor is off by one word) */
-#  ifdef CHECK_HEAP
-        if (((Addr_t)ap->nextw & WORD_SZB) == 0) {
-            *(ap->nextw) = (ml_val_t)0;
-            ap->nextw++;
-        }
-#  else
-        ap->nextw = (ml_val_t *)(((Addr_t)ap->nextw) | WORD_SZB);
-#  endif
-#endif
         *(ap->nextw++) = desc;
         res = PTR_CtoML(ap->nextw);
         ap->nextw += nwords;
@@ -230,10 +216,6 @@ ml_val_t ML_AllocRaw64 (ml_state_t *msp, Word_t nelems)
         COUNT_ALLOC(msp, szb);
     }
     else {
-#ifdef ALIGN_REALDS
-      /* Force REALD_SZB alignment */
-        msp->ml_allocPtr = (ml_val_t *)((Addr_t)(msp->ml_allocPtr) | WORD_SZB);
-#endif
         ML_AllocWrite (msp, 0, desc);
         res = ML_Alloc (msp, nwords);
     }

@@ -293,7 +293,6 @@ PVT void CheckStringArena (arena_t *ap)
 	if (isDESC(desc)) {
 	    switch (GET_TAG(desc)) {
 	      case DTAG_raw:
-	      case DTAG_raw64:
 		len = GET_LEN(desc);
 		break;
 	      default:
@@ -307,11 +306,6 @@ PVT void CheckStringArena (arena_t *ap)
 	    prevDesc = p-1;
 	    p += len;
 	}
-#ifdef ALIGN_REALDS
-	else if ((desc == 0) && (((Addr_t)p & WORD_SZB) != 0))
-	  /* assume this is alignment padding */
-	    continue;
-#endif
 	else {
 	    ERROR;
 	    SayDebug (

@@ -1,6 +1,6 @@
 (* object-desc.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The encoding of object description headers.
@@ -36,20 +36,22 @@ structure ObjectDesc :> OBJECT_DESC =
     local
       fun mkTag t = II.orb(II.<<(t, 0w2), 2)
     in
-    val tag_record	= mkTag 0
-    val tag_vec_hdr	= mkTag 1
-    val tag_vec_data	= tag_record
-    val tag_arr_hdr	= mkTag 2
-    val tag_arr_data	= mkTag 3
-    val tag_ref		= tag_arr_data
-    val tag_raw		= mkTag 4
-    val tag_raw64	= mkTag 5
-    val tag_special	= mkTag 6
+    val tag_record	= mkTag 0       (* records of uniform values *)
+    val tag_vec_hdr	= mkTag 1       (* immutable vector-descriptor object *)
+    val tag_vec_data	= tag_record    (* polymorphic vector data (same as records) *)
+    val tag_arr_hdr	= mkTag 2       (* mutable array-descriptor object *)
+    val tag_arr_data	= mkTag 3       (* polymorphic array data *)
+    val tag_ref		= tag_arr_data  (* references are length-one array data *)
+    val tag_raw		= mkTag 4       (* raw data; i.e., strings, floats, etc *)
+    val tag_mixed	= mkTag 5       (* records of mixed uniform and raw data *)
+    val tag_special	= mkTag 6       (* special objects *)
     end (* local *)
 
   (* build a descriptor from a tag and length *)
     fun makeDesc (len, t) = II.orb(II.<<(len, tagWidth), t)
     fun makeDesc' (len, t) = II.orb(II.<<(II.fromInt len, tagWidth), t)
+
+    fun makeMixedDesc' {len, totLen} = raise Fail "unimplemented"
 
   (* array/vector header codes; note that sequences of tagged integers use
    * the next largest size (e.g., 31 ==> 32).
@@ -65,7 +67,7 @@ structure ObjectDesc :> OBJECT_DESC =
   (* fixed descriptors *)
     val desc_pair = makeDesc(2, tag_record)
     val desc_ref = makeDesc(1, tag_ref)
-    val desc_real64 = makeDesc(wordsPerReal, tag_raw64)
+    val desc_real64 = makeDesc(wordsPerReal, tag_raw)
     val desc_polyvec = makeDesc(seq_poly, tag_vec_hdr)
     val desc_polyarr = makeDesc(seq_poly, tag_arr_hdr)
     val desc_special = makeDesc(0, tag_special)

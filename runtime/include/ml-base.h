@@ -65,12 +65,6 @@
 /* convert a number of doubles to an even number of words */
 #define DOUBLES_TO_WORDS(N)	((N) * REALD_SZW)
 
-/* when ML values are 32-bits, it is useful to align doubles on 8-byte boundries */
-#ifndef SIZE_64
-#  define ALIGN_REALDS
-#endif
-
-
 #ifndef _ASM_
 
 #include <stdlib.h>

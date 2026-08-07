@@ -105,7 +105,19 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.2; 2026/06/18
+== Version 2026.2; 2026/08/07
+
+//--------------------------------------------------------------------
+[2026-08-05]::
++
+Removed the redundant `raw64` object descriptor tag.  This tag was a
+relic from the days when we supported 32-bit systems, where the heap
+objects containing reals had to be double-word aligned.  We plan to
+reuse this tag to support mixed records (_i.e._, records that contain
+both uniform values and raw numeric data) in a future version of the
+system.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-06-18]::

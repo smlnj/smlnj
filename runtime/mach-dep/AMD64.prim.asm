@@ -397,7 +397,7 @@ ALIGNED_ENTRY(create_r_a)
 	/* allocate the data object */
 	MOV	(temp,temp1)
 	SAL	(IM(TAG_SHIFTW),temp1)		/* temp1 := descriptor */
-	OR	(IM(MAKE_TAG(DTAG_raw64)),temp1)
+	OR	(IM(MAKE_TAG(DTAG_raw)),temp1)
 	MOV	(temp1,REGIND(allocptr))	/* store descriptor */
 	ADD	(WORD_SZB_IM,allocptr)		/* allocptr++ */
 	MOV	(allocptr,temp1)		/* temp1 := data object */

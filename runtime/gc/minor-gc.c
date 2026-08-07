@@ -348,24 +348,9 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
 #endif
 	arena = gen1->arena[ARRAY_INDX];
 	break;
-/* 64BIT: on 64-bit machines, we can treat DTAG_raw and DTAG_raw64 the same */
       case DTAG_raw:
 	len = GET_LEN(desc);
 	arena = gen1->arena[STRING_INDX];
-	break;
-      case DTAG_raw64:
-	len = GET_LEN(desc);
-	arena = gen1->arena[STRING_INDX];
-#ifdef ALIGN_REALDS
-#  ifdef CHECK_HEAP
-	if (((Addr_t)arena->nextw & WORD_SZB) == 0) {
-	    *(arena->nextw) = (ml_val_t)0;
-	    arena->nextw++;
-	}
-#  else
-	arena->nextw = (ml_val_t *)(((Addr_t)arena->nextw) | WORD_SZB);
-#  endif
-#endif
 	break;
       case DTAG_special:
 	return MinorGC_FwdSpecial (gen1, obj, desc);
