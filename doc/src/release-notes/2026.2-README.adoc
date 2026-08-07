@@ -111,6 +111,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/352[Pattern-matching for `IntInf` literals generates ill-formed FLINT]
 | [.bugid]#354#
 | {issue-base}/354[Unexpected `Overflow` exception]
+| [.bugid]#357#
+| {issue-base}/357[`build.sh` script does not work correctly when `INSTALLDIR` is defined]
 |=======
 
 We also fixed the following bugs that did not have issues

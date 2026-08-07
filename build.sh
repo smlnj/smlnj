@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Build and installation script for SML/NJ System.
@@ -14,6 +14,12 @@
 cmd=$0
 here=$(pwd)
 
+#
+# set the SML root directory
+#
+cd $(dirname $cmd) || exit 1
+SMLNJ_ROOT=$(pwd)
+
 # default LLVM directory
 LLVM_DIRNAME=llvm21
 
@@ -26,6 +32,7 @@ usage() {
   echo "usage: build.sh [ options ]"
   echo "options:"
   echo "    -h,-help           print this message and exit"
+  echo "    -install <dir>     specify installation directory (default $SMLNJ_ROOT)"
   echo "    -nolib             skip building libraries/tools"
   echo "    -runtime           build the runtime system only"
   echo "    -doc               generate documentation"
@@ -41,24 +48,29 @@ usage() {
   exit 1
 }
 
-# specifying the LLVM subdirectory (which is a submodule)
-#
-LLVMDIR_OPTION=
-
 # process options
+#
 NOLIB=no
 QUIET=yes
+INSTALLDIR=""
 CLEAN_INSTALL=no
 INSTALL_DEBUG=no
 INSTALL_DEV=no
 ONLY_RUNTIME=no
 MAKE_DOC=no
 SANITIZE_ADDRESS=no
+LLVMDIR_OPTION=""
 BUILD_LLVM_FLAGS=""
 while [ "$#" != "0" ] ; do
   arg=$1; shift
   case $arg in
     -help|-h) usage ;;
+    -install)
+      if [[ $# -gt 0 ]] ; then
+        INSTALLDIR=$1; shift
+      else
+        usage
+      fi ;;
     -nolib) NOLIB=yes ;;
     -verbose) QUIET=no ;;
     -clean) CLEAN_INSTALL=yes ;;
@@ -101,6 +113,8 @@ dsay() {
   fi
 }
 
+vsay "$cmd: SML root is $SMLNJ_ROOT."
+
 export CM_VERBOSE
 if [ x${QUIET} = xyes ] ; then
   CM_VERBOSE=false
@@ -112,7 +126,7 @@ fi
 #
 if [ x${CLEAN_INSTALL} = xyes ] ; then
   vsay "$cmd: remove existing executables and libraries"
-  rm -rf bin lib runtime/bin runtime/lib runtime/$LLVM_DIRNAME/build
+  rm -rf bin include lib runtime/$LLVM_DIRNAME/build
 fi
 #
 # create the preloads.standard file
@@ -126,16 +140,15 @@ SHELL=/bin/sh
 dsay "$cmd: Using shell $SHELL."
 
 #
-# set the SML root directory
+# check the installation directory (if specified)
 #
-cd $(dirname $cmd) || exit 1
-SMLNJ_ROOT=$(pwd)
-vsay "$cmd: SML root is $SMLNJ_ROOT."
-
-cd $here || exit 1
-cd "${INSTALLDIR:=$SMLNJ_ROOT}" || exit 1
-INSTALLDIR=`pwd`
-cd "$SMLNJ_ROOT" || exit 1
+cd "$here" || exit 1
+if [ x"$INSTALLDIR" != x ] ; then
+  cd "$INSTALLDIR" || exit 1
+  INSTALLDIR=$(pwd)
+else
+  INSTALLDIR="$SMLNJ_ROOT"
+fi
 vsay "$cmd: Installation directory is ${INSTALLDIR}."
 
 #
@@ -161,6 +174,7 @@ HEAPDIR=$BINDIR/.heap		# where heap images live
 RUNDIR=$BINDIR/.run		# where executables (i.e., the RTS) live
 LIBDIR=$INSTALLDIR/lib		# where libraries live
 
+# export variables used by the installer
 export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LLVMDIR
 
 #
@@ -398,7 +412,7 @@ else
   # if the "-dev" option was given, then we rebuild LLVM even if it is already
   # built, since we want to assure that the cross compiler is supported.
   #
-  BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
+  BUILD_LLVM_FLAGS="-install $INSTALLDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
     vsay $cmd: Building LLVM for all targets in $LLVMDIR
     cd "$LLVMDIR" || exit 1
@@ -525,8 +539,6 @@ cd "$SMLNJ_ROOT" || exit 1
 #
 if [ x"$NOLIB" = xno ] ; then
   vsay "$cmd: Installing other libraries and programs:"
-  # export variables used by the installer
-  export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR
   CM_TOLERATE_TOOL_FAILURES=true
   export CM_TOLERATE_TOOL_FAILURES
   if "$BINDIR"/sml -m \$smlnj/installer.cm ; then
