@@ -144,12 +144,16 @@ dsay "$cmd: Using shell $SHELL."
 #
 cd "$here" || exit 1
 if [ x"$INSTALLDIR" != x ] ; then
+  if [ ! -d "$INSTALLDIR" ] ; then
+    vsay "$cmd: creating $INSTALLDIR."
+    mkdir -p "$INSTALLDIR"
+  fi
   cd "$INSTALLDIR" || exit 1
   INSTALLDIR=$(pwd)
 else
   INSTALLDIR="$SMLNJ_ROOT"
 fi
-vsay "$cmd: Installation directory is ${INSTALLDIR}."
+vsay "$cmd: Installation directory is $INSTALLDIR."
 
 #
 # set the various directory and file pathname variables

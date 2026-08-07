@@ -7,14 +7,20 @@
 
 SHELL =		/bin/sh
 
-RUNTIME_ROOT =	../..
+#
+# these variables are set by the build.sh script, but we define them
+# here for when the makefile is used directly
+#
+SMLNJ_ROOT ?=	../../..
+INSTALLDIR ?=   $(SMLNJ_ROOT)
+
+RUNTIME_ROOT =	$(SMLNJ_ROOT)/runtime
 CLIB_DIR =	$(RUNTIME_ROOT)/c-libs
 INC_DIR =	$(RUNTIME_ROOT)/include
 OBJS_DIR =	$(RUNTIME_ROOT)/objs
-CFGCG_DIR =	$(RUNTIME_ROOT)/llvm/smlnj
 
 INCLUDES =	-I$(INC_DIR) -I$(CLIB_DIR) -I$(OBJS_DIR)
-CXX_INCLUDES =	-I$(CFGCG_DIR)/include
+CXX_INCLUDES =	$(INCLUDES) -I$(INSTALLDIR)/include
 
 MAKE =		make
 AR =		ar
@@ -36,7 +42,7 @@ endif
 
 LLVM_CXX_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
 #LLVM_CPP_FLAGS = -Iinclude $(INCLUDES)
-LLVM_CPP_FLAGS = -DNDEBUG -Iinclude $(INCLUDES) $(ARCH_DEFS)
+LLVM_CPP_FLAGS = -DNDEBUG $(CXX_INCLUDES) $(ARCH_DEFS)
 
 LIBRARY =	libcodegen.a
 
