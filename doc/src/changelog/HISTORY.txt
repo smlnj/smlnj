@@ -108,6 +108,15 @@ Here is an update to the entry
 == Version 2026.2; 2026/08/07
 
 //--------------------------------------------------------------------
+[2026-08-07]::
++
+Implemented "pointer equality" functions in the `Unsafe` structure
+as requested in {legacy-issue-base}/327[Legacy Issue #327].  The
+functions are called `==` and `!=`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-08-05]::
 +
 Removed the redundant `raw64` object descriptor tag.  This tag was a
@@ -116,6 +125,9 @@ objects containing reals had to be double-word aligned.  We plan to
 reuse this tag to support mixed records (_i.e._, records that contain
 both uniform values and raw numeric data) in a future version of the
 system.
++
+Also removed the `Raw64` constructor from the `Object.representation`
+datatype.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 

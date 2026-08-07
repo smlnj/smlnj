@@ -1,12 +1,7 @@
 // A template for creating release notes for a version
 //
-<<<<<<< HEAD
-:version: 2026.2-rc1
-:date: June 18, 2026
-=======
 :version: 2026.2
 :date: August 7, 2026
->>>>>>> mixed
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -45,18 +40,18 @@ This release fixes a number of bugs; adds support for additional bit-level
 operations on words, and includes various improvements in the system's
 internals.
 
+The distinction between "raw" and "raw64" values has been eliminated,
+since they have the same representation on 64-bit hardware.  This change
+affects the compiler, runtime system, and Basis library.
+
 == Details
 
 === Compiler
 
 * The printing of real results in the REPL has been improved.
 
-<<<<<<< HEAD
-=======
-*
-
->>>>>>> mixed
-=== CM
+* The distinction between "raw" and "raw64" records has been eliminated
+  inside the compiler.
 
 === LLVM
 
@@ -66,9 +61,9 @@ internals.
   the details.  This change fixes {issue-base}/318[Issue #318 (Segmentation fault
   with SML/NJ compiled MLton)].
 
-=== MLRISC
-
 === Runtime System
+
+* Removed the redundant `raw64` object descriptor tag.
 
 === Basis Library
 
@@ -76,12 +71,15 @@ internals.
   https://github.com/SMLFamily/BasisLibrary/wiki/2026-001-Additional-Bitops-for-WORD-signature[2026-001
   (Additional Bitops for WORD signature)].
 
+* Removed the `Raw64` constructor from the `Unsafe.Object.representation` datatype.
+
+* Added functions `Unsafe.==` and `Unsafe.!=` that implement "pointer equality"
+  (as requested in {legacy-issue-base}/327[Legacy Issue #327]).
+
 === SML/NJ Library
 
-* added the `Trilean` structure, which implements a three-valued logic
+* Added the `Trilean` structure, which implements a three-valued logic
   that is useful for some program analyses
-
-=== Successor ML
 
 === ML-LPT
 
@@ -90,6 +88,9 @@ internals.
 === Documentation
 
 === Installation
+
+* The `build.sh` script now supports the `-install` option for specifying a target
+  installation directory.
 
 == Bugs
 
@@ -119,16 +120,15 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/352[Pattern-matching for `IntInf` literals generates ill-formed FLINT]
 | [.bugid]#354#
 | {issue-base}/354[Unexpected `Overflow` exception]
-<<<<<<< HEAD
-=======
 | [.bugid]#357#
 | {issue-base}/357[`build.sh` script does not work correctly when `INSTALLDIR` is defined]
->>>>>>> mixed
 |=======
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
+
+* Addressed {legacy-issue-base}/327[Legacy Issue #327 (`Unsafe.ptrEq`)]
 
 * Fixed {legacy-issue-base}/353[Legacy Issue #353
   (Inconsistent datatype representation causes segfault)]

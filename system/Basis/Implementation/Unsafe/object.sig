@@ -15,7 +15,6 @@ signature UNSAFE_OBJECT =
     datatype representation
       = Unboxed
       | Raw		(* packed raw data *)
-      | Raw64		(* 64-byte aligned raw data (used for Real64.real) *)
       | Pair
       | Record
       | Ref
