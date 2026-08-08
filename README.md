@@ -55,7 +55,7 @@ these steps:
 1. Set `VERSION` to the version of **SML/NJ** that you want to build;
    for example
    ``` bash
-   VERSION=2025.3
+   VERSION=2026.2
    ```
 
 2. Clone the repository
