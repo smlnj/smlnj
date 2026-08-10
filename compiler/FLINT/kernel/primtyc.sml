@@ -41,6 +41,7 @@ structure PrimTyc :> PRIM_TYC =
       | PT_RARRAY
       | PT_SLOCK
     (* internal use only *)
+      | PT_ENUM
       | PT_ETAG
       | PT_VOID
 
@@ -62,6 +63,7 @@ structure PrimTyc :> PRIM_TYC =
 	    | PT_BARRAY => "BARR"
 	    | PT_RARRAY => "RARR"
 	    | PT_SLOCK  => "SLCK"
+	    | PT_ENUM   => "ENUM"
 	    | PT_ETAG   => "ETG"
 	    | PT_VOID   => "VOID"
 	  (* end case *))
@@ -86,6 +88,7 @@ structure PrimTyc :> PRIM_TYC =
     val ptc_rarray = PT_RARRAY
     val ptc_slock  = PT_SLOCK
 
+    val ptc_enum   = PT_ENUM
     val ptc_etag   = PT_ETAG
     val ptc_void   = PT_VOID
 
@@ -106,13 +109,14 @@ structure PrimTyc :> PRIM_TYC =
 	    | PT_BARRAY => 0
 	    | PT_RARRAY => 0
 	    | PT_SLOCK =>  0
+	    | PT_ENUM =>   0
 	    | PT_ETAG =>   1
 	    | PT_VOID =>   0
 	  (* end case *))
 
 
   (** each primitive type constructor is equipped with a key *)
-    val numBaseCode = 17
+    val numBaseCode = 18
     fun pt_toint ptyc = (case ptyc
 	   of PT_NUM n => numBaseCode + n
 	    | PT_REAL 32 => 0
@@ -130,8 +134,9 @@ structure PrimTyc :> PRIM_TYC =
 	    | PT_BARRAY => 12
 	    | PT_RARRAY => 13
 	    | PT_SLOCK =>  14
-	    | PT_ETAG =>   15
-	    | PT_VOID =>   16	(* must be = numBaseCode-1 *)
+	    | PT_ENUM =>   15
+	    | PT_ETAG =>   16
+	    | PT_VOID =>   17	(* must be = numBaseCode-1 *)
 	    | _ => bug("bogus ptyc: " ^ pt_print ptyc)
 	  (* end case *))
 
@@ -140,7 +145,7 @@ structure PrimTyc :> PRIM_TYC =
       val ptycvec = #[
 	      PT_REAL 32, PT_REAL 64, PT_STRING, PT_EXN, PT_ARRAY, PT_VECTOR, PT_REF,
 	      PT_CONT, PT_CCONT, PT_ARROW, PT_OBJ, PT_POINTER, PT_BARRAY, PT_RARRAY,
-	      PT_SLOCK, PT_ETAG, PT_VOID
+	      PT_SLOCK, PT_ENUM, PT_ETAG, PT_VOID
 	    ]
     in
     fun pt_fromint k = if (k < numBaseCode)
@@ -220,11 +225,12 @@ structure PrimTyc :> PRIM_TYC =
 
     fun ubxupd (PT_NUM 0) = false	(* IntInf.int *)
       | ubxupd (PT_NUM n) = (n <= Target.defaultIntSz)
+      | ubxupd PT_ENUM = true
       | ubxupd PT_POINTER = true	(* okay since pointer is outside heap *)
       | ubxupd _ = false
 
     fun isvoid (PT_NUM 0) = true
-      | isvoid (PT_NUM _ | PT_REAL _ | PT_STRING) = false
+      | isvoid (PT_NUM _ | PT_REAL _ | PT_STRING | PT_ENUM) = false
       | isvoid _ = true
 
   end (* structure PrimTyc *)

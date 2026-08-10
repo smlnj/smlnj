@@ -41,6 +41,7 @@ val tcc_num    : int -> Lty.tyc	(* int type of given size *)
 val tcc_real   : Lty.tyc
 val tcc_string : Lty.tyc
 val tcc_exn    : Lty.tyc
+val tcc_enum   : Lty.tyc
 val tcc_void   : Lty.tyc
 val tcc_unit   : Lty.tyc
 val tcc_bool   : Lty.tyc
@@ -57,6 +58,7 @@ val ltc_int    : Lty.lty	(* = ltc_num Target.defaultIntSz *)
 val ltc_real   : Lty.lty	(* REAL32: need ltc_real32/ltc_real64 *)
 val ltc_string : Lty.lty
 val ltc_exn    : Lty.lty
+val ltc_enum   : Lty.lty
 val ltc_void   : Lty.lty
 val ltc_unit   : Lty.lty
 val ltc_bool   : Lty.lty
@@ -88,5 +90,4 @@ val ltLookup : ltyEnv * LambdaVar.lvar * DebIndex.depth -> Lty.lty option
 val ltInsert : ltyEnv * LambdaVar.lvar * Lty.lty * DebIndex.depth -> ltyEnv
 
 end (* signature LTYBASIC *)
-
 

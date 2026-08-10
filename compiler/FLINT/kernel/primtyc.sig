@@ -34,7 +34,8 @@ signature PRIM_TYC =
     val ptc_rarray : primtyc    (* real64array *)
     val ptc_slock  : primtyc
 
-  (* ptc_void and pct_etag do not correspond to "real" primitive types (from BasisTypes) *)
+  (* these do not have corresponding primitive types from BasicTypes *)
+    val ptc_enum   : primtyc
     val ptc_void   : primtyc
     val ptc_etag   : primtyc
 
