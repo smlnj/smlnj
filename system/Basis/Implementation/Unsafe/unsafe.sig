@@ -93,7 +93,7 @@ signature UNSAFE =
 
     val cast : 'a -> 'b
 
-    (* pointer equality; these operators do a shallow comparison of the **uniform**
+    (* "pointer" equality; these operators do a shallow comparison of the **uniform**
      * representations of their arguments.  For unboxed values (e.g., characters),
      * this is the same as regular equality.  For boxed values, this will be pointer
      * equality.  If `x` and `y` have equality type, then `==(x, y)` implies that

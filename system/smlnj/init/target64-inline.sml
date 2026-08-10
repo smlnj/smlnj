@@ -66,7 +66,8 @@ structure InlineT =
     val recordSub	: ('a * int) -> 'b = InLine.recordSub
     val raw64Sub	: ('a * int) -> real = InLine.raw64Sub
 
-    val ptreql          : 'a * 'a -> bool = InLine.ptr_eql
+    val ptrEq           : 'a * 'a -> bool = InLine.ptr_eql
+    val ptrNeq          : 'a * 'a -> bool = InLine.ptr_neq
 
     (* machine properties *)
     val isBigEndian : unit -> bool = InLine.host_big_endian
