@@ -406,6 +406,7 @@ struct
 	  fun eqConValue (PL.INTcon i1,    F.INT i2)    = (#ival i1 = #ival i2)
 	    | eqConValue (PL.WORDcon i1,   F.WORD i2)   = (#ival i1 = #ival i2)
 	    | eqConValue (PL.STRINGcon s1, F.STRING s2) = (s1 = s2)
+	    | eqConValue (PL.DATAcon((_, A.CONSTANT i1, _), _, _), F.ENUM i2) = (i1 = i2)
 	    | eqConValue (con, v) = bugval("unexpected comparison with val", v)
 
           (* lookup : bindings * LV.lvar -> sval

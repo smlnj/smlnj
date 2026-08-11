@@ -62,6 +62,8 @@ struct
 	  concat["(I", Int.toString ty, ")", IntInf.toString ival]
       | valueToString (F.WORD{ival, ty}) =
 	  concat["(W", Int.toString ty, ")", IntInf.toString ival]
+      | valueToString (F.ENUM i) =
+	  concat["(ENUM)", Int.toString i]
       | valueToString (F.REAL{rval, ty}) =
 	  concat["(R", Int.toString ty, ")", RealLit.toString rval]
       | valueToString (F.STRING s) = PrintUtil.formatString s

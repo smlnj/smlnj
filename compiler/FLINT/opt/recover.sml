@@ -64,6 +64,7 @@ fun recover (fdec: prog, postRep : bool) =
 	fun getlty (VAR v) = lookup v
 	  | getlty (INT{ty, ...}) = LB.ltc_num ty
 	  | getlty (WORD{ty, ...}) = LB.ltc_num ty
+	  | getlty (ENUM _) = LB.ltc_enum
 	  | getlty (REAL _) = LB.ltc_real
 	  | getlty (STRING _) = LB.ltc_string
 

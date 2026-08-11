@@ -52,11 +52,13 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
   (* integer types/values *)
     local
       val tt = {sz = Target.defaultIntSz, tag = true}
+      val et = {sz = Target.defaultTaggedIntSz, tag = true}
       fun bt sz = {sz = sz, tag = false}
     in
     val tagIntTy = NUMt tt
     fun tagInt n = NUM{ival = n, ty = tt}
     fun tagInt' n = tagInt(IntInf.fromInt n)
+    fun enumTag n = NUM{ival = IntInf.fromInt n, ty = et}
     fun boxIntTy sz = NUMt(bt sz)
     fun boxInt (sz, i) = NUM{ival = i, ty = bt sz}
   (* address-sized words *)
@@ -335,6 +337,7 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
               if (ty <= Target.defaultIntSz)
                 then tagInt ival
                 else boxInt(ty, ival)
+          | lpvar (F.ENUM i) = enumTag i
           | lpvar (F.REAL r) = REAL r
           | lpvar (F.STRING s) = STRING s
 

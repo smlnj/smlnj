@@ -154,7 +154,10 @@ structure CPSUtil : sig
 		| SOME sz => CPS.NUMt{sz = sz, tag = (sz <= Target.defaultIntSz)}
 		| NONE => (case PT.realSize pt
 		     of SOME sz => CPS.FLTt sz
-		      | NONE => BOGt
+		      | NONE =>
+			  if PT.pt_eq(pt, PT.ptc_enum)
+			    then CPS.NUMt{sz = Target.defaultTaggedIntSz, tag = true}
+			    else BOGt
 		    (* end case *))
 	      (* end case *)),
 	  fn tc => LD.tcw_tuple (tc,

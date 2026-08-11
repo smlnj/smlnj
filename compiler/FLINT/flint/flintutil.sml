@@ -290,6 +290,7 @@ fun sameValue (v1, v2) =
        of (VAR x, VAR y) => LV.same(x, y)
 	| (INT n1, INT n2) => (#ty n1 = #ty n2) andalso (#ival n1 = #ival n2)
 	| (WORD w1, WORD w2) => (#ty w1 = #ty w2) andalso (#ival w1 = #ival w2)
+	| (ENUM i1, ENUM i2) => i1 = i2
 	| (REAL r1, REAL r2) => RealLit.same(#rval r1, #rval r2)
 	| (STRING s1, STRING s2) => (s1 = s2)
 	| _ => false
