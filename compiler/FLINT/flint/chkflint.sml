@@ -214,6 +214,7 @@ fun check phase envs lexp = let
 	    fun typeofVal (VAR lv) = typeofVar lv
 	      | typeofVal (INT{ty, ...}) = LB.ltc_num ty
 	      | typeofVal (WORD{ty, ...}) = LB.ltc_num ty
+	      | typeofVal (ENUM _) = LB.ltc_enum
 	      | typeofVal (REAL _) = LB.ltc_real
 	      | typeofVal (STRING _) = LB.ltc_string
 	      (* REAL64: need more cases *)

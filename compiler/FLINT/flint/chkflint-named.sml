@@ -195,6 +195,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 		    fun typeofVal (VAR lv) = typeofVar lv
 		      | typeofVal (INT{ty, ...}) = LE.ltc_num ty
 		      | typeofVal (WORD{ty, ...}) = LE.ltc_num ty
+		      | typeofVal (ENUM _) = LE.ltc_enum
 		      | typeofVal (REAL _) = LE.ltc_real
 		      | typeofVal (STRING _) = LE.ltc_string
 		      (* REAL64: need more cases *)

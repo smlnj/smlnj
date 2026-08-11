@@ -216,6 +216,7 @@ val isFloat  = RT.isFloat
 val isPair = RT.isPair
 
 fun tagInt i = INT{ival = IntInf.fromInt i, ty = Target.defaultIntSz}
+fun enum i = ENUM i
 
 (****************************************************************************
  *                      TYPED INTERPRETATION OF UNTAGGED                    *
@@ -307,15 +308,15 @@ fun utgd (tc, kenv, rt) =
 
 (* val tgdc : int * tyc * kenv * tyc -> value -> lexp *)
 fun tgdc (i, tc, kenv, rt) =
-  let val nt = LD.tcc_tuple [LB.tcc_int, rt]
+  let val nt = LD.tcc_tuple [LB.tcc_enum, rt]
    in fn u => let val x = mkv()
-               in RECORD(FU_rk_tuple, [tagInt i, u], x, WRAP(nt, VAR x))
+               in RECORD(FU_rk_tuple, [enum i, u], x, WRAP(nt, VAR x))
               end
   end
 
 (* val tgdd : int * tyc * kenv * tyc -> value -> lexp *)
 fun tgdd (i, tc, kenv, rt) =
-  let val nt = LD.tcc_tuple [LB.tcc_int, rt]
+  let val nt = LD.tcc_tuple [LB.tcc_enum, rt]
    in fn u => let val x = mkv() and v = mkv()
                in FU_UNWRAP(nt, [u], x, SELECT(VAR x, 1, v, RET[VAR v]))
               end
@@ -489,4 +490,3 @@ fun mkuwp (tc, kenv, b, nt) =
 
 end (* toplevel local *)
 end (* structure TypeOper *)
-

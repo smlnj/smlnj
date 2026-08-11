@@ -17,6 +17,7 @@ structure FLINT : FLINT =
       = VAR of LV.lvar
       | INT of int IntConst.t	(* "ty" = size = 0 for IntInf.int *)
       | WORD of int IntConst.t
+      | ENUM of int
       | REAL of int RealConst.t
       | STRING of string
 
