@@ -93,10 +93,9 @@ if [ x"$VERSION" = xnone ] ; then
   # get version number from source
   VERSION=$CONFIG_VERSION
 elif [ x"$VERSION" != x"$CONFIG_VERSION" ] ; then
-  echo "$CMD [Error]: version in config/version is $CONFIG_VERSION"
   cd $HERE
   rm -rf $DISTROOT
-  exit 1
+  complain "version in config/version is $CONFIG_VERSION"
 fi
 
 # is this a release candidate?
@@ -133,12 +132,16 @@ RSRC=Resources
 
 # you need a developer ID to sign the final package;
 #
+CODE_SIGN=none
+INST_SIGN=none
 case x"$SIGNER" in
-  xjhr) SIGN="Developer ID Installer: John Reppy (8A296SNBSN)" ;;
-  xnone) SIGN=none ;;
+  xjhr)
+    CODE_SIGN="Developer ID Application: John Reppy (8A296SNBSN)"
+    INST_SIGN="Developer ID Installer: John Reppy (8A296SNBSN)"
+  ;;
+  xnone) ;;
   *)
     echo "$CMD [Warning]: unknown user, so package will not be signed!"
-    SIGN=none
   ;;
 esac
 
@@ -176,13 +179,25 @@ sed \
   components/distribution_xml.in \
     > distribution.xml
 
-# TODO: here is probably where we should use codesign to enable the hardened runtime
-# for the runtime executable.  Something like the following command:
+# sign the executable files
 #
-#    codesign --force --options runtime --sign $SIGN bin/.run/run.amd64-darwin
-#
-# we may also need to add the --entitlements flag to enable things like executing
-# the code that we generate
+if [ x"$CODE_SIGN" != xnone ] ; then
+  EXECUTABLES="\
+    bin/cfgc \
+    bin/heap2obj \
+    bin/llc \
+    bin/llvm-config \
+    bin/.run/run.amd64-darwin \
+    bin/.run/run.arm64-darwin \
+    "
+  for prog in $EXECUTABLES ; do
+    vsay "$CMD: codesign --sign "$CODE_SIGN" $prog"
+    codesign --force --options runtime \
+        --entitlements components/sml-entitlements.plist \
+        --sign "$CODE_SIGN" --timestamp \
+        $prog
+  done
+fi
 
 # create the resources directory and fill it
 #
@@ -219,14 +234,14 @@ pkgbuild $PKG_OPTS smlnj.pkg
 #
 BUILD_OPTS="--package-path components --resources $RSRC \
   --distribution distribution.xml ./smlnj-$ARCH-$VERSION.pkg"
-if [ x"$SIGN" = xnone ] ; then
+if [ x"$INST_SIGN" = xnone ] ; then
   echo "$CMD: building unsigned package smlnj-$ARCH-$VERSION.pkg"
   vsay "$CMD: productbuild $BUILD_OPTS"
   productbuild $BUILD_OPTS
 else
   echo "$CMD: building signed package smlnj-$ARCH-$VERSION.pkg"
-  vsay "$CMD: productbuild --sign \"$SIGN\" $BUILD_OPTS"
-  productbuild --sign "$SIGN" $BUILD_OPTS
+  vsay "$CMD: productbuild --sign \"$INST_SIGN\" $BUILD_OPTS"
+  productbuild --sign "$INST_SIGN" $BUILD_OPTS
 fi
 
 # cleanup
