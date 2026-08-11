@@ -53,6 +53,7 @@ structure PPCps : PPCPS =
       | value2str (NUM{ival, ty={sz, ...}}) = concat[
 	    "(I", Int.toString sz, ")", IntInf.toString ival
 	  ]
+      | value2str (ENUM i) = "(E)" ^ Int.toString i
       | value2str (REAL{rval, ty}) = concat[
 	    "(R", Int.toString ty, ")", RealLit.toString rval
 	  ]

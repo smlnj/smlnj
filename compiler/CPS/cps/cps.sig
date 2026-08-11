@@ -27,6 +27,7 @@ signature CPS =
 
     datatype cty
       = NUMt of intty	        (* integers of the given type *)
+      | ENUMt			(* datatype-constructor tag *)
       | PTRt of pkind	        (* pointer *)
       | FUNt		        (* function? *)
       | FLTt of int	        (* float of given size *)
@@ -148,6 +149,7 @@ signature CPS =
       = VAR of lvar
       | LABEL of lvar			(* function labels after closure conversion *)
       | NUM of intty IntConst.t         (* `NUM{ival, ty = {sz, tag}}` *)
+      | ENUM of int			(* datatype-constructor tag *)
       | REAL of int RealConst.t         (* `REAL{rval, ty = sz}` *)
       | STRING of string
       | VOID                            (* used in closure conversion *)

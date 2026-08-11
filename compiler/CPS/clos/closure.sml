@@ -265,6 +265,7 @@ fun subset (x,y) = (case SL.difference(x,y) of [] => true | _ => false)
 
 (* check if a CPS type is a small constant size object *)
 fun smallObj (FLTt _) = true
+  | smallObj ENUMt = true
   | smallObj (NUMt{sz, tag}) = tag
   | smallObj _ = false
 
@@ -2045,5 +2046,4 @@ in  (* body of closeCPS *)
 end
 end (* local of open *)
 end (* functor Closure *)
-
 

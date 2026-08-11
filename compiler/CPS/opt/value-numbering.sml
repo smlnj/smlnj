@@ -260,6 +260,9 @@ structure ValueNumbering : sig
           end
       | cmpValue (C.NUM _, _) = LESS
       | cmpValue (_, C.NUM _) = GREATER
+      | cmpValue (C.ENUM i1, C.ENUM i2) = Int.compare(i1, i2)
+      | cmpValue (C.ENUM _, _) = LESS
+      | cmpValue (_, C.ENUM _) = GREATER
       | cmpValue (C.REAL{rval=r1, ty=n1}, C.REAL{rval=r2, ty=n2}) =
           RealLit.compare(r1, r2) ?=> (fn () => cmpCode(n1, n2))
       | cmpValue (C.REAL _, _) = LESS
@@ -277,6 +280,7 @@ structure ValueNumbering : sig
       | sameValue (C.NUM{ival=i1, ty=ty1}, C.NUM{ival=i2, ty=ty2}) =
 (* QUESTION: can we ignore the tag, since it is implied by the size? *)
           (#sz ty1 = #sz ty2) andalso (i1 = i2) andalso (#tag ty1 = #tag ty2)
+      | sameValue (C.ENUM i1, C.ENUM i2) = (i1 = i2)
       | sameValue (C.REAL{rval=r1, ty=n1}, C.REAL{rval=r2, ty=n2}) =
           (n1 = n2) andalso RealLit.same(r1, r2)
       | sameValue (C.STRING s1, C.STRING s2) = (s1 = s2)

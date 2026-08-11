@@ -127,6 +127,7 @@ fun equalUptoAlpha(ce1,ce2) =
                   end
               | same(LABEL a, LABEL b) = same(VAR a, VAR b)
               | same(NUM i, NUM j) = (#ty i = #ty j) andalso (#ival i = #ival j)
+              | same(ENUM i, ENUM j) = (i = j)
               | same(REAL a, REAL b) = (#ty a = #ty b) andalso RealLit.same(#rval a, #rval b)
               | same(STRING a, STRING b) = a=b
               | same(a,b) = false
@@ -651,6 +652,17 @@ and g hdlr = let
                    of v' as NUM{ival, ty={tag=true, ...}} => if !CG.switchopt
                        then let
                          val i = IntInf.toInt ival
+                         fun f (e::el, j) = (if i=j then () else drop_body e; f(el, j+1))
+                           | f ([], _) = ()
+                         in
+                           click "h";
+                           f(el, 0);
+                           newname(c, tagInt 0);
+                           g' (List.nth(el,i))
+                         end
+                       else SWITCH(v', c, map g' el)
+                    | v' as ENUM i => if !CG.switchopt
+                       then let
                          fun f (e::el, j) = (if i=j then () else drop_body e; f(el, j+1))
                            | f ([], _) = ()
                          in

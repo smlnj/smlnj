@@ -600,6 +600,7 @@ structure ContractPrim : sig
     fun branch (get : get_info) = let
           fun cond (P.UNBOXED, vl) = notCond(P.BOXED, vl)
             | cond (P.BOXED, [NUM{ty={tag, ...}, ...}]) = SOME(not tag)
+            | cond (P.BOXED, [ENUM _]) = SOME false
             | cond (P.BOXED, [STRING s]) = SOME true
             | cond (P.BOXED, [VAR v]) = (case #info(get v)
                  of RECinfo _ => SOME true
@@ -616,6 +617,7 @@ structure ContractPrim : sig
                 SOME(CA.toSigned(sz, #ival i) < CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLess(sz, #ival i, #ival j))
+            | cond (P.CMP{oper=P.LT, ...}, [ENUM i, ENUM j]) = SOME(i < j)
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [_, NUM{ival=0, ...}]) =
                 SOME false (* no unsigned value is < 0 *)
             | cond (P.CMP{oper=P.LT, kind=P.UINT _}, [VAR v, NUM{ival=256, ...}]) = (
@@ -633,6 +635,7 @@ structure ContractPrim : sig
                 SOME(CA.toSigned(sz, #ival i) <= CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLessEq(sz, #ival i, #ival j))
+            | cond (P.CMP{oper=P.LTE, ...}, [ENUM i, ENUM j]) = SOME(i <= j)
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM{ival=0, ...}, _]) =
                 SOME true (* 0 is <= all unsigned values *)
             | cond (P.CMP{oper=P.GT, kind}, [w,v]) =
@@ -658,9 +661,11 @@ structure ContractPrim : sig
                  * their unsigned value.
                  *)
                 SOME(CA.uEq(k, #ival i, #ival j))
+            | cond (P.CMP{oper=P.EQL, ...}, [ENUM i, ENUM j]) = SOME(i = j)
             | cond (P.CMP{oper=P.NEQ, kind}, vl) = notCond (P.CMP{oper=P.EQL, kind=kind}, vl)
             | cond (P.PEQL, [NUM i, NUM j]) =
                 SOME(CA.uEq(Target.pointerSz, #ival i, #ival j))
+            | cond (P.PEQL, [ENUM i, ENUM j]) = SOME(i = j)
             | cond (P.PNEQ, vl) = notCond(P.PEQL, vl)
             | cond _ = NONE
           and notCond arg = Option.map not (cond arg)

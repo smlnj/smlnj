@@ -511,6 +511,7 @@ structure Literals : LITERALS =
 		fn (C.VAR x) => inDomain x
 		 | (C.LABEL _) => bug "unexpected LABEL"
 		 | (C.NUM n) => true
+                 | (C.ENUM _) => true
 		 | (C.REAL r) => true
 		 | (C.STRING s) => true
 		 | C.VOID => false
@@ -523,6 +524,7 @@ structure Literals : LITERALS =
 		fn (C.VAR x) => Option.map #2 (findVar x)
 		 | (C.LABEL _) => bug "unexpected LABEL"
 		 | (C.NUM n) => NONE
+                 | (C.ENUM _) => NONE
 		 | (C.REAL r) => findLit (LV_REAL r)
 		 | (C.STRING s) => findLit (LV_STR s)
 		 | C.VOID => bug "unexpected VOID"
@@ -542,6 +544,7 @@ structure Literals : LITERALS =
 		      (* end case *))
 		 | (C.LABEL _) => bug "unexpected LABEL"
 		 | (C.NUM n) => ()
+                 | (C.ENUM _) => ()
 		 | (C.REAL r) => (setHasReal64 env; useLit(addReal r))
 		 | (C.STRING s) => useLit(addString s)
 		 | C.VOID => ()
@@ -559,6 +562,11 @@ structure Literals : LITERALS =
 		     (* end case *))
 		 | (C.LABEL _) => bug "unexpected LABEL"
 		 | (C.NUM n) => IMMED n
+                 | (C.ENUM i) =>
+                     IMMED {
+                       ival=IntInf.fromInt i,
+                       ty={ sz=Target.defaultIntSz, tag=true }
+                     }
 		 | (C.REAL r) => bug "unexpected REAL"
 		 | (C.STRING s) => use(addString s)
 		 | C.VOID => bug "unexpected VOID"
