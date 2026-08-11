@@ -449,6 +449,13 @@ else
 fi
 cd "$SMLNJ_ROOT" || exit 1
 
+#
+# remove unused LLVM executables from bin directory
+#
+for f in llvm-libtool-darwin llvm-tblgen ; do
+  rm -f bin/$f
+done
+
 vsay $cmd: runtime system built
 if [ x"$ONLY_RUNTIME" = xyes ] ; then
   exit 1
