@@ -52,13 +52,13 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
   (* integer types/values *)
     local
       val tt = {sz = Target.defaultIntSz, tag = true}
-      val et = {sz = Target.defaultTaggedIntSz, tag = true}
       fun bt sz = {sz = sz, tag = false}
     in
     val tagIntTy = NUMt tt
     fun tagInt n = NUM{ival = n, ty = tt}
     fun tagInt' n = tagInt(IntInf.fromInt n)
-    fun enumTag n = NUM{ival = IntInf.fromInt n, ty = et}
+    fun enumTag n = ENUM n
+    val unitVal = enumTag 0
     fun boxIntTy sz = NUMt(bt sz)
     fun boxInt (sz, i) = NUM{ival = i, ty = bt sz}
   (* address-sized words *)
@@ -146,11 +146,13 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
 
   (* primwrap: cty -> P.pure *)
     fun primwrap (NUMt{sz, ...}) = P.WRAP(NK.INT sz)
+      | primwrap ENUMt = P.BOX (* or CAST? *)
       | primwrap (FLTt sz) = P.WRAP(NK.FLOAT sz)
       | primwrap _ = P.BOX
 
   (* primunwrap: cty -> P.pure *)
     fun primunwrap (NUMt{sz, ...}) = P.UNWRAP(NK.INT sz)
+      | primunwrap ENUMt = P.UNBOX (* or CAST? *)
       | primunwrap (FLTt sz) = P.UNWRAP(NK.FLOAT sz)
       | primunwrap _ = P.UNBOX
 
@@ -415,7 +417,7 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
              | F.RECORD(FR.RK_VECTOR _, [], v, e) =>
                  bug "zero length vectors in convert"
              | F.RECORD(rk, [], v, e) => let
-                 val _ = newname(v, tagInt 0)
+                 val _ = newname(v, unitVal)
                  in
                    loop(e, c)
                  end
@@ -454,7 +456,7 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
                            val b = switch {
                                    arg = lpvar u, sign = sign,
                                    cases = map proc l,
-                                   default = APP(VAR df, [tagInt 0])
+                                   default = APP(VAR df, [unitVal])
                                  }
                            in case d
                                 of NONE => b
@@ -687,7 +689,7 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
                          | _ => bug "unexpected case in F.PRIMOP"
                      val vl = lpvars ul
                   in case map_primop p
-                      of PKS i => let val _ = newname(v, tagInt 0)
+                      of PKS i => let val _ = newname(v, unitVal)
                                    in SETTER(i, vl, loop(e,c))
                                   end
                        | PKA i => ARITH(i, vl, v, ct, loop(e,c))

@@ -82,6 +82,7 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
   (* convert CPS types to CFG types *)
     fun cvtTy cpsTy = (case cpsTy
 	   of CPS.NUMt{sz, tag=true} => C.TAGt
+	    | CPS.ENUMt => C.TAGt
 	    | CPS.NUMt{sz, ...} =>
 (*DEBUG*)if isTaggedInt sz then raise Fail "bogus CPS numeric type" else
 C.NUMt{sz=sz}
@@ -174,6 +175,7 @@ C.NUMt{sz=sz}
 	  fun typeOfVal (VAR x) = typeOf x
 	    | typeOfVal (LABEL lab) = typeOf lab
 	    | typeOfVal (NUM{ty, ...}) = CPS.NUMt ty
+	    | typeOfVal (ENUM _) = CPS.ENUMt
 	    | typeOfVal v = error ["gen.typeOfVal: unexpected ", PPCps.value2str v]
 	  val exps = LTbl.mkTable (CPSInfo.numVars info, Fail "exps")
 (*
@@ -189,6 +191,7 @@ C.NUMt{sz=sz}
 	    | genV (LABEL lab) = label lab
 	    | genV (NUM{ty={tag=true, ...}, ival}) = mlInt' ival
 	    | genV (NUM{ty={sz, ...}, ival}) = szNum sz ival
+	    | genV (ENUM i) = mlInt'(IntInf.fromInt i)
 	    | genV v = error ["gen.genV: unexepected ", PPCps.value2str v]
 	  val genPureTagged = TaggedArith.pure genV
 	  val genTagged = TaggedArith.trapping genV

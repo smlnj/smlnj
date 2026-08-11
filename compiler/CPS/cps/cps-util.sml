@@ -85,7 +85,7 @@ structure CPSUtil : sig
     fun sizeOfTy (CPS.FLTt sz) = sz
       | sizeOfTy (CPS.NUMt{tag=false, sz}) = sz
       | sizeOfTy (CPS.NUMt _) = Target.mlValueSz
-      | sizeOfTy (CPS.PTRt _ | CPS.FUNt | CPS.CNTt _) = Target.mlValueSz
+      | sizeOfTy (CPS.ENUMt | CPS.PTRt _ | CPS.FUNt | CPS.CNTt _) = Target.mlValueSz
 
     fun isFloat (CPS.FLTt _) = true
       | isFloat _ = false
@@ -96,6 +96,7 @@ structure CPSUtil : sig
 
     fun ctyToString (CPS.NUMt{sz, tag=true}) =  "[I]"
       | ctyToString (CPS.NUMt{sz, ...}) = concat["[I", Int.toString sz, "]"]
+      | ctyToString CPS.ENUMt = "[E]"
       | ctyToString (CPS.FLTt sz) = concat["[R", Int.toString sz, "]"]
       | ctyToString (CPS.PTRt(CPS.RPT{ptrLen, rawLen})) = (case (ptrLen, rawLen)
            of (0, m) => concat["[PF", Int.toString m, "]"]
@@ -156,7 +157,7 @@ structure CPSUtil : sig
 		     of SOME sz => CPS.FLTt sz
 		      | NONE =>
 			  if PT.pt_eq(pt, PT.ptc_enum)
-			    then CPS.NUMt{sz = Target.defaultTaggedIntSz, tag = true}
+			    then CPS.ENUMt
 			    else BOGt
 		    (* end case *))
 	      (* end case *)),

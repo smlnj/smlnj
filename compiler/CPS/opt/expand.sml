@@ -82,6 +82,7 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
      | getval (LABEL v) = get v
 (* QUESTION: should we return Const for boxed ints? *)
      | getval (NUM{ty={tag=true, ...}, ...}) = Const
+     | getval (ENUM _) = Const
 (*     | getval (REAL _) = Real*)
      | getval _ = Other
    fun call(v, args) = case getval v
@@ -604,4 +605,3 @@ fun expand {function=(fkind,fvar,fargs,ctyl,cexp),unroll,bodysize,click,afterClo
 
 end (* toplevel local *)
 end (* functor Expand *)
-
