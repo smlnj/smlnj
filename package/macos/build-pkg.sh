@@ -7,7 +7,7 @@
 #
 
 CMD="build-pkg.sh"
-GITHUB_URL="git@github.com:smlnj/smlnj.git"
+GITHUB_URL="https://github.com/smlnj/smlnj.git"
 DISTROOT=smlnj
 VERBOSE=""
 SIGNER="$USER"
@@ -67,8 +67,8 @@ fi
 if [ x"$VERSION" != xnone ] ; then
   BRANCH="--branch v$VERSION"
 fi
-vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL"
-git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL
+vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL $DISTROOT"
+git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL $DISTROOT
 if [ "$?" != 0 ] ; then
   complain "unable to download source from GitHub"
 fi
@@ -166,19 +166,6 @@ mv tmp-doc doc
 #
 rm *tgz
 
-# back up to the root
-#
-cd $HERE
-
-# configure the distribution file
-#
-sed \
-  -e "s/@VERSION@/$VERSION/g" \
-  -e "s/@PRODUCT_ARCH@/$PRODUCT_ARCH/g" \
-  -e "s/@ARCH@/$ARCH/g" \
-  components/distribution_xml.in \
-    > distribution.xml
-
 # sign the executable files
 #
 if [ x"$CODE_SIGN" != xnone ] ; then
@@ -193,11 +180,24 @@ if [ x"$CODE_SIGN" != xnone ] ; then
   for prog in $EXECUTABLES ; do
     vsay "$CMD: codesign --sign "$CODE_SIGN" $prog"
     codesign --force --options runtime \
-        --entitlements components/sml-entitlements.plist \
+        --entitlements ../components/sml-entitlements.plist \
         --sign "$CODE_SIGN" --timestamp \
         $prog
   done
 fi
+
+# back up to the root
+#
+cd $HERE
+
+# configure the distribution file
+#
+sed \
+  -e "s/@VERSION@/$VERSION/g" \
+  -e "s/@PRODUCT_ARCH@/$PRODUCT_ARCH/g" \
+  -e "s/@ARCH@/$ARCH/g" \
+  components/distribution_xml.in \
+    > distribution.xml
 
 # create the resources directory and fill it
 #
