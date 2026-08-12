@@ -165,6 +165,7 @@ mv tmp-doc doc
 # cleanup
 #
 rm *tgz
+rm -rf runtime/llvm*/build
 
 # sign the executable files
 #
@@ -243,6 +244,19 @@ else
   vsay "$CMD: productbuild --sign \"$INST_SIGN\" $BUILD_OPTS"
   productbuild --sign "$INST_SIGN" $BUILD_OPTS
 fi
+
+# notarize the package
+#
+NOTARY_OPTS="--keychain-profile jhr-dev-account smlnj-$ARCH-$VERSION.pkg"
+vsay "$CMD: xcrun notarytool submit --wait $NOTARY_OPTS"
+xcrun notarytool submit --wait $NOTARY_OPTS
+
+# TODO: check that notarization succeeded
+
+# staple the ticket to the package
+#
+vsay "$CMD: xcrun stapler validate -v smlnj-$ARCH-$VERSION.pkg"
+xcrun stapler validate -v smlnj-$ARCH-$VERSION.pkg
 
 # cleanup
 #
