@@ -100,6 +100,7 @@ sml.boot.*
 sml.bin.*
 /bin/
 /lib/
+/include/
 llvm/build/
 llvm/.cache
 runtime/bin/
