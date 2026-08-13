@@ -88,7 +88,8 @@ structure PrimopBindings : sig
 	  end
 
   (* add operations for an integer type to the primop list *)
-    fun defineIntOps (prefix, ity, sz, prims) = let
+    fun defineIntOps (ity, sz, prims) = let
+          val prefix = concat["int", Int.toString sz, "_"]
 	  val nk = P.INT sz
 	  val i_i = ar(ity, ity)
 	  val ii_i = ar(tup[ity, ity], ity)
@@ -119,7 +120,8 @@ structure PrimopBindings : sig
 	  end
 
   (* add operations for a word type to the primop list *)
-    fun defineWordOps (prefix, wty, sz, prims) = let
+    fun defineWordOps (wty, sz, prims) = let
+          val prefix = concat["word", Int.toString sz, "_"]
 	  val nk = P.UINT sz
 	  val w_w = ar(wty, wty)
 	  val w_i = ar(wty, BT.intTy)
@@ -175,7 +177,8 @@ structure PrimopBindings : sig
 	  end
 
   (* add operations for a real type to the primop list *)
-    fun defineRealOps (prefix, rty, sz, prims) = let
+    fun defineRealOps (rty, sz, prims) = let
+          val prefix = concat["real", Int.toString sz, "_"]
 	  val nk = P.FLOAT sz
 	  val r_r = ar(rty, rty)
 	  val rr_r = ar(tup[rty, rty], rty)
@@ -234,10 +237,7 @@ structure PrimopBindings : sig
   (* generate conversion operators for the int and word types of the given
    * size.
    *)
-    fun defineCvtOps (iTy, wTy, sz, prims) = let
-	  val (iName, wName) = if (sz = intSz)
-		then ("int", "word")
-		else let val s = Int.toString sz in ("int"^s, "word"^s) end
+    fun defineCvtOps (iName, iTy, wName, wTy, sz, prims) = let
 	  val lgWName = "word" ^ Int.toString largeWSz
 	  fun nm (s, from, to) = concat[s, from, "_to_", to]
 	  fun iTo ty = ar(iTy, ty)
@@ -248,10 +248,10 @@ structure PrimopBindings : sig
 	  val prims = if (sz = intSz)
 		then prims
 		else prims :-:
-		  (iName ^ "_to_int", iTo BT.intTy, sCopyChk(sz, intSz)) :-:
-		  (wName ^ "_to_word", wTo BT.wordTy, uCopy(sz, intSz)) :-:
-		  ("int_to_" ^ iName, iFrom BT.intTy, sCopyChk(intSz, sz)) :-:
-		  ("word_to_" ^ wName, wFrom BT.wordTy, uCopy(intSz, sz))
+                  (iName ^ "_to_int63", iTo BT.intTy, sCopyChk(sz, intSz)) :-:
+		  (wName ^ "_to_word63", wTo BT.wordTy, uCopy(sz, intSz)) :-:
+		  ("int63_to_" ^ iName, iFrom BT.intTy, sCopyChk(intSz, sz)) :-:
+		  ("word63_to_" ^ wName, wFrom BT.wordTy, uCopy(intSz, sz))
 	(* add conversions to/from large word type when sz <> large word size *)
 	  val prims = if (sz = largeWSz)
 		then prims
@@ -265,9 +265,9 @@ structure PrimopBindings : sig
 	    (iName ^  "_to_intinf", iTo BT.intinfTy, P.PRIM(CP.EXTEND_INF sz)) :-:
 	    ("intinf_to_" ^ iName, iFrom BT.intinfTy, P.PRIM(CP.TEST_INF sz)) :-:
 	  (* word type to/from default int type *)
-	    ("int_to_" ^ wName, wFrom BT.intTy, sCopy(intSz, sz)) :-:
-	    (nm("unsigned_", wName, "int"), wTo BT.intTy, uCopyChk(sz, intSz)) :-:
-	    (nm("signed_", wName, "int"), wTo BT.intTy, sCopyChk(sz, intSz)) :-:
+	    ("int63_to_" ^ wName, wFrom BT.intTy, sCopy(intSz, sz)) :-:
+	    (nm("unsigned_", wName, "int63"), wTo BT.intTy, uCopyChk(sz, intSz)) :-:
+	    (nm("signed_", wName, "int63"), wTo BT.intTy, sCopyChk(sz, intSz)) :-:
 	  (* word type to/from int inf *)
 	    ("unsigned_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.PRIM(CP.COPY_INF sz)) :-:
 	    ("signed_" ^ wName ^ "_to_intinf", wTo BT.intinfTy, P.PRIM(CP.EXTEND_INF sz)) :-:
@@ -356,7 +356,7 @@ structure PrimopBindings : sig
 (* TODO: once we have real64vectors, we can define those operations too *)
 
   (* default integer operations *)
-    val prims = defineIntOps ("int_", BT.intTy, intSz, prims)
+    val prims = defineIntOps (BT.intTy, intSz, prims)
 
   (* extra operations for the default integer type, which essentially implement
    * word operations on ints (these are used to simplify the Basis Library
@@ -368,47 +368,53 @@ structure PrimopBindings : sig
 	  val ii_i = ar(tup[BT.intTy, BT.intTy], BT.intTy)
 	  val iw_i = ar(tup[BT.intTy, BT.wordTy], BT.intTy)
 	  val ii_b = ar(tup[BT.intTy, BT.intTy], BT.boolTy)
+          val prefix = concat["int", Int.toString intSz, "_"]
 	  in
 	    prims :-:
 	  (* unchecked addition/subtraction *)
-	    ("int_unsafe_add", ii_i, P.PURE{oper=PureP.ADD, kind=nk}) :-:
-	    ("int_unsafe_sub", ii_i, P.PURE{oper=PureP.SUB, kind=nk}) :-:
+	    (prefix^"unsafe_add", ii_i, P.PURE{oper=PureP.ADD, kind=nk}) :-:
+	    (prefix^"unsafe_sub", ii_i, P.PURE{oper=PureP.SUB, kind=nk}) :-:
 	  (* bitwise operations *)
-	    ("int_orb", ii_i, P.PURE{oper=PureP.ORB, kind=nk}) :-:
-	    ("int_xorb", ii_i, P.PURE{oper=PureP.XORB, kind=nk}) :-:
-	    ("int_andb", ii_i, P.PURE{oper=PureP.ANDB, kind=nk}) :-:
-	    ("int_raw_rshift", iw_i, P.PURE{oper=PureP.RSHIFT, kind=nk}) :-:
-	    ("int_raw_lshift", iw_i, P.PURE{oper=PureP.LSHIFT, kind=nk}) :-:
-	    ("int_notb", i_i, P.PURE{oper=PureP.NOTB, kind=nk}) :-:
-	    ("int_ltu", ii_b, P.CMP{oper=CmpP.LT, kind=nk}) :-:
-	    ("int_geu", ii_b, P.CMP{oper=CmpP.GTE, kind=nk})
+	    (prefix^"orb", ii_i, P.PURE{oper=PureP.ORB, kind=nk}) :-:
+	    (prefix^"xorb", ii_i, P.PURE{oper=PureP.XORB, kind=nk}) :-:
+	    (prefix^"andb", ii_i, P.PURE{oper=PureP.ANDB, kind=nk}) :-:
+	    (prefix^"raw_rshift", iw_i, P.PURE{oper=PureP.RSHIFT, kind=nk}) :-:
+	    (prefix^"raw_lshift", iw_i, P.PURE{oper=PureP.LSHIFT, kind=nk}) :-:
+	    (prefix^"notb", i_i, P.PURE{oper=PureP.NOTB, kind=nk}) :-:
+	    (prefix^"ltu", ii_b, P.CMP{oper=CmpP.LT, kind=nk}) :-:
+	    (prefix^"geu", ii_b, P.CMP{oper=CmpP.GTE, kind=nk})
 	  end
 
   (* default word operations *)
-    val prims = defineWordOps ("word_", BT.wordTy, intSz, prims)
+    val prims = defineWordOps (BT.wordTy, intSz, prims)
 
   (* Int32 operations *)
-    val prims = defineIntOps ("int32_", BT.int32Ty, 32, prims)
+    val prims = defineIntOps (BT.int32Ty, 32, prims)
 
   (* Word8 operations *)
-    val prims = defineWordOps ("word8_", BT.word8Ty, 8, prims)
+    val prims = defineWordOps (BT.word8Ty, 8, prims)
 
   (* Word32 operations *)
-    val prims = defineWordOps ("word32_", BT.word32Ty, 32, prims)
+    val prims = defineWordOps (BT.word32Ty, 32, prims)
 
   (* Int64 operations *)
-    val prims = defineIntOps ("int64_", BT.int64Ty, 64, prims)
+    val prims = defineIntOps (BT.int64Ty, 64, prims)
 
   (* Word64 operations *)
-    val prims = defineWordOps ("word64_", BT.word64Ty, 64, prims)
+    val prims = defineWordOps (BT.word64Ty, 64, prims)
 
   (* Real64 operations *)
-    val prims = defineRealOps ("real64_", BT.realTy, 64, prims)
+    val prims = defineRealOps (BT.realTy, 64, prims)
 
   (* conversions integers and words *)
-    val prims = defineCvtOps (BT.intTy, BT.wordTy, intSz, prims)
-    val prims = defineCvtOps (BT.int32Ty, BT.word32Ty, 32, prims)
-    val prims = defineCvtOps (BT.int64Ty, BT.word64Ty, 64, prims)
+    local
+      val iName = "int" ^ Int.toString intSz
+      val wName = "word" ^ Int.toString intSz
+    in
+    val prims = defineCvtOps (iName, BT.intTy, wName, BT.wordTy, intSz, prims)
+    end (* local *)
+    val prims = defineCvtOps ("int32", BT.int32Ty, "word32", BT.word32Ty, 32, prims)
+    val prims = defineCvtOps ("int64", BT.int64Ty, "word64", BT.word64Ty, 64, prims)
 
   (* conversions for Word8
    * NOTE: if we had an Int8.int type, then we could use defineCvtOps here!
@@ -423,9 +429,9 @@ structure PrimopBindings : sig
 	    ("unsigned_word8_to_" ^ lgWName, wTo largeWTy, pCOPY(8, largeWSz)) :-:
 	    ("signed_word8_to_" ^ lgWName, wTo largeWTy, pEXTEND(8, largeWSz)) :-:
 	  (* word type to/from default int type *)
-	    ("int_to_word8", wFrom BT.intTy, sCopy(intSz, 8)) :-:
-	    ("unsigned_word8_to_int", wTo BT.intTy, uCopyChk(8, intSz)) :-:
-	    ("signed_word8_to_int", wTo BT.intTy, sCopyChk(8, intSz)) :-:
+	    ("int63_to_word8", wFrom BT.intTy, sCopy(intSz, 8)) :-:
+	    ("unsigned_word8_to_int63", wTo BT.intTy, uCopyChk(8, intSz)) :-:
+	    ("signed_word8_to_int63", wTo BT.intTy, sCopyChk(8, intSz)) :-:
 	  (* word type to/from int inf *)
 	    ("unsigned_word8_to_intinf", wTo BT.intinfTy, P.PRIM(CP.COPY_INF 8)) :-:
 	    ("signed_word8_to_intinf", wTo BT.intinfTy, P.PRIM(CP.EXTEND_INF 8)) :-:
@@ -437,18 +443,18 @@ structure PrimopBindings : sig
    *)
     val prims = if Target.is64
 	  then prims :-:
-	      ("trunc_int64_to_word", ar(BT.int64Ty, BT.wordTy), pTRUNC(64, intSz)) :-:
-	      ("trunc_word64_to_int", ar(BT.word64Ty, BT.intTy), pTRUNC(64, intSz)) :-:
+	      ("trunc_int64_to_word63", ar(BT.int64Ty, BT.wordTy), pTRUNC(64, intSz)) :-:
+	      ("trunc_word64_to_int63", ar(BT.word64Ty, BT.intTy), pTRUNC(64, intSz)) :-:
 	      ("copy_int64_to_word64", ar(BT.int64Ty, BT.word64Ty), pCOPY(64, 64)) :-:
-	      ("copy_word_to_int64", ar(BT.wordTy, BT.int64Ty), pCOPY(intSz, 64)) :-:
+	      ("copy_word63_to_int64", ar(BT.wordTy, BT.int64Ty), pCOPY(intSz, 64)) :-:
 	      ("copy_word64_to_int64", ar(BT.word64Ty, BT.int64Ty), pCOPY(64, 64))
 	  else let
 	    in
 	      prims :-:
-	      ("trunc_int32_to_word", ar(BT.int32Ty, BT.wordTy), pTRUNC(32, intSz)) :-:
-	      ("trunc_word32_to_int", ar(BT.word32Ty, BT.intTy), pTRUNC(32, intSz)) :-:
+	      ("trunc_int32_to_word31", ar(BT.int32Ty, BT.wordTy), pTRUNC(32, intSz)) :-:
+	      ("trunc_word32_to_int31", ar(BT.word32Ty, BT.intTy), pTRUNC(32, intSz)) :-:
 	      ("copy_int32_to_word32", ar(BT.int32Ty, BT.word32Ty), pCOPY(32, 32)) :-:
-	      ("copy_word_to_int32", ar(BT.wordTy, BT.int32Ty), pCOPY(intSz, 32)) :-:
+	      ("copy_word31_to_int32", ar(BT.wordTy, BT.int32Ty), pCOPY(intSz, 32)) :-:
 	      ("copy_word32_to_int32", ar(BT.word32Ty, BT.int32Ty), pCOPY(32, 32))
 	    end
 
@@ -462,10 +468,10 @@ structure PrimopBindings : sig
 		(name, ar(iTy, BT.realTy), P.PRIM(CP.INT_TO_REAL{from=iSz, to=realSz}))
 	  in
 	    prims :-:
-	    r2i("floor_real64_to_int", true) :-:
-	    r2i("round_real64_to_int", false) :-:
-	    i2r("int_to_real64", BT.intTy, intSz) :-:
-(* FIXME: add "word_to_real64" *)
+	    r2i("floor_real64_to_int63", true) :-:
+	    r2i("round_real64_to_int63", false) :-:
+	    i2r("int63_to_real64", BT.intTy, intSz) :-:
+(* FIXME: add "word63_to_real64" *)
 	    (if Target.is64
 	      then i2r("int64_to_real64", BT.int64Ty, 64)
 	      else i2r("int32_to_real64", BT.int32Ty, 32))

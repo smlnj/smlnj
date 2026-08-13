@@ -108,12 +108,12 @@ structure CoreIntInf :> sig
     infixr 5 ::
     val not : bool -> bool = InLine.inl_not
 
-    val wToI64 : word -> int64  = InLine.copy_word_to_int64
+    val wToI64 : word -> int64  = InLine.copy_word63_to_int64
     val w64ToI64 : word64 -> int64 = InLine.copy_word64_to_int64
-    val wToW64 : word -> word64 = InLine.word_to_word64
-    val i64ToW : int64 -> word = InLine.trunc_int64_to_word
+    val wToW64 : word -> word64 = InLine.word63_to_word64
+    val i64ToW : int64 -> word = InLine.trunc_int64_to_word63
     val i64ToW64 : int64 -> word64 = InLine.copy_int64_to_word64
-    val w64ToW : word64 -> word = InLine.word64_to_word
+    val w64ToW : word64 -> word = InLine.word64_to_word63
     val ~ : int64 -> int64 = InLine.int64_neg
     infix || && >> ^ <<
     val op || : word64 * word64 -> word64 = InLine.word64_orb
@@ -135,17 +135,17 @@ structure CoreIntInf :> sig
     fun concrete (i : intinf) : rep = InLine.cast i
 
     val hBaseBits : word = 0w31 (* half number of bits per digit *)
-    val baseBits : word = InLine.word_lshift (hBaseBits, 0w1)
-    val base : word = InLine.word_lshift (0w1, baseBits)
+    val baseBits : word = InLine.word63_lshift (hBaseBits, 0w1)
+    val base : word = InLine.word63_lshift (0w1, baseBits)
     val base64 = wToW64 base
-    val maxDigit : word = InLine.word_sub(base, 0w1)
+    val maxDigit : word = InLine.word63_sub(base, 0w1)
     val maxDigit64 = wToW64 maxDigit
     val maxDigitL : word = 0wx7fffffff	(* lower half of maxDigit *)
     val maxDigitL64 = wToW64 maxDigitL
     val neg_base_as_int : int = ~0x4000000000000000
 
-    val gap : word = InLine.word_sub (0w64, baseBits) (* 64 - baseBits *)
-    val slc : word = InLine.word_sub (baseBits, gap)  (* baseBits - gap *)
+    val gap : word = InLine.word63_sub (0w64, baseBits) (* 64 - baseBits *)
+    val slc : word = InLine.word63_sub (baseBits, gap)  (* baseBits - gap *)
 
   (* convert intinf to int64; raise Overflow it result is too large *)
     fun testInf64 i = let
@@ -177,8 +177,8 @@ structure CoreIntInf :> sig
     fun extend64Inf i64 = let
 	  fun e (negative, w63) = BI{
 		    negative = negative,
-		    digits = if InLine.word_ge (w63, base)
-			then [InLine.word_sub (w63, base), 0w1]
+		    digits = if InLine.word63_ge (w63, base)
+			then [InLine.word63_sub (w63, base), 0w1]
 			else [w63]
 		  }
 	  val i = if InLine.int64_eql(i64, 0)
@@ -218,9 +218,9 @@ structure CoreIntInf :> sig
     fun lowValue i = (case concrete i
 	   of BI { digits = [], ... } => 0
 	    | BI { digits = [d], negative = false } =>
-		InLine.unsigned_word_to_int d
+		InLine.unsigned_word63_to_int63 d
 	    | BI { digits = [d], negative = true } =>
-		InLine.int_neg (InLine.unsigned_word_to_int d)
+		InLine.int63_neg (InLine.unsigned_word63_to_int63 d)
 	    | _ => neg_base_as_int
 	  (* end case *))
 
@@ -247,8 +247,8 @@ structure CoreIntInf :> sig
     datatype order = datatype Order.order
 
     fun dcmp (x, y) =
-	if InLine.word_lt (x, y) then LESS else
-	if InLine.word_gt (x, y) then GREATER else
+	if InLine.word63_lt (x, y) then LESS else
+	if InLine.word63_gt (x, y) then GREATER else
 	EQUAL
 
     fun natcmp ([], []) = EQUAL
@@ -269,21 +269,21 @@ structure CoreIntInf :> sig
     fun le (x, y) = not (gt (x, y))
 
     fun adddig (d1, d2) : {carry: bool, res: word} =
-        let val sum = InLine.word_add (d1, d2)
+        let val sum = InLine.word63_add (d1, d2)
         in
-	    {carry = InLine.word_ge (sum, base),
-	     res = InLine.word_andb (sum, maxDigit) }
+	    {carry = InLine.word63_ge (sum, base),
+	     res = InLine.word63_andb (sum, maxDigit) }
         end
 
     (* add one to nat *)
     fun natinc [] = [0w1]
       | natinc (x :: xs) =
-	  if InLine.word_eql (x, maxDigit) then 0w0 :: natinc xs
-	  else InLine.word_add (x, 0w1) :: xs
+	  if InLine.word63_eql (x, maxDigit) then 0w0 :: natinc xs
+	  else InLine.word63_add (x, 0w1) :: xs
 
     fun natdec (0w0 :: xs) = maxDigit :: natdec xs
       | natdec [0w1] = []
-      | natdec (x :: xs) = InLine.word_sub (x, 0w1) :: xs
+      | natdec (x :: xs) = InLine.word63_sub (x, 0w1) :: xs
       | natdec [] = raise Assembly.Overflow (* should never happen! *)
 
     (* add two nats plus 1 (carry) *)
@@ -292,8 +292,8 @@ structure CoreIntInf :> sig
       | natadd1 (x :: xs, y :: ys) = let
 	    val { carry, res } = adddig (x, y)
 	    val (carry, res) =
-		if InLine.word_eql (res, maxDigit) then (true, 0w0)
-		else (carry, InLine.word_add (res, 0w1))
+		if InLine.word63_eql (res, maxDigit) then (true, 0w0)
+		else (carry, InLine.word63_add (res, 0w1))
 	in
 	    res :: natadd01 (carry, xs, ys)
 	end
@@ -318,14 +318,14 @@ structure CoreIntInf :> sig
       | natsub (xs, [], true) = natsub (xs, [0w0], true)
       | natsub ([], _, _) = raise Negative
       | natsub (x :: xs, y :: ys, c) = let
-	    val y' = if c then InLine.word_add (y, 0w1) else y
+	    val y' = if c then InLine.word63_add (y, 0w1) else y
 	    val (res, carry) =
-		if InLine.word_lt (x, y') then
-		    (InLine.word_sub (InLine.word_add (x, base), y'), true)
-		else (InLine.word_sub (x, y'), false)
+		if InLine.word63_lt (x, y') then
+		    (InLine.word63_sub (InLine.word63_add (x, base), y'), true)
+		else (InLine.word63_sub (x, y'), false)
 	in
 	    case natsub (xs, ys, carry) of
-		[] => if InLine.word_eql (res, 0w0) then [] else [res]
+		[] => if InLine.word63_eql (res, 0w0) then [] else [res]
 	      | more => res :: more
 	end
 
@@ -386,7 +386,7 @@ structure CoreIntInf :> sig
       | natmadd (w, x :: xs, c) = let
 	  val (h, l) = ddmul (w, x)
 	  val { carry,  res = l' } = adddig (l, c)
-	  val h' = if carry then InLine.word_add (h, 0w1) else h
+	  val h' = if carry then InLine.word63_add (h, 0w1) else h
 	  in
 	    l' :: natmadd (w, xs, h')
 	  end
@@ -411,7 +411,7 @@ structure CoreIntInf :> sig
     fun consd (0w0, []) = []
       | consd (x, xs) = x :: xs
 
-    fun scale w = InLine.word_div (base, InLine.word_add (w, 0w1))
+    fun scale w = InLine.word63_div (base, InLine.word63_add (w, 0w1))
 
   (* returns length-1 and last element *)
     fun length'n'last [] = (0, 0w0)	(* should not happen *)
@@ -419,43 +419,43 @@ structure CoreIntInf :> sig
       | length'n'last (_ :: l) = let
 	  val (len, last) = length'n'last l
 	  in
-	    (InLine.int_add (len, 1), last)
+	    (InLine.int63_add (len, 1), last)
 	  end
 
     fun nth (_, []) = 0w0
       | nth (0, x :: _) = x
-      | nth (n, _ :: xs) = nth (InLine.int_sub (n, 1), xs)
+      | nth (n, _ :: xs) = nth (InLine.int63_sub (n, 1), xs)
 
     (* divide DP number by digit; assumes u < i , i >= base/2 *)
     fun natdivmod2 ((u,v), i) =
-	let fun low w = InLine.word_andb (w, maxDigitL)
-	    fun high w = InLine.word_rshiftl (w, hBaseBits)
+	let fun low w = InLine.word63_andb (w, maxDigitL)
+	    fun high w = InLine.word63_rshiftl (w, hBaseBits)
 	    val (vh, vl) = (high v, low v)
 	    val (ih, il) = (high i, low i)
 
 	    fun adj (q, r, vx) =
-		let val x = InLine.word_add (InLine.word_lshift (r, hBaseBits), vx)
-		    val y = InLine.word_mul (q, il)
+		let val x = InLine.word63_add (InLine.word63_lshift (r, hBaseBits), vx)
+		    val y = InLine.word63_mul (q, il)
 		    fun loop (q, x) =
-			if InLine.word_ge (x, y) then (q, InLine.word_sub (x, y))
-			else loop (InLine.word_sub (q, 0w1), InLine.word_add (x, i))
+			if InLine.word63_ge (x, y) then (q, InLine.word63_sub (x, y))
+			else loop (InLine.word63_sub (q, 0w1), InLine.word63_add (x, i))
 		in loop (q, x)
 		end
 
-	    val q1 = InLine.word_div (u, ih)
-	    val r1 = InLine.word_mod (u, ih)
+	    val q1 = InLine.word63_div (u, ih)
+	    val r1 = InLine.word63_mod (u, ih)
 	    val (q1, r1) = adj (q1, r1, vh)
-	    val q0 = InLine.word_div (r1, ih)
-	    val r0 = InLine.word_mod (r1, ih)
+	    val q0 = InLine.word63_div (r1, ih)
+	    val r0 = InLine.word63_mod (r1, ih)
 	    val (q0, r0) = adj (q0, r0, vl)
-	in (InLine.word_add (InLine.word_lshift (q1, hBaseBits), q0), r0)
+	in (InLine.word63_add (InLine.word63_lshift (q1, hBaseBits), q0), r0)
 	end
 
     (* divide bignat by digit>0 *)
     fun natdivmodd (m, 0w1) = (m, 0w0) (* speedup *)
       | natdivmodd (m, i) = let
             val scale = scale i
-            val i' = InLine.word_mul (i, scale)
+            val i' = InLine.word63_mul (i, scale)
             val m' = natmadd (scale, m, 0w0)
             fun dmi [] = ([], 0w0)
               | dmi (d::r) = let
@@ -466,7 +466,7 @@ structure CoreIntInf :> sig
 		end
             val (q,r) = dmi m'
         in
-	    (q, InLine.word_div (r, scale))
+	    (q, InLine.word63_div (r, scale))
 	end
 
     (* From Knuth Vol II, 4.3.1, but without opt. in step D3 *)
@@ -477,7 +477,7 @@ structure CoreIntInf :> sig
         in (qt, consd (d, rm)) end (* speedup *)
       | natdivmod (m, [d]) = let
             val (qt, rm) = natdivmodd (m, d)
-        in (qt, if InLine.word_eql (rm, 0w0) then [] else [rm]) end
+        in (qt, if InLine.word63_eql (rm, 0w0) then [] else [rm]) end
       | natdivmod (m, n) = let
 	    val (ln, last) = length'n'last n (* ln >= 1 *)
 	    val scale = scale last
@@ -491,12 +491,12 @@ structure CoreIntInf :> sig
                     fun msds ([],_) = (0w0,0w0)
                       | msds ([d],0) = (0w0,d)
                       | msds ([d2,d1],0) = (d1,d2)
-                      | msds (d::r,i) = msds (r,InLine.int_sub (i, 1))
+                      | msds (d::r,i) = msds (r,InLine.int63_sub (i, 1))
                     val (m1,m2) = msds (m, ln)
                     val tq = if InLine.= (m1, n1) then maxDigit
                              else #1 (natdivmod2 ((m1,m2), n1))
                     fun try (q,qn') = (q, natsub0 (m,qn'))
-                	handle Negative => try (InLine.word_sub (q,0w1),
+                	handle Negative => try (InLine.word63_sub (q,0w1),
 						natsub0 (qn', n'))
                     val (q,rr) = try (tq, natmadd (tq,n',0w0))
                 in (consd (q,qt), rr) end
@@ -545,7 +545,7 @@ structure CoreIntInf :> sig
       | mod' (BI { digits = [], ... }, _) = zero
       | mod' (BI { digits = low :: _, ... },
 	      BI { digits = [0w2], negative }) =
-	  if InLine.word_eql (InLine.word_andb (low, 0w1), 0w0) then zero
+	  if InLine.word63_eql (InLine.word63_andb (low, 0w1), 0w0) then zero
 	  else BI { digits = [0w1], negative = negative }
       | mod' (BI x, BI y) = #2 (divMod'' (x, y))
 
@@ -553,26 +553,26 @@ structure CoreIntInf :> sig
       | rem' (BI { digits = [], ... }, _) = zero
       | rem' (BI { digits = low :: _, negative },
 	      BI { digits = [0w2], ... }) =
-	  if InLine.word_eql (InLine.word_andb (low, 0w1), 0w0) then zero
+	  if InLine.word63_eql (InLine.word63_andb (low, 0w1), 0w0) then zero
 	  else BI { digits = [0w1], negative = negative }
       | rem' (BI x, BI y) = #2 (quotRem'' (x, y))
 
     fun natpow (_, 0) = [0w1]
-      | natpow ([], n) = if InLine.int_lt (n, 0) then raise Assembly.Div else []
+      | natpow ([], n) = if InLine.int63_lt (n, 0) then raise Assembly.Div else []
       | natpow (x, n) =
-	  if InLine.int_lt (n, 0) then []
+	  if InLine.int63_lt (n, 0) then []
 	  else let fun exp (m, 0w0) = [0w1]
 		     | exp (m, 0w1) = m
 		     | exp (m, n) = let
-			   val x = exp (m, InLine.word_rshiftl (n, 0w1))
+			   val x = exp (m, InLine.word63_rshiftl (n, 0w1))
 			   val y = natmul (x, x)
 		       in
-			   if InLine.word_eql (InLine.word_andb (n, 0w1), 0w0)
+			   if InLine.word63_eql (InLine.word63_andb (n, 0w1), 0w0)
                            then y
 			   else natmul (y, m)
 		       end
 	       in
-		   exp (x, InLine.int_to_word n)
+		   exp (x, InLine.int63_to_word63 n)
 	       end
 
     fun pow (_, 0) = abstract (BI { negative = false, digits = [0w1] })
@@ -580,7 +580,7 @@ structure CoreIntInf :> sig
 	    val BI { negative, digits } = concrete i
 	in
 	    abstract (bi { negative = negative andalso
-	                              InLine.int_eql (InLine.int_rem (n, 2), 1),
+	                              InLine.int63_eql (InLine.int63_rem (n, 2), 1),
 			   digits = natpow (digits, n) })
 	end
 

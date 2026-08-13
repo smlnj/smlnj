@@ -105,7 +105,17 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.2; 2026/08/07
+== Version 2026.2; 2026/08/13
+
+//--------------------------------------------------------------------
+[2026-08-13]::
++
+Changed the names of primitive operations that work on the default
+integer and word types in the `InLine` structure.  The names are
+now consistent with the primitive operations for other sizes of
+types; for example, `int_add` is now `int63_add`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-08-07]::

@@ -111,14 +111,14 @@ structure Core =
       ref(fn s:string => (raise NoProfiler):int*int array*int ref)
     end
 
-    local val ieql : int * int -> bool = InLine.int_eql
+    local val ieql : int * int -> bool = InLine.int63_eql
           val peql : 'a * 'a -> bool = InLine.ptr_eql
-          val ineq : int * int -> bool = InLine.int_neq
+          val ineq : int * int -> bool = InLine.int63_neq
 	  val i64eq : int64 * int64 -> bool = InLine.int64_eql
           val boxed : 'a -> bool = InLine.boxed
-          val op + : int * int -> int = InLine.int_add
-          val op - : int * int -> int = InLine.int_sub
-          val op * : int * int -> int = InLine.int_mul
+          val op + : int * int -> int = InLine.int63_add
+          val op - : int * int -> int = InLine.int63_sub
+          val op * : int * int -> int = InLine.int63_mul
 	  val op := : 'a ref * 'a -> unit = InLine.:=
           val ordof : string * int -> char = InLine.char_vec_unsafe_sub
           val cast : 'a -> 'b = InLine.cast
@@ -128,14 +128,14 @@ structure Core =
 	  val recSub : ('a * int) -> 'b = InLine.recordSub
           val vecLen : 'a -> int = InLine.seq_length
           val vecSub : 'a vector * int -> 'a = InLine.vec_unsafe_sub
-          val andb : int * int -> int = InLine.int_andb
-	  val fast_add : int * int -> int = InLine.int_unsafe_add
-	  val fast_sub : int * int -> int = InLine.int_unsafe_sub
+          val andb : int * int -> int = InLine.int63_andb
+	  val fast_add : int * int -> int = InLine.int63_unsafe_add
+	  val fast_sub : int * int -> int = InLine.int63_unsafe_sub
 
 	  val width_tags = 0w7  (* 5 tag bits plus "10" *)
 
         (* the type annotation is just to work around an bug - sm *)
-          val ltu : int * int -> bool = InLine.int_ltu
+          val ltu : int * int -> bool = InLine.int63_ltu
 
     in
 
@@ -143,9 +143,9 @@ structure Core =
       * the maximum length field value (sign bit should be 0).
       *)
        val max_length = let
-	    val op - = InLine.word_sub
-	    infix << val op << = InLine.word_lshift
-	    val int = InLine.signed_word_to_int
+	    val op - = InLine.word63_sub
+	    infix << val op << = InLine.word63_lshift
+	    val int = InLine.signed_word63_to_int63
 	    in
 	      int ((0w1 << (0w63 - width_tags)) - 0w1)
 	    end
@@ -192,7 +192,7 @@ structure Core =
 
 	   fun delay (f : unit -> 'a) = InLine.mkspecial(TSUS,f): 'a susp
 	   fun force (x : 'a susp) =
-	       if InLine.int_eql((InLine.getspecial x),TSUS)
+	       if InLine.int63_eql((InLine.getspecial x),TSUS)
 	       then let val y : 'a = recSub (InLine.cast x, 0) ()
 		    in InLine.cast x := y;
 		       InLine.setspecial(InLine.cast x, TSES);
@@ -384,7 +384,7 @@ structure Core =
         val deref = ( InLine.! )
 	val unboxedupdate = InLine.arr_unboxed_update
 	val subscript = InLine.arr_unsafe_sub
-	val iadd = InLine.int_add
+	val iadd = InLine.int63_add
 
     end (* local *)
 
