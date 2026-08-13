@@ -38,6 +38,8 @@ root_dir = os.path.dirname(os.path.abspath(__file__))
 components_dir = os.path.join(root_dir, "components")
 dist_dir = os.path.join(root_dir, dist_name)
 
+##### UTILITIES
+
 # report an error and exit
 #
 def error(msg):
@@ -71,8 +73,6 @@ def run_command(prog, args, *, cwd=None, timeout=None):
     check=False,
     cwd=cwd, timeout=timeout)
 
-##### BUILD DISTRIBUTION
-
 # expand a "@foo@" string as specified by the dictionary `substs` (i.e., by `substs[foo]`)
 #
 def expand_match(substs, m):
@@ -90,8 +90,10 @@ def expand_file(*, src, dst, substs):
       for ln in inS:
         outS.write(re.sub(r"@([A-Za-z0-9_-]+)@", lambda m : expand(substs,m), ln))
 
-def build_distribution(version):
-  #
+##### BUILD DISTRIBUTION
+
+def build_distribution(info):
+  run_command(os.path.join(dist_dir, "build.sh"), ["-doc"], cwd=dst_dir)
 
 ##### SIGNING
 
@@ -141,7 +143,7 @@ def codesign_exec(executable, entitlements, info):
 def codesign(info):
   for e in tool_execs:
     codesign_exec(e, f"{components_dir}/tool-entitlements.plist", info)
-  for e in sml_execs
+  for e in sml_execs:
     codesign_exec(e, f"{components_dir}/sml-entitlements.plist", info)
 
 # build and sign the distribution package
@@ -172,13 +174,13 @@ def package(info):
     # NOTE: this command relies on the fact that there is only one absolute
     # font-size command in the README file (the others are relative)
     #
-    readme=f"{distroot}/doc/html/readme/{info["version_stem"]}-README.html"
-    if (not os.path.exists(readme)):
-      error (f"cannot find {readme}")
-    with open(readme, 'rt', encoding="utf-8") as inS:
-      with open(os.path.join(rsrc_dir, "readme.html"), "wt", encoding="utf-8") as outS:
-        for ln in inS:
-          outS.write(re.sub(r"font-size: [0-9]+pt;", "font-size: 9pt;", ln))
+  readme=f"{distroot}/doc/html/readme/{info['version_stem']}-README.html"
+  if (not os.path.exists(readme)):
+    error (f"cannot find {readme}")
+  with open(readme, 'rt', encoding="utf-8") as inS:
+    with open(os.path.join(rsrc_dir, "readme.html"), "wt", encoding="utf-8") as outS:
+      for ln in inS:
+        outS.write(re.sub(r"font-size: [0-9]+pt;", "font-size: 9pt;", ln))
   # create the smlnj.pkg file
   run_command("pkgbuild",
     [ "--identifier", info["package_id"],
@@ -193,7 +195,7 @@ def package(info):
     [ "--components", components_dir,
       "--resources", rsrc_dir,
       "--distribution", os.path.join(root_dir, "distribution.xml"),
-      os.path.join(root_dir, f"smlnj-{info["arch"]}-{info["version"]}.pkg")],
+      os.path.join(root_dir, f"smlnj-{info['arch']}-{info['version']}.pkg")],
     cwd=root_dir)
 
 # sign the executables, build the installer package and sign it,
@@ -244,14 +246,15 @@ def create_arg_parser():
   parser.add_argument(
     '-a', '--arch',
     action='store', default=None,
-    help="specify the architecture of the distribution when '-sign' option is specified")
+    help="specify the architecture of the distribution when the '-sign' option is specified")
   parser.add_argument(
     'version', action='store',
     help="the version of SML/NJ to package")
+  return (parser)
 
 # this program is only useful on macOS
 #
-if (platform.name() != 'Darwin'):
+if (platform.system() != 'Darwin'):
   error("not a macOS system")
 
 # set up the command-line option parsing
@@ -264,10 +267,10 @@ verbose = args.verbose
 #
 # process the version string
 version_pieces=args.version.split("-")
-if (len(version_pieces) = 1):
+if (len(version_pieces) == 1):
   info["version_stem"] = version_pieces[0]
   info["version_suffix"] = ""
-elif (len(version_pieces) = 2):
+elif (len(version_pieces) == 2):
   info["version_stem"] = version_pieces[0]
   info["version_suffix"] = version_pieces[1]
 else:
@@ -276,19 +279,18 @@ info["version"] = args.version
 # normalize the architecture name
 if (not args.sign or not args.arch):
   info["arch"] = platform.machine()
-if (info["arch"] = "x86_64" or info["arch"] = "amd64"):
+if (info["arch"] == "x86_64" or info["arch"] == "amd64"):
   info["arch"] = "amd64"
   info["product_arch"] = "x86_64"
-elif (info["arch"] = "arm64" or info["arch"] = "aarch64"):
+elif (info["arch"] == "arm64" or info["arch"] == "aarch64"):
   info["arch"] = "arm64"
   info["product_arch"] = "arm64"
 else:
-  error(f"unrecognized architecture '{info[arch]}'")
-args.info["package_id"] = f"org.smlnj.{info["arch"]}.pkg"
+  error(f"unrecognized architecture \"{info['arch']}\"")
+args.info["package_id"] = f"org.smlnj.{info['arch']}.pkg"
 
 if (not args.sign):
   # build the distribution
-  args.arch = platform.machine()
   build_distribution(info)
 
 if (not args.build_only):
