@@ -1,0 +1,306 @@
+#!/usr/bin/env python3
+#
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
+#
+# Script to build the installer package for macOS
+#
+# usage: build-pkg [ <options> ] <version>
+#
+# The optional arguments are:
+#
+#     -h, --help       show this help message and exit
+#     -v, --verbose    output information as the build proceeds
+#     --info <file>    specify the package info JSON file
+#     --no-clean       do not remove the intermediate files after packaging
+#     --build-only     build the distribution in the 'smlnj' directory, but do
+#                      not sign, package, or notarize it.
+#     -s, --sign       sign, package, and notarize the distribution in the
+#                      'smlnj' directory.
+#     --arch <arch>    specify the architecture of the distribution when `-sign`
+#                      option is specified
+#
+
+import argparse
+import json
+import os
+import platform
+import re
+import subprocess
+import shutil
+
+dist_name="smlnj"
+
+# some paths
+#
+default_info_file = os.path.expanduser("~/Library/SMLNJ/package-info.json")
+root_dir = os.path.dirname(os.path.abspath(__file__))
+components_dir = os.path.join(root_dir, "components")
+dist_dir = os.path.join(root_dir, dist_name)
+
+# report an error and exit
+#
+def error(msg):
+  if isinstance(msg, list):
+    print("\n".join(msg), file=sys.stderr)
+  else:
+    print(msg, file=sys.stderr)
+  sys.exit(1)
+
+# verbose messages flag
+#
+verbose=False
+
+# output a status message (if the verbose flag is true)
+#
+def vsay(msg):
+  if isinstance(msg, list):
+    print("# ".join(msg), file=sys.stdout)
+  else:
+    print("# " + msg, file=sys.stdout)
+
+# run a shell command
+#
+def run_command(prog, args, *, cwd=None, timeout=None):
+  cmd = [prog] + args
+  process = subprocess.run(
+    cmd,
+    text=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    check=False,
+    cwd=cwd, timeout=timeout)
+
+##### BUILD DISTRIBUTION
+
+# expand a "@foo@" string as specified by the dictionary `substs` (i.e., by `substs[foo]`)
+#
+def expand_match(substs, m):
+  if (m.group(1) in dict):
+    return substs[m.group(1)]
+  else:
+    return m.group(1)
+
+# copy the file at `src` to `dst` while substituting strings of the form "@foo@"
+# as specified by the dictionary `substs` (i.e., by `substs[foo]`)
+#
+def expand_file(*, src, dst, substs):
+  with open(src, 'rt', encoding="utf-8") as inS:
+    with open(dst, "wt", encoding="utf-8") as outS:
+      for ln in inS:
+        outS.write(re.sub(r"@([A-Za-z0-9_-]+)@", lambda m : expand(substs,m), ln))
+
+def build_distribution(version):
+  #
+
+##### SIGNING
+
+# helper function for loading the package info dictionary from a JSON file
+#
+def get_package_info(path):
+  try:
+    with open(path, "r", encoding="utf-8") as in_strm:
+      info = json.load(in_strm)
+  except json.JSONDecodeError as exn:
+    error([f'error loading {path}', '  ' + exn.msg])
+  # validate the contents
+  for key in ["application_id", "installer_id", "keychain_profile"]:
+    if (key not in info):
+      error(f"JSON file {path} is missing {key}")
+  return (info)
+
+# the executables; we split these into SML executables, which require extra
+# entitlements, and the regular executables
+#
+sml_execs = [
+    ".run/run.amd64-darwin",
+    ".run/run.arm64-darwin"
+  ]
+tool_execs = ["cfgc", "heap2obj", "llc", "llvm-config"]
+
+# codesign the given executable
+#
+def codesign_exec(executable, entitlements, info):
+  args=[
+      "-f",
+      "--options", "runtime",
+      "--entitlements", entitlements,
+      "--sign", info["application_id"],
+      "--timestamp"
+    ]
+  if (verbose):
+    args.append("-v")
+  args.append(executable)
+  run_command(
+    "codesign",
+    args,
+    cwd=f"{dist_dir}/bin")
+
+# codesign pass
+#
+def codesign(info):
+  for e in tool_execs:
+    codesign_exec(e, f"{components_dir}/tool-entitlements.plist", info)
+  for e in sml_execs
+    codesign_exec(e, f"{components_dir}/sml-entitlements.plist", info)
+
+# build and sign the distribution package
+#
+def package(info):
+  # configure the distribution file
+  expand_file(
+    os.path.join(components_dir, "distribution_xml.in"),
+    os.path.join(root_dir, "distribution.xml"),
+    { "VERSION" : info["version"],
+      "PRODUCT_ARCH" : info["product_arch"],
+      "ARCH" : info["arch"]})
+  # create the "Resources" directory
+  rsrc_dir=f"{dist_dir}/Resources"
+  if (os.path.exists(rsrc_dir)):
+    shutil.rmtree(rsrc_dir)
+  os.mkdir(rsrc_dir)
+  # copy files to the resources
+  for f in ["smlnj-background.jpg", "license.html", "conclusion.html"]:
+    shutil.copyfile(os.path.join(components_dir, f), os.path.join(rsrc_dir, f))
+  # add the welcome message to the resources
+  expand_file(
+    os.path.join(components_dir, "welcome_html.in"),
+    os.path.join(rsrc_dir, "welcome.html"),
+    { "VERSION" : info["version"],
+      "ARCH" : info["arch"]})
+    # copy the readme, while adjusting the fontsize for the installer panel
+    # NOTE: this command relies on the fact that there is only one absolute
+    # font-size command in the README file (the others are relative)
+    #
+    readme=f"{distroot}/doc/html/readme/{info["version_stem"]}-README.html"
+    if (not os.path.exists(readme)):
+      error (f"cannot find {readme}")
+    with open(readme, 'rt', encoding="utf-8") as inS:
+      with open(os.path.join(rsrc_dir, "readme.html"), "wt", encoding="utf-8") as outS:
+        for ln in inS:
+          outS.write(re.sub(r"font-size: [0-9]+pt;", "font-size: 9pt;", ln))
+  # create the smlnj.pkg file
+  run_command("pkgbuild",
+    [ "--identifier", info["package_id"],
+      "--version", version,
+      "--scripts", os.path.join(components_dir, "scripts"),
+      "--install-location", "/usr/local/smlnj",
+      "--root", dist_dir,
+      "smlnj.pkg"],
+    cwd=root_dir)
+  # sign the smlnj.pkg file
+  run_command("productbuild",
+    [ "--components", components_dir,
+      "--resources", rsrc_dir,
+      "--distribution", os.path.join(root_dir, "distribution.xml"),
+      os.path.join(root_dir, f"smlnj-{info["arch"]}-{info["version"]}.pkg")],
+    cwd=root_dir)
+
+# sign the executables, build the installer package and sign it,
+# notarize the package, and then staple the notarization ticket to
+# the package
+def sign_distribution(info):
+  # sign the executables
+  codesign(info)
+  # build and sign the distribution package
+  package(info)
+  # notarize the package
+  notarize(info)
+
+##### CLEANUP
+
+def cleanup():
+  vsay ("removing intermediate files")
+  for f in [dist_name, "Resources", "smlnj.pkg", "distribution.xml"]:
+    shutil.rmtree(os.path.join(root_dir, f), ignore_errors=True)
+
+##### MAIN
+
+# create the command-line argument parser
+#
+def create_arg_parser():
+  parser = argparse.ArgumentParser(
+    prog="build-pkg",
+    description="Script for packaging the SML/NJ distribution for macOS")
+  parser.add_argument(
+    '-v', '--verbose', action='store_true',
+    help='output information as the build proceeds')
+  parser.add_argument(
+    "--info",
+    action="store",
+    default=default_info_file,
+    help=f"specify the package info JSON file (default: {default_info_file})")
+  parser.add_argument(
+    '--no-clean', action='store_true',
+    help='do not remove the intermediate files after packaging')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument(
+    '--build-only', action='store_true',
+    help=f"build the distribution in '{dist_dir}', but do not sign, package, or notarize it.")
+  group.add_argument(
+    '-s', '--sign',
+    action='store_true', default=None,
+    help=f"sign, package, and notarize the distribution in '{dist_dir}'.")
+  parser.add_argument(
+    '-a', '--arch',
+    action='store', default=None,
+    help="specify the architecture of the distribution when '-sign' option is specified")
+  parser.add_argument(
+    'version', action='store',
+    help="the version of SML/NJ to package")
+
+# this program is only useful on macOS
+#
+if (platform.name() != 'Darwin'):
+  error("not a macOS system")
+
+# set up the command-line option parsing
+#
+args = create_arg_parser().parse_args()
+
+verbose = args.verbose
+
+# define the info dictionary
+#
+# process the version string
+version_pieces=args.version.split("-")
+if (len(version_pieces) = 1):
+  info["version_stem"] = version_pieces[0]
+  info["version_suffix"] = ""
+elif (len(version_pieces) = 2):
+  info["version_stem"] = version_pieces[0]
+  info["version_suffix"] = version_pieces[1]
+else:
+  error(f"bogus version '{args.version}'")
+info["version"] = args.version
+# normalize the architecture name
+if (not args.sign or not args.arch):
+  info["arch"] = platform.machine()
+if (info["arch"] = "x86_64" or info["arch"] = "amd64"):
+  info["arch"] = "amd64"
+  info["product_arch"] = "x86_64"
+elif (info["arch"] = "arm64" or info["arch"] = "aarch64"):
+  info["arch"] = "arm64"
+  info["product_arch"] = "arm64"
+else:
+  error(f"unrecognized architecture '{info[arch]}'")
+args.info["package_id"] = f"org.smlnj.{info["arch"]}.pkg"
+
+if (not args.sign):
+  # build the distribution
+  args.arch = platform.machine()
+  build_distribution(info)
+
+if (not args.build_only):
+  # verify the existence of the dist_dir
+  if (not os.path.isdir(dist_dir)):
+    error(f"the distribution directory {distdir} is missing")
+  # extend the `info` dictionary with the package info
+  pkg_info = get_package_info(args.info)
+  info.update(pkg_info)
+  # sign, package, and notarize the distribution
+  sign_distribution(info)
+
+if (not args.no_clean or args.build_only or args.sign):
+  # remove intermediate files
+  cleanup()

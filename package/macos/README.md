@@ -3,7 +3,7 @@
 This directory contains the infrastructure for building a macOS
 installer for SML/NJ.  The basic command
 
-	./build-pkg.py [ options ] $VERSION
+	./build-pkg [ options ] $VERSION
 
 will build a signed installer package for the specified version (e.g.,
 2026.2). This script assumes that the boot files have already been
