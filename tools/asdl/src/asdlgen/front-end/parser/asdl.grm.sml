@@ -92,14 +92,16 @@ structure ASDLTokens =
       | isEOF _ = false
   end (* ASDLTokens *)
 
-functor ASDLParseFn (Lex : ANTLR_LEXER) = struct
+
+functor ASDLParseFn (Lex : ANTLR_LEXER)
+ = struct
 
   local
-    structure Tok =
-ASDLTokens
+    structure Tok = ASDLTokens
+
     structure UserCode =
       struct
-
+        
   structure PT = ParseTree
 
   val aliasId = Atom.atom "alias"
@@ -115,7 +117,8 @@ ASDLTokens
 
   fun markId (span : AntlrStreamPos.span, id) = {span = span, tree = id}
 
-fun Root_PROD_1_ACT (MarkDecl, Include, MarkDecl_SPAN : (Lex.pos * Lex.pos), Include_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+
+        fun Root_PROD_1_ACT (MarkDecl, Include, MarkDecl_SPAN : (Lex.pos * Lex.pos), Include_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   (PT.File{includes = Include, decls = MarkDecl})
 fun Include_PROD_1_ACT (CODE, KW_include, CODE_SPAN : (Lex.pos * Lex.pos), KW_include_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ({span = FULL_SPAN, tree = CODE})
@@ -227,19 +230,13 @@ fun ViewProps_PROD_2_ACT (LBRACE, RBRACE, ViewProp, LBRACE_SPAN : (Lex.pos * Lex
   (ViewProp)
 fun ViewProp_PROD_1_ACT (Id, CODE, Id_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   (mark PT.VProp_Mark (FULL_SPAN, (PT.VProp(Id, CODE))))
+
       end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
 
-(* replace functor with inline structure for better optimization
-    structure EBNF = AntlrEBNF(
-      struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
-      end)
-*)
     structure EBNF =
       struct
 	fun optional (pred, parse, strm) =
@@ -269,21 +266,22 @@ fun ViewProp_PROD_1_ACT (Id, CODE, Id_SPAN : (Lex.pos * Lex.pos), CODE_SPAN : (L
 	      in
 		(y::ys, (left, right), strm'')
 	      end
-      end
+      end (* EBNF *)
 
     fun mk lexFn = let
-fun getS() = {}
+        fun getS() = {}
 fun putS{} = ()
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs)
+
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) =
-	        (Err.whileDisabled eh (fn() => prod strm))
-		handle Err.ParseError => try (prods)
-          in try prods end
-fun matchKW_alias strm = (case (lex(strm))
+              fun try [] = fail()
+                | try (prod :: prods) =
+                    (Err.whileDisabled eh (fn() => prod strm))
+                    handle Err.ParseError => try (prods)
+              in try prods end
+        fun matchKW_alias strm = (case (lex(strm))
  of (Tok.KW_alias, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
@@ -387,6 +385,7 @@ fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
+
 
 val (Root_NT) = 
 let
@@ -3857,5 +3856,6 @@ in (Root_NT) end
 fun parse lexFn  s = let val (Root_NT) = mk lexFn in Root_NT s end
 
   end
+
 
 end

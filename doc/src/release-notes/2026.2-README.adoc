@@ -53,6 +53,9 @@ affects the compiler, runtime system, and Basis library.
 * The distinction between "raw" and "raw64" records has been eliminated
   inside the compiler.
 
+* The naming of default integer and word primitive operators in the `InLine`
+  structure has been made consistent with the operators for the other types.
+
 === LLVM
 
 * Disabled the "convert switch to lookup table" optimization in LLVM because it can
@@ -85,8 +88,6 @@ affects the compiler, runtime system, and Basis library.
 
 * Fixed {issue-base}/341[Issue 341].
 
-=== Documentation
-
 === Installation
 
 * The `build.sh` script now supports the `-install` option for specifying a target
@@ -96,7 +97,7 @@ affects the compiler, runtime system, and Basis library.
 
 Here is a list of the issues and pull requests that are closed with this release.
 
-[.buglist,cols="^1,<15",strips="none",options="header"]
+[.buglist,cols="^3,<12",strips="none",options="header"]
 |=======
 | Issue
 | Description
@@ -144,7 +145,7 @@ repository):
 We believe that SML/NJ will build and run on the following systems, but have only
 tested some of them:
 
-[.support-table,cols="^2s,^4v,^3v",options="header",strips="none"]
+[.support-table,cols="^3s,^4v,^2v",options="header",strips="none"]
 |=======
 | Architecture | Operating System | Status
 | AMD64 | |
