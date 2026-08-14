@@ -104,6 +104,7 @@ PVT status_t ExportImage (ml_state_t *msp, int kind, FILE *file)
     {
 	ml_heap_hdr_t	heapHdr;
 
+	CLEAR_MEM(&heapHdr, sizeof(heapHdr));
 	heapHdr.numVProcs	= 1;
 	heapHdr.numGens		= heap->numGens;
 	heapHdr.numArenas	= NUM_ARENAS;
@@ -251,6 +252,7 @@ PrintRegionMap(rp);
   /* initialize the arena headers. */
     arenaHdrsSize = heap->numGens * (NUM_OBJ_KINDS * sizeof(heap_arena_hdr_t));
     arenaHdrs = (heap_arena_hdr_t *) MALLOC (arenaHdrsSize);
+    CLEAR_MEM(arenaHdrs, arenaHdrsSize);
     offset = WR_Tell(wr) + arenaHdrsSize;
     offset = ROUNDUP(offset, pagesize);
     /* initialize the arena headers for this generation */

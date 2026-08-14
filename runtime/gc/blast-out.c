@@ -192,6 +192,7 @@ PVT ml_val_t BlastHeap (ml_state_t *msp, ml_val_t obj, blast_res_t *info)
 	hdr.numArenas = numArenas;
 	hdr.numBOKinds = 0; /** FIX THIS **/
 	hdr.numBORegions = 0;   /** FIX THIS **/
+	hdr.hasCode = FALSE;
 
 	if (isEXTERNTAG(obj)) {
 	    ASSERT(numArenas == 0);
