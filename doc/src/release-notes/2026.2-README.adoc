@@ -125,6 +125,10 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/354[Unexpected `Overflow` exception]
 | [.bugid]#357#
 | {issue-base}/357[`build.sh` script does not work correctly when `INSTALLDIR` is defined]
+| [.bugid]#359#
+| {issue-base}/359[Build script is confused on where LLVM is built]
+| [.bugid]#360#
+| {issue-base}/360[`./build.sh -install <dir>` can't find `-lCFGCodeGen`]
 |=======
 
 We also fixed the following bugs that did not have issues

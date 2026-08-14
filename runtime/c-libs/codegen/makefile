@@ -1,7 +1,7 @@
 #
 # the makefile for the LLVM code generator library
 #
-# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 
@@ -12,6 +12,7 @@ SHELL =		/bin/sh
 # here for when the makefile is used directly
 #
 SMLNJ_ROOT ?=	../../..
+LIBDIR ?=	$(SMLNJ_ROOT)/lib
 INSTALLDIR ?=   $(SMLNJ_ROOT)
 
 RUNTIME_ROOT =	$(SMLNJ_ROOT)/runtime

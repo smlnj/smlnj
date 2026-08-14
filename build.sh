@@ -179,7 +179,7 @@ RUNDIR=$BINDIR/.run		# where executables (i.e., the RTS) live
 LIBDIR=$INSTALLDIR/lib		# where libraries live
 
 # export variables used by the installer
-export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LLVMDIR
+export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LIBDIR LLVMDIR
 
 #
 # old root environment variable (for compatibility)
@@ -422,7 +422,7 @@ else
     cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
-  elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
+  elif [ ! -x "$BINDIR/llvm-config" ] ; then
     vsay $cmd: Building LLVM in $LLVMDIR
     cd "$LLVMDIR" || exit 1
     dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
