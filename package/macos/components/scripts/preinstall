@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
+#
+# pre-install script for macOS installs
+#
+# usage:
+#
+#	preinstall <pkg-path> <dst-path> <dst-vol> <root-dir>
+#
+# where
+#
+#	<pkg-path>	Full path to the installation package the Installer application
+#			is processing. For example: /Volumes/Users/jhr/Desktop/smlnj-amd64.pkg
+#
+#	<dst-path>	Full path to the installation destination. For example: /usr/local/smlnj
+#
+#	<dst-vol>	Installation volume (or mount point) to receive the payload.
+#
+#	<root-dir>	The root directory for the system
+#
+
+DST="$2"
+
+# if SML/NJ is already installed, then we want to remove the old stuff first
+#
+if [ x"$DST" != x ] ; then
+  if [ -d "$DST" ] ; then
+    rm -rf "$DST"/*
+  fi
+else
+  exit 1
+fi
+
+exit 0

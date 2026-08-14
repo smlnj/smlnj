@@ -219,7 +219,7 @@ def package(info):
     shutil.rmtree(rsrc_dir)
   os.mkdir(rsrc_dir)
   # copy files to the resources
-  for f in ["smlnj-background.jpg", "license.html", "conclusion.html"]:
+  for f in ["background.jpg", "license.html", "conclusion.html"]:
     shutil.copyfile(os.path.join(components_dir, f), os.path.join(rsrc_dir, f))
   # add the welcome message to the resources
   expand_file(
@@ -248,10 +248,10 @@ def package(info):
     cwd=root_dir)
   # sign the smlnj.pkg file
   run_command("productbuild",
-    [ "--sign", info["installer_id"],
-      "--package-path", "components",
+    [ "--distribution", os.path.join(root_dir, "distribution.xml"),
+      "--package-path", components_dir,
       "--resources", rsrc_dir,
-      "--distribution", "distribution.xml",
+      "--sign", info["installer_id"],
       os.path.join(root_dir, info["package_file"])],
     cwd=root_dir)
 
