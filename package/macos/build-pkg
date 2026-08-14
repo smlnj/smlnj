@@ -9,16 +9,17 @@
 #
 # The optional arguments are:
 #
-#     -h, --help       show this help message and exit
-#     -v, --verbose    output information as the build proceeds
-#     --info <file>    specify the package info JSON file
-#     --no-clean       do not remove the intermediate files after packaging
-#     --build-only     build the distribution in the 'smlnj' directory, but do
-#                      not sign, package, or notarize it.
-#     -s, --sign       sign, package, and notarize the distribution in the
-#                      'smlnj' directory.
-#     --arch <arch>    specify the architecture of the distribution when `-sign`
-#                      option is specified
+#     -h, --help      show this help message and exit
+#     -v, --verbose   output information as the build proceeds
+#     --info <file>   specify the package info JSON file
+#     --no-clean      do not remove the intermediate files after packaging
+#     --build-only    build the distribution in 'smlnj', but do
+#                     not sign, package, or notarize it.
+#     -s, --sign      sign, package, and notarize the distribution in 'smlnj'.
+#     --no-notarize   do not notarize the distribution.
+#     -a <arch>
+#     --arch <arch>   specify the architecture of the distribution when the
+#                     '-sign' option is specified
 #
 
 import argparse
@@ -111,8 +112,12 @@ def remove_files(dir, files):
   for stem in files:
     file = os.path.join(dir, stem)
     for f in glob.glob(file):
-      vsay(f"remove {f}")
-      shutil.rmtree(f, ignore_errors=True)
+      if (os.path.exists(f)):
+        vsay(f"remove {f}")
+        if (os.path.isdir(f)):
+          shutil.rmtree(f)
+        else:
+          os.remove(f)
 
 ##### BUILD DISTRIBUTION
 
@@ -203,11 +208,12 @@ def package(info):
   expand_file(
     src = os.path.join(components_dir, "distribution_xml.in"),
     dst = os.path.join(root_dir, "distribution.xml"),
-    substs = { "VERSION" : info["version"],
+    substs = {
+      "VERSION" : info["version"],
       "PRODUCT_ARCH" : info["product_arch"],
       "ARCH" : info["arch"]})
   # create the "Resources" directory
-  rsrc_dir=f"{dist_dir}/Resources"
+  rsrc_dir=f"{root_dir}/Resources"
   if (os.path.exists(rsrc_dir)):
     vsay(f"removing old {rsrc_dir} directory")
     shutil.rmtree(rsrc_dir)
@@ -219,8 +225,7 @@ def package(info):
   expand_file(
     src = os.path.join(components_dir, "welcome_html.in"),
     dst = os.path.join(rsrc_dir, "welcome.html"),
-    substs = { "VERSION" : info["version"],
-      "ARCH" : info["arch"]})
+    substs = {"VERSION" : info["version"], "ARCH" : info["arch"]})
     # copy the readme, while adjusting the fontsize for the installer panel
     # NOTE: this command relies on the fact that there is only one absolute
     # font-size command in the README file (the others are relative)
@@ -271,8 +276,11 @@ def sign_distribution(info):
   codesign(info)
   # build and sign the distribution package
   package(info)
-  # notarize the package
-  notarize(info)
+  # conditionally notarize the package
+  if (info["notarize"]):
+    notarize(info)
+  else:
+    vsay("skip notarization")
 
 ##### CLEANUP
 
@@ -305,8 +313,12 @@ def create_arg_parser():
     help=f"build the distribution in '{dist_dir}', but do not sign, package, or notarize it.")
   group.add_argument(
     '-s', '--sign',
-    action='store_true', default=None,
+    action='store_true',
     help=f"sign, package, and notarize the distribution in '{dist_dir}'.")
+  parser.add_argument(
+    '--no-notarize',
+    action='store_true',
+    help=f"do not notarize the distribution.")
   parser.add_argument(
     '-a', '--arch',
     action='store', default=None,
@@ -351,6 +363,11 @@ else:
   error(f"unrecognized architecture \"{info['arch']}\"")
 info["package_id"] = f"org.smlnj.{info['arch']}.pkg"
 info["package_file"] = f"smlnj-{info['arch']}-{info['version']}.pkg"
+
+if (args.no_notarize):
+  info["notarize"] = False
+else:
+  info["notarize"] = True
 
 if (not args.sign):
   # build the distribution
