@@ -1,7 +1,7 @@
 // A template for creating release notes for a version
 //
 :version: 2026.2
-:date: August 7, 2026
+:date: August 14, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -89,6 +89,8 @@ affects the compiler, runtime system, and Basis library.
 * Fixed {issue-base}/341[Issue 341].
 
 === Installation
+
+* The **macOS** installers are now notarized.
 
 * The `build.sh` script now supports the `-install` option for specifying a target
   installation directory.

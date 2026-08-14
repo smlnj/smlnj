@@ -105,7 +105,15 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.2; 2026/08/13
+== Version 2026.2; 2026/08/14
+
+//--------------------------------------------------------------------
+[2026-08-14]::
++
+Rewrote the **macOS** packaging script in Python.  The new script
+implements code signing and notarization.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-08-13]::
