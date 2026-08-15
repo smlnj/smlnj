@@ -22,7 +22,7 @@ ROOT=$(pwd)
 
 cleanup () {
   if [ x"$CLEANUP" = xyes ] ; then
-    cd $ROOT
+    cd "$ROOT" || exit 1
     rm -rf $DISTROOT
   fi
 }
@@ -38,14 +38,14 @@ usage() {
 }
 
 complain() {
-  echo "$CMD [Error]: $@"
+  echo "$CMD [Error]: $*"
   cleanup
   exit 1
 }
 
 vsay() {
   if [ x"$VERBOSE" = x-verbose ] ; then
-    echo "$CMD: $@"
+    echo "$CMD: $*"
   fi
 }
 
@@ -116,7 +116,7 @@ fi
 
 # switch to the cloned source directory
 #
-cd $DISTROOT
+cd "$DISTROOT" || exit 1
 
 # remove stuff that we do not need
 #
@@ -149,7 +149,7 @@ fi
 
 # package up the source tree as a compressed tar file
 #
-cd $ROOT
+cd "$ROOT" || exit 1
 make_tarball smlnj-$ARCH-unix-$VERSION.tgz smlnj
 
 cleanup

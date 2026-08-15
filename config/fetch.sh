@@ -12,9 +12,6 @@ this="$0"
 ROOT="$1"
 shift
 
-LIBS="$ROOT"/libraries
-TOOLS="$ROOT"/tools
-
 CONFIGDIR="$ROOT/config"
 
 VERSION=`cat "$CONFIGDIR"/version`
@@ -71,8 +68,8 @@ fetchurl() {
 	done
     done
     if [ $fetched = no ] ; then
-	echo $this: Fetching $try was no success.
-	echo '  ' You should try to do it manually now.
+	echo "$this: Fetching $try was no success."
+	echo "  You should try to do it manually now."
 	askurl "$1" "$2" "$3"
     fi
 }
@@ -93,7 +90,7 @@ usecurl() {
 }
 
 testurlgetter() {
-    (exec >/dev/null 2>&1 ; exec $*)
+    (exec >/dev/null 2>&1 ; exec "$@")
 }
 
 #

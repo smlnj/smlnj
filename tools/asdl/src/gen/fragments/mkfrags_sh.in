@@ -21,10 +21,10 @@ XXXX
 exit $?
 elif test "@SML@" = "mlton" ; then
   HERE=$(pwd)
-  cd @ASDL_SRCDIR@/gen/fragments
-  make -s $PROG || exit $1
-  cd $HERE
-  @ASDL_SRCDIR@/gen/fragments/$PROG $DIR || exit $1
+  cd "@ASDL_SRCDIR@/gen/fragments" || exit 1
+  make -s $PROG || exit 1
+  cd "$HERE" || exit 1
+  "@ASDL_SRCDIR@/gen/fragments/$PROG" "$DIR" || exit 1
   exit 0
 else
   echo "unknown SML implementation"

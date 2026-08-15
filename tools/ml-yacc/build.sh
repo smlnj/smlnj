@@ -42,7 +42,7 @@ if [ "$HEAP_IMAGE" = "" ]; then
   HEAP_IMAGE="$ROOT"
 fi
 
-cd src
+cd src || exit
 "$BUILD" -DNO_ML_YACC -DNO_ML_LEX ml-yacc.cm ExportParseGen.parseGen "$HEAP_IMAGE"
 
 exit 0
