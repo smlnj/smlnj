@@ -20,5 +20,5 @@ if test ! -r $heap ; then
   exit 1
 fi
 
-exec sml @SMLload=$heap $@
+exec sml @SMLload=$heap "$@"
 
