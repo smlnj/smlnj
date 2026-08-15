@@ -66,7 +66,7 @@ while [ "$#" != "0" ] ; do
   case $arg in
     -help|-h) usage ;;
     -install)
-      if [[ $# -gt 0 ]] ; then
+      if [ "$#" -gt 0 ] ; then
         INSTALLDIR=$1; shift
       else
         usage
@@ -87,7 +87,7 @@ while [ "$#" != "0" ] ; do
       BUILD_LLVM_FLAGS="-sanitize-address $BUILD_LLVM_FLAGS"
       ;;
     -llvmdir)
-      if [[ $# -gt 0 ]] ; then
+      if [ "$#" -gt 0 ] ; then
         LLVMDIR_OPTION=$1; shift
       else
         usage
