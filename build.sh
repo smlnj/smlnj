@@ -397,14 +397,6 @@ if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
   fi
 fi
 
-if [ x"$XDEFS" != x ] ; then
-  if [ x"$EXTRA_DEFS" = x ] ; then
-    EXTRA_DEFS="XDEFS=\"$XDEFS\""
-  else
-    EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
-  fi
-fi
-
 #
 # build the run-time system
 #
@@ -430,7 +422,11 @@ else
   fi
   cd "$RUNTIMEDIR/objs" || exit 1
   vsay $cmd: Compiling the run-time system.
-  make -f $RT_MAKEFILE $EXTRA_DEFS
+  if [ x"$XDEFS" != x ] ; then
+    make -f $RT_MAKEFILE "XDEFS=\"$XDEFS\"" $EXTRA_DEFS
+  else
+    make -f $RT_MAKEFILE $EXTRA_DEFS
+  fi
   if [ -x run.$ARCH-$OPSYS ]; then
     mv run.$ARCH-$OPSYS "$RUNDIR"
     if [ -f runx.$ARCH-$OPSYS ]; then
