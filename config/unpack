@@ -98,7 +98,7 @@ usecurl() {
 }
 
 testurlgetter() {
-    (exec >/dev/null 2>&1 ; exec $@)
+    (exec >/dev/null 2>&1 ; exec "$@")
 }
 
 #
@@ -187,7 +187,7 @@ unarchive() {
 # no archive is found locally, it invokes $URLGETTER and tries again.
 # The variable $tryfetch is used to make sure this happens only once.
 fetch_n_unpack() {
-    cd "$2" | exit 1
+    cd "$2" || exit 1
     if unarchive "$1" "$4".tgz un_tar_gz ||
        unarchive "$1" "$4".tar.gz un_tar_gz ||
        unarchive "$1" "$4".tar.Z un_tar_Z ||

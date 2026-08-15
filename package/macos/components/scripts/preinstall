@@ -27,7 +27,7 @@ DST="$2"
 #
 if [ x"$DST" != x ] ; then
   if [ -d "$DST" ] ; then
-    rm -rf "$DST"/*
+    rm -rf "${DST:?}"/*
   fi
 else
   exit 1
