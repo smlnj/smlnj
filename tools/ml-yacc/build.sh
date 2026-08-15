@@ -8,6 +8,8 @@
 #   -o image		-- specify the name of the heap image, "ml-yacc"
 #			   is the default.
 
+set -eu
+
 CMD=$0
 
 ROOT="ml-yacc"
@@ -32,7 +34,7 @@ while [ "$#" != "0" ] ; do
       ;;
     -64) ;; # ignore size specification for compatibility with 2021.1
     *)
-      echo $CMD: invalid argument: $arg
+      echo "$CMD: invalid argument: $arg"
       exit 1
       ;;
   esac
@@ -44,5 +46,3 @@ fi
 
 cd src
 "$BUILD" -DNO_ML_YACC -DNO_ML_LEX ml-yacc.cm ExportParseGen.parseGen "$HEAP_IMAGE"
-
-exit 0

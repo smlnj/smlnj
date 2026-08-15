@@ -13,7 +13,7 @@
 # general document colors
 #
 BACKGROUND="#fff"
-LIGHT_BACKGROUND="#f8f8f7"
+#LIGHT_BACKGROUND="#f8f8f7"
 MEDIUM_BACKGROUND="#ececec"
 #MEDIUM_BACKGROUND="#f8f8f7"
 #MEDIUM_BACKGROUND="#99ccff"
@@ -80,4 +80,4 @@ sed -e s/@BACKGROUND@/$BACKGROUND/g \
     -e s/@PUNCT_COLOR@/$PUNCT_COLOR/g \
     -e s/@TV_COLOR@/$TV_COLOR/g \
     -e s/@TY_COLOR@/$TY_COLOR/g \
-    $1
+    "$1"

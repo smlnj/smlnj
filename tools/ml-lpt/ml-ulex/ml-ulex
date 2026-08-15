@@ -15,10 +15,10 @@ case `uname -s` in
   *) heap=${scripthome}ml-ulex.x86-linux ;;
 esac
 
-if test ! -r $heap ; then
+if test ! -r "$heap" ; then
   echo "ml-ulex: no heap image!"
   exit 1
 fi
 
-exec sml @SMLload=$heap $@
+exec sml @SMLload="$heap" "$@"
 

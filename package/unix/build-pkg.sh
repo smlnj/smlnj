@@ -10,6 +10,8 @@
 # boot files needed to bootstrap the compiler.
 #
 
+set -e
+
 CMD="build-pkg.sh"
 GITHUB_URL="git@github.com:smlnj/smlnj.git"
 DISTROOT=smlnj
@@ -22,7 +24,7 @@ ROOT=$(pwd)
 
 cleanup () {
   if [ x"$CLEANUP" = xyes ] ; then
-    cd $ROOT
+    cd "$ROOT"
     rm -rf $DISTROOT
   fi
 }
@@ -34,18 +36,18 @@ usage() {
   echo "    -arch <arch>  -- specify architecture for boot files"
   echo "    -verbose      -- enable messages that document the packaging process"
   echo "    -no-clean     -- do not remove the source tree after packaging"
-  exit $1
+  exit "$1"
 }
 
 complain() {
-  echo "$CMD [Error]: $@"
+  echo "$CMD [Error]: $*"
   cleanup
   exit 1
 }
 
 vsay() {
   if [ x"$VERBOSE" = x-verbose ] ; then
-    echo "$CMD: $@"
+    echo "$CMD: $*"
   fi
 }
 
@@ -54,6 +56,7 @@ make_tarball() {
     Darwin) TARFLAGS="--no-mac-metadata $TARFLAGS" ;;
   esac
   vsay "tar $TARFLAGS -czf \"$1\" \"$2\""
+  # shellcheck disable=SC2086
   tar $TARFLAGS -czf "$1" "$2" || exit 1
 }
 
@@ -109,14 +112,13 @@ if [ x"$VERSION" != xnone ] ; then
   BRANCH="--branch v$VERSION"
 fi
 vsay "git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL"
-git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL
-if [ "$?" != 0 ] ; then
+if ! git clone --depth 1 --recurse-submodules $BRANCH $GITHUB_URL; then
   complain "unable to download source from GitHub"
 fi
 
 # switch to the cloned source directory
 #
-cd $DISTROOT
+cd "$DISTROOT"
 
 # remove stuff that we do not need
 #
@@ -149,7 +151,7 @@ fi
 
 # package up the source tree as a compressed tar file
 #
-cd $ROOT
-make_tarball smlnj-$ARCH-unix-$VERSION.tgz smlnj
+cd "$ROOT"
+make_tarball "smlnj-$ARCH-unix-$VERSION.tgz" smlnj
 
 cleanup

@@ -8,12 +8,11 @@
 # NOTE: this script was extracted from the old "unpack" script and deals with
 # the fetching of files.
 
+set -e
+
 this="$0"
 ROOT="$1"
 shift
-
-LIBS="$ROOT"/libraries
-TOOLS="$ROOT"/tools
 
 CONFIGDIR="$ROOT/config"
 
@@ -23,9 +22,9 @@ VERSION=`cat "$CONFIGDIR"/version`
 SUFFIXES="tgz tar.gz tar.Z tz tar tar.bz2"
 
 vsay() {
-    if [ x${INSTALL_DEBUG} = xtrue ] ; then
+    if [ x"${INSTALL_DEBUG}" = xtrue ] ; then
 	echo "$@"
-    elif [ x${INSTALL_QUIETLY} = xtrue ] ; then
+    elif [ x"${INSTALL_QUIETLY}" = xtrue ] ; then
 	:
     else
 	echo "$@"
@@ -40,7 +39,7 @@ vsay() {
 #
 askurl() {
     echo "$this: Please, fetch $1 archive"
-    echo ' ('$2.'*' or $VERSION-$2.'*)'
+    echo " ($2.* or $VERSION-$2.*)"
     echo " from $3"
     echo " and then re-run this script!"
     exit 1
@@ -55,15 +54,15 @@ askurl() {
 #
 fetchurl() {
     getter=$1 ; shift
-    vsay $this: Fetching $1 from $3. Please stand by...
+    vsay "$this: Fetching $1 from $3. Please stand by..."
     fetched=no
     for base in "$2" "$VERSION-$2" ; do
 	for ext in $SUFFIXES ; do
 	    try=$base.$ext
-	    vsay $this: Trying $try ...
+	    vsay "$this: Trying $try ..."
 	    if "$getter" "$3"/"$try" "$ROOT"/"$try" ; then
 		fetched=yes
-		vsay $this: Fetching $try was a success.
+		vsay "$this: Fetching $try was a success."
 		break 2		# get out of both for-loops
 	    else
 		rm -f "$ROOT"/"$try"
@@ -71,8 +70,8 @@ fetchurl() {
 	done
     done
     if [ $fetched = no ] ; then
-	echo $this: Fetching $try was no success.
-	echo '  ' You should try to do it manually now.
+	echo "$this: Fetching $try was no success."
+	echo "   You should try to do it manually now."
 	askurl "$1" "$2" "$3"
     fi
 }
@@ -93,7 +92,7 @@ usecurl() {
 }
 
 testurlgetter() {
-    (exec >/dev/null 2>&1 ; exec $*)
+    (exec >/dev/null 2>&1 ; exec "$@")
 }
 
 #

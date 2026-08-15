@@ -6,7 +6,9 @@
 # usage: scripts/prepare-sig.sh <dir> <sign>
 #
 
-function usage {
+set -eu
+
+usage() {
   echo "usage: scripts/prepare-sig.sh <dir> <sign>"
   exit 1
 }
@@ -27,13 +29,13 @@ if [ ! -d "$d" ] ; then
   exit 1
 fi
 
-lib=$(basename $d/*-lib.adoc .adoc)
+lib=$(basename "$d"/*-lib.adoc .adoc)
 
 template=Templates/sig.adoc
 stem="sig-$name"
 mod_adoc="$d/$stem.adoc"
 
-if [ -f $mod_adoc ] ; then
+if [ -f "$mod_adoc" ] ; then
   echo "$0: file '$mod_adoc' already exists"
   exit 1
 fi
@@ -41,6 +43,6 @@ fi
 echo "creating $mod_adoc"
 
 ## create the placeholder for the module
-sed -e "s/@DIR@/$d/" -e "s/@LIBRARY@/$lib/" -e "s/@NAME@/$name/" $template > $mod_adoc
+sed -e "s/@DIR@/$d/" -e "s/@LIBRARY@/$lib/" -e "s/@NAME@/$name/" $template > "$mod_adoc"
 
 exit 0

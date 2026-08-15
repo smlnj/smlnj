@@ -11,9 +11,9 @@
 
 
 this=$0
-cmddir=`dirname $0`
-cmddir=`cd "$cmddir"; pwd`
-bindir=`cd "$cmddir/../bin"; pwd`
+cmddir=`dirname "$0"`
+cmddir=`cd "$cmddir" && pwd`
+bindir=`cd "$cmddir/../bin" && pwd`
 
 ARGS=""
 

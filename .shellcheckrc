@@ -1,0 +1,8 @@
+# Allow x-prefixed comparisons
+disable=SC2268
+
+# Allow using `..` instead of $(..)
+disable=SC2006
+
+# The operators -ot/-nt/-ef are specified by POSIX.1-2024
+disable=SC3013

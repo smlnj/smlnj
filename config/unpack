@@ -76,8 +76,8 @@ fetchurl() {
 	done
     done
     if [ $fetched = no ] ; then
-	echo $this: Fetching $try was no success.
-	echo '  ' You should try to do it manually now.
+	echo "$this: Fetching $try was no success."
+	echo "   You should try to do it manually now."
 	askurl "$1" "$2" "$3"
     fi
 }
@@ -98,7 +98,7 @@ usecurl() {
 }
 
 testurlgetter() {
-    (exec >/dev/null 2>&1 ; exec $*)
+    (exec >/dev/null 2>&1 ; exec "$@")
 }
 
 #
@@ -187,7 +187,7 @@ unarchive() {
 # no archive is found locally, it invokes $URLGETTER and tries again.
 # The variable $tryfetch is used to make sure this happens only once.
 fetch_n_unpack() {
-    cd "$2"
+    cd "$2" || exit 1
     if unarchive "$1" "$4".tgz un_tar_gz ||
        unarchive "$1" "$4".tar.gz un_tar_gz ||
        unarchive "$1" "$4".tar.Z un_tar_Z ||
@@ -195,7 +195,7 @@ fetch_n_unpack() {
        unarchive "$1" "$4".tar.bz2 un_tar_bz2 ||
        unarchive "$1" "$4".tz un_tar_Z
     then
-	: we are done
+	: "we are done"
     elif [ $tryfetch = yes ] ; then
 	urlgetter
 	$URLGETTER "$1" "$4" "$SRCARCHIVEURL"
@@ -232,7 +232,7 @@ do
 #         unpack run-time "$ROOT"/base runtime runtime
 # 	;;
       boot.*)
-        unpack bootfiles "$ROOT" sml.$i $i
+        unpack bootfiles "$ROOT" "sml.$i" "$i"
  	;;
       compiler)
 	unpack compiler "$ROOT" compiler compiler
@@ -303,9 +303,9 @@ do
         unpack "asdlgen tool and libraries" "$TOOLS" asdl asdl
         ;;
       *)
-	echo Unknown package: ${i}.
-	echo Trying default method...
-	unpack ${i} "$ROOT" ${i} ${i}
+	echo "Unknown package: ${i}."
+	echo "Trying default method..."
+	unpack "${i}" "$ROOT" "${i}" "${i}"
 	;;
     esac
 done

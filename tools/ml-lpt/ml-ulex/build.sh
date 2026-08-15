@@ -8,15 +8,15 @@
 #   -o image		-- specify the name of the heap image, "ml-ulex"
 #			   is the default.
 
+set -eu
+
 CMD=$0
 
 ROOT="ml-ulex"
 HEAP_IMAGE=""
 SMLNJROOT=`pwd`/../../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
-LIB=${INSTALLDIR:-$SMLNJROOT}/lib
 BUILD=$BIN/ml-build
-SML=$BIN/sml
 
 #
 # process command-line options
@@ -34,7 +34,7 @@ while [ "$#" != "0" ] ; do
       ;;
     -64) ;; # ignore size specification for compatibility with 2021.1
     *)
-      echo $CMD: invalid argument: $arg
+      echo "$CMD: invalid argument: $arg"
       exit 1
       ;;
   esac
@@ -46,6 +46,4 @@ fi
 
 #
 # Build the ml-ulex standalone program:
-"$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
-
-exit 0
+"$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main "$HEAP_IMAGE"

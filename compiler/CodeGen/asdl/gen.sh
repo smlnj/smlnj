@@ -9,6 +9,8 @@
 # usage: gen.sh
 #
 
+set -eu
+
 cmd=gen.sh
 src=cfg.asdl
 

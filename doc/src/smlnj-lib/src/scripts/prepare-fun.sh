@@ -6,7 +6,9 @@
 # usage: scripts/prepare-fun.sh <dir> <fun>
 #
 
-function usage {
+set -eu
+
+usage() {
   echo "usage: scripts/prepare-str.sh <dir> <fun>"
   exit 1
 }
@@ -27,18 +29,18 @@ if [ ! -d "$d" ] ; then
   exit 1
 fi
 
-lib=$(basename $d/*-lib.adoc .adoc)
+lib=$(basename "$d"/*-lib.adoc .adoc)
 
 template=Templates/fun.adoc
 stem="fun-$name"
 mod_adoc="$d/$stem.adoc"
 
-if [ -f $mod_adoc ] ; then
+if [ -f "$mod_adoc" ] ; then
   echo "$0: file '$mod_adoc' already exists"
   exit 1
 fi
 
 ## create the placeholder for the module
-sed -e "s/@DIR@/$d/" -e "s/@LIBRARY@/$lib/" -e "s/@NAME@/$name/" $template > $mod_adoc
+sed -e "s/@DIR@/$d/" -e "s/@LIBRARY@/$lib/" -e "s/@NAME@/$name/" $template > "$mod_adoc"
 
 exit 0

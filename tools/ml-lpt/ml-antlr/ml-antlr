@@ -136,10 +136,10 @@ esac
 
 heap=${scripthome}ml-antlr.${ARCH}-${OPSYS}
 
-if test ! -r $heap ; then
+if test ! -r "$heap"; then
   echo "ml-antlr: no heap image!"
   exit 1
 fi
 
-exec sml @SMLload=$heap $@
+exec sml @SMLload="$heap" "$@"
 
