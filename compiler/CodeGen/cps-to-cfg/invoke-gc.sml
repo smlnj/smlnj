@@ -251,7 +251,7 @@ fun prRoots roots = Control.Print.say (concat["Roots = ", roots2s roots, "\n"])
 	(* pack the record of extra pointers/tagged values and pass it to `k` *)
 	  and packRecord (flds, k) = let
 		fun packFlds ([], n, args) = let
-		      val desc = D.makeDesc' (n, D.tag_record)
+		      val desc = D.makeDesc (n, D.tag_record)
 		      val tpl = LV.mkLvar()
 		      in
 			C.ALLOC(record desc, List.rev args, tpl,
@@ -278,7 +278,7 @@ fun prRoots roots = Control.Print.say (concat["Roots = ", roots2s roots, "\n"])
 			else (2 * (align64 (4*n32) div 8 + n64), D.tag_raw)
 *)
                         else raise Fail "32-bit systems are not supported"
-		val desc = D.makeDesc' (nWords, tag)
+		val desc = D.makeDesc (nWords, tag)
 		val (flds, args) = let
 		      fun get sz ((ix, nk), (flds, args)) =
 			    ({kind=nk, sz=sz}::flds, getLive ix :: args)
