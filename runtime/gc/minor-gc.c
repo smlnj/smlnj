@@ -272,6 +272,39 @@ PVT void MinorGC_SweepToSpace (gen_t *gen1)
 	MinorGC_SweepToSpArena(PAIR_INDX);
 	MinorGC_SweepToSpArena(ARRAY_INDX);
 
+      /* sweep the mixed-record arena */
+        {
+            arena_t *ap = gen1->arena[MIXED_INDX];
+            ml_val_t *p = ap->sweep_nextw;
+            if (p < ap->nextw) {
+                Word_t objLen, ptrLen;
+                swept = TRUE;
+                do {
+                    ml_val_t hdr = *p++;
+                    ASSERT(isDESC(hdr));
+                    switch (GET_TAG(hdr)) {
+                      case DTAG_vec_hdr:
+                      case DTAG_arr_hdr:
+                        /* vector/array headers are pairs of data-ptr and length */
+                        objLen = 2;
+                        ptrLen = 1;
+                        break;
+                      case DTAG_mixed:
+                        objLen = MIXED_GET_LEN(hdr);
+                        ptrLen = MIXED_GET_PTRLEN(hdr);
+                        break;
+                      default:
+                        Die ("invalid header tag %#x in mixed arena (gen 1)\n", hdr);
+                    }
+                    for (int j = 0;  j < ptrLen;  ++j) {
+                        MinorGC_CheckWord(allocBase, allocSz, gen1, p+j);
+                    }
+                    p += objLen;
+                } while (p < ap->nextw);
+                ap->sweep_nextw = p;
+            }
+        }
+
     } while (swept);
 
 } /* end of MinorGC_SweepToSpace. */
@@ -334,7 +367,7 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
             }
         }
 #endif
-	arena = gen1->arena[RECORD_INDX];
+	arena = gen1->arena[MIXED_INDX];
         break;
       case DTAG_arr_data:
 	len = GET_LEN(desc);
@@ -347,6 +380,10 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
         }
 #endif
 	arena = gen1->arena[ARRAY_INDX];
+	break;
+      case DTAG_mixed:
+        len = MIXED_GET_LEN(desc);
+	arena = gen1->arena[MIXED_INDX];
 	break;
       case DTAG_raw:
 	len = GET_LEN(desc);

@@ -1,6 +1,6 @@
 /*! \file tags.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are the macros for object tags and descriptors.  They should agree
@@ -48,6 +48,7 @@
 #define DTAG_arr_data	HEXLIT(3)	/* polymorphic array data */
 #define DTAG_ref	DTAG_arr_data	/* reference cell */
 #define DTAG_raw	HEXLIT(4)	/* word-size aligned non-pointer data */
+#define DTAG_mixed      HEXLIT(5)       /* mixed record */
 #define DTAG_special	HEXLIT(6)	/* Special object; length is kind */
 #define DTAG_extern	HEXLIT(10)	/* external symbol reference (used in */
 					/* exported heap images) */
@@ -120,5 +121,9 @@
 /* extract descriptor fields */
 #define GET_LEN(D)		(((Word_t)(D)) >> TAG_SHIFTW)
 #define GET_TAG(D)		((((Word_t)(D)) ANDOP DTAG_MASK) >> DTAG_SHIFTW)
+
+/* extract descriptor fields from mixed records */
+#define MIXED_GET_LEN(D)        ((Unsigned32_t)(Addr_t)(D) >> TAG_SHIFTW)
+#define MIXED_GET_PTRLEN(D)     ((Addr_t)(D) >> 32)
 
 #endif /* !_TAGS_ */

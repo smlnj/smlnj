@@ -303,7 +303,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
        * address offset table.
        */
         for (j = 0;  j < NUM_ARENAS;  j++) {
-            arena_t             *ap = gen->arena[j];
+            arena_t *ap = gen->arena[j];
 
             if (p->info.o.sizeB > 0) {
                 addrOffset[i][j] = (Addr_t)(ap->tospBase) - (Addr_t)(p->info.o.baseAddr);
@@ -313,8 +313,8 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
                 if (HeapIO_ReadBlock(bp, (ap->tospBase), p->info.o.sizeB) == FAILURE) {
                     Die("failure to read heap data; gen = %d, arena = %d\n", i+1, j);
                 }
-                ap->nextw       = (ml_val_t *)((Addr_t)(ap->tospBase) + p->info.o.sizeB);
-                ap->oldTop      = ap->tospBase;
+                ap->nextw  = (ml_val_t *)((Addr_t)(ap->tospBase) + p->info.o.sizeB);
+                ap->oldTop = ap->tospBase;
             }
             else if (isACTIVE(ap)) {
                 ap->oldTop = ap->tospBase;
@@ -413,7 +413,7 @@ PVT void ReadHeap (inbuf_t *bp, ml_heap_hdr_t *hdr, ml_state_t *msp, ml_val_t *e
 
                     if (DumpObjectStrings && (j == CODE_INDX)) {
                       /* dump the comment string of the code object */
-                        char           *namestring;
+                        char *namestring;
                         if ((namestring = (char *)BO_GetCodeObjTag(bdp)) != NIL(char *))
                             SayDebug ("[%6d bytes, at %p] %s\n", bdp->sizeB, bdp->obj, namestring);
                     }
@@ -626,6 +626,56 @@ PVT void RepairHeap (
         RepairArena(RECORD_INDX);
         RepairArena(PAIR_INDX);
         RepairArena(ARRAY_INDX);
+
+        /* repair the mixed-record arena */
+        {
+            arena_t *ap = heap->gen[i]->arena[MIXED_INDX];
+            Word_t objLen, ptrLen;
+
+            ml_val_t *p = ap->tospBase;
+            ml_val_t *q = ap->nextw;
+            while (p < q) {
+                ml_val_t hdr = *p++;
+                ASSERT(isDESC(hdr));
+                switch (GET_TAG(hdr)) {
+                  case DTAG_vec_hdr:
+                  case DTAG_arr_hdr:
+                    /* vector/array headers are pairs of data-ptr and length */
+                    objLen = 2;
+                    ptrLen = 1;
+                    break;
+                  case DTAG_mixed:
+                    objLen = MIXED_GET_LEN(hdr);
+                    ptrLen = MIXED_GET_PTRLEN(hdr);
+                    break;
+                  default:
+                    Die ("invalid header tag %#x in mixed arena (gen 1)\n", hdr);
+                }
+                /* process the pointer-part of the mixed object */
+                ASSERT(ptrLen < objLen);
+                for (int j = 0;  j < ptrLen;  j++) {
+                    ml_val_t w = p[j];
+                    if (isBOXED(w)) {
+                        Addr_t obj = PTR_MLtoADDR(w);
+                        aid_t aid = ADDR_TO_PAGEID(oldBIBOP, obj);
+                        if (IS_BIGOBJ_AID(aid)) {
+                            bo_reloc_t *dp =
+                                AddrToRelocInfo (oldBIBOP, boRegionTbl, aid, obj);
+                            p[j] = PTR_CtoML((obj - dp->oldAddr) + dp->newObj->obj);
+                        }
+                        else {
+                            int gg = EXTRACT_GEN(aid)-1;
+                            int objc = EXTRACT_OBJC(aid)-1;
+                            p[j] = PTR_CtoML(obj + addrOffset[gg][objc]);
+                        }
+                    }
+                    else if (isEXTERNTAG(w)) {
+                        p[j] = externs[EXTERNID(w)];
+                    }
+                }
+                p += objLen;
+            }
+        }
     }
 
 } /* end of RepairHeap */

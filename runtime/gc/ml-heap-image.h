@@ -35,10 +35,12 @@
 #define ORDER		0x00112233
 
 /* heap image version identifier (date in mmddyyyy form) */
-#define IMAGE_MAGIC	0x02102025
+//#define IMAGE_MAGIC	0x02102025
+#define IMAGE_MAGIC     0x08192026
 
 /* blasted heap image version identifier (date in 00mmddyy form) */
-#define BLAST_MAGIC	0x00070995
+//#define BLAST_MAGIC	0x00070995
+#define BLAST_MAGIC     0x08192026
 
 /* the kind of heap image */
 #define EXPORT_HEAP_IMAGE	1

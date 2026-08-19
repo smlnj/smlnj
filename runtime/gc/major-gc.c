@@ -587,6 +587,40 @@ PVT void MajorGC_SweepToSpace (heap_t *heap, int maxCollectedGen, int maxSweptGe
 	    SweepToSpArena(gen, RECORD_INDX);
 	    SweepToSpArena(gen, PAIR_INDX);
 
+          /* Sweep the mixed-object arena */
+            {
+                arena_t *ap = gen->arena[MIXED_INDX];
+                ml_val_t *p = ap->sweep_nextw;
+                if (p < ap->nextw) {
+                    Word_t objLen, ptrLen;
+                    swept = TRUE;
+                    do {
+                        ml_val_t hdr = *p++;
+                        ASSERT(isDESC(hdr));
+                        switch (GET_TAG(hdr)) {
+                          case DTAG_vec_hdr:
+                          case DTAG_arr_hdr:
+                            /* vector/array headers are pairs of data-ptr and length */
+                            objLen = 2;
+                            ptrLen = 1;
+                            break;
+                          case DTAG_mixed:
+                            objLen = MIXED_GET_LEN(hdr);
+                            ptrLen = MIXED_GET_PTRLEN(hdr);
+                            break;
+                          default:
+                            Die ("invalid header tag %#x in mixed arena (gen %d)\n",
+                                hdr, i+1);
+                        }
+                        for (int j = 0;  j < ptrLen;  ++j) {
+                            MajorGC_CheckWord(heap, bibop, maxAid, p+j);
+                        }
+                        p += objLen;
+                    } while (p < ap->nextw);
+                    ap->sweep_nextw = p;
+                }
+            }
+
 	  /* Sweep the array arena */
 	    {
 		arena_t		*ap = gen->arena[ARRAY_INDX];
@@ -706,27 +740,34 @@ PVT ml_val_t MajorGC_ForwardObj (heap_t *heap, aid_t maxAid, ml_val_t v, aid_t i
     ml_val_t	*new_obj;
     ml_val_t	desc;
     Word_t	len;
+    int         objc = EXTRACT_OBJC(id);
     arena_t	*arena;
 
     switch (EXTRACT_OBJC(id)) {
-      case OBJC_record: {
+      case OBJC_record:
+      case OBJC_mixed:
+      {
 	desc = obj[-1];
 	switch (GET_TAG(desc)) {
-	  case DTAG_vec_hdr:
-	  case DTAG_arr_hdr:
-	    len = 2;
-	    break;
 	  case DTAG_forward:
 	  /* This object has already been forwarded */
 	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
 	  case DTAG_record:
 	    len = GET_LEN(desc);
 	    break;
+	  case DTAG_vec_hdr:
+	  case DTAG_arr_hdr:
+	    len = 2;
+	    break;
+          case DTAG_mixed:
+            len = MIXED_GET_LEN(desc);
+            break;
 	  default:
-	    Die ("bad record tag %d, obj = %p, desc = %p",
-		GET_TAG(desc), obj, desc);
+	    Die ("bad %s tag %d, obj = %p, desc = %p",
+		(EXTRACT_OBJC(id) == OBJC_record) ? "record" : "mixed-record",
+                GET_TAG(desc), obj, desc);
 	} /* end of switch */
-	arena = heap->gen[EXTRACT_GEN(id)-1]->arena[RECORD_INDX];
+	arena = heap->gen[EXTRACT_GEN(id)-1]->arena[OBJC_TO_INDEX(objc)];
 	if (isOLDER(arena, obj))
 	    arena = arena->nextGen;
       } break;
