@@ -75,17 +75,12 @@ bigobj_desc_t *BO_AllocRegion (heap_t *heap, Addr_t reqSzB)
         reqSzB = MIN_BOREGION_SZB;
     }
 
-    /* number of pages to hold requested size.  Since the first page does not
+    /* number of pages to hold requested size. */
+    npages = (ROUNDUP(reqSzB, BIGOBJ_PAGE_SZB) >> BIGOBJ_PAGE_SHIFT);
+    /* the amount of memory we need for the region.  Since the first page does not
      * hold data, we need one extra page.
      */
-    npages = (ROUNDUP(reqSzB, BIGOBJ_PAGE_SZB) >> BIGOBJ_PAGE_SHIFT) + 1;
-    /* the amount of memory we need for the region */
-    memObjSzB = ROUNDUP(npages*BIGOBJ_PAGE_SZB, BIBOP_PAGE_SZB);
-    /* the actual number of big-object pages in the memory object (not counting
-     * the first page.
-     */
-    ASSERT (npages <= (memObjSzB >> BIGOBJ_PAGE_SHIFT) - 1);
-    npages = (memObjSzB >> BIGOBJ_PAGE_SHIFT) - 1;
+    memObjSzB = (npages + 1)*BIGOBJ_PAGE_SZB;
     /* size of header for npages */
     hdrSzB = BOREGION_HDR_SZB(npages);
 
