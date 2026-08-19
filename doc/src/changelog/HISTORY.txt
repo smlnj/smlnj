@@ -102,7 +102,16 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2026-08-19]::
++
+Modified `TransPrim` to instantiate the numeric subscript/update
+primitive operators with monomorphic types (instead of type constructor
+applications).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
 == Version 2026.2; 2026/08/14

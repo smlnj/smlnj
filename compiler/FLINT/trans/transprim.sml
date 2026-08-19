@@ -384,6 +384,21 @@ structure TransPrim : sig
 			oper)
 		  (* end case *)
 		end
+	(* inline subscript for raw vectors and arrays *)
+	  fun inlNumSubscript (subOp, argt, seqtc, elemt) = let
+		val oper = PL.PRIM (FP.PRIM subOp, lt_arw(argt, elemt), [])
+		in
+		  case coreExn ["Subscript"]
+		   of SOME ssexn =>
+			mkFn argt (fn p =>
+			  mkLet (PL.SELECT(0, p)) (fn a =>
+			    mkLet (PL.SELECT(1, p)) (fn i =>
+			      boundsChk (i, a, seqtc, elemt) (mkApp2(oper, a, i)))))
+		     | NONE => (
+			warn "no access to exn Subscript for inline subscript";
+			oper)
+		  (* end case *)
+		end
 	(* division operators with an explicit test for a zero divisor *)
 	  fun inldiv (nk, po, lt, ts) = let
 		val oper = PL.PRIM (po, lt, ts)
@@ -596,7 +611,7 @@ structure TransPrim : sig
                               (* end case *))
                         val argt = lt_tup [t1, lt_int]
                         in
-                          inlSubscript (CP.NUMSUBSCRIPT kind, argt, tc1, t2)
+                          inlNumSubscript (CP.NUMSUBSCRIPT kind, argt, tc1, t2)
                         end
                     | InlP.NUMSUBSCRIPTV kind => let
                         val (tc1, t1, t2) = (case ts
@@ -605,21 +620,21 @@ structure TransPrim : sig
                               (* end case *))
                         val argt = lt_tup [t1, lt_int]
                         in
-                          inlSubscript (CP.NUMSUBSCRIPTV kind, argt, tc1, t2)
+                          inlNumSubscript (CP.NUMSUBSCRIPTV kind, argt, tc1, t2)
                         end
                     | InlP.NUMUPDATE kind => let
-                        val oper = PL.PRIM(FP.PRIM(CP.NUMUPDATE kind), lt, ts)
-                        val (tc1, t1, t2) = (case ts
+                        val (seqtc, seqt, elemt) = (case ts
                                of [a, b] => (a, lt_tyc a, lt_tyc b)
                                 | _ => unexpectedTy ()
                               (* end case *))
-                        val argt = lt_tup [t1, lt_int, t2]
+                        val argt = lt_tup [seqt, lt_int, elemt]
+                        val oper = PL.PRIM(FP.PRIM(CP.NUMUPDATE kind), lt_arw(argt, elemt), [])
                         in
                           mkFn argt (fn x =>
                             mkLet (PL.SELECT(0, x)) (fn a =>
                               mkLet (PL.SELECT(1, x)) (fn i =>
                                 mkLet (PL.SELECT(2, x)) (fn v =>
-                                  boundsChk (i, a, tc1, LB.ltc_unit)
+                                  boundsChk (i, a, seqtc, LB.ltc_unit)
                                     (PL.APP(oper, PL.RECORD[a, i, v]))))))
                         end
                     | InlP.NOT => mkFn lt_bool (fn x => mkCOND(x, falseLexp, trueLexp))
