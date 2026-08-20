@@ -75,6 +75,9 @@ if [ $SMLBIN != "." ] ; then
   PATH=$PATH:$SMLBIN
 fi
 
+if [ x"$CM_VERBOSE" = xtrue ] ; then
+  echo "$SML $ARGS $* -DNO_PLUGINS \$smlnj/cmb.cm"
+fi
 exec $SML $ARGS $@ -DNO_PLUGINS '$smlnj/cmb.cm' <<XXXX
 (if $STATS then Stats.reset() else ();
 CMB.make();
