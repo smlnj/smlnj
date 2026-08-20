@@ -99,7 +99,7 @@ structure InvokeGC : sig
     datatype root
       = Unit			(* initialized to "()" *)
       | Boxed of int		(* boxed live value with index *)
-      | Record of root list	(* elements are Param or Raw only *)
+      | Record of root list	(* elements are Boxed or Raw only *)
       | Raw of (int * P.numkind) list * (int * P.numkind) list
 
 (* DEBUG
