@@ -273,7 +273,6 @@ structure Literals : LITERALS =
       | LV_STR of string				(* string *)
       | LV_RECORD of C.record_kind * literal list	(* record/vector/raw record *)
       | LV_RAW of W8V.vector				(* raw data vector (target word size) *)
-      | LV_RAW64 of W8V.vector				(* raw data vector (64-bit aligned data) *)
 
     and literal
       = LIT of {			(* heap-allocated literal value *)
@@ -299,7 +298,6 @@ structure Literals : LITERALS =
       | cpsTypeOf (LV_RECORD(C.RK_RECORD, lits)) = C.PTRt(C.RPT(List.length lits))
       | cpsTypeOf (LV_RECORD _) = CPSUtil.BOGt
       | cpsTypeOf (LV_RAW _) = CPSUtil.BOGt
-      | cpsTypeOf (LV_RAW64 bv) = C.PTRt(C.FPT(W8V.length bv div 8))
 
   (* is a literal used as value outside of being part of another literal? *)
     fun litIsUsed (LIT{refCnt, useCnt, ...}) = (!refCnt < !useCnt)
@@ -340,9 +338,6 @@ structure Literals : LITERALS =
 		  | (LV_RAW v) => say(concat[
 			"RAW(", Int.toString(W8V.length v), " bytes) ", suffix, "\n"
 		      ])
-		  | (LV_RAW64 v) => say(concat[
-			"RAW64(", Int.toString(W8V.length v), " bytes) ", suffix, "\n"
-		      ])
 		(* end case *))
 	  fun prSlot (i, LIT arg) = (
 		say (StringCvt.padLeft #" " 4 (Int.toString i) ^ ": ");
@@ -368,7 +363,6 @@ structure Literals : LITERALS =
       (* add a literal record value to the environment *)
 	val addRecord : t -> C.record_kind * literal list * C.lvar -> unit
 	val addRaw : t -> W8V.vector * C.lvar -> unit
-	val addRaw64 : t -> W8V.vector * C.lvar -> unit
       (* return the literal that a variable is bound to *)
 	val findVar : t -> C.lvar -> var_info option
       (* is a value representable as a literal? *)
@@ -418,7 +412,6 @@ structure Literals : LITERALS =
 		List.foldl f h0 lits
 	      end
 	  | hashLV (LV_RAW v) = HashString.hashString(Byte.bytesToString v) + 0w127
-	  | hashLV (LV_RAW64 v) = HashString.hashString(Byte.bytesToString v) + 0w233
 
 	fun sameLV (LV_REAL{ty=ty1, rval=rv1}, LV_REAL{ty=ty2, rval=rv2}) =
 	      (ty1 = ty2) andalso RealLit.same(rv1, rv2)
@@ -426,7 +419,6 @@ structure Literals : LITERALS =
 	  | sameLV (LV_RECORD(rk1, lvs1), LV_RECORD(rk2, lvs2)) =
 	      (rk1 = rk2) andalso ListPair.allEq sameLit (lvs1, lvs2)
 	  | sameLV (LV_RAW v1, LV_RAW v2) = (v1 = v2)
-	  | sameLV (LV_RAW64 v1, LV_RAW64 v2) = (v1 = v2)
 	  | sameLV _ = false
 
 	and sameLit (LIT{useCnt=u1, ...}, LIT{useCnt=u2, ...}) = (u1 = u2)
@@ -496,17 +488,12 @@ structure Literals : LITERALS =
 		fn (rk, flds, v) => insert (v, (false, add (LV_RECORD(rk, flds))))
 	      end
 
-	local
-	  fun addRawLit wrap (tbl as LE{lits, vMap, ...}) = let
-		val add = add lits
-		val insert = LV.Tbl.insert vMap
-		in
-		  fn (data, v) => insert (v, (false, add (wrap data)))
-		end
-	in
-	val addRaw = addRawLit LV_RAW
-	val addRaw64 = addRawLit LV_RAW64
-	end (* local *)
+	fun addRaw (tbl as LE{lits, vMap, ...}) = let
+              val add = add lits
+              val insert = LV.Tbl.insert vMap
+              in
+                fn (data, v) => insert (v, (false, add (LV_RAW data)))
+              end
 
 	fun findVar (LE{vMap, ...}) = LV.Tbl.find vMap
 
@@ -598,7 +585,6 @@ structure Literals : LITERALS =
 	  val useValue' = LitEnv.useValue' env
 	  val addRecord = LitEnv.addRecord env
 	  val addRaw = LitEnv.addRaw env
-	  val addRaw64 = LitEnv.addRaw64 env
 	  fun fieldToValue (u, C.OFFp 0) = u
 	    | fieldToValue _ = bug "unexpected access in field"
 	(* process a CPS function *)
@@ -642,7 +628,7 @@ structure Literals : LITERALS =
 		      doExp e)
 (* REAL32: FIXME *)
 		  | C.PURE(C.P.WRAP(C.P.FLOAT 64), [C.REAL{ty=64, rval}], v, t, e) => (
-		      addRaw64 (real64ToBytes rval, v);
+		      addRaw (real64ToBytes rval, v);
 		      doExp e)
 		  | C.PURE (p, ul, v, t, e) => (useValues ul; doExp e)
 		  | C.RCC (k, l, p, ul, vtl, e) => (useValues ul; doExp e)
@@ -729,7 +715,6 @@ structure Literals : LITERALS =
 			(* end case *)
 		      end
 		  | genLV (d, LV_RAW v) = (depth(d+1); encRAW(buf, v))
-		  | genLV (d, LV_RAW64 v) = (depth(d+1); encRAW64(buf, v))
 		and genLit (d, lit as LIT{id, value, ...}) = if litIsShared lit
 		      then ( (* shared literal, so either load or save it *)
 			case findSharedLit id
