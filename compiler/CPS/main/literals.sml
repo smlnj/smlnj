@@ -1,21 +1,15 @@
-(* literals.sml
+(* new-literals.sml
  *
- * NOTE: this file implements the "old" bytecode instruction set, which is
- * only valid on 32-bit targets.  See new-literals.sml for the new encoding.
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * All rights reserved.
  *
  * This file implements support for heap-allocated literals.  Our approach
  * is to split out the literals from the CPS representation and create a
- * bytecode program that for allocating the literals.
+ * bytecode program that the runtime execures to allocate the literals.
  *
  * The implementation of the bytecode interpreter for the literal language
- * is in base/runtime/gc/old-literals.c.
- *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
- * All rights reserved.
- *
- * TODO:
- *   REAL32: need support for 32-bit floats
- *   add support for IntInf.int as type
+ * is in base/runtime/gc/build-literals.c.  A description of the bytecode
+ * language is in dev-notes/new-literals.md.
  *)
 
 signature LITERALS =
@@ -30,515 +24,899 @@ signature LITERALS =
    *)
     val split : CPS.function -> CPS.function * Word8Vector.vector
 
-  end;
+  end
 
 structure Literals : LITERALS =
   struct
 
     structure W8V = Word8Vector
+    structure W8B = Word8Buffer
     structure LV = LambdaVar
-    structure Set = struct
-	type intset = LV.Set.set ref
-	fun new() = ref LV.Set.empty
-	fun add set i = set := LV.Set.add(!set, i)
-	fun mem set i =  LV.Set.member(!set, i)
-	fun rmv set i = set := LV.Set.delete(!set, i)
-      end
-
-    open CPS
+    structure LVTbl = LV.Tbl
+    structure WordTbl = WordHashTable
+    structure C = CPS
 
     fun bug msg = ErrorMsg.impossible ("Literals: "^msg)
-    fun mkv _ = LV.mkLvar()
 
     val debugFlg = Control.CG.debugLits
     val say = Control.Print.say
 
-  (****************************************************************************
-   *                         A MINI-LITERAL LANGUAGE                          *
-   ****************************************************************************)
-    datatype lit_val
-      = LI_INT of IntInf.int	(* tagged integer literal *)
-      | LI_STRING of string
-      | LI_VAR of lvar
-
-    datatype block_kind
-      = LI_RECORD		(* record of tagged ML values *)
-      | LI_VECTOR		(* vector of tagged ML values *)
-
-    datatype lit_exp
-      = LI_TOP of lit_val list
-      | LI_BLOCK of (block_kind * lit_val list * lvar * lit_exp)
-      | LI_F64BLOCK of (RealLit.t list * lvar * lit_exp)
-      | LI_RAWBLOCK of (IntInf.int list * lvar * lit_exp)
-
-    fun rk2bk CPS.RK_VECTOR = LI_VECTOR
-      | rk2bk CPS.RK_RECORD = LI_RECORD
-      | rk2bk _ = bug "rk2bk: unexpected block kind"
-
-    fun val2lit (CPS.VAR v) = LI_VAR v
-      | val2lit (CPS.NUM{ival, ty={tag=true, ...}}) = LI_INT ival
-      | val2lit (CPS.STRING s) = LI_STRING s
-      | val2lit _ = bug "unexpected case in val2lit"
-
-  (* printing a literal expression *)
-    fun printLits lexp = let
-	  fun prIndent 0 = ()
-	    | prIndent n = (say "  "; prIndent(n-1))
-	  fun valToStr (LI_INT n) = IntInf.toString n
-	    | valToStr (LI_STRING s) = concat["\"", String.toString s, "\""]
-	    | valToStr (LI_VAR x) = LV.lvarName x
-	  fun pr indent (le : lit_exp) = (
-		prIndent indent;
-		case le
-		 of LI_TOP lits => (
-		      say "TOP\n";
-		      List.app (fn lit => (prIndent(indent+1); say(valToStr lit); say "\n")) lits;
-		      prIndent (indent+1);
-		      say "RETURN")
-		  | LI_BLOCK(rk, lits, x, k) => (
-		      say "LET "; say(LV.lvarName x); say " = ";
-		      case rk
-		       of LI_VECTOR => say "VECTOR("
-			| LI_RECORD => say "RECORD("
-		      (* end case *);
-		      say (String.concatWithMap "," valToStr lits);
-		      say ")\n";
-		      pr indent k)
-		  | LI_F64BLOCK(lits, x, k) => (
-		      say "LET "; say(LV.lvarName x); say " = RAW64(";
-		      say (String.concatWithMap "," RealLit.toString lits);
-		      say ")\n";
-		      pr indent k)
-		  | LI_RAWBLOCK(lits, x, k) => (
-		      say "LET "; say(LV.lvarName x); say " = RAW(";
-		      say (String.concatWithMap "," IntInf.toString lits);
-		      say ")\n";
-		      pr indent k)
-		(* end case *))
-	  in
-	    pr 0 lexp
-	  end
+  (* number of bytes per ML value *)
+    val valueSzb = Target.mlValueSz div 8
 
   (****************************************************************************
    *                 TRANSLATING THE LITERAL EXP TO BYTES                     *
    ****************************************************************************)
 
   (* Literals are encoded as instructions for a "literal machine."  The abstract
-   * description of these instructions is as follows:
-   *
-   *	INT(i)			-- push the int31 literal i on the stack
-   *	RAW32[i1,...,in]	-- form a 32-bit raw data record from the
-   *				   i1..in and push a pointer to it.
-   *	RAW64[r1,...,rn]	-- form a 64-bit raw data record from the
-   *				   r1..rn and push a pointer to it.
-   *	STR[c1,...,cn]		-- form a string from the characters c1..cn
-   *				   and push it on the stack.
-   *	LIT(k)			-- push the contents of the stack element
-   *				   that is k slots from the top of the stack.
-   *	VECTOR(n)		-- pop n elements from the stack, make a vector
-   *				   from them and push a pointer to the vector.
-   *	RECORD(n)		-- pop n elements from the stack, make a record
-   *				   from them and push a pointer.
-   *	RETURN			-- return the literal that is on the top of the
-   *				   stack.
-   *
-   * Encoding:
-   *   INT(i)		0x01 <i>
-   *   RAW32[i]		0x02 <i>
-   *   RAW32[i1,..,in]	0x03 <n> <i1> ... <in>
-   *   RAW64[r]		0x04 <r>
-   *   RAW64[r1,..,rn]	0x05 <n> <r1> ... <rn>
-   *   STR[c1,..,cn]	0x06 <n> <c1> ... <cn>
-   *   LIT(k)		0x07 <k>
-   *   VECTOR(n)	0x08 <n>
-   *   RECORD(n)	0x09 <n>
-   *   RETURN		0xff
+   * description of these instructions is given in dev-notes/new-literals.md
    *)
 
-    fun toBytes32 (n, l) =
-	  Word8.fromLargeInt(IntInf.~>>(n, 0w24)) ::
-	  Word8.fromLargeInt(IntInf.~>>(n, 0w16)) ::
-	  Word8.fromLargeInt(IntInf.~>>(n, 0w8)) ::
-	  Word8.fromLargeInt n :: l
-    fun toBytes32' (n, l) = toBytes32 (IntInf.fromInt n, l)
-    fun intToBytes n = toBytes32' (n, [])
-    fun strToBytes s = map Byte.charToByte (explode s)
+  (* magic number for V2 literal bytecodes.  This needs to agree with the runtime
+   * constant `V2_MAGIC` in `runtime/gc/build-literals.c`
+   *)
+    val magicV2 : int = 0x20190921
 
-    val emit_MAGIC = W8V.fromList[0wx19, 0wx98, 0wx10, 0wx22]
-    fun emit_DEPTH n = W8V.fromList(intToBytes n)
-    fun emit_INT i = W8V.fromList(0wx01 :: toBytes32(i, []))
-    fun emit_RAW32 [i] = W8V.fromList(0wx02 :: toBytes32(i, []))
-      | emit_RAW32 l =
-	  W8V.fromList(0wx03 :: (toBytes32'(length l, List.foldr toBytes32 [] l)))
-    fun emit_RAW64 [r] = W8V.fromList(0wx04 :: Word8Vector.toList r)
-      | emit_RAW64 l = W8V.concat(W8V.fromList(0wx05 :: intToBytes(length l)) :: l)
-    fun emit_STR s = W8V.concat[
-	    W8V.fromList(0wx06 :: intToBytes(size s)),
-	    Byte.stringToBytes s
+  (* `INT` opcodes *)
+    fun opINT_0_10 n = Word8.fromLargeInt n
+    fun opINT_m5_m1 n = Word8.fromLargeInt(0x0A - n)
+    val opINTb : Word8.word = 0wx10
+    val opINTh : Word8.word = 0wx11
+    val opINTw : Word8.word = 0wx12
+    val opINTlw : Word8.word = 0wx13
+  (* `INT32` opcodes *)
+    val opINT32b : Word8.word = 0wx14
+    val opINT32h : Word8.word = 0wx15
+    val opINT32w : Word8.word = 0wx16
+  (* `INT64` opcodes *)
+    val opINT64b : Word8.word = 0wx17
+    val opINT64h : Word8.word = 0wx18
+    val opINT64w : Word8.word = 0wx19
+    val opINT64lw : Word8.word = 0wx1A
+  (* real literal opcode *)
+    val opREAL32 : Word8.word = 0wx26
+    val opREAL64 : Word8.word = 0wx27
+  (* `STR` opcodes *)
+    val opSTRb : Word8.word = 0wx2C
+    val opSTRn : Word8.word = 0wx2D
+  (* record opcodes *)
+    fun opRECORD_1_7 len = Word8.fromInt(0x2F + len)
+    val opRECORDb: Word8.word = 0wx37
+    val opRECORDw: Word8.word = 0wx38
+  (* vector opcodes *)
+    val opVECTORb: Word8.word = 0wx39
+    val opVECTORw: Word8.word = 0wx3A
+  (* raw data vectors *)
+    fun opRAW_1_2 n = Word8.fromInt(0x3A + n)
+    val opRAWb : Word8.word = 0wx3D
+    val opRAWw : Word8.word = 0wx3E
+    val opRAW64b : Word8.word = 0wx41
+    val opRAW64w : Word8.word = 0wx42
+  (* save/load opcodes *)
+    val opSAVEb : Word8.word = 0wx44
+    val opSAVEh : Word8.word = 0wx45
+    val opLOADb : Word8.word = 0wx46
+    val opLOADh : Word8.word = 0wx47
+  (* return *)
+    val opRETURN : Word8.word = 0wxff
+
+    fun ~>> (n : int, w : word) = Word.toIntX(Word.~>>(Word.fromInt n, w))
+
+  (* encode 8-bit signed value as a byte list *)
+    fun addInt8 (buf, n) = W8B.add1(buf, Word8.fromInt n)
+    fun addLargeInt8 (buf, n) = W8B.add1(buf, Word8.fromLargeInt n)
+  (* encode 16-bit signed value as a byte list *)
+    fun addInt16 (buf, n) = (
+	  W8B.add1(buf, Word8.fromInt(~>>(n, 0w8)));
+	  W8B.add1(buf, Word8.fromInt n))
+    fun addLargeInt16 (buf, n) = (
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
+	  W8B.add1(buf, Word8.fromLargeInt n))
+  (* encode 32-bit signed value as a byte list *)
+    fun addInt32 (buf, n) = (
+	  W8B.add1(buf, Word8.fromInt(~>>(n, 0w24)));
+	  W8B.add1(buf, Word8.fromInt(~>>(n, 0w16)));
+	  W8B.add1(buf, Word8.fromInt(~>>(n, 0w8)));
+	  W8B.add1(buf, Word8.fromInt n))
+    fun addLargeInt32 (buf, n) = (
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w24)));
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w16)));
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
+	  W8B.add1(buf, Word8.fromLargeInt n))
+  (* encode a 64-bit signed value as a byte list *)
+    fun addLargeInt64 (buf, n) = (
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w56)));
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w48)));
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w40)));
+	  W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w32)));
+	  addLargeInt32 (buf, n))
+    fun addLargeInt64' (buf, n) = addLargeInt64 (buf, IntInf.fromInt n)
+
+    fun intToBytes32 n = W8V.fromList[
+	    Word8.fromInt(~>>(n, 0w24)),
+	    Word8.fromInt(~>>(n, 0w16)),
+	    Word8.fromInt(~>>(n, 0w8)),
+	    Word8.fromInt n
 	  ]
-    fun emit_LIT k = W8V.fromList(0wx07 :: intToBytes k)
-    fun emit_VECTOR n = W8V.fromList(0wx08 :: intToBytes n)
-    fun emit_RECORD n = W8V.fromList(0wx09 :: intToBytes n)
-    val emit_RETURN = W8V.fromList[0wxff]
 
-    fun litToBytes (LI_TOP[]) = W8V.fromList[]
-      | litToBytes litExp = let
-	  fun depth (LI_TOP ls, d, maxDepth) = Int.max(maxDepth, d+length ls)
-	    | depth (LI_BLOCK(_, ls, _, rest), d, maxDepth) =
-		depth (rest, d+1, Int.max(maxDepth, d+length ls))
-	    | depth (LI_F64BLOCK(ls, _, rest), d, maxDepth) =
-		depth (rest, d+1, Int.max(maxDepth, d+length ls))
-	    | depth (LI_RAWBLOCK(ls, _, rest), d, maxDepth) =
-		depth (rest, d+1, Int.max(maxDepth, d+length ls))
-	  fun emitLitExp (env, exp, code) = let
-		fun emitLitVals ([], _, code) = code
-		  | emitLitVals (lit::r, d, code) = let
-		      val instr = (case lit
-			     of (LI_INT i) => emit_INT i
-			      | (LI_STRING s) => emit_STR s
-			      | (LI_VAR v) => let
-				  fun f ([], _) = bug "unbound lvar"
-				    | f (v'::r, d) = if (v = v') then d else f(r, d+1)
-				  in
-				    emit_LIT(f (env, d))
-				  end
-			    (* end case *))
-		      in
-			emitLitVals (r, d+1, instr::code)
-		      end
-		fun emitBlock (LI_RECORD, ls, code) =
-		      emit_RECORD(length ls) :: emitLitVals(ls, 0, code)
-		  | emitBlock (LI_VECTOR, ls, code) =
-		      emit_VECTOR(length ls) :: emitLitVals(ls, 0, code)
-		fun emitF64Block (ls, code) = let
-		      val toBits = #1 o Real64ToBits.toBits
-		      in
-		        emit_RAW64(map toBits ls) :: code
-		      end
-		fun emitI32Block (ls, code) = emit_RAW32 ls :: code
-		in
-		  case exp
-		   of (LI_TOP ls) => emit_RETURN :: emitBlock(LI_RECORD, ls, code)
-		    | (LI_BLOCK(bk, ls, v, rest)) =>
-			emitLitExp (v::env, rest, emitBlock(bk, ls, code))
-		    | (LI_F64BLOCK(ls, v, rest)) =>
-			emitLitExp (v::env, rest, emitF64Block(ls, code))
-		    | (LI_RAWBLOCK(ls, v, rest)) =>
-			emitLitExp (v::env, rest, emitI32Block(ls, code))
-		  (* end case *)
-		end
-	  val maxDepth = depth (litExp, 0, 1)
-	  val code = emit_MAGIC
-		:: emit_DEPTH maxDepth
-		:: List.rev(emitLitExp([], litExp, []))
+    fun largeIntToBytes32 n = W8V.fromList[
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w24)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w16)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w8)),
+	    Word8.fromLargeInt n
+	  ]
+
+    fun largeIntToBytes64 n = W8V.fromList[
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w56)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w48)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w40)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w32)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w24)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w16)),
+	    Word8.fromLargeInt(IntInf.~>>(n, 0w8)),
+	    Word8.fromLargeInt n
+	  ]
+
+    val intToBytes = if Target.is64
+	  then largeIntToBytes64 o Int.toLarge
+	  else intToBytes32
+
+    fun largeIntToBytes (32, n) = largeIntToBytes32 n
+      | largeIntToBytes (64, n) = largeIntToBytes64 n
+      | largeIntToBytes _ = bug "bogus integer size"
+
+    fun real64ToBytes r = #1(Real64ToBits.toBits r)
+
+  (* encode the literal header block *)
+    fun headerToBytes {maxstk, maxsaved} = W8V.concat[
+	  intToBytes32 magicV2,
+	  intToBytes32 maxstk,
+	  intToBytes32 Target.mlValueSz,
+	  intToBytes32 maxsaved]
+
+(* 64BIT: workaround for compiler bug *)
+    val minInt32 = Word64.toLargeIntX 0wxFFFFFFFF80000000
+    val maxInt32 = Word64.toLargeInt 0wx7FFFFFFF
+
+  (* encode tagged integers *)
+    fun encINT (buf, n) = if (0 <= n) andalso (n <= 10)
+	    then W8B.add1(buf, opINT_0_10 n)
+	  else if (~5 <= n) andalso (n < 0)
+	    then W8B.add1(buf, opINT_m5_m1 n)
+	  else if (~128 <= n) andalso (n <= 127)
+	    then (W8B.add1(buf, opINTb); addLargeInt8(buf, n))
+	  else if (~32768 <= n) andalso (n <= 32767)
+	    then (W8B.add1(buf, opINTh); addLargeInt16(buf, n))
+	  else if (minInt32 <= n) andalso (n <= maxInt32)
+	    then (W8B.add1(buf, opINTw); addLargeInt32(buf, n))
+	    else (W8B.add1(buf, opINTlw); addLargeInt64(buf, n))
+
+  (* encode 32-bit boxed integers *)
+    fun encINT32 (buf, n) = if (~128 <= n) andalso (n <= 127)
+	    then (W8B.add1(buf, opINTb); addLargeInt8(buf, n))
+	  else if (~32768 <= n) andalso (n <= 32767)
+	    then (W8B.add1(buf, opINTb); addLargeInt16(buf, n))
+	    else (W8B.add1(buf, opINTb); addLargeInt32(buf, n))
+
+  (* encode 64-bit boxed integers *)
+    fun encINT64 (buf, n) = if (~128 <= n) andalso (n <= 127)
+	    then (W8B.add1(buf, opINT64b); addLargeInt8(buf, n))
+	  else if (~32768 <= n) andalso (n <= 32767)
+	    then (W8B.add1(buf, opINT64h); addLargeInt16(buf, n))
+	  else if (minInt32 <= n) andalso (n <= maxInt32)
+	    then (W8B.add1(buf, opINT64w); addLargeInt32(buf, n))
+	    else (W8B.add1(buf, opINT64lw); addLargeInt64(buf, n))
+
+(* REAL32: FIXME *)
+  (* endcode a 64-bit real literal *)
+    fun encREAL64 (buf, bits) = (W8B.add1(buf, opREAL64); W8B.addVec(buf, bits))
+
+  (* encode a STR opcode and length *)
+    fun encSTR (buf, len) = if (len <= 255)
+	    then (W8B.add1(buf, opSTRb); addInt8(buf, len))
+	    else (W8B.add1(buf, opSTRn); W8B.addVec(buf, intToBytes len))
+
+  (* encode a RECORD opcode and length *)
+    fun encRECORD (buf, len) = if (len <= 7)
+	    then W8B.add1(buf, opRECORD_1_7 len)
+	  else if (len <= 255)
+	    then (W8B.add1(buf, opRECORDb); addInt8(buf, len))
+	  else if (len <= Vector.maxLen)
+	    then (W8B.add1(buf, opRECORDw); addInt32(buf, len))
+	    else bug "record too big"
+
+  (* encode a VECTOR opcode and length *)
+    fun encVECTOR (buf, len) = if (len <= 255)
+	    then (W8B.add1(buf, opVECTORb); addInt8(buf, len))
+	  else if (len <= Vector.maxLen)
+	    then (W8B.add1(buf, opVECTORw); addInt32(buf, len))
+	    else bug "vector too big"
+
+  (* encode RAW data *)
+    fun encRAW (buf, data) = let
+	  val len = W8V.length data div valueSzb
 	  in
-	    W8V.concat code
+	    if (len <= 2)
+	      then W8B.add1(buf, opRAW_1_2 len)
+	    else if (len <= 255)
+	      then (W8B.add1(buf, opRAWb); addInt8(buf, len))
+	      else (W8B.add1(buf, opRAWw); addInt32(buf, len));
+	    W8B.addVec(buf, data)
 	  end
+
+  (* encode RAW64 data *)
+    fun encRAW64 (buf, data) = let
+	  val len = W8V.length data div 8
+	  in
+	    if (len <= 255)
+	      then (W8B.add1(buf, opRAW64b); addInt8(buf, len))
+	      else (W8B.add1(buf, opRAW64w); addInt32(buf, len));
+	    W8B.addVec(buf, data)
+	  end
+
+  (* encode a SAVE/LOAD opcode *)
+    local
+      fun enc (opb, oph) (buf, slot) = if (slot <= 255)
+	  then (W8B.add1(buf, opb); addInt8(buf, slot))
+	  else (W8B.add1(buf, oph); addInt16(buf, slot))
+    in
+    val encSAVE = enc (opSAVEb, opSAVEh)
+    val encLOAD = enc (opLOADb, opLOADh)
+    end (* local *)
 
   (****************************************************************************
    *                    LIFTING LITERALS ON CPS                               *
    ****************************************************************************)
-    datatype info
-      = ZZ_STR of string
-      | ZZ_RCD of record_kind * value list
 
-    exception LitInfo
+    datatype literal_value
+      = LV_REAL of int RealConst.t			(* real number of given size *)
+      | LV_STR of string				(* string *)
+      | LV_RECORD of C.record_kind * literal list	(* record/vector/raw record *)
+      | LV_RAW of W8V.vector				(* raw data vector (target word size) *)
+      | LV_RAW64 of W8V.vector				(* raw data vector (64-bit aligned data) *)
 
-(* FIXME: we should probably either use hash tables or the raw comparison
- * functions to implement the dictionaries.
- *)
+    and literal
+      = LIT of {			(* heap-allocated literal value *)
+	    refCnt : int ref,		(* count of uses of this literal value from other
+					 * literals; when > 1, then we have shared structure. *)
+	    useCnt : int ref,		(* count of all uses of this literal.  When this count
+					 * is > refCnt, then the literal will need to be bound
+					 * to a variable in the residual program.
+					 *)
+	    id : word,			(* unique ID *)
+	    value : literal_value	(* value *)
+	  }
+      | IMMED of C.intty IntConst.t	(* immediate integer/word literal *)
 
-  (* string literal dictionary *)
-    datatype slit = SLIT of string * word
-    fun toSlit s = SLIT(s, HashString.hashString s)
-    fun fromSlit (SLIT(s, _)) = s
-    structure SlitDict = RedBlackMapFn(
-      struct
-        type ord_key = slit
-	fun compare (SLIT(s1,i1), SLIT(s2,i2)) =
-	      if i1 < i2 then LESS
-	      else if i1 > i2 then GREATER
-	      else String.compare(s1, s2)
-      end)
+    fun useLit (LIT{useCnt, ...}) = useCnt := !useCnt + 1
+      | useLit (IMMED _) = ()
+    fun refLit (LIT{refCnt, ...}) = refCnt := !refCnt + 1
+      | refLit (IMMED _) = ()
 
-  (* real literal dictionary *)
-    datatype rlit = RLIT of RealLit.t * word
-    fun toRlit r = RLIT(r, RealLit.hash r)
-    fun fromRlit (RLIT(r, _)) = r
-    structure RlitDict = RedBlackMapFn(
-      struct
-        type ord_key = rlit
-	fun compare (RLIT(r1,i1), RLIT(r2,i2)) =
-	  if i1 < i2 then LESS
-	  else if i1 > i2 then GREATER
-	  else RealLit.compare(r1, r2)
-      end)
+  (* return the CPS type for a literal value *)
+    fun cpsTypeOf (LV_REAL{ty, ...}) = C.FLTt ty
+      | cpsTypeOf (LV_STR _) = CPSUtil.BOGt
+      | cpsTypeOf (LV_RECORD(C.RK_RECORD, lits)) = C.PTRt(C.RPT(List.length lits))
+      | cpsTypeOf (LV_RECORD _) = CPSUtil.BOGt
+      | cpsTypeOf (LV_RAW _) = CPSUtil.BOGt
+      | cpsTypeOf (LV_RAW64 bv) = C.PTRt(C.FPT(W8V.length bv div 8))
 
-    (* lifting all literals from a CPS program *)
-    fun liftlits (body, root, offset) = let
-        (* the list of record, string, and real constants *)
-	  val m : info LV.Tbl.hash_table = LV.Tbl.mkTable(32, LitInfo)
-	  val freevars : lvar list ref = ref []
-	  fun addv x = (freevars := (x :: (!freevars)))
-	(* check if an lvar is used by the main program *)
-	  val refset : Set.intset = Set.new()
-	  val used : lvar -> unit = Set.add refset
-	  val isUsed : lvar -> bool = Set.mem refset
-	(* memoize the information on which corresponds to what *)
-	  fun enter (v, i) = (LV.Tbl.insert m (v, i); addv v)
-	  fun const (VAR v) = ((LV.Tbl.lookup m v; true) handle _ => false)
-	    | const (NUM _ | REAL _ | STRING _) = true
-	    | const _ = bug "unexpected case in const"
-	  fun cstlit (VAR v) = ((LV.Tbl.lookup m v; true) handle _ => false)
-	    | cstlit (REAL _ | STRING _) = true
-	    | cstlit _ = false
-	(* register a string literal *)
-	  local val strs : string list ref = ref []
-		val strsN : int ref = ref 0
-		val sdict = ref (SlitDict.empty)
-		val srtv = mkv()
-		val srtval = VAR srtv
-	  in
-	  fun entStr s = let
-	        val v = mkv()  (** should hash to remove duplicates **)
-		val sd = !sdict
-		val rlit = toSlit s
-		val n = (case SlitDict.find(sd, rlit)
-		       of SOME k => k
-			| _ => let
-			    val _ = (strs := (s :: (!strs)))
-			    val k = !strsN
-			    val _ = (strsN := (k+1))
-			    val _ = (sdict := (SlitDict.insert(sd, rlit, k)))
-			    in
-			      k
-			    end)
-	        in
-		  (VAR v, fn ce => SELECT(n, srtval, v, CPSUtil.BOGt, ce))
-	        end
-	  fun appStr () = let
-		fun g (a::r, z) = g(r, (STRING a)::z)
-		  | g ([], z) = z (* reverse to reflecting the correct order *)
-	        in
-		  case !strs
-		   of [] => ()
-		    | xs => (enter(srtv, ZZ_RCD(RK_RECORD, g(xs,[]))); used srtv)
-		  (* end case *)
-	        end
-	  end (* local of processing string literals *)
-	(* register a real literal *)
-	  local val reals : RealLit.t list ref = ref []
-		val realsN : int ref = ref 0
-		val rdict = ref (RlitDict.empty)
-		val rrtv = mkv()
-		val rrtval = VAR rrtv
-	  in
-	  fun entReal s = let
-	        val v = mkv()  (** should hash to remove duplicates **)
-		val rd = !rdict
-		val rlit = toRlit s
-		val n = (case RlitDict.find(rd, rlit)
-		       of SOME k => k
-			| _ => let
-			    val _ = (reals := (s :: (!reals)))
-			    val k = !realsN
-			    val _ = (realsN := (k+1))
-			    val _ = (rdict := (RlitDict.insert(rd, rlit, k)))
-			    in
-			      k
-			    end)
-	        in
-		  (VAR v, fn ce => SELECT(n, rrtval, v, FLTt 64, ce))	(* REAL32: FIXME *)
-	        end
-	  fun appReal () = let
-	        fun g (a::r, z) = g(r, REAL{rval=a, ty=64} :: z)	(* REAL32: FIXME *)
-		  | g ([], z) = z (* reverse to reflecting the correct order *)
-	        in
-		  case !reals
-		   of [] => ()
-		    | xs => (enter(rrtv, ZZ_RCD(RK_RAW64BLOCK, g(xs,[]))); used rrtv)
-	        end
-	  end (* local of processing real literals *)
-	(* translation on the CPS values *)
-	  fun lpsv u = (case u
-		 of REAL{rval, ...} => entReal rval	(* REAL32: FIXME *)
-		  | STRING s => entStr s
-		  | VAR v => (used v; (u, Fn.id))
-		  | _ => (u, Fn.id)
+  (* is a literal used as value outside of being part of another literal? *)
+    fun litIsUsed (LIT{refCnt, useCnt, ...}) = (!refCnt < !useCnt)
+      | litIsUsed _ = bug "impossible"
+
+  (* is a literal shared?  This happens when its refCnt is > 1 or when its refCnt = 1 and
+   * its useCnt > 1.
+   *)
+    fun litIsShared (LIT{refCnt=ref rc, useCnt, ...}) =
+	  (rc > 1) orelse ((rc = 1) andalso (!useCnt > 1))
+      | litIsShared _ = bug "impossible"
+
+  (* print the list of "top-level" literals (for debugging purposes) *)
+    fun printLits lits = let
+	  val id2s = Word.fmt StringCvt.DEC
+	  fun prIndent 0 = ()
+	    | prIndent n = (say "  "; prIndent(n-1))
+	  fun prLIT indent {refCnt, useCnt, id, value} = prValue indent (value, concat[
+		  "#", id2s id, " ", Int.toString(!refCnt), "/", Int.toString(!useCnt)
+		])
+	  and prLiteral indent lit = (
+		prIndent indent;
+		case lit
+		 of LIT arg => prLIT indent arg
+		  | (IMMED{ty={sz, tag}, ival}) => say(concat[
+			IntInf.toString ival, ":i", Int.toString sz, "\n"
+		      ])
 		(* end case *))
-	  fun lpvs vs = let
-		fun g (u, (xs, hh)) = let
-		      val (nu, nh) = lpsv u
+	  and prValue indent (lv, suffix) = (case lv
+		 of (LV_REAL{rval, ...}) => say(concat[RealLit.toString rval, " ", suffix, "\n"])
+		  | (LV_STR s) => say (concat["\"", String.toString s, "\" ", suffix, "\n"])
+		  | (LV_RECORD(rk, lits)) => (
+		      case rk
+		       of C.RK_VECTOR => say(concat["VECTOR ", suffix, "\n"])
+			| C.RK_RECORD => say(concat["RECORD ", suffix, "\n"])
+		      (* end case *);
+		      List.app (prLiteral (indent+1)) lits)
+		  | (LV_RAW v) => say(concat[
+			"RAW(", Int.toString(W8V.length v), " bytes) ", suffix, "\n"
+		      ])
+		  | (LV_RAW64 v) => say(concat[
+			"RAW64(", Int.toString(W8V.length v), " bytes) ", suffix, "\n"
+		      ])
+		(* end case *))
+	  fun prSlot (i, LIT arg) = (
+		say (StringCvt.padLeft #" " 4 (Int.toString i) ^ ": ");
+		prLIT 3 arg)
+	    | prSlot (i, IMMED _) = bug "unexpected top-level IMMED"
+	  in
+	    List.appi prSlot lits
+	  end (* printLits *)
+
+  (* an environment for tracking literals *)
+    structure LitEnv : sig
+
+	type t
+
+      (* a variable that is bound to a literal is either used to build a literal
+       * record, in which case the bool is false, or is used as an argument to
+       * some other operation (including non-literal records).
+       *)
+	type var_info = bool * literal
+
+      (* create a new environment *)
+	val new : unit -> t
+      (* add a literal record value to the environment *)
+	val addRecord : t -> C.record_kind * literal list * C.lvar -> unit
+	val addRaw : t -> W8V.vector * C.lvar -> unit
+	val addRaw64 : t -> W8V.vector * C.lvar -> unit
+      (* return the literal that a variable is bound to *)
+	val findVar : t -> C.lvar -> var_info option
+      (* is a value representable as a literal? *)
+	val isConst : t -> C.value -> bool
+      (* find the literal value for the given value.  Note that for NUM values, we
+       * return NONE, since they are represented as IMMED literals.
+       *)
+	val findValue : t -> C.value -> literal option
+      (* record the use of a value in a non-literal context *)
+	val useValue : t -> C.value -> unit
+      (* like useValue, but for values embedded in literal records.  This function
+       * returns the literal that the value maps to.
+       *)
+	val useValue' : t -> C.value -> literal
+      (* return the number of literals in the environment *)
+	val numLits : t -> int
+      (* return true if there are no literals defined in the environment *)
+	val isEmpty : t -> bool
+      (* return true if the environment has unbound 64-bit real literals (e.g.,
+       * the arguments to arithmetic operations).
+       *)
+	val hasReal64 : t -> bool
+      (* return a list of all of the literals defined in the environment (not counting
+       * the IMMED literals, which are not recorded in the environment)
+       *)
+	val allLits : t -> literal list
+      (* return a list of the variables that are bound to top-level literalsn paired
+       * with their binding.
+       *)
+	val boundVars : t -> (C.lvar * literal) list
+
+      end = struct
+
+	fun hashLV (LV_REAL{ty, rval}) = RealLit.hash rval + 0w179
+	  | hashLV (LV_STR s) = HashString.hashString s + 0w283
+	  | hashLV (LV_RECORD(rk, lits)) = let
+	      fun f (LIT{id, ...}, h) = 0w3 * id + 0w419
+		| f (IMMED{ty={tag, sz}, ival}, h) = if tag
+		      then Word.fromLargeInt ival + 0w157
+		      else Word.fromLargeInt ival + Word.fromInt sz + 0w257
+	      val h0 = (case rk
+		     of C.RK_VECTOR => 0w197
+		      | C.RK_RECORD => 0w313
+		      | _ => bug("unexpected record kind " ^ PPCps.rkToString rk)
+		    (* end case *))
+	      in
+		List.foldl f h0 lits
+	      end
+	  | hashLV (LV_RAW v) = HashString.hashString(Byte.bytesToString v) + 0w127
+	  | hashLV (LV_RAW64 v) = HashString.hashString(Byte.bytesToString v) + 0w233
+
+	fun sameLV (LV_REAL{ty=ty1, rval=rv1}, LV_REAL{ty=ty2, rval=rv2}) =
+	      (ty1 = ty2) andalso RealLit.same(rv1, rv2)
+	  | sameLV (LV_STR s1, LV_STR s2) = (s1 = s2)
+	  | sameLV (LV_RECORD(rk1, lvs1), LV_RECORD(rk2, lvs2)) =
+	      (rk1 = rk2) andalso ListPair.allEq sameLit (lvs1, lvs2)
+	  | sameLV (LV_RAW v1, LV_RAW v2) = (v1 = v2)
+	  | sameLV (LV_RAW64 v1, LV_RAW64 v2) = (v1 = v2)
+	  | sameLV _ = false
+
+	and sameLit (LIT{useCnt=u1, ...}, LIT{useCnt=u2, ...}) = (u1 = u2)
+	  | sameLit (IMMED n1, IMMED n2) = (n1 = n2)
+	  | sameLit _ = false
+
+	structure LTbl = HashTableFn(
+	  struct
+	    type hash_key = literal_value
+	    val hashVal = hashLV
+	    val sameKey = sameLV
+	  end)
+
+	type var_info = bool * literal
+
+	datatype t = LE of {
+	    hasReal64Lits : bool ref,		(* true if there are unbound real64 literals *)
+	    lits : literal LTbl.hash_table,	(* table of unique literals in the module *)
+	    vMap : var_info LV.Tbl.hash_table	(* map from variables to the literals that they *)
+						(* are bound to *)
+	  }
+
+	fun new () = LE{
+		hasReal64Lits = ref false,
+		lits = LTbl.mkTable(32, Fail "LitTbl"),
+		vMap = LV.Tbl.mkTable(32, Fail "VarTbl")
+	      }
+
+	fun setHasReal64 (LE{hasReal64Lits, ...}) = (hasReal64Lits := true)
+	fun hasReal64 (LE{hasReal64Lits, ...}) = !hasReal64Lits
+
+	fun add lits = let
+	      val find = LTbl.find lits
+	      val insert = LTbl.insert lits
+	      in
+		fn lv => (case find lv
+		     of SOME lit => lit
+		      | NONE => let
+			  val lit = LIT{
+				  useCnt = ref 0,
+				  refCnt = ref 0,
+				  id = Word.fromInt(LTbl.numItems lits),
+				  value = lv
+				}
+			  in
+			    LTbl.insert lits (lv, lit);
+			    lit
+			  end
+		    (* end case *))
+	      end
+
+	local
+	  fun addLiteral wrap (LE{lits, ...}) = let
+		val addL = add lits
+		in
+		  fn v => addL (wrap v)
+		end
+	in
+	val addString = addLiteral LV_STR
+	val addReal = addLiteral LV_REAL
+	end (* local *)
+
+	fun addRecord (tbl as LE{lits, vMap, ...}) = let
+	      val add = add lits
+	      val insert = LV.Tbl.insert vMap
+	      in
+		fn (rk, flds, v) => insert (v, (false, add (LV_RECORD(rk, flds))))
+	      end
+
+	local
+	  fun addRawLit wrap (tbl as LE{lits, vMap, ...}) = let
+		val add = add lits
+		val insert = LV.Tbl.insert vMap
+		in
+		  fn (data, v) => insert (v, (false, add (wrap data)))
+		end
+	in
+	val addRaw = addRawLit LV_RAW
+	val addRaw64 = addRawLit LV_RAW64
+	end (* local *)
+
+	fun findVar (LE{vMap, ...}) = LV.Tbl.find vMap
+
+	fun insertVar (LE{vMap, ...}) = LV.Tbl.insert vMap
+
+	fun isConst (LE{vMap, ...}) = let
+	      val inDomain = LV.Tbl.inDomain vMap
+	      in
+		fn (C.VAR x) => inDomain x
+		 | (C.LABEL _) => bug "unexpected LABEL"
+		 | (C.NUM n) => true
+		 | (C.REAL r) => true
+		 | (C.STRING s) => true
+		 | C.VOID => false
+	      end
+
+	fun findValue (LE{lits, vMap, ...}) = let
+	      val findLit = LTbl.find lits
+	      val findVar = LV.Tbl.find vMap
+	      in
+		fn (C.VAR x) => Option.map #2 (findVar x)
+		 | (C.LABEL _) => bug "unexpected LABEL"
+		 | (C.NUM n) => NONE
+		 | (C.REAL r) => findLit (LV_REAL r)
+		 | (C.STRING s) => findLit (LV_STR s)
+		 | C.VOID => bug "unexpected VOID"
+	      end
+
+	fun useValue env = let
+	      val findVar = findVar env
+	      val addReal = addReal env
+	      val addString = addString env
+	      val insert = insertVar env
+	      in
+		fn (C.VAR x) => (case findVar x
+		       of SOME(flg, lit) => (
+			    useLit lit;
+			    if flg then () else insert (x, (true, lit)))
+			| NONE => ()
+		      (* end case *))
+		 | (C.LABEL _) => bug "unexpected LABEL"
+		 | (C.NUM n) => ()
+		 | (C.REAL r) => (setHasReal64 env; useLit(addReal r))
+		 | (C.STRING s) => useLit(addString s)
+		 | C.VOID => ()
+	      end
+
+	fun useValue' env = let
+	      val findVar = findVar env
+	      val addReal = addReal env
+	      val addString = addString env
+	      fun use lit = (useLit lit; refLit lit; lit)
+	      in
+		fn (C.VAR x) => (case findVar x
+		      of SOME(_, lit) => use lit
+		       | NONE => bug "expected literal"
+		     (* end case *))
+		 | (C.LABEL _) => bug "unexpected LABEL"
+		 | (C.NUM n) => IMMED n
+		 | (C.REAL r) => bug "unexpected REAL"
+		 | (C.STRING s) => use(addString s)
+		 | C.VOID => bug "unexpected VOID"
+	      end
+
+	fun numLits (LE{lits, ...}) = LTbl.numItems lits
+
+	fun isEmpty (LE{lits, ...}) = (LTbl.numItems lits = 0)
+
+	fun allLits (LE{lits, ...}) = LTbl.listItems lits
+
+	fun boundVars (LE{vMap, ...}) =
+	      LV.Tbl.foldi
+		(fn (x, (true, lit), acc) => (x, lit)::acc | (_, _, acc) => acc)
+		  [] vMap
+
+      end (* LitEnv *)
+
+
+  (* The first pass initializes the literal table by walking the CPS module.  After
+   * this pass, we have identified any literal value that needs to be included in the
+   * literal section.  Furthermore, we have identified which literal values are used
+   * in non-literal contexts.
+   *)
+    fun identifyLiterals body = let
+	  val env = LitEnv.new()
+	  val isConst = LitEnv.isConst env
+	  val useValue = LitEnv.useValue env
+	  val useValues = List.app useValue
+	  val useValue' = LitEnv.useValue' env
+	  val addRecord = LitEnv.addRecord env
+	  val addRaw = LitEnv.addRaw env
+	  val addRaw64 = LitEnv.addRaw64 env
+	  fun fieldToValue (u, C.OFFp 0) = u
+	    | fieldToValue _ = bug "unexpected access in field"
+	(* process a CPS function *)
+	  fun doFun (fk, f, vl, cl, e) = doExp e
+	(* process a CPS expression *)
+	  and doExp ce = (case ce
+		 of C.RECORD(rk, fields, v, e) => let
+		      val ul = List.map fieldToValue fields
 		      in
-			(nu::xs, nh o hh)
-		      end
-	        in
-		  foldr g ([], Fn.id) vs
-	        end
-	(* if all fields of a record are "constant", then we lift it *)
-	  fun field ul = let
-	       fun h ((x, OFFp 0)::r, z) = if const x
-			then h(r, x::z)
-			else NONE
-		  | h ([], z) = SOME(rev z)
-		  | h _ = bug "unexpected case in field"
-	        in
-		  h (ul, [])
-	        end
-	(* register a constant record *)
-	  fun record (rk, ul, v) = (case field ul
-		 of SOME xl => (enter(v, ZZ_RCD(rk, xl)); Fn.id)
-		  | NONE => let
-		      fun g ((u, p as OFFp 0), (r, hh)) = let
-			      val (nu, nh) = lpsv u
+			case rk
+			 of C.RK_RAWBLOCK => let
+			      fun isImmed (C.NUM _) = true
+                                | isImmed (C.REAL _) = true
+				| isImmed _ = false
+			      fun encode (C.NUM{ty={sz, ...}, ival}) =
+				    largeIntToBytes(sz, ival)
+                                | encode (C.REAL{ty, rval}) = real64ToBytes rval
+				| encode _ = bug "RAWBLOCK: impossible"
 			      in
-				((nu, p)::r, nh o hh)
+				if List.all isImmed ul
+				  then addRaw (W8V.concat(List.map encode ul), v)
+				  else useValues ul
 			      end
-			 | g _ = bug "unexpected non-zero OFFp in record"
-		      val (nl, hdr) = foldr g ([], Fn.id) ul
+			  | _ => if List.all isConst ul
+			      then addRecord (rk, List.map useValue' ul, v)
+			      else useValues ul
+			(* end case *);
+			doExp e
+		      end
+		  | C.SELECT(i, u, v, t, e) => (useValue u; doExp e)
+		  | C.OFFSET _ => bug "unexpected OFFSET in doExp"
+		  | C.APP(u, ul) => useValues ul
+		  | C.FIX(fns, e) => (List.app doFun fns; doExp e)
+		  | C.SWITCH(u, v, es) => (useValue u; List.app doExp es)
+		  | C.BRANCH(p, ul, v, e1, e2) => (useValues ul; doExp e1; doExp e2)
+		  | C.SETTER(p, ul, e) => (useValues ul; doExp e)
+		  | C.LOOKER(p, ul, v, t, e) => (useValues ul; doExp e)
+		  | C.ARITH(p, ul, v, t, e) => (useValues ul; doExp e)
+		  | C.PURE(C.P.WRAP(C.P.INT sz), [C.NUM{ival, ...}], v, t, e) => (
+		      addRaw (largeIntToBytes(sz, ival), v);
+		      doExp e)
+(* REAL32: FIXME *)
+		  | C.PURE(C.P.WRAP(C.P.FLOAT 64), [C.REAL{ty=64, rval}], v, t, e) => (
+		      addRaw64 (real64ToBytes rval, v);
+		      doExp e)
+		  | C.PURE (p, ul, v, t, e) => (useValues ul; doExp e)
+		  | C.RCC (k, l, p, ul, vtl, e) => (useValues ul; doExp e)
+		(* end case *))
+	  in
+	    doExp body;
+	    env
+	  end
+
+  (* literal values are either in the main literal vector or in the vector
+   * of real literals.
+   *)
+    datatype lit_loc = LitSlot of int | Real64Slot of int
+
+  (* build the representation of the literals; return a table mapping literal IDs
+   * to their locations, the bytecode for building the literal vector, and a boolean
+   * that is true if there is a real-literal vector.
+   *)
+    fun buildLiterals env = let
+	(* generate bytecode for the literals *)
+	  val buf = W8B.new (2 * LitEnv.numLits env * valueSzb)
+	(* track the maximum stack depth required *)
+	  val stkDepth = ref 0
+	  fun depth d = if d > !stkDepth then stkDepth := d else ()
+	(* get a list of the literals that are bound to variables in order of their
+	 * definition.
+	 *)
+	  val lits = let
+		fun gt (LIT{id=a, ...}, LIT{id=b, ...}) = (a > b)
+		  | gt _ = bug "unexpected IMMED literal"
+		in
+		  ListMergeSort.sort gt
+		    (List.filter litIsUsed (LitEnv.allLits env))
+		end
+	  val numNamedLits = List.length lits
+	(* tracking the location of literals in the literal/real vector *)
+	  val nLits = ref(if LitEnv.hasReal64 env then 1 else 0)
+	  val nReal64Lits = ref 0
+	  val real64Lits = ref []
+	  val litIdTbl = WordTbl.mkTable(numNamedLits, Fail "litIdTbl")
+	  val insertLit = let
+		val insert = WordTbl.insert litIdTbl
+		in
+		  fn id => let val slot = !nLits
 		      in
-			fn ce => hdr(RECORD(rk, nl, v, ce))
-		      end)
-	(* register a wrapped float literal *)
-	  fun wrapfloat (sz, u, v, t) = if const u
-		then (enter(v, ZZ_RCD(RK_RAW64BLOCK, [u])); Fn.id)
-		else let val (nu, hh) = lpsv u
-		      in (fn ce => hh(PURE(P.WRAP(P.FLOAT sz), [nu], v, t, ce)))
-		     end
-	(* fetch out the literal information *)
-	  fun getInfo () = let
-	        val _ = appReal()   (* register all Reals as a record *)
-		val _ = appStr()   (* register all Strings as a record *)
-		val allvars = !freevars
-		val exports = List.filter isUsed allvars
+			nLits := slot + 1;
+			insert (id, LitSlot slot)
+		      end
+		end
+	  val insertReal64 = let
+		val insert = WordTbl.insert litIdTbl
+		in
+		  fn (id, rval) => let val slot = !nReal64Lits
+		      in
+			nReal64Lits := slot + 1;
+			insert (id, Real64Slot slot);
+			real64Lits := real64ToBytes rval :: !real64Lits
+		      end
+		end
+	(* table to track shared literals (indexed by literal ID) *)
+	  val sharedLitTbl = WordTbl.mkTable(numNamedLits, Fail "sharedLitTbl")
+	  val insertSharedLit = let
+		val insert = WordTbl.insert sharedLitTbl
+		in
+		  fn id => let val loc = WordTbl.numItems sharedLitTbl
+		      in
+			insert (id, loc); loc
+		      end
+		end
+	  val findSharedLit = WordTbl.find sharedLitTbl
+	(* generate code for a literal *)
+	  fun genLiteral (d, lit as LIT{id, value, ...}) = let
+		fun genLV (d, LV_REAL _) = bug "unexpected embedded LV_REAL"
+		  | genLV (d, LV_STR s) = (
+		      encSTR(buf, size s); W8B.addVec(buf, Byte.stringToBytes s))
+		  | genLV (d, LV_RECORD(rk, lits)) = let
+		      fun genFld (lit, d) = (genLit (d, lit); d+1)
+		      in
+			depth (Int.max(d+1, foldl genFld d lits));
+			case rk
+			 of C.RK_VECTOR => encVECTOR (buf, List.length lits)
+			  | C.RK_RECORD => encRECORD (buf, List.length lits)
+			  | _ => bug "unexpected record kind"
+			(* end case *)
+		      end
+		  | genLV (d, LV_RAW v) = (depth(d+1); encRAW(buf, v))
+		  | genLV (d, LV_RAW64 v) = (depth(d+1); encRAW64(buf, v))
+		and genLit (d, lit as LIT{id, value, ...}) = if litIsShared lit
+		      then ( (* shared literal, so either load or save it *)
+			case findSharedLit id
+			 of SOME slot => (depth(d+1); encLOAD(buf, slot))
+			  | NONE => (genLV(d, value); encSAVE(buf, insertSharedLit id))
+			(* end case *))
+		      else genLV (d, value)
+		  | genLit (d, IMMED{ty={tag=true, ...}, ival}) = (depth(d+1); encINT (buf, ival))
+		  | genLit (d, IMMED{ty={sz=32, ...}, ival}) = (depth(d+1); encINT32 (buf, ival))
+		  | genLit (d, IMMED{ty={sz=64, ...}, ival}) = (depth(d+1); encINT64 (buf, ival))
+		  | genLit _ = bug "unsupported IMMED type"
+		in
+		  case value
+		   of LV_REAL{ty=64, rval} => insertReal64(id, rval)
+		    | _ => (insertLit id; genLit (d, lit))
+		  (* end case *)
+		end
+	    | genLiteral _ = bug "unexpected top-level IMMED literal"
+	(* add literals to buffer *)
+	  val _ = List.appi genLiteral lits
+	(* generate the code to create the real-literal vector (if necessary) *)
+	  val (rcode, litVecSz) = (case List.rev (!real64Lits)
+		 of [] => (W8V.fromList[], numNamedLits)
+		  | rlits => let
+		      val rbuf = W8B.new(8 * !nReal64Lits + 5)
+		      in
+			depth (1);
+			encRAW64 (rbuf, W8V.concat rlits);
+			(W8B.contents rbuf, numNamedLits + 1 - !nReal64Lits)
+		      end
+		(* end case *))
+	(* add the instruction to build the literal vector and to return the result *)
+	  val _ = (encRECORD(buf, litVecSz); W8B.add1(buf, opRETURN))
+	(* create literal program *)
+	  val code = W8V.concat[
+		  headerToBytes {maxstk = !stkDepth, maxsaved = WordTbl.numItems sharedLitTbl},
+		  rcode,
+		  W8B.contents buf
+		]
+	  in
+	    if !debugFlg
+	      then let
+		fun prBV (x, LIT{id, ...}) = (
+		      say(concat["LET ", LV.lvarName x, " = "]);
+		      case WordTbl.find litIdTbl id
+		       of NONE => say "<no slot>\n"
+			| SOME(LitSlot n) => say(concat["literal-", Int.toString n, "\n"])
+			| SOME(Real64Slot n) => say(concat["real64-", Int.toString n, "\n"])
+		      (* end case *))
+		fun prByte (i, w) = (
+		      say(StringCvt.padLeft #"0" 2 (Word8.toString w));
+		      if (i mod 16 = 15)
+			then say "\n"
+			else say " ")
+		in
+		  say "==========\n";
+		  say(concat["== bytecode size: ", Int.toString(W8V.length code), "\n"]);
+		  printLits lits;
+		  say "==========\n";
+		  List.app prBV (LitEnv.boundVars env);
+		  say "==========\n";
+		  W8V.appi prByte code;
+		  if (W8V.length code mod 16 <> 15) then say "\n" else ();
+		  say "==========\n"
+		end
+	      else ();
+	    (litIdTbl, code, litVecSz, !nReal64Lits)
+	  end
 
-		val toplit =
-		  let fun g ([], z) = LI_TOP z
-			| g (x::r, z) =
-			     (case LV.Tbl.lookup m x
-			       of ZZ_STR s => g(r, (LI_STRING s)::z)
-				| _ => g(r, (LI_VAR x)::z))
-		   in g(exports, [])
-		  end
-
-		fun mklit (v, lit) = let
-		    fun unREAL (CPS.REAL{rval, ...}) = rval	(* REAL32: FIXME *)
-		      | unREAL _ = bug "unREAL"
-		    fun unINT32 (CPS.NUM{ival, ...}) = ival
-		      | unINT32 _ = bug "unINT32"
-		    in
-		      case LV.Tbl.lookup m v
-		       of (ZZ_STR s) =>
-			    bug "currently we don't expect ZZ_STR in mklit"
-			(* lit   --- or we could inline string *)
-			| (ZZ_RCD(CPS.RK_RAW64BLOCK, vs)) =>
-			    LI_F64BLOCK(map unREAL vs, v, lit)
-			| (ZZ_RCD(CPS.RK_RAWBLOCK, vs)) =>
-			    LI_RAWBLOCK(map unINT32 vs, v, lit)
-			| (ZZ_RCD(rk, vs)) =>
-			    LI_BLOCK(rk2bk rk, map val2lit vs, v, lit)
-		    end
-
-		(** build up the literal structure *)
-		val lit = foldl mklit toplit allvars
-
-		val n = length exports
-		val hdr =
-		  if n = 0 then Fn.id
-		  else let val rv = mkv()
-			   val rval = VAR rv
-			   val rhdr =
-			     fn ce => SELECT(offset, root, rv, PTRt(RPT n), ce)
-
-			   fun mkhdr (v, (i, hh)) =
-			     let val nh =
-				   (case LV.Tbl.lookup m v
-				     of (ZZ_STR s) => bug "ZZ_STR in mkhdr"
-					  (* (fn ce =>
-						SELECT(i, rval, v, CPSUtil.BOGt, ce)) *)
-				      | (ZZ_RCD (rk, vs)) =>
-					  let val n = length vs
-					      val t =
-						case rk
-						 of RK_RAW64BLOCK => PTRt(FPT n)
-						  | RK_VECTOR => CPSUtil.BOGt
-						  | _ => PTRt(RPT n)
-					   in fn ce => SELECT(i, rval, v, t, ce)
-					  end)
-			      in (i+1, hh o nh)
-			     end
-			in #2 (foldr mkhdr (0, rhdr) exports)
-		       end
-	     in (lit, hdr)
-	    end (* function getInfo *)
-
-	  fun lpfn (fk, f, vl, cl, e) = (fk, f, vl, cl, loop e)
-
-	  and loop ce = (case ce
-	       of RECORD (rk, ul, v, e) => record (rk, ul, v) (loop e)
-		| SELECT (i, u, v, t, e) =>
-		    let val (nu, hh) = lpsv u
-		     in hh(SELECT(i, nu, v, t, loop e))
-		    end
-		| OFFSET _ => bug "unexpected OFFSET in loop"
-		| APP (u, ul) =>
-		    let val (nu, h1) = lpsv u
-			val (nl, h2) = lpvs ul
-		     in h1(h2(APP(nu, nl)))
-		    end
-		| FIX (fns, e) => FIX(map lpfn fns, loop e)
-		| SWITCH (u, v, es) =>
-		    let val (nu, hh) = lpsv u
-		     in hh(SWITCH(nu, v, map loop es))
-		    end
-		| BRANCH (p, ul, v, e1, e2) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(BRANCH(p, nl, v, loop e1, loop e2))
-		    end
-		| SETTER (p, ul, e) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(SETTER(p, nl, loop e))
-		    end
-		| LOOKER (p, ul, v, t, e) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(LOOKER(p, nl, v, t, loop e))
-		    end
-		| ARITH (p, ul, v, t, e) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(ARITH(p, nl, v, t, loop e))
-		    end
-(* QUESTION: should there be a case for `P.WRAP(P.INT _)` here? *)
-		| PURE (P.WRAP(P.FLOAT sz), [u], v, t, e) => wrapfloat (sz, u, v, t) (loop e)
-		| PURE (p, ul, v, t, e) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(PURE(p, nl, v, t, loop e))
-		    end
-		| RCC (k, l, p, ul, vtl, e) =>
-		    let val (nl, hh) = lpvs ul
-		     in hh(RCC(k, l, p, nl, vtl, loop e))
-		    end
-	      (* end case *))
-
-	  val newbody = loop body
-	  val (lit, hdr) = getInfo ()
-       in (hdr newbody, lit)
-      end
+(* TODO: keep an environment of available literal bindings to avoid redundant SELECTs *)
+  (* rewrite the program, removing unused variables *)
+    fun liftLiterals (env, idTbl, litVec, fltVec, body) = let
+	  val findValue = LitEnv.findValue env
+	  val findVar = LitEnv.findVar env
+	  fun getSlot id = (case WordTbl.find idTbl id
+		 of SOME slot => slot
+		  | NONE => bug("no slot for literal " ^ Word.fmt StringCvt.DEC id)
+		(* end case *))
+	(* rewrite a value *)
+	  fun rewriteValue (u, k : C.value -> C.cexp) = (case findValue u
+		 of SOME(LIT{id, value, ...}) => let
+		      val v = LambdaVar.mkLvar()
+		      val ty = cpsTypeOf value
+		      in
+			case getSlot id
+			 of LitSlot n => C.SELECT(n, litVec, v, ty, k(C.VAR v))
+			  | Real64Slot n => C.SELECT(n, fltVec, v, ty, k(C.VAR v))
+			(* end case *)
+		      end
+		  | _ => k u
+		(* end case *))
+handle ex => (say(concat["rewriteValue (", PPCps.value2str u, ", -): error\n"]); raise ex)
+	(* rewrite a list of values *)
+	  fun rewriteValues (ul, k : C.value list -> C.cexp) = let
+		fun rewrite ([], ul') = k(List.rev ul')
+		  | rewrite (u::ul, ul') = rewriteValue (u, fn u' => rewrite(ul, u'::ul'))
+		in
+		  rewrite (ul, [])
+		end
+	(* rewrite a list of record fields *)
+	  fun rewriteFields (ul, k : (C.value * C.accesspath) list -> C.cexp) = let
+		fun rewrite ([], ul') = k(List.rev ul')
+		  | rewrite ((u, acc)::ul, ul') =
+		      rewriteValue (u, fn u' => rewrite(ul, (u',acc)::ul'))
+		in
+		  rewrite (ul, [])
+		end
+handle ex => (say "rewriteFields\n"; raise ex)
+	(* rewrite a variable that might be bound to a record literal *)
+	  fun rewriteVar (x, mkOrig, k) = (case findVar x
+		 of SOME _ => k()
+		  | _ => mkOrig()
+		(* end case *))
+handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); raise ex)
+	(* process a CPS function *)
+	  fun doFun (fk, f, vl, cl, e) = (fk, f, vl, cl, doExp e)
+	(* process a CPS expression *)
+	  and doExp ce = (case ce
+		 of C.RECORD(rk, ul, v, e) =>
+		      rewriteVar (v,
+			fn () => rewriteFields (ul, fn ul' => C.RECORD(rk, ul', v, doExp e)),
+			fn () => doExp e)
+		  | C.SELECT(i, u, v, t, e) =>
+		      rewriteValue(u, fn u' => C.SELECT(i, u', v, t, doExp e))
+		  | C.OFFSET _ => bug "unexpected OFFSET in doExp"
+		  | C.APP(u, ul) =>
+		      rewriteValues (ul, fn ul' => C.APP(u, ul'))
+		  | C.FIX(fns, e) => C.FIX(map doFun fns, doExp e)
+		  | C.SWITCH(u, v, es) =>
+		      rewriteValue (u, fn u' => C.SWITCH(u', v, List.map doExp es))
+		  | C.BRANCH(p, ul, v, e1, e2) =>
+		      rewriteValues (ul, fn ul' => C.BRANCH(p, ul', v, doExp e1, doExp e2))
+		  | C.SETTER(p, ul, e) =>
+		      rewriteValues (ul, fn ul' => C.SETTER(p, ul', doExp e))
+		  | C.LOOKER(p, ul, v, t, e) =>
+		      rewriteValues (ul, fn ul' => C.LOOKER(p, ul', v, t, doExp e))
+		  | C.ARITH(p, ul, v, t, e) =>
+		      rewriteValues (ul, fn ul' => C.ARITH(p, ul', v, t, doExp e))
+		  | C.PURE(C.P.WRAP nk, [u], v, t, e) =>
+		      rewriteVar (v,
+			fn () => rewriteValue (u, fn u' => C.PURE(C.P.WRAP nk, [u'], v, t, doExp e)),
+			fn () => doExp e)
+		  | C.PURE(p, ul, v, t, e) =>
+		      rewriteValues (ul, fn ul' => C.PURE(p, ul', v, t, doExp e))
+		  | C.RCC(k, l, p, ul, vtl, e) =>
+		      rewriteValues (ul, fn ul' => C.RCC(k, l, p, ul', vtl, doExp e))
+		(* end case *))
+	  in
+	  (* process the module *)
+	    doExp body
+	  end
 
  (* the main function *)
-    fun split (fk, f, vl as [_,x], [kontTy, t as PTRt(RPT n)], body) = let
-	  val nt = PTRt(RPT (n+1))
-	  val (nbody, lit) = liftlits(body, VAR x, n)
-	  val nfn = (fk, f, vl, [kontTy, nt], nbody)
+    fun split (func as (fk, f, vl as [_,x], [kontTy, t as C.PTRt(C.RPT n)], body)) = let
+	(* new argument type has an additional argument for the literals *)
+	  val nt = C.PTRt(C.RPT(n+1))
+	  val _ = if !debugFlg
+		then (
+		  say (concat["\n==== Before Literals.liftLiterals\n"]);
+		  PPCps.printcps0 func)
+		else ()
+	  val env = identifyLiterals body
+	  val (nbody, code) = if LitEnv.isEmpty env
+		then (body, W8V.fromList[opRETURN])
+		else let
+(* REAL32: FIXME *)
+		  val (idTbl, code, nLits, nReal64Lits) = buildLiterals env
+		  val lvv = LambdaVar.mkLvar()
+		  val rvv = LambdaVar.mkLvar()
+		  val nbody = liftLiterals (env, idTbl, C.VAR lvv, C.VAR rvv, body)
+		(* add code to bind the real-literal vector (if necessary) *)
+		  val nbody = if nReal64Lits > 0
+			then C.SELECT(0, C.VAR lvv, rvv, C.PTRt(C.FPT nReal64Lits), nbody)
+			else nbody
+		(* add code to bind the literal vector *)
+		  val nbody = C.SELECT(n, C.VAR x, lvv, C.PTRt(C.RPT nLits), nbody)
+		  in
+		    (nbody, code)
+		  end
+	  val nfunc = (fk, f, vl, [kontTy, nt], nbody)
 	  in
 	    if !debugFlg
 	      then (
-		say (concat["\n[After Literals.split ...]\n"]);
-		PPCps.printcps0 nfn;
-	        say "==========\n";
-		printLits lit;
-		say "\n")
+		say (concat["==== After Literals.liftLiterals\n"]);
+		PPCps.printcps0 nfunc)
 	      else ();
-	    (nfn, litToBytes lit)
+	    (nfunc, code)
 	  end
       | split _ = bug "unexpected CPS header in split"
 
