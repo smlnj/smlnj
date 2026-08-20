@@ -162,6 +162,8 @@ structure PPCps : PPCPS =
 	    | RK_CONT => "RK_CONT"
 	    | RK_FCONT => "RK_FCONT"
 	    | RK_KNOWN => "RK_KNOWN"
+            | RK_MIXED{ptrLen,rawLen} =>
+                concat["RK_MIXED<", Int.toString ptrLen, ":", Int.toString rawLen, ">"]
 	    | RK_RAWBLOCK => "RK_RAWBLOCK"
 	  (* end case *))
 

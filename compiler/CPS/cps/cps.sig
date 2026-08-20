@@ -7,6 +7,9 @@
 signature CPS =
   sig
 
+    (* mixed-record representation *)
+    type record_rep = {ptrLen : int, rawLen : int}
+
     datatype record_kind
       = RK_VECTOR	(* vector *)
       | RK_RECORD	(* SML record/tuple *)
@@ -14,9 +17,10 @@ signature CPS =
       | RK_CONT		(* closure record for continuation *)
       | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
       | RK_KNOWN	(* closure record for known function *)
+      | RK_MIXED of record_rep	(* mixed record *)
       | RK_RAWBLOCK	(* raw data record *)
 
-    datatype pkind = VPT | RPT of int | FPT of int
+    datatype pkind = VPT | RPT of record_rep
 
   (* type info for integers: size in bits and tagged vs boxed *)
     type intty = {sz : int, tag : bool}
@@ -27,6 +31,11 @@ signature CPS =
       | FUNt		        (* function? *)
       | FLTt of int	        (* float of given size *)
       | CNTt of cty list	(* continuation *)
+
+    (* useful pointer types *)
+    val ptrTy : cty             (* == PTRt VPT *)
+    val rPtrTy : int -> cty     (* rPtrTy n == PTRt(RPT{ptrLen = n, rawLen = 0}) *)
+    val fPtrTy : int -> cty     (* fPtr n == PTRt(RPT{ptrLen = 0, rawLen = n}) *)
 
     structure P : sig
 

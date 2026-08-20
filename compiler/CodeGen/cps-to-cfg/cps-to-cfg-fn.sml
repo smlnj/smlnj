@@ -213,6 +213,8 @@ C.NUMt{sz=sz}
 		  | RECORD(CPS.RK_FCONT, flds, x, k) => allocRawRecord (flds, x, k)
 (* REAL32: FIXME *)
 		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) => allocRawRecord (flds, x, k)
+                  | RECORD(CPS.RK_MIXED rep, flds, x, k) =>
+                      allocRecord (D.makeMixedDesc rep, flds, x, bindVarIn(x, k))
 		  | RECORD(_, flds, x, k) => allocRecord (
 		      D.makeDesc (length flds, D.tag_record),
 		      flds, x, bindVarIn(x, k))

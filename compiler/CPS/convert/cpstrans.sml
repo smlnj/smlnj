@@ -111,7 +111,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                           (* we have floating-point arguments to spill *)
 			    val v = mkv()
 			    val vs = map (fn x => (x, OFFp 0)) spfvars
-			    val ct = PTRt(FPT (length vs))
+			    val ct = fPtrTy (length vs)
 			    fun fh e = RECORD(RK_RAWBLOCK, vs, v, e)
 			    in
 			      (fh, (VAR v)::spgvars, ct::spgctys)
@@ -146,7 +146,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                             fun fh e = List.foldri
                                   (fn (i, sv, e) => SELECT(i, v', sv, FLTt 64, e)) (* REAL32: FIXME *)
                                     e spfvars
-			    val ct = PTRt(FPT(List.length spfvars))
+			    val ct = fPtrTy (List.length spfvars)
 			    in
 			      (SOME v, fh, v::spgvars, ct::spgctys)
 			    end
@@ -162,7 +162,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                                   (fn (i, sv, st, e) => SELECT(i, v', sv, st, e))
                                     (fhdr e)
                                       (spgvars, spgctys)
-			    val ct = PTRt(RPT(List.length spgvars))
+			    val ct = rPtrTy(List.length spgvars)
 			    in
 			      (SOME (v, ct), gh)
 			    end

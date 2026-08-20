@@ -7,6 +7,30 @@
 structure CPS : CPS =
   struct
 
+(* TODO: the `record_kind` type mixes the issue of what the purpose of a record is
+ * with the representation decision.  I propose defining three types:
+ *
+ *    datatype record_kind = RK_RECORD | RK_VECTOR | RK_FUN | RK_CONT | RK_KNOWN
+ *
+ *    type record_rep = {ptrLen : int, rawLen : int}
+ *
+ *    datatype pkind = VPT | RPT of record_rep
+ *
+ * Then the mapping from the current record_kind to the new rep would be something like
+ *
+ *    RK_VECTOR         ==>     (RK_VECTOR, {ptrLen = <n>, rawLen = 0})
+ *    RK_RECORD         ==>     (RK_RECORD, {ptrLen = <n>, rawLen = 0})
+ *    RK_ESCAPE         ==>     (RK_FUN, {ptrLen = <n>, rawLen = 0})
+ *    RK_CONT           ==>     (RK_CONT, {ptrLen = <n>, rawLen = 0})
+ *    RK_FCONT          ==>     (RK_CONT, {ptrLen = 0, rawLen = <n>})
+ *    RK_KNOWN          ==>     (RK_KNOWN, {ptrLen = <n>, rawLen = 0})
+ *    RK_MIXED          ==>     (<kind>, {ptrLen = <n>, rawLen = <m>})
+ *    RK_RAWBLOCK       ==>     (RK_RECORD, {ptrLen = 0, rawLen = <n>})
+ *)
+
+    (* mixed-record representation *)
+    type record_rep = {ptrLen : int, rawLen : int}
+
     datatype record_kind
       = RK_VECTOR	(* vector *)
       | RK_RECORD	(* SML record/tuple *)
@@ -14,9 +38,10 @@ structure CPS : CPS =
       | RK_CONT		(* closure record for continuation *)
       | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
       | RK_KNOWN	(* closure record for known function *)
+      | RK_MIXED of record_rep	(* mixed record *)
       | RK_RAWBLOCK	(* raw data record *)
 
-    datatype pkind = VPT | RPT of int | FPT of int
+    datatype pkind = VPT | RPT of record_rep
 
   (* kinds of integers: size in bits and tagged vs boxed *)
     type intty = {sz : int, tag : bool}
@@ -27,6 +52,10 @@ structure CPS : CPS =
       | FUNt		        (* function? *)
       | FLTt of int 	        (* float of given size *)
       | CNTt of cty list	(* continuation *)
+
+    val ptrTy = PTRt VPT
+    fun rPtrTy n = PTRt(RPT{ptrLen = n, rawLen = 0})
+    fun fPtrTy n = PTRt(RPT{ptrLen = 0, rawLen = n})
 
     structure P =
       struct
