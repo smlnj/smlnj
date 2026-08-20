@@ -100,11 +100,10 @@ C.NUMt{sz=sz}
     fun looker (oper, args) = C.LOOKER{oper = oper, args = args}
 
   (* raw record with uniform fields *)
-    fun rawRecord (desc, kind, sz, n) = let
-	  val ty = {kind = kind, sz = sz}
-	  val align = sz div 8
+    fun rawRecord (desc, kind, n) = let
+	  val ty = {kind = kind, sz = 64}
 	  in
-	    TP.RAW_RECORD{desc = desc, align = align, fields = List.tabulate(n, fn _ => ty)}
+	    TP.RAW_RECORD{desc = desc, align = 8, fields = List.tabulate(n, fn _ => ty)}
 	  end
 
     fun zExt (from, to, arg) = pure (TP.EXTEND{signed=false, from=from, to=to}, [arg])
@@ -210,9 +209,11 @@ C.NUMt{sz=sz}
 			    bindVarIn(x, k)))
 		      end
 (* REAL32: FIXME *)
-		  | RECORD(CPS.RK_FCONT, flds, x, k) => allocRawRecord (flds, x, k)
+		  | RECORD(CPS.RK_FCONT, flds, x, k) =>
+                      allocRawRecord (TP.FLT, flds, x, k)
 (* REAL32: FIXME *)
-		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) => allocRawRecord (flds, x, k)
+		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) =>
+                      allocRawRecord (TP.INT, flds, x, k)
 		  | RECORD(_, flds, x, k) => allocRecord (
 		      D.makeDesc' (length flds, D.tag_record),
 		      flds, x, bindVarIn(x, k))
@@ -340,7 +341,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.WRAP(P.INT sz), [v], x, _, k) => if (sz = ity)
 			then let
 			  val desc = D.makeDesc'(1, D.tag_raw)
-			  val oper = rawRecord (desc, TP.INT, ity, 1)
+			  val oper = rawRecord (desc, TP.INT, 1)
 			  in
 			    C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
 			  end
@@ -351,7 +352,7 @@ C.NUMt{sz=sz}
 		      error ["wrap for 32-bit floats is not implemented"]
 		  | PURE(P.WRAP(P.FLOAT 64), [v], x, _, k) => let
 		      val desc = D.makeDesc'(1, D.tag_raw)
-		      val oper = rawRecord (desc, TP.FLT, 64, 1)
+		      val oper = rawRecord (desc, TP.FLT, 1)
 		      in
 			C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
 		      end
@@ -399,10 +400,10 @@ C.NUMt{sz=sz}
 		C.ALLOC(record desc, List.map getField fields, x, k)
 (* REAL32: FIXME *)
 	(* Allocate a record with raw machine-int-sized components *)
-	  and allocRawRecord (fields, x, k) = let
+	  and allocRawRecord (kind, fields, x, k) = let
 		val len = length fields
 		val desc = D.makeDesc'(len, D.tag_raw)
-		val oper = rawRecord (desc, TP.INT, ity, len)
+		val oper = rawRecord (desc, kind, len)
 		in
 		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))
 		end
