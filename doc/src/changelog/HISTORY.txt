@@ -105,6 +105,20 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-08-20]::
++
+Some improvements to the code that constructs the literals vector.
+First, the module's name has been changed from `NewLiterals` to
+`Literals`, since the old literals code has been removed from the
+compiler.  Second, the literals code previously split out real literals
+into their own vector in order to support the 64-bit alignment
+requirement for reals on 32-bit machines.  Since we no longer support
+32-bit targets, we now merge the real literals into the main literal
+vector.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-08-19]::
 +
 Modified `TransPrim` to instantiate the numeric subscript/update

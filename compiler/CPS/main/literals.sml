@@ -335,6 +335,7 @@ structure Literals : LITERALS =
 		      case rk
 		       of C.RK_VECTOR => say(concat["VECTOR ", suffix, "\n"])
 			| C.RK_RECORD => say(concat["RECORD ", suffix, "\n"])
+                        | _ => bug("unexpected record kind " ^ PPCps.rkToString rk)
 		      (* end case *);
 		      List.app (prLiteral (indent+1)) lits)
 		  | (LV_RAW v) => say(concat[
@@ -387,10 +388,6 @@ structure Literals : LITERALS =
 	val numLits : t -> int
       (* return true if there are no literals defined in the environment *)
 	val isEmpty : t -> bool
-      (* return true if the environment has unbound 64-bit real literals (e.g.,
-       * the arguments to arithmetic operations).
-       *)
-	val hasReal64 : t -> bool
       (* return a list of all of the literals defined in the environment (not counting
        * the IMMED literals, which are not recorded in the environment)
        *)
@@ -443,20 +440,15 @@ structure Literals : LITERALS =
 	type var_info = bool * literal
 
 	datatype t = LE of {
-	    hasReal64Lits : bool ref,		(* true if there are unbound real64 literals *)
 	    lits : literal LTbl.hash_table,	(* table of unique literals in the module *)
 	    vMap : var_info LV.Tbl.hash_table	(* map from variables to the literals that they *)
 						(* are bound to *)
 	  }
 
 	fun new () = LE{
-		hasReal64Lits = ref false,
 		lits = LTbl.mkTable(32, Fail "LitTbl"),
 		vMap = LV.Tbl.mkTable(32, Fail "VarTbl")
 	      }
-
-	fun setHasReal64 (LE{hasReal64Lits, ...}) = (hasReal64Lits := true)
-	fun hasReal64 (LE{hasReal64Lits, ...}) = !hasReal64Lits
 
 	fun add lits = let
 	      val find = LTbl.find lits
@@ -549,7 +541,7 @@ structure Literals : LITERALS =
 		      (* end case *))
 		 | (C.LABEL _) => bug "unexpected LABEL"
 		 | (C.NUM n) => ()
-		 | (C.REAL r) => (setHasReal64 env; useLit(addReal r))
+		 | (C.REAL r) => useLit(addReal r)
 		 | (C.STRING s) => useLit(addString s)
 		 | C.VOID => ()
 	      end
@@ -652,11 +644,6 @@ structure Literals : LITERALS =
 	    env
 	  end
 
-  (* literal values are either in the main literal vector or in the vector
-   * of real literals.
-   *)
-    datatype lit_loc = LitSlot of int | Real64Slot of int
-
   (* build the representation of the literals; return a table mapping literal IDs
    * to their locations, the bytecode for building the literal vector, and a boolean
    * that is true if there is a real-literal vector.
@@ -679,9 +666,7 @@ structure Literals : LITERALS =
 		end
 	  val numNamedLits = List.length lits
 	(* tracking the location of literals in the literal/real vector *)
-	  val nLits = ref(if LitEnv.hasReal64 env then 1 else 0)
-	  val nReal64Lits = ref 0
-	  val real64Lits = ref []
+	  val nLits = ref 0
 	  val litIdTbl = WordTbl.mkTable(numNamedLits, Fail "litIdTbl")
 	  val insertLit = let
 		val insert = WordTbl.insert litIdTbl
@@ -689,17 +674,7 @@ structure Literals : LITERALS =
 		  fn id => let val slot = !nLits
 		      in
 			nLits := slot + 1;
-			insert (id, LitSlot slot)
-		      end
-		end
-	  val insertReal64 = let
-		val insert = WordTbl.insert litIdTbl
-		in
-		  fn (id, rval) => let val slot = !nReal64Lits
-		      in
-			nReal64Lits := slot + 1;
-			insert (id, Real64Slot slot);
-			real64Lits := real64ToBytes rval :: !real64Lits
+			insert (id, slot)
 		      end
 		end
 	(* table to track shared literals (indexed by literal ID) *)
@@ -715,7 +690,9 @@ structure Literals : LITERALS =
 	  val findSharedLit = WordTbl.find sharedLitTbl
 	(* generate code for a literal *)
 	  fun genLiteral (d, lit as LIT{id, value, ...}) = let
-		fun genLV (d, LV_REAL _) = bug "unexpected embedded LV_REAL"
+		fun genLV (d, LV_REAL{ty=64, rval}) = (
+(* REAL32: FIXME *)
+                      depth(d+1); encRAW(buf, real64ToBytes rval))
 		  | genLV (d, LV_STR s) = (
 		      encSTR(buf, size s); W8B.addVec(buf, Byte.stringToBytes s))
 		  | genLV (d, LV_RECORD(rk, lits)) = let
@@ -730,6 +707,7 @@ structure Literals : LITERALS =
 		      end
 		  | genLV (d, LV_RAW v) = (depth(d+1); encRAW(buf, v))
 		  | genLV (d, LV_RAW64 v) = (depth(d+1); encRAW64(buf, v))
+                  | genLV _ = bug "bogus literal value"
 		and genLit (d, lit as LIT{id, value, ...}) = if litIsShared lit
 		      then ( (* shared literal, so either load or save it *)
 			case findSharedLit id
@@ -742,31 +720,16 @@ structure Literals : LITERALS =
 		  | genLit (d, IMMED{ty={sz=64, ...}, ival}) = (depth(d+1); encINT64 (buf, ival))
 		  | genLit _ = bug "unsupported IMMED type"
 		in
-		  case value
-		   of LV_REAL{ty=64, rval} => insertReal64(id, rval)
-		    | _ => (insertLit id; genLit (d, lit))
-		  (* end case *)
+		  insertLit id; genLit (d, lit)
 		end
 	    | genLiteral _ = bug "unexpected top-level IMMED literal"
 	(* add literals to buffer *)
 	  val _ = List.appi genLiteral lits
-	(* generate the code to create the real-literal vector (if necessary) *)
-	  val (rcode, litVecSz) = (case List.rev (!real64Lits)
-		 of [] => (W8V.fromList[], numNamedLits)
-		  | rlits => let
-		      val rbuf = W8B.new(8 * !nReal64Lits + 5)
-		      in
-			depth (1);
-			encRAW64 (rbuf, W8V.concat rlits);
-			(W8B.contents rbuf, numNamedLits + 1 - !nReal64Lits)
-		      end
-		(* end case *))
 	(* add the instruction to build the literal vector and to return the result *)
-	  val _ = (encRECORD(buf, litVecSz); W8B.add1(buf, opRETURN))
+	  val _ = (encRECORD(buf, numNamedLits); W8B.add1(buf, opRETURN))
 	(* create literal program *)
 	  val code = W8V.concat[
 		  headerToBytes {maxstk = !stkDepth, maxsaved = WordTbl.numItems sharedLitTbl},
-		  rcode,
 		  W8B.contents buf
 		]
 	  in
@@ -776,8 +739,7 @@ structure Literals : LITERALS =
 		      say(concat["LET ", LV.lvarName x, " = "]);
 		      case WordTbl.find litIdTbl id
 		       of NONE => say "<no slot>\n"
-			| SOME(LitSlot n) => say(concat["literal-", Int.toString n, "\n"])
-			| SOME(Real64Slot n) => say(concat["real64-", Int.toString n, "\n"])
+			| SOME n => say(concat["literal-", Int.toString n, "\n"])
 		      (* end case *))
 		fun prByte (i, w) = (
 		      say(StringCvt.padLeft #"0" 2 (Word8.toString w));
@@ -796,12 +758,12 @@ structure Literals : LITERALS =
 		  say "==========\n"
 		end
 	      else ();
-	    (litIdTbl, code, litVecSz, !nReal64Lits)
+	    (litIdTbl, code, numNamedLits)
 	  end
 
 (* TODO: keep an environment of available literal bindings to avoid redundant SELECTs *)
   (* rewrite the program, removing unused variables *)
-    fun liftLiterals (env, idTbl, litVec, fltVec, body) = let
+    fun liftLiterals (env, idTbl, litVec, body) = let
 	  val findValue = LitEnv.findValue env
 	  val findVar = LitEnv.findVar env
 	  fun getSlot id = (case WordTbl.find idTbl id
@@ -814,10 +776,7 @@ structure Literals : LITERALS =
 		      val v = LambdaVar.mkLvar()
 		      val ty = cpsTypeOf value
 		      in
-			case getSlot id
-			 of LitSlot n => C.SELECT(n, litVec, v, ty, k(C.VAR v))
-			  | Real64Slot n => C.SELECT(n, fltVec, v, ty, k(C.VAR v))
-			(* end case *)
+			C.SELECT(getSlot id, litVec, v, ty, k(C.VAR v))
 		      end
 		  | _ => k u
 		(* end case *))
@@ -896,14 +855,9 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 		then (body, W8V.fromList[opRETURN])
 		else let
 (* REAL32: FIXME *)
-		  val (idTbl, code, nLits, nReal64Lits) = buildLiterals env
+		  val (idTbl, code, nLits) = buildLiterals env
 		  val lvv = LambdaVar.mkLvar()
-		  val rvv = LambdaVar.mkLvar()
-		  val nbody = liftLiterals (env, idTbl, C.VAR lvv, C.VAR rvv, body)
-		(* add code to bind the real-literal vector (if necessary) *)
-		  val nbody = if nReal64Lits > 0
-			then C.SELECT(0, C.VAR lvv, rvv, C.PTRt(C.FPT nReal64Lits), nbody)
-			else nbody
+		  val nbody = liftLiterals (env, idTbl, C.VAR lvv, body)
 		(* add code to bind the literal vector *)
 		  val nbody = C.SELECT(n, C.VAR x, lvv, C.PTRt(C.RPT nLits), nbody)
 		  in
