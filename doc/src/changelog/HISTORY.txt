@@ -107,6 +107,14 @@ Here is an update to the entry
 //--------------------------------------------------------------------
 [2026-08-20]::
 +
+The `InvokeGC` module has been rewritten to use mixed records to
+preserve live vars across GC calls.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-20]::
++
 Removed the redundant `LV_RAW64` constructor from the literal-lifting
 code and renamed the `NewLiterals` structure as `Literals`.
 +
