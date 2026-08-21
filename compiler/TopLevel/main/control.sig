@@ -1,6 +1,6 @@
 (* control.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -8,6 +8,7 @@
 signature CGCONTROL =
   sig
     val closureStrategy : int ref
+    val mixedClosures : bool ref
     val cpsopt : string list ref		(* list of cpsopt phases *)
     val rounds : int ref
     val betacontract : bool ref
@@ -50,7 +51,6 @@ signature CGCONTROL =
     val ifidiom : bool ref
     val comparefold : bool ref
     val debugLits : bool ref
-    val newLiterals : bool ref
     val debugRep : bool ref
     val deadup : bool ref
     val printit : bool ref

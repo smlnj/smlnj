@@ -1,10 +1,11 @@
 (* control.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
 (* Code generation controls (including some used in FLINT?) *)
+(* TODO: split Control_CG into two modules: one for CPS and one for CFG/LLVM *)
 structure Control_CG : CGCONTROL =
   struct
     val priority = [10, 11, 2]
@@ -40,7 +41,8 @@ structure Control_CG : CGCONTROL =
 	    r
 	  end
 
-    val closureStrategy = new (i, "closure-strategy", "?", 0)	(* see CPS/clos/closure.sml *)
+    val closureStrategy = new (i, "closure-strategy", "specify the closure strategy", 0)	(* see CPS/clos/closure.sml *)
+    val mixedClosures = new (b, "mixed-closures", "use mixed records for closures", true)
     val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [
 	    "first_contract", "eta", "zeroexpand", "vn", "check",
             "last_contract"
@@ -90,7 +92,6 @@ structure Control_CG : CGCONTROL =
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)
-    val newLiterals = new (b, "new-literals", "use new literal representation", false)
     val debugRep = new (b, "debug-rep", "?", false)
     val deadup = new (b, "deadup", "?", true)
     val printit = new (b, "printit", "whether to show CPS", false)
@@ -103,7 +104,6 @@ structure Control_CG : CGCONTROL =
     val debugSpill = new (b, "debug-cps-spill", "enable CPS spill debugging", false)
     val debugSpillInfo = new (b, "debug_cps_spill_info", "enable CPS spill info", false)
   end (* structure Control_CG *)
-
 
 structure Control : CONTROL =
   struct
