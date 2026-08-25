@@ -743,7 +743,7 @@ PVT ml_val_t MajorGC_ForwardObj (heap_t *heap, aid_t maxAid, ml_val_t v, aid_t i
     int         objc = EXTRACT_OBJC(id);
     arena_t	*arena;
 
-    switch (EXTRACT_OBJC(id)) {
+    switch (objc) {
       case OBJC_record:
       case OBJC_mixed:
       {
@@ -764,7 +764,7 @@ PVT ml_val_t MajorGC_ForwardObj (heap_t *heap, aid_t maxAid, ml_val_t v, aid_t i
             break;
 	  default:
 	    Die ("bad %s tag %d, obj = %p, desc = %p",
-		(EXTRACT_OBJC(id) == OBJC_record) ? "record" : "mixed-record",
+		(objc == OBJC_record) ? "record" : "mixed-record",
                 GET_TAG(desc), obj, desc);
 	} /* end of switch */
 	arena = heap->gen[EXTRACT_GEN(id)-1]->arena[OBJC_TO_INDEX(objc)];
