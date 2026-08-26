@@ -645,7 +645,8 @@ fun constrStr(transp, sign, str, strDec, strExp, evOp, tdepth, entEnv, rpath,
    in if transp
       then (A.SEQdec[strDec, matchedDec], matchedStr, matchedExp)
       else (* instantiate the signature (opaque match) *)
-	   let val STR {rlzn=matchedRlzn, access, prim, ...} = matchedStr
+      (case matchedStr
+         of STR {rlzn=matchedRlzn, access, prim, ...} => let
 	       val {rlzn=abstractRlzn, ...} =
 		   INS.instAbstr {sign=sign, entEnv=entEnv, rlzn=matchedRlzn,
 				  rpath=rpath, region=region, compInfo=compInfo}
@@ -653,6 +654,8 @@ fun constrStr(transp, sign, str, strDec, strExp, evOp, tdepth, entEnv, rpath,
 	       val _ = debugmsg "<<< constrStr[transp=false]"
             in (A.SEQdec[strDec, matchedDec], abstractStr, matchedExp)
 	   end
+          | ERRORstr => (A.SEQdec[strDec, matchedDec], ERRORstr, matchedExp)
+        (* end case *))
   end (* fun constrStr *)
 
 
