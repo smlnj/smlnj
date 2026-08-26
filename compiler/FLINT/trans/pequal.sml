@@ -337,7 +337,7 @@ structure PEqual : PEQUAL =
 			      | expandRECdcon z = z
 			    in
 			      case map expandRECdcon dcons0
-			       of [{rep=REF,...}] => atomeq(tyc, ty)
+			       of [{rep=DA.REF,...}] => atomeq(tyc, ty)
 				| dcons => (
 				    find ty
 				      handle Notfound => let
