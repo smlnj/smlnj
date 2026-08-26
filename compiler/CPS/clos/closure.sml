@@ -1074,7 +1074,7 @@ fun layer(env,cfree,rk,fk,ccl) =
  *	1 = flat without aliasing
  *	2 = flat with aliasing
  *	3 = linked without aliasing
- *	4 = flat with aliasing
+ *	4 = linked with aliasing
  *)
 fun closureBoxed(cn, fns, free, fk, ccl, env) =
   let val rk = boxedKind(fk)
