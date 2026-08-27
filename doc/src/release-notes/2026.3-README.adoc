@@ -52,6 +52,8 @@ FILES::
 
 === SML/NJ Library
 
+A number of library bugs were fixed.
+
 === Successor ML
 
 === ML-LPT
@@ -80,6 +82,16 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/367[Fix the pattern match to reference `REF` dcon]
 | [.bugid]#368#
 | {issue-base}/368[compiler throws an error upon invalid opaque signature match]
+| [.bugid]#378#
+| {issue-base}/378[`UTF8.map` does not do anything]
+| [.bugid]#380#
+| {issue-base}/380[Rand48's incorrect implementation results in periodic results]
+| [.bugid]#390#
+| {issue-base}/390[line break cutoff is one character too strict in PP library]
+| [.bugid]#391#
+| {issue-base}/391[pretty-printing `maxDepth` is controlled by `maxIndent`]
+| [.bugid]#392#
+| {issue-base}/392[ANSI background color styles are not properly popped]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

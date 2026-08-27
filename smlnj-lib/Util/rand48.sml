@@ -32,10 +32,6 @@ structure Rand48 : RAND48 =
 
     (* mask low 48 bits *)
     val mask48 = W64.<<(0w1, 0w48) - 0w1
-    (* mask low 32 bits *)
-    val mask32 = W64.<<(0w1, 0w32) - 0w1
-    (* mask low 31 bits *)
-    val mask31 = W64.<<(0w1, 0w31) - 0w1
 
     (* IEEE exponent bias *)
     val ieeeExpBias = Word64.<<(0wx3ff, 0w52)
@@ -70,13 +66,9 @@ structure Rand48 : RAND48 =
 
     fun drand () = mkReal (randStep buffer)
 
-    fun lrand () = Word.fromLarge (W64.toLarge(W64.andb(randStep buffer, mask31)))
+    fun lrand () = Word.fromLarge(W64.toLarge(W64.>>(randStep buffer, 0w17)))
 
     (* returns a random signed 32-bit number (i.e., in the range -2^31..2^31-1) *)
-    fun mrand () = let
-          val w = W64.andb(randStep buffer, mask32)
-          in
-            W64.toIntX(W64.~>>(W64.<<(w, 0w32), 0w32))
-          end
+    fun mrand () = W64.toIntX(W64.~>>(W64.<<(randStep buffer, 0w16), 0w32))
 
   end

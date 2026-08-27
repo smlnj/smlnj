@@ -5,8 +5,19 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-08-27]
+        * Fix for Issue #381 (Rand48's incorrect implementation results in
+          periodic results)
+        * Fix for Issue #390 (line break cutoff is one character too strict
+          in PP library)
+        * Fix for Issue #391 (pretty-printing `maxDepth` is controlled by
+          `maxIndent`)
+        * Fix for Issue #392 (ANSI background color styles are not properly
+          popped)
+
 [2026-08-26]
 	Fix for Issue #378 (`UTF8.map` does not do anything)
+
 
 --------------------------------------------------------------------------------
 SML/NJ 2026.2
