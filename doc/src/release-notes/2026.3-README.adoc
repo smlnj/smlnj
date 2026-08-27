@@ -85,7 +85,11 @@ Here is a list of the issues and pull requests that are closed with this release
 | [.bugid]#378#
 | {issue-base}/378[`UTF8.map` does not do anything]
 | [.bugid]#380#
-| {issue-base}/380[Rand48's incorrect implementation results in periodic results]
+| {issue-base}/380[`CharMap.mkCharMap` creates a too-small array]
+| [.bugid]#381#
+| {issue-base}/381[Rand48's incorrect implementation results in periodic results]
+| [.bugid]#382#
+| {issue-base}/382[`HashSetFn.filter` does not reset the number of elements if it removes everything]
 | [.bugid]#390#
 | {issue-base}/390[line break cutoff is one character too strict in PP library]
 | [.bugid]#391#

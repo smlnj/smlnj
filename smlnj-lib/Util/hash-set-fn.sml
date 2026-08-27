@@ -372,7 +372,7 @@ functor HashSetFn (Key : HASH_KEY) : MONO_HASH_SET =
 
     fun filter pred (SET{table=ref tbl, nItems}) = let
 	  val len = Array.length tbl
-	  fun remove (_, 0) = ()
+	  fun remove (_, 0) = nItems := 0
 	    | remove (i, n) = if (i < len)
 		then (case Array.sub(tbl, i)
 		   of NIL => remove(i+1, n)

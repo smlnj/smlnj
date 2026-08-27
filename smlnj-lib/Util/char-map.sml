@@ -23,7 +23,7 @@ structure CharMap :> CHAR_MAP =
    *)
     fun mkCharMap {default, bindings} = let
 	(* this array maps characters to indices in the valMap *)
-	  val arr = Array.array (Char.maxOrd, default)
+	  val arr = Array.array (Char.maxOrd+1, default)
 	  fun doBinding (s, v) =
 		CharVector.app (fn c => update(arr, Char.ord c, v)) s
 	  in
