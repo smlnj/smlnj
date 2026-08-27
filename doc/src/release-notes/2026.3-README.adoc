@@ -1,6 +1,4 @@
-// A template for creating release notes for a version
-//
-:version: @VERSION@
+:version: 2026.3
 :date: @DATE@
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
@@ -80,6 +78,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/366[Fix the printing of vector patterns]
 | [.bugid]#367#
 | {pull-base}/367[Fix the pattern match to reference `REF` dcon]
+| [.bugid]#368#
+| {issue-base}/368[compiler throws an error upon invalid opaque signature match]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
