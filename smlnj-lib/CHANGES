@@ -2,6 +2,13 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
+SML/NJ 2026.3
+-------------------
+
+[2026-08-26]
+	Fix for Issue #378 (`UTF8.map` does not do anything)
+
+--------------------------------------------------------------------------------
 SML/NJ 2026.2
 -------------------
 

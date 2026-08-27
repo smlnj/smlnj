@@ -278,7 +278,7 @@ structure UTF8 :> UTF8 =
     fun map f s = let
 	  fun mapf (ss, chrs) = (case getWCFromSubstring ss
 		 of NONE => String.implodeRev chrs
-		  | SOME(wc, ss) => mapf (ss, List.revAppend(encode'(wc, []), chrs))
+		  | SOME(wc, ss) => mapf (ss, List.revAppend(encode'(f wc, []), chrs))
 		(* end case *))
 	  in
 	    mapf (SS.full s, [])
