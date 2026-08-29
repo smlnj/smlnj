@@ -316,13 +316,13 @@ functor ListMapFn (K : ORD_KEY) :> ORD_MAP where type Key.ord_key = K.ord_key =
    * are checked in key order.
    *)
     fun all pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' ((_, x)::r) = pred x andalso all' r
 	  in
 	    all'
 	  end
     fun alli pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' (arg::r) = pred arg andalso all' r
 	  in
 	    all'
