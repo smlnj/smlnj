@@ -103,7 +103,7 @@ structure IntListMap :> ORD_MAP where type Key.ord_key = Int.int =
 	  end
 
     fun findAndRemove (l, key) = let
-	  fun f (_, []) = raise LibBase.NotFound
+	  fun f (_, []) = NONE
 	    | f (prefix, (elem as (key', x)) :: r) =
                   if (key' < key) then f(elem :: prefix, r)
                   else if (key' = key) then SOME(List.revAppend(prefix, r), x)
