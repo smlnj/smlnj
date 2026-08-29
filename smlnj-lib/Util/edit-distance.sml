@@ -39,8 +39,8 @@ structure EditDistance : sig
           val nb = size b
           (* [0..na]x[0..nb] array of costs *)
           val d = Array.array((na+1)*(nb+1), ~1)
-          fun get (i, j) = arraySub(d, i*nb + j)
-          fun set (i, j, k) = arrayUpdate(d, i*nb + j, k)
+          fun get (i, j) = arraySub(d, i*(nb+1) + j)
+          fun set (i, j, k) = arrayUpdate(d, i*(nb+1) + j, k)
           (* compute min cost for position [i,j], where `cost` is the cost
            * of replacement at position [i,j].  Transposition cost is handled
            * separately.
