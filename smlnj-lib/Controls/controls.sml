@@ -63,7 +63,7 @@ structure Controls : CONTROLS =
     fun mkOptionFlag {ctl=Ctl{get, set, help, ...}, short, long} = {
 	    short = short,
 	    long = (case long of NONE => [] | SOME opt => [opt]),
-	    desc = GetOpt.NoArg(set (SOME(not (get ())))),
+	    desc = GetOpt.NoArg(fn () => set (SOME(not (get ()))) ()),
 	    help = help
 	  }
 
