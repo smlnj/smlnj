@@ -426,6 +426,7 @@ structure Date : DATE =
 			  | SOME(#"y", ss') => continue(2, ss')
 			  | SOME(#"Y", ss') => continue(4, ss')
 			  | SOME(#"Z", ss') => continue(3, ss')
+			  | SOME(#"%", ss') => continue(1, ss')
 			  | SOME(c, ss') => (1, SS.full(String.str c), ss')
 			(* end case *)
 		      end
