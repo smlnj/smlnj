@@ -282,7 +282,7 @@ structure Format : FORMAT =
 			  then doRealSign false ^ "inf"
 			  else "nan"
 		    | (_, LEFT(w, arg)) =>
-			StringCvt.padLeft #" " w (doField (flags, wid, ty, arg))
+			StringCvt.padRight #" " w (doField (flags, wid, ty, arg))
 		    | (_, RIGHT(w, arg)) =>
 			StringCvt.padRight #" " w (doField (flags, Wid w, ty, arg))
 		    | _ => raise BadFmtList
