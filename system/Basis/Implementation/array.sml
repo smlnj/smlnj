@@ -40,6 +40,7 @@ structure Array : ARRAY =
 
     fun tabulate (0, _) = InlineT.PolyArray.newArray0()
       | tabulate (n, f : int -> 'a) : 'a array =
+          if InlineT.Int.ltu(maxLen, n) then raise Size else
           let val a = array(n, f 0)
               fun tab i =
                 if (i < n) then (InlineT.PolyArray.update(a, i, f i);
