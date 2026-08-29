@@ -128,15 +128,12 @@ functor Hash2TableFn (
 		      | rest => HTRep.B(h2, k2, (k1, v), rest)
 		    (* end case *))
 	  in
-	    case (look1 (Array.sub (arr1, i1)), look2 (Array.sub (arr2, i2)))
-	     of (HTRep.NIL, HTRep.NIL) => ()
-	      | (b1, b2) => (
-		(* NOTE: both b1 and b2 should be non-nil, since we should
-		 * have replaced an item in both tables.
-		 *)
-		  Array.update(arr1, i1, b1);
-		  Array.update(arr2, i2, b2))
-	    (* end case *)
+	    (case look1 (Array.sub (arr1, i1))
+	      of HTRep.NIL => ()
+	       | b1 => Array.update(arr1, i1, b1));
+	    (case look2 (Array.sub (arr2, i2))
+	      of HTRep.NIL => ()
+	       | b2 => Array.update(arr2, i2, b2))
 	  end
 
   (* return true, if the key is in the domain of the table *)
