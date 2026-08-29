@@ -164,7 +164,7 @@ structure CharVectorSlice :> MONO_VECTOR_SLICE
 		  end
 	    in
 	      if (n <= len)
-		then SOME(mkVec(), SS.extract(base, start', NONE))
+		then SOME(mkVec(), SS.extract(base, start', SOME(len -- n)))
 		else NONE
 	    end
 
