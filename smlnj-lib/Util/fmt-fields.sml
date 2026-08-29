@@ -193,7 +193,7 @@ structure FmtFields : sig
 		      zero_pad = false, base = false, large = false
 		    })
 		end
-	  val (wid, fmtStr) = if (Char.isDigit(valOf(SS.first fmtStr)))
+	  val (wid, fmtStr) = if (case SS.first fmtStr of SOME c => Char.isDigit c | NONE => raise BadFormat)
 		then let
 		  val (n, fmtStr) = valOf (decToInt SS.getc fmtStr)
 		  in (Wid n, fmtStr) end
