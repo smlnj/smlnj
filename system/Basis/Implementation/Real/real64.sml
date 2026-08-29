@@ -242,7 +242,12 @@ structure Real64Imp : REAL =
 
     fun realMod x = #frac (split x)
 
-    fun rem(x,y) = y * #frac(split(x/y))
+    fun rem (x, y) =
+	  if isNan x orelse isNan y orelse Bool.not(isFinite x) orelse (y == 0.0)
+	    then Real64Values.posNaN
+	  else if Bool.not(isFinite y)
+	    then x
+	    else y * #frac(split(x/y))
 
     fun checkFloat x = if x>negInf andalso x<posInf then x
                        else if isNan x then raise General.Div
