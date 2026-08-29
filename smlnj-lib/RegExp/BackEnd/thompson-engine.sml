@@ -285,10 +285,10 @@ structure ThompsonEngine : REGEXP_ENGINE =
                   add (stateList, id)
                 end
           (* get the list of start states by performing epsilon moves *)
-	  fun startStates strm = let
+	  fun startStates (isFirst, strm) = let
 		val stamp' = incr()
 		in
-		  addState (true, strm, stamp', [], start)
+		  addState (isFirst, strm, stamp', [], start)
 		end
           (* is the accepting state in the current set of states? *)
 	  fun isMatch stamp = (Array.sub(lastStamp, 0) = stamp)
@@ -373,7 +373,7 @@ end;
                               (* end case *)
                             end
                       (* end case *))
-                val nfaStart = startStates strm
+                val nfaStart = startStates (isFirst, strm)
                 val lastMatch = if isMatch(!stamp)
                       then SOME(0, strm)
                       else NONE
