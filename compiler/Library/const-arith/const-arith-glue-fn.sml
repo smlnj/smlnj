@@ -42,5 +42,3 @@ functor ConstArithGlueFn (
     open S U B
 
   end
-
-
