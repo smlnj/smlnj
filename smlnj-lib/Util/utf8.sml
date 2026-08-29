@@ -314,7 +314,7 @@ structure UTF8 :> UTF8 =
 
     fun exists pred s = let
 	  fun existsf ss = (case getWCFromSubstring ss
-		 of NONE => true
+		 of NONE => false
 		  | SOME(wc, ss) => pred wc orelse existsf ss
 		(* end case *))
 	  in
