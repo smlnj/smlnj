@@ -131,11 +131,12 @@ structure Substring :> SUBSTRING
     fun isSuffix s1 (SS(s2, i2, n2)) =
 	PreString.isPrefix (s1, s2, i2 + n2 - stringSize s1, n2)
     fun isSubstring s = let
+	val slen = stringSize s
 	val stringsearch = PreString.kmp s
 	fun search (SS (s', i, n)) = let
 	    val epos = i + n
 	in
-	    stringsearch (s', i, epos) < epos
+	    stringsearch (s', i, epos) + slen <= epos
 	end
     in
 	search
