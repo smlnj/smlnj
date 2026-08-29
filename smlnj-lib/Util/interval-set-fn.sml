@@ -50,7 +50,7 @@ functor IntervalSetFn (D : INTERVAL_DOMAIN) : INTERVAL_SET =
 		  | EQUAL => (a, y)::r
 		  | GREATER => (case D.compare(a, y)
 		       of GREATER => if (D.isSucc(y, a))
-			    then (x, b) :: r
+			    then ins(x, b, r)
 			    else (x, y) :: ins(a, b, r)
 			| EQUAL => ins(x, b, r)
 			| LESS => (case D.compare(b, y)
@@ -76,7 +76,9 @@ functor IntervalSetFn (D : INTERVAL_DOMAIN) : INTERVAL_SET =
 		  | EQUAL => (a, y)::r
 		  | GREATER => (case D.compare(a, y)
 		       of GREATER => if (D.isSucc(y, a))
-			    then (x, a) :: r
+			    then (case ins(a, r)
+			       of (_, y')::r' => (x, y')::r'
+				| [] => raise Fail "impossible")
 			    else (x, y) :: ins(a, r)
 			| _ => (x, y)::r
 		      (* end case *))
