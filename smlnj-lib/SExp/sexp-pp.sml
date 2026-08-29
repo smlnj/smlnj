@@ -16,6 +16,14 @@ structure SExpPP : sig
     structure PP = TextIOPP
     structure F = Format
 
+    fun fmtFloat value = let
+	  val s = F.format "%g" [F.REAL value]
+	  in
+	    if CharVector.exists (fn c => (c = #".") orelse (c = #"e") orelse (c = #"E")) s
+	      then s
+	      else s ^ ".0"
+	  end
+
     fun output (strm, sexp) = let
 	  val str = PP.string strm
 	  fun sp () = PP.space strm 1
@@ -36,7 +44,7 @@ structure SExpPP : sig
 	  and ppVal (S.SYMBOL value) = str (Atom.toString value)
 	    | ppVal (S.BOOL value) = str (if value then "#t" else "#f")
 	    | ppVal (S.INT value) = str (F.format "%d" [F.LINT value])
-	    | ppVal (S.FLOAT value) = str (F.format "%g" [F.REAL value])
+	    | ppVal (S.FLOAT value) = str (fmtFloat value)
 	    | ppVal (S.STRING value) = str (SExpStringUtil.toString value)
 	    | ppVal (S.QUOTE value) = (str "'"; ppVal value)
 	    | ppVal (S.LIST values) = ppList values
