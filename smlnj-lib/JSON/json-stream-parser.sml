@@ -560,9 +560,18 @@ structure JSONStreamParser :> sig
                               | (#"7", src) => scanF (src, 7::fDigits)
                               | (#"8", src) => scanF (src, 8::fDigits)
                               | (#"9", src) => scanF (src, 9::fDigits)
-                              | (#"e", src) => scanExp (src, wDigits, fDigits)
-                              | (#"E", src) => scanExp (src, wDigits, fDigits)
-                              | _ => mkFloat (isNeg, wDigits, fDigits, 0, src)
+                              | (#"e", src) =>
+                                  if null fDigits
+                                    then error' (ctx, startSrc, InvalidNumber)
+                                    else scanExp (src, wDigits, fDigits)
+                              | (#"E", src) =>
+                                  if null fDigits
+                                    then error' (ctx, startSrc, InvalidNumber)
+                                    else scanExp (src, wDigits, fDigits)
+                              | _ =>
+                                  if null fDigits
+                                    then error' (ctx, startSrc, InvalidNumber)
+                                    else mkFloat (isNeg, wDigits, fDigits, 0, src)
                             (* end case *))
                       in
                         scanF (src, [])
