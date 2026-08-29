@@ -1,6 +1,6 @@
-(* new-literals.sml
+(* literals.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This file implements support for heap-allocated literals.  Our approach
@@ -10,6 +10,12 @@
  * The implementation of the bytecode interpreter for the literal language
  * is in base/runtime/gc/build-literals.c.  A description of the bytecode
  * language is in dev-notes/new-literals.md.
+ *
+ * TODO: this code currently splits out real literals into their own vector
+ * that is then included in the main literal vector.  The reason for this
+ * representation was because of the 64-bit alignment requirement for reals
+ * on 32-bit machines.  Since we no longer support 32-bit systems, we can
+ * merge the real literals into the main literal vector using a mixed record.
  *)
 
 signature LITERALS =
