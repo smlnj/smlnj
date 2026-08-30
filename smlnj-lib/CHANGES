@@ -7,6 +7,7 @@ SML/NJ 2026.3
 
 [2026-08-27]
         * Fix for Issue #370 (The SExp parser re-parses top-level quoted symbols)
+        * Fix for Issue #371 (SExp parser parses negative numbers as symbols)
         * Fix for Issue #380 (`CharMap.mkCharMap` creates a too-small array)
         * Fix for Issue #381 (Rand48's incorrect implementation results in
           periodic results)
@@ -19,7 +20,6 @@ SML/NJ 2026.3
         * Fix for Issue #392 (ANSI background color styles are not properly
           popped)
         * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
-        * Fix for Issue # ()
         * Fix for Issue # ()
 
 [2026-08-27]

@@ -52,8 +52,6 @@
 <INITIAL>[ \t\n\r]+		=> ( T.WHITE );
 <INITIAL>";"[^\n\r]*[\n\r]+	=> ( skip() (* comment *));
 
-<INITIAL>{ident}		=> ( T.SYMBOL (yytext) );
-
 <INITIAL>"'"			=> ( T.QUOTE );
 <INITIAL>"("			=> ( T.DELIM (T.PAREN, T.OPEN) );
 <INITIAL>")"			=> ( T.DELIM (T.PAREN, T.CLOSE) );
@@ -87,6 +85,8 @@
 <INITIAL>{int}{frac}		=> ( float yytext );
 <INITIAL>{int}{exp}		=> ( float yytext );
 <INITIAL>{int}{frac}{exp}	=> ( float yytext );
+
+<INITIAL>{ident}		=> ( T.SYMBOL (yytext) );
 
 (* string values follow the syntax of Scheme as described in
  *
