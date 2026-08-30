@@ -61,7 +61,7 @@ structure ParserComb : PARSER_COMB =
 
     fun skipBefore pred p getc strm = let
 	  fun skip' strm = (case getc strm
-		 of NONE => NONE
+		 of NONE => p getc strm
 		  | SOME(c, strm') =>
 		      if (pred c) then skip' strm' else p getc strm
 		(* end case *))
