@@ -403,6 +403,7 @@ structure CoreIntInf :> sig
 	     digits = natmul (#digits x, #digits y) }
 
     val one = BI { negative = false, digits = [0w1] }
+    val negOne = BI { negative = true, digits = [0w1] }
     val zero = BI { negative = false, digits = [] }
     fun posi digits = BI { digits = digits, negative = false }
     fun negi digits = BI { digits = digits, negative = true }
@@ -576,13 +577,25 @@ structure CoreIntInf :> sig
 	       end
 
     fun pow (_, 0) = abstract (BI { negative = false, digits = [0w1] })
-      | pow (i, n) = let
+      | pow (i, j) = if InLine.int63_lt(j, 0)
+          then (case concrete i
+             of BI{negative=false, digits=[0w1]} => abstract one
+              | BI{digits=[], ...} => raise Assembly.Div
+              | BI{negative=true, digits=[0w1]} =>
+                  if InLine.int63_eql(InLine.int63_andb(j, 1), 0)
+                    then abstract one (* j is even *)
+                    else abstract negOne (* j is even *)
+              | _ => abstract zero
+            (* end case *))
+          else let
 	    val BI { negative, digits } = concrete i
-	in
-	    abstract (bi { negative = negative andalso
-	                              InLine.int63_eql (InLine.int63_rem (n, 2), 1),
-			   digits = natpow (digits, n) })
-	end
+            in
+              abstract (bi {
+                  negative = negative
+                    andalso InLine.int63_eql (InLine.int63_rem (j, 2), 1),
+                  digits = natpow (digits, j)
+                })
+            end
 
     val ~ = fabs1 neg
     val - = fabs2 sub
