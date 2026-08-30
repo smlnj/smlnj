@@ -97,6 +97,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/391[pretty-printing `maxDepth` is controlled by `maxIndent`]
 | [.bugid]#392#
 | {issue-base}/392[ANSI background color styles are not properly popped]
+| [.bugid]#403#
+| {issue-base}/403[`Substring.isSubstring` returns false when given empty strings]
 | [.bugid]#446#
 | {issue-base}/446[`Real.toDecimal`/`Real.fromDecimal` don't round-trip]
 | [.bugid]#454#

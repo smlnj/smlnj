@@ -1,6 +1,6 @@
 (* string.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -159,21 +159,22 @@ structure StringImp : STRING =
 
   (* String comparisons *)
     fun isPrefix s1 s2 = PreString.isPrefix (s1, s2, 0, size s2)
-    fun isSuffix s1 s2 =
-	let val sz2 = size s2
+    fun isSuffix s1 s2 = let
+        val sz2 = size s2
 	in
-	    PreString.isPrefix (s1, s2, sz2 - size s1, sz2)
+          PreString.isPrefix (s1, s2, sz2 - size s1, sz2)
 	end
-    fun isSubstring s = let
+    fun isSubstring "" = (fn _ => true)
+      | isSubstring s = let
 	val stringsearch = PreString.kmp s
 	fun search s' = let
 	    val epos = size s'
-	in
-	    stringsearch (s', 0, epos) < epos
-	end
-    in
-	search
-    end
+            in
+              stringsearch (s', 0, epos) < epos
+            end
+        in
+          search
+        end
 
     fun compare (a, b) =
 	PreString.cmp (a, 0, size a, b, 0, size b)
