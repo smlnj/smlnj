@@ -111,6 +111,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/446[`Real.toDecimal`/`Real.fromDecimal` don't round-trip]
 | [.bugid]#447#
 | {issue-base}/447[`StringCvt.skipWS` does not skip form feeds, returns, or vertical tabs]
+| [.bugid]#448#
+| {issue-base}/448[`Vector.update` does not raise `Subscript` on out-of-bounds index]
 | [.bugid]#454#
 | {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
 // | [.bugid]#@ID@#
