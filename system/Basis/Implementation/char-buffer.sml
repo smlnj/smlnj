@@ -86,8 +86,8 @@ structure CharBuffer :> MONO_BUFFER
 
     fun sub (BUF{content=ref arr, len=ref n, ...}, i) =
           if Word.<(Word.fromInt i, Word.fromInt n)
-            then raise Subscript
-            else A.sub(arr, i)
+            then A.sub(arr, i)
+            else raise Subscript
 
     fun clear (BUF{len, ...}) = (len := 0)
 
