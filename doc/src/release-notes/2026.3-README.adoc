@@ -97,6 +97,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/391[pretty-printing `maxDepth` is controlled by `maxIndent`]
 | [.bugid]#392#
 | {issue-base}/392[ANSI background color styles are not properly popped]
+| [.bugid]#401#
+| {issue-base}/401[`Word8Buffer.copy` throws exception on valid input]
 | [.bugid]#402#
 | {issue-base}/402[`Array.tabulate` calls its function even on invalid input]
 | [.bugid]#403#
