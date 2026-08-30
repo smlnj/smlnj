@@ -23,8 +23,12 @@ SML/NJ 2026.3
           `maxIndent`)
         * Fix for Issue #392 (ANSI background color styles are not properly
           popped)
+        * Fix for Issue #399 (`HashTable.findAndRemove` does not update `numItems`)
         * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
         * Fix for Issue #434 (`EditDistance.distance` treats transposition as free)
+        * Fix for Issue # ()
+        * Fix for Issue # ()
+        * Fix for Issue # ()
         * Fix for Issue # ()
         * Fix for Issue # ()
 
