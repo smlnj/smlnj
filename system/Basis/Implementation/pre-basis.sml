@@ -1,6 +1,6 @@
 (* pre-basis.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This contains definitions of various Basis types that are
@@ -46,6 +46,9 @@ structure PreBasis =
 	  fun isWS (#" ") = true
 	    | isWS (#"\t") = true
 	    | isWS (#"\n") = true
+	    | isWS (#"\v") = true
+	    | isWS (#"\f") = true
+	    | isWS (#"\r") = true
 	    | isWS _ = false
 	  fun lp cs = (case (getc cs)
 		 of (SOME(c, cs')) => if (isWS c) then lp cs' else cs
