@@ -1,6 +1,6 @@
-(* interfun-set-fn.sml
+(* interval-set-fn.sml
  *
- * COPYRIGHT (c) 2005 John Reppy (http://www.cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An implementation of sets over a discrete ordered domain, where the
@@ -50,7 +50,7 @@ functor IntervalSetFn (D : INTERVAL_DOMAIN) : INTERVAL_SET =
 		  | EQUAL => (a, y)::r
 		  | GREATER => (case D.compare(a, y)
 		       of GREATER => if (D.isSucc(y, a))
-			    then (x, b) :: r
+			    then ins(x, b, r)
 			    else (x, y) :: ins(a, b, r)
 			| EQUAL => ins(x, b, r)
 			| LESS => (case D.compare(b, y)
@@ -76,7 +76,10 @@ functor IntervalSetFn (D : INTERVAL_DOMAIN) : INTERVAL_SET =
 		  | EQUAL => (a, y)::r
 		  | GREATER => (case D.compare(a, y)
 		       of GREATER => if (D.isSucc(y, a))
-			    then (x, a) :: r
+			    then (case ins(a, r)
+                               of (_, y')::r' => (x, y') :: r'
+                                | _ => raise Fail "impossible"
+                              (* end case *))
 			    else (x, y) :: ins(a, r)
 			| _ => (x, y)::r
 		      (* end case *))
