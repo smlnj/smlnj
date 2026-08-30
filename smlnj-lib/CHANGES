@@ -19,6 +19,8 @@ SML/NJ 2026.3
         * Fix for Issue #383 (`ListMapFn.all` always return `false`)
         * Fix for Issue #386 (`EditDistance.distance` uses the wrong stride)
         * Fix for Issue #388 (`Format.LEFT` justifies text to the right)
+        * Fix for Issue #389 (`Format.format` raises `Option` instead of `BadFormat`
+          on invalid format)
         * Fix for Issue #390 (line break cutoff is one character too strict
           in PP library)
         * Fix for Issue #391 (pretty-printing `maxDepth` is controlled by
@@ -29,8 +31,6 @@ SML/NJ 2026.3
         * Fix for Issue #399 (`HashTable.findAndRemove` does not update `numItems`)
         * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
         * Fix for Issue #434 (`EditDistance.distance` treats transposition as free)
-        * Fix for Issue #389 (`Format.format` raises `Option` instead of `BadFormat`
-          on invalid format)
         * Fix for Issue # ()
         * Fix for Issue # ()
         * Fix for Issue # ()
