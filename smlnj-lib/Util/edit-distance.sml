@@ -95,7 +95,7 @@ structure EditDistance : sig
                                 in
                                   (* check for transposition *)
                                   if (aim1 = bj) andalso (bjm1 = ai)
-                                    then set(i, j, Int.min(dij, get(i-2, j-2)))
+                                    then set(i, j, Int.min(dij, get(i-2, j-2) + 1))
                                     else set(i, j, dij)
                                 end
                           in
