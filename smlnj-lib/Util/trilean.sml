@@ -38,9 +38,9 @@ structure Trilean : TRILEAN =
                  of SOME(c, inS') => if Char.isSpace c
                       then st0 inS'
                       else (case Char.toLower c
-                         of #"f" => stF inS
-                          | #"t" => stT inS
-                          | #"u" => stU inS
+                         of #"f" => stF inS'
+                          | #"t" => stT inS'
+                          | #"u" => stU inS'
                           | _ => NONE
                         (* end case *))
                   | NONE => NONE
