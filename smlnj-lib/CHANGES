@@ -13,6 +13,7 @@ SML/NJ 2026.3
           periodic results)
         * Fix for Issue #382 (`HashSetFn.filter` does not reset the number
           of elements if it removes everything)
+        * Fix for Issue #383 (`ListMapFn.all` always return `false`)
         * Fix for Issue #390 (line break cutoff is one character too strict
           in PP library)
         * Fix for Issue #391 (pretty-printing `maxDepth` is controlled by

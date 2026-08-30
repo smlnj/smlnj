@@ -1,9 +1,7 @@
 (* list-map-fn.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
- *
- * COPYRIGHT (c) 1996 by AT&T Research.  See COPYRIGHT file for details.
  *
  * An implementation of finite maps on ordered keys, which uses a sorted list
  * representation.
@@ -316,17 +314,16 @@ functor ListMapFn (K : ORD_KEY) :> ORD_MAP where type Key.ord_key = K.ord_key =
    * are checked in key order.
    *)
     fun all pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' ((_, x)::r) = pred x andalso all' r
 	  in
 	    all'
 	  end
     fun alli pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' (arg::r) = pred arg andalso all' r
 	  in
 	    all'
 	  end
 
   end (* functor ListMapFn *)
-

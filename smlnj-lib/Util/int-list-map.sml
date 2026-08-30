@@ -309,13 +309,13 @@ structure IntListMap :> ORD_MAP where type Key.ord_key = Int.int =
    * are checked in key order.
    *)
     fun all pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' ((_, x)::r) = pred x andalso all' r
 	  in
 	    all'
 	  end
     fun alli pred = let
-	  fun all' [] = false
+	  fun all' [] = true
 	    | all' (arg::r) = pred arg andalso all' r
 	  in
 	    all'
