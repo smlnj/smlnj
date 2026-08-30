@@ -32,8 +32,10 @@ SML/NJ 2026.3
           popped)
         * Fix for Issue #398 (`IntListMap.findAndRemove` raises exception on failure)
         * Fix for Issue #399 (`HashTable.findAndRemove` does not update `numItems`)
+        * Fix for Issue #432 (`Hash.string'` does not hash the first character)
         * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
         * Fix for Issue #434 (`EditDistance.distance` treats transposition as free)
+        * Fix for Issue # ()
         * Fix for Issue # ()
         * Fix for Issue # ()
 

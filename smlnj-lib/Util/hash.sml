@@ -93,7 +93,7 @@ structure Hash : HASHING
 
     local
       fun hashSeq (length, get, hash) (seq, acc : W64.word) : W64.word = let
-            fun lp (0, acc) = acc
+            fun lp (~1, acc) = acc
               | lp (i, acc) = lp (i-1, hash(get(seq, i), acc))
             in
               lp (length seq - 1, acc)
