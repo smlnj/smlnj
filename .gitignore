@@ -177,6 +177,7 @@ doc/src/man/*.1
 doc/src/man/*.7
 doc/src/**/*.html
 package/macos/*.pkg
+package/macos/smlnj
 *.pkl
 v-amd64-*
 v-arm64-*
