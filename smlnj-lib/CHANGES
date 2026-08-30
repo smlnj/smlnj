@@ -16,6 +16,7 @@ SML/NJ 2026.3
         * Fix for Issue #382 (`HashSetFn.filter` does not reset the number
           of elements if it removes everything)
         * Fix for Issue #383 (`ListMapFn.all` always return `false`)
+        * Fix for Issue #388 (`Format.LEFT` justifies text to the right)
         * Fix for Issue #390 (line break cutoff is one character too strict
           in PP library)
         * Fix for Issue #391 (pretty-printing `maxDepth` is controlled by
@@ -23,6 +24,7 @@ SML/NJ 2026.3
         * Fix for Issue #392 (ANSI background color styles are not properly
           popped)
         * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
+        * Fix for Issue # ()
         * Fix for Issue # ()
         * Fix for Issue # ()
 
