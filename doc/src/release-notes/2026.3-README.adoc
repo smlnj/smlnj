@@ -97,6 +97,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/391[pretty-printing `maxDepth` is controlled by `maxIndent`]
 | [.bugid]#392#
 | {issue-base}/392[ANSI background color styles are not properly popped]
+| [.bugid]#393#
+| {issue-base}/393[`Posix.ProcEnv.uname` crashes on syscall failure]
 | [.bugid]#401#
 | {issue-base}/400[`Word8Buffer.sub` allows invalid indices and throws on valid indices]
 | [.bugid]#400#
