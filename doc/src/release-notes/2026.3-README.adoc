@@ -35,7 +35,9 @@ FILES::
 == Summary
 
 This release contains a large number of mostly minor bug fixes for issues
-identified by Claude and reported by Skye Soss.
+identified by Claude and reported by Skye Soss.  There are a number of regular
+bug fixes as well.  We have also added support for "mixed" records to the runtime
+system.
 
 == Details
 
