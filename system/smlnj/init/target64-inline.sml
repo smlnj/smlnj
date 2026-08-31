@@ -160,11 +160,11 @@ structure InlineT =
         val op >=   : int32 * int32 -> bool   = InLine.int32_ge
         val op =    : int32 * int32 -> bool   = InLine.int32_eql
         val op <>   : int32 * int32 -> bool   = InLine.int32_neq
-	end (* local *)
 
         val min     : int32 * int32 -> int32  = InLine.int32_min
         val max     : int32 * int32 -> int32  = InLine.int32_max
-        val abs     : int32 -> int32          = InLine.int32_abs
+        val abs     : int32 -> int32          = i32chk InLine.int32_abs
+	end (* local *)
       end
 
     structure Int63 =
