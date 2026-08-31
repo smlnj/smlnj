@@ -472,7 +472,7 @@ structure Date : DATE =
     val toString = fmt "%a %b %d %H:%M:%S %Y"
 
   (* Date scanner *)
-    fun scan getc s = let
+    fun scan getc = let
 	  fun getword s = StringCvt.splitl Char.isAlpha getc s
 	(* consume the character c from the stream s and then pass the remaining
 	 * stream to the continuation k.  Returns NONE if a different character
@@ -555,8 +555,9 @@ structure Date : DATE =
 		  | ("Sat", s') => month Sat s'
 		  | _ => NONE
 		(* end case *))
+          val skipWS = StringCvt.skipWS getc
 	  in
-	    wday s
+	    fn s => wday (skipWS s)
 	  end (* scan *)
 
     fun fromString s = StringCvt.scanString scan s
