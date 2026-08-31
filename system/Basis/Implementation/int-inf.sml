@@ -277,30 +277,30 @@ structure IntInfImp :> INT_INF = struct
 	  (* end case *))
 
     fun startscan (doit, hex) getchar s = let
-	fun hexprefix (neg, s) =
-	    case getchar s of
-		SOME ((#"x" | #"X"), s') => doit (neg, s')
+	fun hexprefix (neg, s) = (case getchar s
+             of SOME ((#"x" | #"X"), s') => doit (neg, s')
 	      | _ => doit (neg, s)
-	fun prefix (neg, s) =
-	    if hex then hexprefix (neg, s)
-	    else doit (neg, s)
-	fun sign s =
-	    case getchar s of
-		NONE => NONE
+            (* end case *))
+	fun prefix (neg, s) = if hex
+              then hexprefix (neg, s)
+	      else doit (neg, s)
+	fun sign s = (case getchar s
+             of NONE => NONE
 	      | SOME ((#"-" | #"~"), s') => prefix (true, s')
 	      | SOME (#"+", s') => prefix (false, s')
 	      | _ => prefix (false, s)
-    in
-	sign (StringCvt.skipWS getchar s)
-    end
+            (* end case *))
+        in
+          sign (StringCvt.skipWS getchar s)
+        end
 
-    fun bitscan (bits, xOkay) getchar = let
+    fun bitscan (bits, prefixPat) getchar = let
           fun dcons (0w0, []) = []
             | dcons (x, xs) = x :: xs
           val pos0 = CoreIntInf.baseBits - bits
           val maxVal = CoreIntInf.maxDigit
           val maxDigit = (0w1 << bits) - 0w1
-          val scanPrefix = ScanUtil.scanPrefix (ScanUtil.hexPat false) getchar
+          val scanPrefix = ScanUtil.scanPrefix prefixPat getchar
           fun scan s = (case scanPrefix s
                  of SOME{neg, next, rest} => let
                       fun digloop (d, pos, nat, s) = let
@@ -385,9 +385,9 @@ structure IntInfImp :> INT_INF = struct
           end
 
     fun scan StringCvt.DEC = decscan
-      | scan StringCvt.HEX = bitscan (0w4, true)
-      | scan StringCvt.OCT = bitscan (0w3, false)
-      | scan StringCvt.BIN = bitscan (0w1, false)
+      | scan StringCvt.HEX = bitscan (0w4, ScanUtil.hexPat false)
+      | scan StringCvt.OCT = bitscan (0w3, ScanUtil.octPat false)
+      | scan StringCvt.BIN = bitscan (0w1, ScanUtil.binPat false)
 
     val ~ = CoreIntInf.~
     val op + = CoreIntInf.+

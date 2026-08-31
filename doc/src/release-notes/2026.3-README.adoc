@@ -138,6 +138,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/434[`EditDistance.distance` treats transposition as free]
 | [.bugid]#440#
 | {issue-base}/440[`ParserComb.skipBefore` returns `NONE` when it reaches EOF]
+| [.bugid]#445#
+| {issue-base}/445[`IntInf.scan StringCvt.BIN` accepts hex prefix]
 | [.bugid]#446#
 | {issue-base}/446[`Real.toDecimal`/`Real.fromDecimal` don't round-trip]
 | [.bugid]#447#
