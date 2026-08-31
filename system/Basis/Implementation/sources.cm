@@ -468,20 +468,7 @@ is
         Real/string-to-frep.sml (* NEW *)
 
 #if defined(SIZE_32)
-        Target32Bit/bind-structs.sml
-        Target32Bit/int.sml
-        Target32Bit/int64.sml
-        Target32Bit/intinf-to-real64.sml
-        Target32Bit/num-scan.sml
-        Target32Bit/num-format.sml
-        Target32Bit/num-scan32.sml
-        Target32Bit/num-format32.sml
-        Target32Bit/pack-word-b64.sml
-        Target32Bit/pack-word-l64.sml
-        Target32Bit/pointer.sml
-        Target32Bit/real64-to-intinf.sml
-        Target32Bit/word.sml
-        Target32Bit/word64.sml
+	/* no longer supported */
 #else
         Target64Bit/bind-structs.sml
         Target64Bit/int.sml
