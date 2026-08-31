@@ -29,9 +29,10 @@ structure InternalTimer : sig
     in
     fun getTime () = let
 	  val (usr, sys, gc) = gettime' ()
+      val gcT = mkTime gc
 	  in {
-	    nongc = { usr = mkTime usr, sys = mkTime sys },
-	    gc    = { usr = mkTime gc, sys = Time.zeroTime }
+	    nongc = { usr = Time.-(mkTime usr, gcT), sys = mkTime sys },
+	    gc    = { usr = gcT, sys = Time.zeroTime }
 	  } end
     end (* local *)
 

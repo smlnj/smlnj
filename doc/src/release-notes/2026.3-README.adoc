@@ -154,6 +154,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/451[`Date.fromString` does not skip leading whitespace]
 | [.bugid]#454#
 | {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
+| [.bugid]#456#
+| {issue-base}/456[`Timer.checkCPUTimer` double-counts garbage collector time]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
