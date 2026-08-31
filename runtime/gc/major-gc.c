@@ -113,7 +113,7 @@ PVT void TrimHeap (heap_t *heap, int maxCollectedGen);
 
 /* the symbolic names of the arenas */
 char		*ArenaName[NUM_ARENAS+1] = {
-	"new", "record", "pair", "string", "array"
+	"new", "record", "pair", "mixed", "string", "array"
     };
 
 /* Check a word for a from-space reference */
