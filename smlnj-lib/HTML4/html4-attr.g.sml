@@ -32,15 +32,18 @@ structure HTML4AttrTokens =
       | isEOF _ = false
   end (* HTML4AttrTokens *)
 
-functor HTML4AttrParseFn (Lex : ANTLR_LEXER) = struct
+
+functor HTML4AttrParseFn (Lex : ANTLR_LEXER)
+ = struct
 
   local
-    structure Tok =
-HTML4AttrTokens
+    structure Tok = HTML4AttrTokens
+
     structure UserCode =
       struct
+        
 
-fun attr_PROD_1_SUBRULE_1_PROD_1_ACT (attr_value, EQUALS, NAME, attr_value_SPAN : (Lex.pos * Lex.pos), EQUALS_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+        fun attr_PROD_1_SUBRULE_1_PROD_1_ACT (attr_value, EQUALS, NAME, attr_value_SPAN : (Lex.pos * Lex.pos), EQUALS_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   (attr_value)
 fun attr_PROD_1_ACT (SR, NAME, SR_SPAN : (Lex.pos * Lex.pos), NAME_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ((NAME, SR))
@@ -53,19 +56,13 @@ fun attr_value_PROD_3_SUBRULE_1_PROD_1_ACT (NUMBER, DOT, NUMBER_SPAN : (Lex.pos 
   (NUMBER)
 fun attr_value_PROD_3_ACT (SR, NUMBER, SR_SPAN : (Lex.pos * Lex.pos), NUMBER_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   (NUMBER ^ (String.concatWith "." SR))
+
       end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
 
-(* replace functor with inline structure for better optimization
-    structure EBNF = AntlrEBNF(
-      struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
-      end)
-*)
     structure EBNF =
       struct
 	fun optional (pred, parse, strm) =
@@ -95,21 +92,22 @@ fun attr_value_PROD_3_ACT (SR, NUMBER, SR_SPAN : (Lex.pos * Lex.pos), NUMBER_SPA
 	      in
 		(y::ys, (left, right), strm'')
 	      end
-      end
+      end (* EBNF *)
 
     fun mk lexFn = let
-fun getS() = {}
+        fun getS() = {}
 fun putS{} = ()
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs)
+
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) =
-	        (Err.whileDisabled eh (fn() => prod strm))
-		handle Err.ParseError => try (prods)
-          in try prods end
-fun matchNAME strm = (case (lex(strm))
+              fun try [] = fail()
+                | try (prod :: prods) =
+                    (Err.whileDisabled eh (fn() => prod strm))
+                    handle Err.ParseError => try (prods)
+              in try prods end
+        fun matchNAME strm = (case (lex(strm))
  of (Tok.NAME(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
@@ -133,6 +131,7 @@ fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
+
 
 val (attrs_NT) = 
 let
@@ -237,5 +236,6 @@ in (attrs_NT) end
 fun parse lexFn  s = let val (attrs_NT) = mk lexFn in attrs_NT s end
 
   end
+
 
 end
