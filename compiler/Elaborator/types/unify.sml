@@ -10,7 +10,7 @@ sig
         (* circularity *)
     | TYC of Types.tycon * Types.tycon * SourceMap.region * SourceMap.region
         (* tycon mismatch *)
-    | TYP of Types.ty * Types.ty * SourceMap.region * SourceMap.region
+    | TYP of SourceMap.region * SourceMap.region
         (* type mismatch *)
     | UBV of Types.tvKind * Types.ty * SourceMap.region * SourceMap.region
         (* UBOUND match *)
@@ -27,7 +27,7 @@ sig
    *   - UNK (ty1, ty2): ty1 and ty2 have not been compared. *)
   and cmp
     = OK of Types.ty
-    | ERR of unifyFail
+    | ERR of Types.ty * Types.ty * unifyFail
     | UNK of Types.ty * Types.ty
 
   exception Unify of unifyFail
@@ -77,7 +77,7 @@ datatype unifyFail
   | EQ                               (* equality type required *)
   | TYC of tycon * tycon * SourceMap.region * SourceMap.region
                                      (* tycon mismatch *)
-  | TYP of ty * ty * SourceMap.region * SourceMap.region     (* type mismatch *)
+  | TYP of SourceMap.region * SourceMap.region     (* type mismatch *)
   | OVLD_F of string                 (* overload mismatch -- not a simple type *)
   | OVLD_UB of string                (* mismatch of OVLD and UBOUND tyvars *)
   | UBV of tvKind * ty * SourceMap.region * SourceMap.region  (* UBOUND match *)
@@ -86,7 +86,7 @@ datatype unifyFail
                                      (* The context of a unification failure. *)
 and cmp
   = OK of Types.ty
-  | ERR of unifyFail
+  | ERR of Types.ty * Types.ty * unifyFail
   | UNK of Types.ty * Types.ty
 
 (* failMessage : unifyFail -> string *)
@@ -102,7 +102,7 @@ fun failMessage (failure: unifyFail) =
        | UBV _ =>     "UBOUND match"
        | CTX {args, ...} =>
            let fun search nil = "type mismatch"
-                 | search (ERR failure :: _) = failMessage failure
+                 | search (ERR (_, _, failure) :: _) = failMessage failure
                  | search (_ :: rest) = search rest
            in  search args
            end
@@ -119,8 +119,9 @@ fun uncheckedArgs (nil, nil) = nil
       UNK (ty1, ty2) :: uncheckedArgs (tys1, tys2)
   | uncheckedArgs _ = bug "uncheckedArgs: arg ty lists wrong length"
 
-fun raiseWithCtx (tycon, checked, failure, rest1, rest2) =
-  let val args = rev checked @ ERR failure :: uncheckedArgs (rest1, rest2)
+fun raiseWithCtx (tycon, checked, ty1, ty2, failure, rest1, rest2) =
+  let val args =
+        rev checked @ ERR (ty1, ty2, failure) :: uncheckedArgs (rest1, rest2)
   in  raise Unify (CTX {tycon=tycon, args=args})
   end
 
@@ -378,7 +379,7 @@ fun unifyTy(type1, type2, reg1, reg2) =
 				  | unifyRelArgs (true::ss, ty1::tys1, ty2::tys2,checked) =
 				      (unifyTy(ty1,ty2,reg1,reg2)
                                        handle Unify failure =>
-                                         raiseWithCtx(tycon1,checked,failure,tys1,tys2);
+                                         raiseWithCtx(tycon1,checked,ty1,ty2,failure,tys1,tys2);
                                        unifyRelArgs(ss,tys1,tys2,OK ty1::checked))
 				  | unifyRelArgs (false::ss, ty1::tys1, ty2::tys2,checked) =
 				      unifyRelArgs (ss,tys1,tys2,UNK(ty1, ty2)::checked)
@@ -390,7 +391,7 @@ fun unifyTy(type1, type2, reg1, reg2) =
                                   | unifyArgs (ty1::tys1,ty2::tys2,checked) =
                                       (unifyTy(ty1,ty2,reg1,reg2)
                                        handle Unify failure =>
-                                         raiseWithCtx(tycon1,checked,failure,tys1,tys2);
+                                         raiseWithCtx(tycon1,checked,ty1,ty2,failure,tys1,tys2);
                                        unifyArgs(tys1,tys2, OK ty1 :: checked))
                                   | unifyArgs _ = bug "unifyTy: arg ty lists wrong length"
                             in  unifyArgs(args1,args2,[])
@@ -418,7 +419,7 @@ fun unifyTy(type1, type2, reg1, reg2) =
 		    app (fn x => unifyTy(x, WILDCARDty, reg1, reg2)) args1
 	       | (WILDCARDty,_) => ()
 	       | (_,WILDCARDty) => ()
-	       | (ty1,ty2) => raise Unify (TYP(ty1,ty2,reg1,reg2)));
+	       | (ty1,ty2) => raise Unify (TYP(reg1,reg2)));
 	    dbsaynl "<<< unifyRaw")
 
      in unifyRaw(type1, type2, reg1, reg2)
@@ -572,7 +573,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 	  | MARKty(ty1, reg2') => instTyvar (tyvar, ty1, reg1, reg2')
           | WILDCARDty => (* propagate WILDCARDty to the fields *)
 	      (app (fn (lab,ty) => unifyTy(WILDCARDty,ty,reg1,reg2)) fields)
-          | _ => raise Unify (TYP (VARty tyvar, ty, reg1, reg2)))
+          | _ => raise Unify (TYP (reg1, reg2)))
 
   | instTyvar (tyvar as ref(OVLDV{eq,...}), ty, reg1, reg2) = (* operator overloading tyvar *)
       (debugPPType(">>instTyvar[OVLDV]",ty);

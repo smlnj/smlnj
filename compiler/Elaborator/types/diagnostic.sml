@@ -9,7 +9,7 @@ structure Diagnostic :> sig
 
   (* Print the diagnostic. *)
   val pp :
-    StaticEnv.staticEnv -> PrettyPrint.stream -> Unify.unifyFail  -> unit
+    StaticEnv.staticEnv -> PrettyPrint.stream -> Types.ty * Types.ty * Unify.unifyFail  -> unit
 end = struct
 
   structure BT = BasicTypes
@@ -18,6 +18,7 @@ end = struct
   structure T  = Types
   structure TU = TypesUtil
 
+  val useColor = true
 
   (* A tiny pretty-printer document for rendering type fragments.
    *
@@ -53,7 +54,13 @@ end = struct
     | join sep (x :: xs) = x @ sep @ join sep xs
 
   fun typeString env width ty =
-    PP.pp_to_string_sans width (PPType.ppType env) ty
+    let val ty =
+          case TU.prune ty
+            of T.VARty (ref (T.OVLDI _)) => List.nth (OverloadClasses.intClass, 0)
+             | T.VARty (ref (T.OVLDW _)) => List.nth (OverloadClasses.wordClass, 0)
+             | _ => ty
+    in  PP.pp_to_string_sans width (PPType.ppType env) ty
+    end
 
   fun tyconString env width tycon =
     PP.pp_to_string_sans width (PPType.ppTycon env) tycon
@@ -73,6 +80,12 @@ end = struct
 
   fun hasLabel label = List.exists (fn label' => Symbol.eq (label, label'))
 
+  local
+    val AnsiHL = ANSITerm.toString [ANSITerm.FG ANSITerm.Red]
+    val AnsiReset = ANSITerm.toString []
+  in
+    fun color s = concat [AnsiHL, s, AnsiReset]
+  end
 
   (* Convert a document into concrete text lines and matching highlighted lines.
    *)
@@ -91,21 +104,23 @@ end = struct
           col := prefixLen
         )
 
-        fun emitChar isMarked c = (
-          if !col >= width
-              andalso !col > prefixLen
-              andalso not (Char.isSpace c) then
-            emitLine ()
-          else
-            ();
-          textLine := !textLine ^ String.str c;
-          markLine :=
-            !markLine ^ String.str (if isMarked then markedChar c else #" ");
-          col := !col + 1
+        fun emitStringColor isMarked s = (
+          textLine := !textLine ^ (if isMarked then color s else s);
+          (* markLine does not change *)
+          col := !col + size s
         )
 
-        fun emitString isMarked s =
-          app (fn #"\n" => emitLine () | c => emitChar isMarked c) (String.explode s)
+        fun emitStringPlain isMarked s = (
+          textLine := !textLine ^ s;
+          markLine := !markLine ^
+            (if isMarked
+              then String.map markedChar s
+              else String.map (fn _ => #" ") s);
+          col := !col + size s
+        )
+
+        val emitString =
+          if useColor then emitStringColor else emitStringPlain
 
         fun emitPiece (Text(marked, s)) = emitString marked s
           | emitPiece (Soft s) =
@@ -116,7 +131,6 @@ end = struct
     in  app emitPiece doc;
         rev ((!textLine, !markLine) :: !lines)
     end
-
 
   fun ppRendered ppstrm (prefix, doc) =
     let val width = !Control_Print.lineWidth
@@ -135,9 +149,8 @@ end = struct
   fun select Left (x, _) = x
     | select Right (_, y) = y
 
-
   (* Render one side of a unification failure. *)
-  fun renderTy side env failure =
+  fun renderTy side env (ty1, ty2, failure) =
     let val width = !Control_Print.lineWidth
         fun typeDoc ty = mark (typeString env width ty)
         fun tyconDoc tycon = mark (tyconString env width tycon)
@@ -145,64 +158,53 @@ end = struct
         val select = fn x => select side x
 
         (* OK and UNK are both irrelevant for diagnostic, so both become "_". *)
-        fun renderArg side (Unify.OK ty) = text (typeString env width ty)
-          | renderArg side (Unify.UNK _) = text "_"
-          | renderArg side (Unify.ERR failure) = render side failure
+        fun renderArg (Unify.OK ty) = text (typeString env width ty)
+          | renderArg (Unify.UNK _) = text "_"
+          | renderArg (Unify.ERR failure) = render failure
 
-        and failNeedsParen side failure =
-          (case failure
-             of Unify.CTX {tycon, ...} => tyconNeedsParen tycon
-              | Unify.TYP (ty1, ty2, _, _) =>
-                  tyNeedsParen (select (ty1, ty2))
-              | Unify.CIRC (_, ty, _, _) =>
-                  tyNeedsParen ty
-              | Unify.UBV (_, ty, _, _) =>
-                  tyNeedsParen ty
-              | _ => false)
+        and argNeedsParen (Unify.ERR (ty1, ty2, failure)) =
+              tyNeedsParen (select (ty1, ty2))
+          | argNeedsParen _ = false
 
-        and argNeedsParen side (Unify.ERR failure) =
-              failNeedsParen side failure
-          | argNeedsParen _ _ = false
-
-        and renderArgParen side arg =
-          if argNeedsParen side arg then
-            text "(" @ renderArg side arg @ text ")"
+        and renderArgParen arg =
+          if argNeedsParen arg then
+            text "(" @ renderArg arg @ text ")"
           else
-            renderArg side arg
+            renderArg arg
 
-        and renderTuple side args =
-          join (soft " " @ text "* ") (map (renderArgParen side) args)
+        and renderTuple args =
+          join (soft " " @ text "* ") (map renderArgParen args)
 
-        and renderRecord side (labels, args) =
+        and renderRecord (labels, args) =
           let fun field (label, arg) =
-                text (Symbol.name label ^ ":") @ renderArg side arg
+                text (Symbol.name label ^ ":") @ renderArg arg
               val fields = ListPair.mapEq field (labels, args)
           in  text "{" @ join (text "," @ soft " ") fields @ text "}"
           end
 
-        and renderArrow side [domain, range] =
-              renderArgParen side domain @ soft " " @ text "-> "
-                                         @ renderArg side range
-          | renderArrow side _ = bug "arrow tycon with wrong arity"
+        and renderArrow [domain, range] =
+              renderArgParen domain @ soft " " @ text "-> "
+                                         @ renderArg range
+          | renderArrow _ = bug "arrow tycon with wrong arity"
 
-        and renderTypeArgs side [] = []
-          | renderTypeArgs side [arg] = renderArgParen side arg @ soft " "
-          | renderTypeArgs side args =
-              text "(" @ join (text "," @ soft " ") (map (renderArg side) args)
+        and renderTypeArgs [] = []
+          | renderTypeArgs [arg] = renderArgParen arg @ soft " "
+          | renderTypeArgs args =
+              text "(" @ join (text "," @ soft " ") (map renderArg args)
                        @ text ")" @ soft " "
 
-        and renderCTX side {tycon, args} =
+        and renderCTX {tycon, args} =
           if Tuples.isTUPLEtyc tycon then
-            renderTuple side args
+            renderTuple args
           else if isArrowTyc tycon then
-            renderArrow side args
+            renderArrow args
           else
             (case tycon
-               of T.RECORDtyc labels => renderRecord side (labels, args)
+               of T.RECORDtyc labels => renderRecord (labels, args)
                 | _ =>
-                    renderTypeArgs side args @ text (tyconString env width tycon))
+                    renderTypeArgs args @ text (tyconString env width tycon))
 
-        and renderRecordTyc side (labels, otherLabels) =
+        and renderRecordTyc (labels, otherLabels) =
           let fun differs label = not (hasLabel label otherLabels)
               fun field label =
                 let val l =
@@ -219,23 +221,13 @@ end = struct
                 text "{" @ join (text "," @ soft " ") (map field labels) @ text "}"
           end
 
-        and render side failure =
+        and render (ty1, ty2, failure) =
           case failure
-            of Unify.CTX ctx => renderCTX side ctx
-             | Unify.TYP (ty1, ty2, _, _) =>
-                 typeDoc (select (ty1, ty2))
+            of Unify.CTX ctx => renderCTX ctx
              | Unify.TYC (T.RECORDtyc labels1, T.RECORDtyc labels2, _, _) =>
-                 renderRecordTyc side (select ((labels1, labels2), (labels2, labels1)))
-             | Unify.CIRC (tv, ty, _, _) =>
-                 (case side
-                    of Left => mark (PPType.tyvarPrintname tv)
-                     | Right => typeDoc ty)
-             | Unify.UBV (_, ty, _, _) =>
-                 (case side
-                    of Left => mark "bound type variable mismatch"
-                     | Right => typeDoc ty)
-             | ubv => mark (Unify.failMessage failure)
-    in  render side failure
+                 renderRecordTyc (select ((labels1, labels2), (labels2, labels1)))
+             | _ => typeDoc (select (ty1, ty2))
+    in  render (ty1, ty2, failure)
     end
 
   fun pp env ppstrm failure =

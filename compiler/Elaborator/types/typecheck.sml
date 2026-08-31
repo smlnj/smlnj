@@ -104,9 +104,9 @@ fun ppRegion ppstrm ((l,u): SourceMap.region) =
      PP.string ppstrm "-";
      PP.string ppstrm (Int.toString u))
 
-fun ppModeErrorMsg ppstrm (mode: Unify.unifyFail) =
+fun ppModeErrorMsg ppstrm (ty1, ty2, mode: Unify.unifyFail) =
     (* if !showCulprits then *)
-      Diagnostic.pp env ppstrm mode
+      Diagnostic.pp env ppstrm (ty1, ty2, mode)
       (* (case mode *)
 	(* of TYC(tyc1,tyc2,reg1,reg2) => *)
 	   (* (PP.newline ppstrm; *)
@@ -199,7 +199,7 @@ fun unifyErr{ty1,name1,ty2,name2,message=m,region,kind,kindname,phrase} =
 		PP.string ppstrm(concat["in ", kindname, ":"]);
 		PP.break ppstrm {nsp=1,offset=2};
 		kind ppstrm (phrase,!printDepth));
-             ppModeErrorMsg ppstrm mode
+             ppModeErrorMsg ppstrm (ty1, ty2, mode)
 	 end));
        false)  (* false will never be returned, because of the call of err *)
 
@@ -660,7 +660,7 @@ in
 			    PP.string ppstrm "in expression:";
 			    PP.break ppstrm {nsp=1,offset=2};
 			    ppExp ppstrm (exp,!printDepth);
-			    ppModeErrorMsg ppstrm mode));
+			    ppModeErrorMsg ppstrm (BT.domain reducedRatorTy, randTy, mode)));
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
 			  (message("operator is not a function",mode))
@@ -670,8 +670,8 @@ in
 			     ppType ppstrm (ratorTy); PP.newline ppstrm;
 			     PP.string ppstrm "in expression:";
 			     PP.break ppstrm {nsp=1,offset=2};
-			     ppExp ppstrm (exp,!printDepth);
-			     ppModeErrorMsg ppstrm mode));
+			     ppExp ppstrm (exp,!printDepth)));
+			     (* ppModeErrorMsg ppstrm (ty1, ty2, mode))); *)
 			 (exp,WILDCARDty))
 	       end
 	   end
