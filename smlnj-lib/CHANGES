@@ -8,6 +8,8 @@ SML/NJ 2026.3
 [2026-08-30]
         * Fix for Issue #370 (The SExp parser re-parses top-level quoted symbols)
         * Fix for Issue #371 (The SExp parser parses negative numbers as symbols)
+        * Fix for Issue #373 (JSONParser.parse does not ensure `0` is not followed
+          by a digit)
         * Fix for Issue #375 (`UnixEnv.addToEnv` does not replace existing keys)
         * Fix for Issue #378 (`UTF8.map` does not do anything)
         * Fix for Issue #379 (`UTF8.exists` always returns `true`)
