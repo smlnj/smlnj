@@ -34,8 +34,8 @@ FILES::
 
 == Summary
 
-This release contains a large number of bug fixes for issues identified by Claude
-and reported by Skye Soss.  Most of this are minor issues/edge cases.
+This release contains a large number of mostly minor bug fixes for issues
+identified by Claude and reported by Skye Soss.
 
 == Details
 
@@ -43,25 +43,18 @@ and reported by Skye Soss.  Most of this are minor issues/edge cases.
 
 === Compiler
 
-=== CM
-
-=== MLRISC
+* Added constant folding for the rotation operators
 
 === Runtime System
 
 === Basis Library
 
+A number of *Basis Library bugs were fixed (see the list below for details).
+
 === SML/NJ Library
 
-A number of library bugs were fixed.
-
-=== Successor ML
-
-=== ML-LPT
-
-=== Documentation
-
-=== Installation
+A number of *SML/NJ Library* bugs were fixed (see the list below or the
+`smlnj-lib/CHANGES` file for details).
 
 == Bugs
 
