@@ -1,6 +1,6 @@
 (* random-engine-sig.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A generic interface for a stateful pseudo-random generator.

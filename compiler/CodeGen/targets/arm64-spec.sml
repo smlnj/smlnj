@@ -1,6 +1,6 @@
 (* arm64-spec.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * See dev-notes/amd64-stack-frame.numbers for stack-frame layout information.

@@ -1,6 +1,6 @@
 (* text-render.sml
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A generic renderer for simple pretty printing to a simple text consumer.

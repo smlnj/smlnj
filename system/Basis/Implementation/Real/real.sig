@@ -1,6 +1,6 @@
 (* real.sig
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The Standard ML Basis Library interface to floating-point structures.

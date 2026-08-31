@@ -1,6 +1,6 @@
 /*! \file win32-timers.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * header for win32 specific interface to interval timers.  See mach-dep/win32-timers.c

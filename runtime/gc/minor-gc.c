@@ -1,6 +1,6 @@
 /*! \file minor-gc.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the code for doing minor collections (i.e., collecting the

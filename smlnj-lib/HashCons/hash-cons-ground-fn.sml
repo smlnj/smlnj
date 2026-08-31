@@ -2,7 +2,7 @@
  *
  * Functor for defining hashed-cons representation of ground terms.
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

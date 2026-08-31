@@ -1,6 +1,6 @@
 /*! \file export-heap.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Routines to export an ML heap image.  The basic layout of the heap image is:

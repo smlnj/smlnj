@@ -1,6 +1,6 @@
 /*! \file ARM64.prim.asm
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Assembly code for the ARM64 (aka AARCH64) target.

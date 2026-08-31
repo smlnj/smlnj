@@ -1,6 +1,6 @@
 (* json-stream-output.fun
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A functor that implements serialization of JSON values using an

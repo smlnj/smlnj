@@ -1,6 +1,6 @@
 (* flintnm.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Converting the Standard PLambda.lexp into the FLINT IL

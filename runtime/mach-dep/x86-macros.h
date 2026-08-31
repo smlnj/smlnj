@@ -1,6 +1,6 @@
 /*! \file x86-macros.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are macros for the X86 and AMD64 assembly code.  They need to be

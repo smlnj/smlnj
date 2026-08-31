@@ -1,6 +1,6 @@
 (* math64-x86.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Math functions for the x86, which has hardware suppport for sqrt, sin, etc.

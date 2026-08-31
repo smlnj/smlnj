@@ -10,7 +10,7 @@ structure Header =
 struct
 (* sml.grm
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This version of the parser supports the following Successor ML syntactic extensions.

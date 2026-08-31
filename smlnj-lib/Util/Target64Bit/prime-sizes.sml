@@ -1,6 +1,6 @@
 (* target64-prim-sizes.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A list of prime numbers for sizing hash tables, etc. on 64-bit targets.

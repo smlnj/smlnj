@@ -1,6 +1,6 @@
 (* html4-parser.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Defines the HTML4Parser structure, which defunctorizes the

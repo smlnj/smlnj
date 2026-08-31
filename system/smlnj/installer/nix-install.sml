@@ -1,6 +1,6 @@
 (* nix-install.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Unix-specific invocation of LibInstall.proc (see libinstall.sml).

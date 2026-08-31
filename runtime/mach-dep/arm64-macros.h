@@ -1,6 +1,6 @@
 /*! \file arm64-macros.h
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are macros for the Arm64 (aka AArch64) assembly code.  They need to be

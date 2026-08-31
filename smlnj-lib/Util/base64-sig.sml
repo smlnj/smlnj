@@ -1,6 +1,6 @@
 (* base64-sig.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Support for Base64 encoding/decoding as specified by RFC 4648.

@@ -1,6 +1,6 @@
 (* int-list-map.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * COPYRIGHT (c) 1996 by AT&T Research.  See COPYRIGHT file for details.

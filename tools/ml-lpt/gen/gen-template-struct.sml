@@ -1,6 +1,6 @@
 (* gen-template-struct.sml
  *
- * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is a helper program for converting the template files into SML
@@ -26,7 +26,7 @@ structure Gen =
     fun header {fileName, structName} = String.concat [
 	    "(* ", fileName, "\n",
 	    " *\n\
-	    \ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)\n\
+	    \ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (https://smlnj.org)\n\
 	    \ * All rights reserved.\n\
 	    \ *\n\
 	    \ * !!! WARNING: this file is generated; do not edit !!!\n\

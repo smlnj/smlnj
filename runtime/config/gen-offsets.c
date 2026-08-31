@@ -1,6 +1,6 @@
 /*! \file gen-offsets.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This C program generates a header file for the *.prim.asm files,

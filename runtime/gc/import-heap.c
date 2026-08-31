@@ -1,6 +1,6 @@
 /*! \file import-heap.c
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Routines to import an ML heap image.

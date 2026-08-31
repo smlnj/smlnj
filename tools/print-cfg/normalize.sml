@@ -1,6 +1,6 @@
 (* normalize.sml
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Normalize a CFG compilation unit by alpha-converting the lambda variables to

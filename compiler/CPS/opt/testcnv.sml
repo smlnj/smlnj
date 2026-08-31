@@ -1,6 +1,6 @@
 (* testcnv.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  *	#define MAX_TO_INT	((1 << (to - 1)) - 1)

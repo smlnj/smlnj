@@ -1,6 +1,6 @@
 (* hash2-table-fn.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Hash tables that are keyed by two keys (in different domains).
