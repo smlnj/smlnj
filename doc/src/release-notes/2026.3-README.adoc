@@ -113,6 +113,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/447[`StringCvt.skipWS` does not skip form feeds, returns, or vertical tabs]
 | [.bugid]#448#
 | {issue-base}/448[`Vector.update` does not raise `Subscript` on out-of-bounds index]
+| [.bugid]#450#
+| {issue-base}/450[`LargeInt.fmt StringCvt.HEX` produces lowercase hex digits]
 | [.bugid]#451#
 | {issue-base}/451[`Date.fromString` does not skip leading whitespace]
 | [.bugid]#454#
