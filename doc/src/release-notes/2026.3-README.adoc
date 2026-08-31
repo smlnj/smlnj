@@ -107,6 +107,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/402[`Array.tabulate` calls its function even on invalid input]
 | [.bugid]#403#
 | {issue-base}/403[`Substring.isSubstring` returns false when given empty strings]
+| [.bugid]#406#
+| {issue-base}/406[`CharVectorSlice.getVec` returns a slice containing the entire underlying vector]
 | [.bugid]#446#
 | {issue-base}/446[`Real.toDecimal`/`Real.fromDecimal` don't round-trip]
 | [.bugid]#447#
