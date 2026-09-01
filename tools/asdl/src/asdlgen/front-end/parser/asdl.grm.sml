@@ -589,13 +589,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -622,13 +620,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -655,13 +651,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -688,13 +682,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -721,13 +713,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -754,13 +744,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -787,13 +775,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -820,13 +806,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -861,13 +845,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -894,13 +876,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -927,13 +907,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -960,13 +938,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -993,13 +969,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1026,13 +1000,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1059,13 +1031,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1092,13 +1062,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1133,13 +1101,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1166,13 +1132,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1199,13 +1163,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1232,13 +1194,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1265,13 +1225,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1298,13 +1256,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1331,13 +1287,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1364,13 +1318,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1405,13 +1357,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1438,13 +1388,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1471,13 +1419,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1504,13 +1450,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1537,13 +1481,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1570,13 +1512,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1603,13 +1543,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1636,13 +1574,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1677,13 +1613,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1710,13 +1644,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1743,13 +1675,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1776,13 +1706,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1809,13 +1737,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1842,13 +1768,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1875,13 +1799,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1908,13 +1830,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1949,13 +1869,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -1982,13 +1900,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2015,13 +1931,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2048,13 +1962,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2081,13 +1993,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2114,13 +2024,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2147,13 +2055,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2180,13 +2086,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2221,13 +2125,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2254,13 +2156,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2287,13 +2187,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2320,13 +2218,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2353,13 +2249,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2386,13 +2280,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2419,13 +2311,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2452,13 +2342,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2493,13 +2381,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2526,13 +2412,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2559,13 +2443,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2592,13 +2474,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2625,13 +2505,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2658,13 +2536,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2691,13 +2567,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2724,13 +2598,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2775,13 +2647,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2808,13 +2678,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2841,13 +2709,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2874,13 +2740,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2907,13 +2771,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2940,13 +2802,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -2973,13 +2833,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
@@ -3006,13 +2864,11 @@ fun ViewEntity_NT (strm) = let
                                 ViewEntity_PROD_3(strm)
                             | (Tok.KW_primitive, _, strm') =>
                                 ViewEntity_PROD_3(strm)
-                            | (Tok.KW_view, _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.KW_view, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.RBRACE, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LEQ, _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.FILE, _, strm') => ViewEntity_PROD_3(strm)
-                            | (Tok.CODE(_), _, strm') =>
-                                ViewEntity_PROD_3(strm)
+                            | (Tok.CODE(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.LID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.UID(_), _, strm') => ViewEntity_PROD_3(strm)
                             | (Tok.DOT, _, strm') =>
