@@ -152,6 +152,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/450[`LargeInt.fmt StringCvt.HEX` produces lowercase hex digits]
 | [.bugid]#451#
 | {issue-base}/451[`Date.fromString` does not skip leading whitespace]
+| [.bugid]#452#
+| {issue-base}/452[`Date.fromTimeUniv o Date.toTime` adds 12 hours to the date]
 | [.bugid]#454#
 | {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
 | [.bugid]#456#
