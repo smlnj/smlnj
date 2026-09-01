@@ -14,7 +14,7 @@
 
 /* _ml_Time_gettime : unit -> Int64.int * Int64.int * Int64.int * Int64.int
  *
- * Return the non-gc CPU time, non-gc system time, gc CPU time, and gc system
+ * Return the total CPU time, total system time, gc CPU time, and gc system
  * time used by this process so far.
  */
 ml_val_t _ml_Time_gettime (ml_state_t *msp, ml_val_t arg)
