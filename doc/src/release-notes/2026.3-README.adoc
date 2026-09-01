@@ -130,6 +130,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/403[`Substring.isSubstring` returns false when given empty strings]
 | [.bugid]#404#
 | {issue-base}/404[`Date.fmt` ignores `%%` if followed by a letter]
+| [.bugid]#405#
+| {issue-base}/405[`Real.rem` produces incorrect results for non-finite arguments]
 | [.bugid]#406#
 | {issue-base}/406[`CharVectorSlice.getVec` returns a slice containing the entire underlying vector]
 | [.bugid]#432#
