@@ -105,6 +105,16 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-08-31]::
++
+Changed the tracking of GC time to include system time (as specified in
+the *Standard ML Basis Library* specification.  This change also includes
+a fix for Issue #456 (`Timer.checkCPUTimer` double-counts garbage
+collector time).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-08-29]::
 +
 Added constant folding for the rotation operators.

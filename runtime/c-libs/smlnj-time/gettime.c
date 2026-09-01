@@ -12,24 +12,25 @@
 #include "ml-timer.h"
 #include "cfun-proto-list.h"
 
-/* _ml_Time_gettime : unit -> Int64.int * Int64.int * Int64.int
+/* _ml_Time_gettime : unit -> Int64.int * Int64.int * Int64.int * Int64.int
  *
- * Return the total CPU time, system time and garbage collection time used by this
- * process so far.
+ * Return the non-gc CPU time, non-gc system time, gc CPU time, and gc system
+ * time used by this process so far.
  */
 ml_val_t _ml_Time_gettime (ml_state_t *msp, ml_val_t arg)
 {
     Time_t		t, s;
-    ml_val_t		cpuT, sysT, gcT, res;
+    ml_val_t		usrT, sysT, gcUsrT, gcSysT, res;
     vproc_state_t	*vsp = msp->ml_vproc;
 
     GetCPUTime (&t, &s);
 
-    cpuT = ML_AllocNanoseconds(msp, t.seconds, t.uSeconds);
+    usrT = ML_AllocNanoseconds(msp, t.seconds, t.uSeconds);
     sysT = ML_AllocNanoseconds(msp, s.seconds, s.uSeconds);
-    gcT = ML_AllocNanoseconds(msp, vsp->vp_gcTime->seconds, vsp->vp_gcTime->uSeconds);
+    gcUsrT = ML_AllocNanoseconds(msp, vsp->vp_gcUsrTime->seconds, vsp->vp_gcUsrTime->uSeconds);
+    gcSysT = ML_AllocNanoseconds(msp, vsp->vp_gcSysTime->seconds, vsp->vp_gcSysTime->uSeconds);
 
-    REC_ALLOC3(msp, res, cpuT, sysT, gcT);
+    REC_ALLOC4(msp, res, usrT, sysT, gcUsrT, gcSysT);
 
     return res;
 
