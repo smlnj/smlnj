@@ -378,8 +378,9 @@ numBO1, numBO2, numBO3);
 	StopGCTimer (msp->ml_vproc, &gcTime);
 	SayDebug (" (%d ms)\n", gcTime);
     }
-    else
+    else {
 	StopGCTimer (msp->ml_vproc, NIL(long *));
+    }
 #endif
 
 #ifdef VM_STATS
