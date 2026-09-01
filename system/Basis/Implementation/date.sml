@@ -429,6 +429,7 @@ structure Date : DATE =
 			  | SOME(#"y", ss') => continue(2, ss')
 			  | SOME(#"Y", ss') => continue(4, ss')
 			  | SOME(#"Z", ss') => continue(3, ss')
+                          | SOME(#"%", ss') => (1, SS.full "%%", ss')
 			  | SOME(c, ss') => (1, SS.full(String.str c), ss')
 			(* end case *)
 		      end
@@ -469,7 +470,9 @@ structure Date : DATE =
 		end
 	  val fmtFns = scan (SS.full fmtStr, 0, [], [])
 	  in
-	    fn d => let val tm = date2tm d in String.concat(List.map (fn f => f tm) fmtFns) end
+	    fn d => let
+                val tm = date2tm d
+                in String.concat (List.map (fn f => f tm) fmtFns) end
 	  end
 
     val toString = fmt "%a %b %d %H:%M:%S %Y"
