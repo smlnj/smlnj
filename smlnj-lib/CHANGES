@@ -2,11 +2,52 @@ This is a list of changes to the SML/NJ Library; the version numbers
 correspond to SML/NJ releases (past and future).
 
 --------------------------------------------------------------------------------
-SML/NJ 2026.2
+SML/NJ 2026.3
 -------------------
 
-[2026-04-18]
+[2026-08-30]
+        * Fix for Issue #370 (The SExp parser re-parses top-level quoted symbols)
+        * Fix for Issue #371 (The SExp parser parses negative numbers as symbols)
+        * Fix for Issue #373 (JSONParser.parse does not ensure `0` is not followed
+          by a digit)
+        * Fix for Issue #375 (`UnixEnv.addToEnv` does not replace existing keys)
+        * Fix for Issue #378 (`UTF8.map` does not do anything)
+        * Fix for Issue #379 (`UTF8.exists` always returns `true`)
+        * Fix for Issue #380 (`CharMap.mkCharMap` creates a too-small array)
+        * Fix for Issue #381 (Rand48's incorrect implementation results in
+          periodic results)
+        * Fix for Issue #382 (`HashSetFn.filter` does not reset the number
+          of elements if it removes everything)
+        * Fix for Issue #383 (`ListMapFn.all` always return `false`)
+        * Fix for Issue #384 (`IntervalSetFn.add` operation doesn't properly
+          merge consecutive ranges)
+        * Fix for Issue #385 (`Hash2TableFn.insert` can corrupt the table)
+        * Fix for Issue #386 (`EditDistance.distance` uses the wrong stride)
+        * Fix for Issue #388 (`Format.LEFT` justifies text to the right)
+        * Fix for Issue #389 (`Format.format` raises `Option` instead of `BadFormat`
+          on invalid format)
+        * Fix for Issue #390 (line break cutoff is one character too strict
+          in PP library)
+        * Fix for Issue #391 (pretty-printing `maxDepth` is controlled by
+          `maxIndent`)
+        * Fix for Issue #392 (ANSI background color styles are not properly
+          popped)
+        * Fix for Issue #398 (`IntListMap.findAndRemove` raises exception on
+          failure)
+        * Fix for Issue #399 (`HashTable.findAndRemove` does not update `numItems`)
+        * Fix for Issue #432 (`Hash.string'` does not hash the first character)
+        * Fix for Issue #433 (The hash table in the `Atom` module is never resized)
+        * Fix for Issue #434 (`EditDistance.distance` treats transposition as free)
+        * Fix for Issue #440 (`ParserComb.skipBefore` returns `NONE` when it
+          reaches EOF)
+        * Fix for Issue # ()
+        * Fix for Issue # ()
+
+[2026-08-27]
         Added the `Trilean` structure to the utility library.
+
+[2026-08-26]
+	Fix for Issue #378 (`UTF8.map` does not do anything)
 
 --------------------------------------------------------------------------------
 SML/NJ 2026.1

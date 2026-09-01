@@ -82,11 +82,12 @@ structure CheckUnused : sig
 			used es
 		  | A.APPexp(e1, e2) =>
 		      chkExp(region, e2, chkExp(region, e1, used))
+		  | A.FNexp(rules, _, _) => List.foldl (chkRule region) used rules
+		  | A.CASEexp(e, (rules,_,_)) =>
+		      List.foldl (chkRule region) (chkExp(region, e, used)) rules
 		  | A.HANDLEexp(e, (rules, _, _)) =>
 		      List.foldl (chkRule region) (chkExp(region, e, used)) rules
 		  | A.RAISEexp(e, _) => chkExp(region, e, used)
-		  | A.CASEexp(e, (rules,_,_)) =>
-		      List.foldl (chkRule region) (chkExp(region, e, used)) rules
 		  | A.IFexp{test, thenCase, elseCase} =>
 		      chkExp(region, elseCase,
 			chkExp(region, thenCase,
@@ -97,9 +98,17 @@ structure CheckUnused : sig
 		      chkExp(region, e2, chkExp(region, e1, used))
 		  | A.WHILEexp{test, expr} =>
 		      chkExp(region, expr, chkExp(region, test, used))
-		  | A.FNexp(rules, _, _) => List.foldl (chkRule region) used rules
 		  | A.LETexp(d, e) =>
 		      chkDec (region, false, d, chkExp(region, e, used))
+                  | A.LETVexp(x, e1, e2) => let
+                      val used' = chkExp(region, e2, used)
+                      in
+                        if VSet.member(used', x)
+                          then chkExp(region, e1, VSet.delete(used', x))
+                          else (
+                            warning (region, x);
+                            chkExp (region, e1, used'))
+                      end
 		  | A.SEQexp es => List.foldl
 		      (fn (e, used) => chkExp(region, e, used))
 			used es
@@ -163,6 +172,7 @@ structure CheckUnused : sig
 			List.foldl chk2 (List.foldl chk1 used rvbs) rvbs
 		      end
 		  | A.DOdec e => chkExp (region, e, used)
+                  | A.VARSELdec _ => used (* should not happen *)
 		  | A.TYPEdec _ => used
 		  | A.DATATYPEdec _ => used
 		  | A.ABSTYPEdec{body, ...} => chkDec (region, top, body, used)

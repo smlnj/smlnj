@@ -71,7 +71,8 @@ structure CharBuffer :> MONO_BUFFER
 	  end
 
     fun copy {src=BUF{content=ref src, len=ref n, ...}, dst, di} =
-	  if (0 <= di) andalso Word.<(Word.fromInt(di ++ n), Word.fromInt(A.length dst))
+	  if (0 <= di)
+          andalso Word.<=(Word.fromInt(di ++ n), Word.fromInt(A.length dst))
 	    then let
 	      fun cpy (di, si) = if (si < n)
 		    then (A.update(dst, di, A.sub(src, si)); cpy (di ++ 1, si ++ 1))
@@ -85,8 +86,8 @@ structure CharBuffer :> MONO_BUFFER
 
     fun sub (BUF{content=ref arr, len=ref n, ...}, i) =
           if Word.<(Word.fromInt i, Word.fromInt n)
-            then raise Subscript
-            else A.sub(arr, i)
+            then A.sub(arr, i)
+            else raise Subscript
 
     fun clear (BUF{len, ...}) = (len := 0)
 

@@ -342,7 +342,7 @@ C.NUMt{sz=sz}
 		      end
 		  | PURE(P.WRAP(P.INT sz), [v], x, _, k) => if (sz = ity)
 			then let
-			  val desc = D.makeDesc(1, D.tag_raw)
+			  val desc = D.makeDesc'(1, D.tag_raw)
 			  val oper = rawRecord (desc, TP.INT, 1)
 			  in
 			    C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
@@ -353,7 +353,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.WRAP(P.FLOAT 32), [v], x, _, k) => (* REAL32: FIXME *)
 		      error ["wrap for 32-bit floats is not implemented"]
 		  | PURE(P.WRAP(P.FLOAT 64), [v], x, _, k) => let
-		      val desc = D.makeDesc(1, D.tag_raw)
+		      val desc = D.makeDesc'(1, D.tag_raw)
 		      val oper = rawRecord (desc, TP.FLT, 1)
 		      in
 			C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
@@ -404,7 +404,7 @@ C.NUMt{sz=sz}
 	(* Allocate a record with raw machine-int-sized components *)
 	  and allocRawRecord (kind, fields, x, k) = let
 		val len = length fields
-		val desc = D.makeDesc(len, D.tag_raw)
+		val desc = D.makeDesc'(len, D.tag_raw)
 		val oper = rawRecord (desc, kind, len)
 		in
 		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))

@@ -1,6 +1,6 @@
 (* int-inf.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Author of the current code: Matthias Blume (blume@tti-c.org)
@@ -166,7 +166,7 @@ structure IntInfImp :> INT_INF = struct
     end
 
     fun fmt StringCvt.OCT = bitfmt (0w3, 0wx7, "01234567")
-      | fmt StringCvt.HEX = bitfmt (0w4, 0wxf, "0123456789abcdef")
+      | fmt StringCvt.HEX = bitfmt (0w4, 0wxf, "0123456789ABCDEF")
       | fmt StringCvt.BIN = bitfmt (0w1, 0wx1, "01")
       | fmt StringCvt.DEC = decfmt
 

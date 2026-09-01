@@ -20,6 +20,14 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
 
     fun say msg = Control.Print.say(String.concat msg)
 
+(* TODO: first and last contract should not be part of this list *)
+    val () = CG.cpsopt := [
+            "first_contract", "eta", "zeroexpand", "vn", "check",
+            "last_contract"
+          ]
+    (* ["first_contract", "eta", "uncurry", "etasplit",
+	"cycle_expand", "eta", "last_contract" ] *)
+
   (** the main optimization function *)
 (* NOTE: The third argument to reduce is currently ignored.
    It used to be used for reopening closures. *)

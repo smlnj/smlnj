@@ -1,0 +1,192 @@
+:version: 2026.3
+:date: @DATE@
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
+:wiki-base: https://github.com/smlnj/.github/wiki
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-url}index.html[[.tt]#{dist-url}#]
+--
+''''''''
+
+== Summary
+
+This release contains a large number of mostly minor bug fixes for issues
+identified by Claude and reported by Skye Soss.
+
+== Details
+
+// **** details: include those sections that are relevant
+
+=== Compiler
+
+* Added constant folding for the rotation operators
+
+=== Runtime System
+
+=== Basis Library
+
+A number of *Basis Library bugs were fixed (see the list below for details).
+
+=== SML/NJ Library
+
+A number of *SML/NJ Library* bugs were fixed (see the list below or the
+`smlnj-lib/CHANGES` file for details).
+
+== Bugs
+
+Here is a list of the issues and pull requests that are closed with this release.
+
+[.buglist,cols="^3,<12",strips="none",options="header"]
+|=======
+| Issue
+| Description
+| [.bugid]#361#
+| {pull-base}/361[Make `build.sh` script more portable]
+| [.bugid]#364#
+| {pull-base}/364[Fix `Word.countTrailingZeros`]
+| [.bugid]#365#
+| {pull-base}/365[Fix position calculation of `funsig` token]
+| [.bugid]#366#
+| {pull-base}/366[Fix the printing of vector patterns]
+| [.bugid]#367#
+| {pull-base}/367[Fix the pattern match to reference `REF` dcon]
+| [.bugid]#368#
+| {issue-base}/368[compiler throws an error upon invalid opaque signature match]
+| [.bugid]#370#
+| {issue-base}/370[The SExp parser re-parses top-level quoted symbols]
+| [.bugid]#371#
+| {issue-base}/371[The SExp parser parses negative numbers as symbols]
+| [.bugid]#373#
+| {issue-base}/373[JSONParser.parse does not ensure `0` is not followed by a digit]
+| [.bugid]#375#
+| {issue-base}/375[`UnixEnv.addToEnv` does not replace existing keys]
+| [.bugid]#378#
+| {issue-base}/378[`UTF8.map` does not do anything]
+| [.bugid]#379#
+| {issue-base}/379[`UTF8.exists` always returns `true`]
+| [.bugid]#380#
+| {issue-base}/380[`CharMap.mkCharMap` creates a too-small array]
+| [.bugid]#381#
+| {issue-base}/381[Rand48's incorrect implementation results in periodic results]
+| [.bugid]#382#
+| {issue-base}/382[`HashSetFn.filter` does not reset the number of elements if it removes everything]
+| [.bugid]#383#
+| {issue-base}/383[`ListMapFn.all` always return `false`]
+| [.bugid]#384#
+| {issue-base}/384[`IntervalSetFn.add` operation doesn't properly merge consecutive ranges]
+| [.bugid]#385#
+| {issue-base}/385[`Hash2TableFn.insert` can corrupt the table]
+| [.bugid]#386#
+| {issue-base}/386[`EditDistance.distance` uses the wrong stride]
+| [.bugid]#388#
+| {issue-base}/388[`Format.LEFT` justifies text to the right]
+| [.bugid]#389#
+| {issue-base}/389[`Format.format` raises `Option` instead of `BadFormat` on invalid format]
+| [.bugid]#390#
+| {issue-base}/390[line break cutoff is one character too strict in PP library]
+| [.bugid]#391#
+| {issue-base}/391[pretty-printing `maxDepth` is controlled by `maxIndent`]
+| [.bugid]#392#
+| {issue-base}/392[ANSI background color styles are not properly popped]
+| [.bugid]#393#
+| {issue-base}/393[`Posix.ProcEnv.uname` crashes on syscall failure]
+| [.bugid]#398#
+| {issue-base}/398[`IntListMap.findAndRemove` raises exception on failure]
+| [.bugid]#399#
+| {issue-base}/399[`HashTable.findAndRemove` does not update `numItems`]
+| [.bugid]#400#
+| {issue-base}/400[`Word8Buffer.sub` allows invalid indices and throws on valid indices]
+| [.bugid]#401#
+| {issue-base}/401[`Word8Buffer.copy` throws exception on valid input]
+| [.bugid]#402#
+| {issue-base}/402[`Array.tabulate` calls its function even on invalid input]
+| [.bugid]#403#
+| {issue-base}/403[`Substring.isSubstring` returns false when given empty strings]
+| [.bugid]#406#
+| {issue-base}/406[`CharVectorSlice.getVec` returns a slice containing the entire underlying vector]
+| [.bugid]#432#
+| {issue-base}/432[`Hash.string'` does not hash the first character]
+| [.bugid]#433#
+| {issue-base}/433[The hash table in the `Atom` module is never resized]
+| [.bugid]#434#
+| {issue-base}/434[`EditDistance.distance` treats transposition as free]
+| [.bugid]#440#
+| {issue-base}/440[`ParserComb.skipBefore` returns `NONE` when it reaches EOF]
+| [.bugid]#446#
+| {issue-base}/446[`Real.toDecimal`/`Real.fromDecimal` don't round-trip]
+| [.bugid]#447#
+| {issue-base}/447[`StringCvt.skipWS` does not skip form feeds, returns, or vertical tabs]
+| [.bugid]#448#
+| {issue-base}/448[`Vector.update` does not raise `Subscript` on out-of-bounds index]
+| [.bugid]#450#
+| {issue-base}/450[`LargeInt.fmt StringCvt.HEX` produces lowercase hex digits]
+| [.bugid]#451#
+| {issue-base}/451[`Date.fromString` does not skip leading whitespace]
+| [.bugid]#454#
+| {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
+// | [.bugid]#@ID@#
+// | {issue-base}/@ID@[@DESCRIPTION@]
+|=======
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+
+* updated the unused-variable checker for changes to the `Absyn.exp`
+  datatype
+
+// ***** include a list of unnumbered/legacy bugs here *****
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^3s,^4v,^2v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) |
+| | Ubuntu 20.04.6 LTS | Tested
+| | Ubuntu 22.04.2 LTS | Tested
+| {nbsp} | |
+| ARM64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) |
+| | macOS 26 (Tahoe) | Tested
+| | macOS 27 (Golden Gate) |
+| | Linux |
+| {nbsp} | |
+|=======

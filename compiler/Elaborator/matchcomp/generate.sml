@@ -198,7 +198,7 @@ fun generate (decTree: MC.dectree, ruleMap: Preprocessing.ruleMap, allRules: rul
 					       if newvar (* vecmvar is a new mvar to be bound to vector *)
 					       then MU.bindPath (pathenv, path, vecmvar)
 					       else pathenv
-					in AS.SRULE (intCon n, NONE, genDecTree(decTree, pathenv))
+					in AS.SRULE (intCon n, NONE, genDecTree(decTree, newPathenv))
 				       end
 				   | genVCase _ = bug "genDecTree:genVCase: not a vector-length case"
 				 val switchCases = map genVCase cases

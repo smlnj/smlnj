@@ -155,7 +155,9 @@ structure IntHashTable :> MONO_HASH_TABLE where type Key.hash_key = int =
                   end
           val (v, bucket) = look (Array.sub (arr, indx))
           in
-            Array.update (arr, indx, bucket); SOME v
+            Array.update (arr, indx, bucket);
+            n_items := !n_items - 1;
+            SOME v
 	  end
             handle _ => NONE
 

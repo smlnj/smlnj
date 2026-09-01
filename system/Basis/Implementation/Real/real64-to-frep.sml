@@ -73,7 +73,7 @@ structure Real64ToFRep : sig
                     else (i, a, b, c, digit, allAZero, allBZero)
                 end
           val (i, a, b, c, digit, allAZero, allBZero) =
-                iter1 (0, a, b, if acceptBounds then c - 1 else c, 0, true, true)
+                iter1 (0, a, b, if acceptBounds then c else c - 1, 0, true, true)
           fun iter2 (i, a, b, c, digit, allBZero) = let
                 val (aq10, ar10) = IntInf.quotRem (a, 10)
                 in

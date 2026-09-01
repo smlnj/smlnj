@@ -400,6 +400,8 @@ structure ContractPrim : sig
             | (P.PURE_ARITH{oper=P.NOTB, kind}, [NUM i]) =>
                 Val(NUM{ival = CA.bNot(sizeOfKind kind, #ival i), ty = #ty i})
             (***** ROTL *****)
+            | (P.PURE_ARITH{oper=P.ROTL, kind}, [NUM n, NUM m]) =>
+                Val(NUM{ival = CA.bRotateL(sizeOfKind kind, #ival n, #ival m), ty = #ty n})
             | (P.PURE_ARITH{oper=P.ROTL, ...}, [i as NUM{ival=0, ...}, _]) => Val i
 (* TODO: rotation of all ones is also a no-op *)
             | (p as P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
@@ -423,6 +425,8 @@ structure ContractPrim : sig
                   else if (sz' <> n) then Pure(p, [v, tagInt' n])
                   else None
                 end
+            | (P.PURE_ARITH{oper=P.ROTR, kind}, [NUM n, NUM m]) =>
+                Val(NUM{ival = CA.bRotateR(sizeOfKind kind, #ival n, #ival m), ty = #ty n})
             (***** PURE_NUMSUBSCRIPT *****)
             | (P.PURE_NUMSUBSCRIPT{kind}, [STRING s, NUM i]) => let
                 val v = ord(String.sub(s, Int.fromLarge(#ival i)))

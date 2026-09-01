@@ -363,7 +363,7 @@ functor PPStreamFn (
 	  val PP{spaceLeft, leftTot, rightTot, queue, ...} = strm
 	  fun advance () = (case Q.peek queue
 		 of (SOME{tok, sz=ref sz, len}) =>
-		      if ((sz >= 0) orelse (!rightTot - !leftTot >= !spaceLeft))
+		      if ((sz >= 0) orelse (!rightTot - !leftTot > !spaceLeft))
 			then (
 			  ignore(Q.dequeue queue);
 			  format (strm, if sz < 0 then infinity else sz, tok);
@@ -496,7 +496,7 @@ functor PPStreamFn (
 	  fun limit optInt = Option.getOpt(optInt, infinity)
 	  val width = limit(D.lineWidth d)
 	  val maxIndent = Int.min(limit(D.maxIndent d), width-1)
-	  val maxDepth = Int.max(limit(D.maxIndent d), 2)
+	  val maxDepth = Int.max(limit(D.maxDepth d), 2)
 	  val strm = PP{
 		  dev = d,
 		  closed = ref false,

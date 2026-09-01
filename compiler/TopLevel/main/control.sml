@@ -43,12 +43,8 @@ structure Control_CG : CGCONTROL =
 
     val closureStrategy = new (i, "closure-strategy", "specify the closure strategy", 0)	(* see CPS/clos/closure.sml *)
     val mixedClosures = new (b, "mixed-closures", "use mixed records for closures", true)
-    val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [
-	    "first_contract", "eta", "zeroexpand", "vn", "check",
-            "last_contract"
-	  ])
-    (* ["first_contract", "eta", "uncurry", "etasplit",
-	"cycle_expand", "eta", "last_contract" ] *)
+    (* CPS optimization phases (this is initialized in CPS/opt/cpsopt.sml) *)
+    val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [])
     val rounds = new (i, "rounds", "max # of cpsopt rounds", 10)
     val path = new (b, "path", "?", false)
     val betacontract = new (b, "betacontract", "?", true)

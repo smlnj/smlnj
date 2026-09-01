@@ -28,7 +28,7 @@ ml_val_t _ml_P_IO_lseek (ml_state_t *msp, ml_val_t arg)
     pos = lseek(fd, offset, whence);
 
     if (pos < 0) {
-	RAISE_SYSERR (msp, (int)pos);
+	return RAISE_SYSERR (msp, (int)pos);
     }
 
     INT64_ALLOC(msp, box_pos, pos);

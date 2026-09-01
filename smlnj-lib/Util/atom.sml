@@ -66,6 +66,7 @@ structure Atom :> ATOM =
 		      val a = ATOM {hash = h, id = toString s}
 		      in
 			Array.update (tbl, indx, a :: Array.sub (tbl, indx));
+			numItems := !numItems + 1;
 			a
 		      end
 		in

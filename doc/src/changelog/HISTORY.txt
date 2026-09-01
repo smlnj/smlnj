@@ -105,6 +105,13 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-08-29]::
++
+Added constant folding for the rotation operators.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-08-20]::
 +
 The `InvokeGC` module has been rewritten to use mixed records to

@@ -1,6 +1,6 @@
 (* word8-vector.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -54,17 +54,17 @@ structure Word8Vector : MONO_VECTOR =
 	val len = length vec
 	fun fold (i, a) =
 	    if i >= len then a else fold (i ++ 1, f (i, usub (vec, i), a))
-    in
-	fold (0, init)
-    end
+        in
+          fold (0, init)
+        end
 
     fun foldl f init vec = let
 	val len = length vec
 	fun fold (i, a) =
 	    if i >= len then a else fold (i ++ 1, f (usub (vec, i), a))
-    in
-	fold (0, init)
-    end
+        in
+          fold (0, init)
+        end
 
     fun foldri f init vec = let
 	fun fold (i, a) =

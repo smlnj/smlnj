@@ -193,11 +193,14 @@ structure FmtFields : sig
 		      zero_pad = false, base = false, large = false
 		    })
 		end
-	  val (wid, fmtStr) = if (Char.isDigit(valOf(SS.first fmtStr)))
-		then let
-		  val (n, fmtStr) = valOf (decToInt SS.getc fmtStr)
-		  in (Wid n, fmtStr) end
-		else (NoPad, fmtStr)
+	  val (wid, fmtStr) = (case SS.first fmtStr
+                 of NONE => raise BadFormat
+                  | SOME c => if (Char.isDigit c)
+                      then let
+                        val (n, fmtStr) = valOf (decToInt SS.getc fmtStr)
+                        in (Wid n, fmtStr) end
+                      else (NoPad, fmtStr)
+                (* end case *))
 	  val (ty, fmtStr) = (case SS.getc fmtStr
 		 of (SOME(#"d", ss)) => (IntField, ss)
 		  | (SOME(#"X", ss)) => (CapHexField, ss)
