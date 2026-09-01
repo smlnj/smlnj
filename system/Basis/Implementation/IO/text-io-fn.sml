@@ -154,12 +154,11 @@ functor TextIOFn (
 	      val INFO{readVec, reader=PIO.RD{chunkSize, ...}, ...} =
 		     infoOfIBuf buf
 	      in
-		case (chunkSize - 1)
-		 of 0 => (fn n => readVec n)
 (* FIXME: what if the rounded size is > maxInputSz? *)
-		  | k => (* round up to next multiple of chunkSize *)
-		      (fn n => readVec(Int.quot((n+k), chunkSize) * chunkSize))
-		(* end case *)
+                if (chunkSize <= 1)
+                  then (fn n => readVec n)
+                  (* round up to next multiple of chunkSize *)
+                  else (fn n => readVec(Int.quot((n+chunkSize-1), chunkSize) * chunkSize))
 	      end
 
 	fun generalizedInput getBuf = let
