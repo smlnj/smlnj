@@ -252,7 +252,7 @@ structure Real64Imp : REAL =
           val d = x / y
           in
             if (d == 0.0) then x
-            else if isFinite d then y * #frac(split(x/y))
+            else if isFinite d then y * #frac(split d)
             else nan
           end
 
