@@ -29,13 +29,13 @@ signature OBJECT_DESC =
     val tag_special : tag       (* special objects *)
 
   (* build an object header from a tag and length (in words) *)
-    val makeDesc : (IntInf.int * tag) -> IntInf.int
-    val makeDesc' : (int * tag) -> IntInf.int
+    val makeDesc : (int * tag) -> IntInf.int
+    val makeDesc' : (IntInf.int * tag) -> IntInf.int
 
-  (* build an object header for a mixed record, where `len` is the length of
-   * the uniform data part and `totLen` is the total length.
+  (* build an object header for a mixed record, where `ptrLen` is the length of
+   * the uniform data part and `rawLen` is the length of the raw data.
    *)
-    val makeMixedDesc' : {len : int, totLen : int} -> IntInf.int
+    val makeMixedDesc : {ptrLen : int, rawLen : int} -> IntInf.int
 
   (* fixed descriptors *)
     val desc_pair : IntInf.int

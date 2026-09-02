@@ -107,6 +107,14 @@ Here is an update to the entry
 //--------------------------------------------------------------------
 [2026-09-02]::
 +
+The `InvokeGC` module has been rewritten to use mixed records to
+preserve live vars across GC calls.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-09-02]::
++
 Added support for "mixed" records that contain both uniform and raw
 data to the runtime system.  This change breaks backward compatibility
 with older heap images, since we have added an additional arena to

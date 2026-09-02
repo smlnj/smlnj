@@ -201,7 +201,7 @@ C.NUMt{sz=sz}
 		 of RECORD(CPS.RK_VECTOR, flds, x, k) => let
 		    (* A vector has a data record and a header record *)
 		      val len = length flds
-		      val dataDesc = D.makeDesc'(len, D.tag_vec_data)
+		      val dataDesc = D.makeDesc(len, D.tag_vec_data)
 		      val dataP = LV.mkLvar()
 		      in
 			allocRecord (dataDesc, flds, dataP,
@@ -214,8 +214,10 @@ C.NUMt{sz=sz}
 (* REAL32: FIXME *)
 		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) =>
                       allocRawRecord (TP.INT, flds, x, k)
+                  | RECORD(CPS.RK_MIXED rep, flds, x, k) =>
+                      allocRecord (D.makeMixedDesc rep, flds, x, bindVarIn(x, k))
 		  | RECORD(_, flds, x, k) => allocRecord (
-		      D.makeDesc' (length flds, D.tag_record),
+		      D.makeDesc (length flds, D.tag_record),
 		      flds, x, bindVarIn(x, k))
 (*
 		  | SELECT(i, v, x, ty as CPS.NUMt{sz, ...}, k) =>
@@ -320,7 +322,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.MKSPECIAL, [i, v], x, _, k) => let
 		      val desc = (case i
 			     of NUM{ty={tag=true, ...}, ival} =>
-				  num (D.makeDesc(ival, D.tag_special))
+				  num (D.makeDesc'(ival, D.tag_special))
 			      | _ => (* desc = (i << tagWidth) | desc_special *)
 				pureOp (TP.ORB, ity, [
 				    pureOp (TP.SHL, ity, [untagSigned i, w2Num D.tagWidth]),
@@ -359,7 +361,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.RAWRECORD rk, [NUM{ty={tag=true, ...}, ival}], x, _, k) =>
 		      let
 		      val n = Int.fromLarge ival (* number of elements *)
-		      fun mkDesc (n, tag) = SOME(D.makeDesc' (n, tag))
+		      fun mkDesc (n, tag) = SOME(D.makeDesc (n, tag))
 		      val (desc, scale) = (case rk
 			     of NONE => (NONE, MS.valueSize)
 			      | SOME CPS.RK_FCONT =>
@@ -402,7 +404,7 @@ C.NUMt{sz=sz}
 	(* Allocate a record with raw machine-int-sized components *)
 	  and allocRawRecord (kind, fields, x, k) = let
 		val len = length fields
-		val desc = D.makeDesc'(len, D.tag_raw)
+		val desc = D.makeDesc(len, D.tag_raw)
 		val oper = rawRecord (desc, kind, len)
 		in
 		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))
@@ -465,7 +467,7 @@ C.NUMt{sz=sz}
 		      in
 			case i
 			 of NUM{ty={tag=true, ...}, ival} =>
-			      set (num (D.makeDesc(ival, D.tag_special)))
+			      set (num (D.makeDesc'(ival, D.tag_special)))
 			  | _ => set (pureOp(TP.ORB, ity, [
 				pureOp(TP.SHL, ity, [untagSigned v, w2Num D.tagWidth]),
 				num D.desc_special

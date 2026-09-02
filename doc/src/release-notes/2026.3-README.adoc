@@ -47,6 +47,8 @@ system.
 
 * Added constant folding for the rotation operators
 
+* Switch to using mixed records for live variables in `InvokeGC`.
+
 === Runtime System
 
 * Changed the heap layout to include an arena for "mixed" records.

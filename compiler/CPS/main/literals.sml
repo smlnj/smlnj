@@ -301,7 +301,7 @@ structure Literals : LITERALS =
   (* return the CPS type for a literal value *)
     fun cpsTypeOf (LV_REAL{ty, ...}) = C.FLTt ty
       | cpsTypeOf (LV_STR _) = CPSUtil.BOGt
-      | cpsTypeOf (LV_RECORD(C.RK_RECORD, lits)) = C.PTRt(C.RPT(List.length lits))
+      | cpsTypeOf (LV_RECORD(C.RK_RECORD, lits)) = C.rPtrTy(List.length lits)
       | cpsTypeOf (LV_RECORD _) = CPSUtil.BOGt
       | cpsTypeOf (LV_RAW _) = CPSUtil.BOGt
 
@@ -874,9 +874,11 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 	  end
 
  (* the main function *)
-    fun split (func as (fk, f, vl as [_,x], [kontTy, t as C.PTRt(C.RPT n)], body)) = let
+    fun split (
+          func as (fk, f, vl as [_,x], [kontTy, t as C.PTRt(C.RPT{ptrLen=n, rawLen=0})], body)
+        ) = let
 	(* new argument type has an additional argument for the literals *)
-	  val nt = C.PTRt(C.RPT(n+1))
+	  val nt = C.rPtrTy(n+1)
 	  val _ = if !debugFlg
 		then (
 		  say (concat["\n==== Before Literals.liftLiterals\n"]);
@@ -893,10 +895,10 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 		  val nbody = liftLiterals (env, idTbl, C.VAR lvv, C.VAR rvv, body)
 		(* add code to bind the real-literal vector (if necessary) *)
 		  val nbody = if nReal64Lits > 0
-			then C.SELECT(0, C.VAR lvv, rvv, C.PTRt(C.FPT nReal64Lits), nbody)
+			then C.SELECT(0, C.VAR lvv, rvv, C.fPtrTy nReal64Lits, nbody)
 			else nbody
 		(* add code to bind the literal vector *)
-		  val nbody = C.SELECT(n, C.VAR x, lvv, C.PTRt(C.RPT nLits), nbody)
+		  val nbody = C.SELECT(n, C.VAR x, lvv, C.rPtrTy nLits, nbody)
 		  in
 		    (nbody, code)
 		  end

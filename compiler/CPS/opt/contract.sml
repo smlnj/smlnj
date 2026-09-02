@@ -443,11 +443,12 @@ and g hdlr = let
                        * We need to be careful that the existing record has the same
                        * kind as this record (as well as the same size and content).
                        *)
+                        fun recInfo {ptrLen, rawLen=0} = (SOME RK_RECORD, ptrLen)
+                          | recInfo {ptrLen=0, rawLen} = (NONE, rawLen)
+                          | recInfo _ = (NONE, ~1)
                         fun objInfo (VAR z) = (case (#info (get z))
-                               of SELinfo(_,_,PTRt(RPT k)) => (SOME RK_RECORD, k)
-                                | SELinfo(_,_,PTRt(FPT k)) => (NONE, k)
-                                | MISCinfo(PTRt(RPT k)) => (SOME RK_RECORD, k)
-                                | MISCinfo(PTRt(FPT k)) => (NONE, k)
+                               of SELinfo(_, _, PTRt(RPT rep)) => recInfo rep
+                                | MISCinfo(PTRt(RPT rep)) => recInfo rep
                                 | RECinfo(kind, l) => (SOME kind, length l)
                                 | _ => (NONE, ~1)
                               (* end case *))

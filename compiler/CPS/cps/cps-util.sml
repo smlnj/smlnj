@@ -1,6 +1,6 @@
 (* cps-util.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -97,8 +97,11 @@ structure CPSUtil : sig
     fun ctyToString (CPS.NUMt{sz, tag=true}) =  "[I]"
       | ctyToString (CPS.NUMt{sz, ...}) = concat["[I", Int.toString sz, "]"]
       | ctyToString (CPS.FLTt sz) = concat["[R", Int.toString sz, "]"]
-      | ctyToString (CPS.PTRt(CPS.RPT k)) = concat["[PR", Int.toString k, "]"]
-      | ctyToString (CPS.PTRt(CPS.FPT k)) = concat["[PF", Int.toString k, "]"]
+      | ctyToString (CPS.PTRt(CPS.RPT{ptrLen, rawLen})) = (case (ptrLen, rawLen)
+           of (0, m) => concat["[PF", Int.toString m, "]"]
+            | (n, 0) => concat["[PR", Int.toString n, "]"]
+            | (n, m) => concat["[PM", Int.toString n, ":", Int.toString m, "]"]
+          (* end case *))
       | ctyToString (CPS.PTRt CPS.VPT) =  "[PV]"
       | ctyToString (CPS.FUNt) = "[FN]"
       | ctyToString (CPS.CNTt tys) = concat [
@@ -120,7 +123,7 @@ structure CPSUtil : sig
     fun lenp (CPS.OFFp _) = 0
       | lenp (CPS.SELp(_,p)) = 1 + lenp p
 
-    val BOGt = CPS.PTRt CPS.VPT  (* bogus pointer type whose length is unknown *)
+    val BOGt = CPS.ptrTy  (* bogus pointer type whose length is unknown *)
 
     local
       structure LT = Lty
@@ -136,11 +139,11 @@ structure CPSUtil : sig
     fun tcflt tc = LK.tc_eqv(tc, tc_real)
     fun ltflt lt = LK.lt_eqv(lt, lt_real)
 
-    fun rtyc (f, []) = CPS.RPT 0
+    fun rtyc (f, []) = CPS.rPtrTy 0
       | rtyc (f, ts) = let
 	  fun loop (a::r, b, len) =
 		if f a then loop(r, b, len+1) else loop(r, false, len+1)
-	    | loop ([], b, len) = if b then CPS.FPT len else CPS.RPT len
+	    | loop ([], b, len) = if b then CPS.fPtrTy len else CPS.rPtrTy len
 	  in
 	    loop(ts, true, 0)
 	  end
@@ -155,7 +158,7 @@ structure CPSUtil : sig
 		    (* end case *))
 	      (* end case *)),
 	  fn tc => LD.tcw_tuple (tc,
-	      fn ts => CPS.PTRt(rtyc(tcflt, ts)),
+	      fn ts => rtyc(tcflt, ts),
 	      fn tc => if LD.tcp_arrow tc
                   then CPS.FUNt
                   else LD.tcw_cont(tc,
@@ -165,7 +168,7 @@ structure CPSUtil : sig
     fun ctype lt =
 	  LD.ltw_tyc(lt, fn tc => ctyc tc,
 	      fn lt =>
-		LD.ltw_str(lt, fn lts => CPS.PTRt(rtyc(fn _ => false, lts)),
+		LD.ltw_str(lt, fn lts => rtyc(fn _ => false, lts),
 		    fn lt => if LD.ltp_fct lt
                         then CPS.FUNt
                         else LD.ltw_cont(lt,

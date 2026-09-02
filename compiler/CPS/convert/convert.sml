@@ -674,7 +674,7 @@ functor Convert (MachSpec : MACH_SPEC) : CONVERT =
                  PURE(P.CAST, [lpvar arg], res, addrTy,
                    loop(e, c))
              | F.PRIMOP((_, FP.PRIM CP.WORD_TO_CPTR, _, _), [arg], res, e) =>
-                 PURE(P.CAST, [lpvar arg], res, PTRt VPT,
+                 PURE(P.CAST, [lpvar arg], res, ptrTy,
                    loop(e, c))
 
              | F.PRIMOP(po as (_,p,lt,ts), ul, v, e) =>

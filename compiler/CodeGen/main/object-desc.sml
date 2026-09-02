@@ -25,7 +25,7 @@ structure ObjectDesc :> OBJECT_DESC =
 
     val bitsPerWord = Word.fromInt Target.mlValueSz
 
-    val wordsPerReal= IntInf.fromInt(Target.defaultRealSz div Target.mlValueSz)
+    val wordsPerReal= II.fromInt(Target.defaultRealSz div Target.mlValueSz)
 
   (* one greater than the maximum length field value (sign should be 0) *)
     val maxLength = II.<<(1, bitsPerWord - (tagWidth+0w1))
@@ -48,10 +48,19 @@ structure ObjectDesc :> OBJECT_DESC =
     end (* local *)
 
   (* build a descriptor from a tag and length *)
-    fun makeDesc (len, t) = II.orb(II.<<(len, tagWidth), t)
-    fun makeDesc' (len, t) = II.orb(II.<<(II.fromInt len, tagWidth), t)
+    fun makeDesc' (len, t) = II.orb(II.<<(len, tagWidth), t)
+    fun makeDesc (len, t) = makeDesc'(II.fromInt len, t)
 
-    fun makeMixedDesc' {len, totLen} = raise Fail "unimplemented"
+  (* the layout of a mixed-record header consists of the tag in bits 0-6
+   * with the total object length (in words) in bits 7-31, and the length of the
+   * pointer data in bits 32-63.
+   *)
+    fun makeMixedDesc {ptrLen, rawLen} =
+          if (ptrLen = 0) orelse (rawLen = 0)
+            then raise Fail "mixed record with zero sub-length"
+            else II.orb(
+              II.<<(II.fromInt rawLen, 0w32),
+              makeDesc(ptrLen+rawLen, tag_mixed))
 
   (* array/vector header codes; note that sequences of tagged integers use
    * the next largest size (e.g., 31 ==> 32).
@@ -65,12 +74,12 @@ structure ObjectDesc :> OBJECT_DESC =
     val seq_real64 : IntInf.int	= 6	(* elements are 64-bit raw floats *)
 
   (* fixed descriptors *)
-    val desc_pair = makeDesc(2, tag_record)
-    val desc_ref = makeDesc(1, tag_ref)
-    val desc_real64 = makeDesc(wordsPerReal, tag_raw)
-    val desc_polyvec = makeDesc(seq_poly, tag_vec_hdr)
-    val desc_polyarr = makeDesc(seq_poly, tag_arr_hdr)
-    val desc_special = makeDesc(0, tag_special)
+    val desc_pair = makeDesc'(2, tag_record)
+    val desc_ref = makeDesc'(1, tag_ref)
+    val desc_real64 = makeDesc'(wordsPerReal, tag_raw)
+    val desc_polyvec = makeDesc'(seq_poly, tag_vec_hdr)
+    val desc_polyarr = makeDesc'(seq_poly, tag_arr_hdr)
+    val desc_special = makeDesc'(0, tag_special)
 
   (* length codes for special descriptors *)
     val special_unevaled_susp : IntInf.int	= 0
@@ -78,4 +87,4 @@ structure ObjectDesc :> OBJECT_DESC =
     val special_weak : IntInf.int		= 2
     val special_nulled_weak : IntInf.int	= 3
 
-  end;
+  end

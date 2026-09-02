@@ -51,7 +51,7 @@ structure StrEqlCnv : sig
 	  val dp = LV.mkLvar()
 	(* wrap expression in binding of `dp` *)
 	  fun withStrData exp =
-		C.PURE(C.P.GETSEQDATA, [s], dp, C.PTRt C.VPT, exp)
+		C.PURE(C.P.GETSEQDATA, [s], dp, C.ptrTy, exp)
 	(* test the i'th word against `w` *)
 	  fun mkTest falseExp (i, w, k) = let
 		val tmp = LV.mkLvar()
