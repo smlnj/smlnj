@@ -637,9 +637,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 #ifdef DEBUG_LITERALS
 	    SayDebug("[%04d/%4d]: INT64(" PRINT ")\n", startPC, depth, arg.iArg);
 #endif
-	    res = ML_AllocWord64(msp, arg.iArg);
-	    PUSH (res);
-	    availSpace -= 2*WORD_SZB;
+	    PUSH ((ml_val_t)arg.iArg);
 	    break;
 #endif
 
