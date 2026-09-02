@@ -40,14 +40,9 @@ SML/NJ 2026.3
         * Fix for Issue #434 (`EditDistance.distance` treats transposition as free)
         * Fix for Issue #440 (`ParserComb.skipBefore` returns `NONE` when it
           reaches EOF)
-        * Fix for Issue # ()
-        * Fix for Issue # ()
 
 [2026-08-27]
         Added the `Trilean` structure to the utility library.
-
-[2026-08-26]
-	Fix for Issue #378 (`UTF8.map` does not do anything)
 
 --------------------------------------------------------------------------------
 SML/NJ 2026.1
