@@ -113,54 +113,59 @@ structure TimeImp : sig
 	fun digv c = Int.toLarge (Char.ord c - Char.ord #"0")
 
 	fun whole s = let
-	    fun loop (s, n, m, ret) =
-		case getc s of
-		    NONE => ret (n, s, m)
-		  | SOME (c, s') =>
-		      if Char.isDigit c then
-			  loop (s', 10 * n + digv c, m + 1, SOME)
-		      else ret (n, s, m)
-	in
-	    loop (s, 0, 0, fn _ => NONE)
-	end
+	    fun loop (s, n, m, ret) = (case getc s
+                 of NONE => ret (n, s, m)
+		  | SOME (c, s') => if Char.isDigit c
+                      then loop (s', 10 * n + digv c, m + 1, SOME)
+                      else ret (n, s, m)
+                (* end case *))
+            in
+              loop (s, 0, 0, fn _ => NONE)
+            end
 
 	fun time (negative, s) = let
 	    fun pow10 p = IntInfImp.pow (10, p)
 	    fun return (usec, s) =
 		SOME (fromMicroseconds (if negative then ~usec else usec), s)
-	    fun fractional (wh, s) =
-		case whole s of
-		    SOME (n, s, m) => let
-			fun done fr = return (wh * 1000000 + fr, s)
+	    fun fractional (wh, s) = (case whole s
+                 of SOME (n, s, m) => let
+                    fun done fr = return (wh * 1000000 + fr, s)
 		    in
-			if m > 6 then done (n div pow10 (m - 6))
-			else if m < 6 then done (n * pow10 (6 - m))
-			else done n
+                      if m > 6 then done (n div pow10 (m - 6))
+                      else if m < 6 then done (n * pow10 (6 - m))
+                      else done n
 		    end
 		  | NONE => NONE
-	    fun withwhole s =
-		case whole s of
-		    NONE => NONE
-		  | SOME (wh, s', _) =>
-		      (case getc s' of
-			   SOME (#".", s'') => fractional (wh, s'')
-			 | _ => return (wh * 1000000, s'))
-	in
-	    case getc s of
-		NONE => NONE
-	      | SOME (#".", s') => fractional (0, s')
-	      | _ => withwhole s
-	end
+                (* end case *))
+	    fun withwhole s = (case whole s
+                 of NONE => NONE
+		  | SOME(wh, s', _) => (case getc s'
+                     of SOME(#".", s'') => (case getc s''
+                         of SOME(c, _) => if Char.isDigit c
+                              then fractional (wh, s'')
+                              else return (wh * 1000000, s'')
+                          | NONE => return (wh * 1000000, s'')
+                        (* end case *))
+                      | _ => return (wh * 1000000, s')
+                    (* end case *))
+                (* end case *))
+            in
+              case getc s
+               of NONE => NONE
+                | SOME(#".", s') => fractional (0, s')
+                | _ => withwhole s
+              (* end case *)
+            end
 
-	fun sign s =
-	    case getc s of
-		NONE => NONE
+	fun sign s = (case getc s
+             of NONE => NONE
 	      | SOME ((#"-" | #"~"), s') => time (true, s')
 	      | SOME (#"+", s') => time (false, s')
 	      | _ => time (false, s)
-    in
-	sign (StringCvt.skipWS getc s)
-    end
+            (* end case *))
+        in
+          sign (StringCvt.skipWS getc s)
+        end
 
     val toString   = fmt 3
     val fromString = PB.scanString scan

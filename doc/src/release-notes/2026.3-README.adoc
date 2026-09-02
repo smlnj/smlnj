@@ -142,6 +142,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/434[`EditDistance.distance` treats transposition as free]
 | [.bugid]#440#
 | {issue-base}/440[`ParserComb.skipBefore` returns `NONE` when it reaches EOF]
+| [.bugid]#440#
+| {issue-base}/441[`Time.scan` doesn't backtrack after seeing `.`]
 | [.bugid]#443#
 | {issue-base}/443[`NetHostDB.scan` raises `Overflow` on parse error instead of returning `NONE`]
 | [.bugid]#444#
