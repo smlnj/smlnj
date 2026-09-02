@@ -105,6 +105,18 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-09-02]::
++
+Added support for "mixed" records that contain both uniform and raw
+data to the runtime system.  This change breaks backward compatibility
+with older heap images, since we have added an additional arena to
+hold such records.  We are experimenting with using such records to
+hold live data across GC calls, to hold excess arguments to function
+calls, and to represent closures.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-08-31]::
 +
 Changed the tracking of GC time to include system time (as specified in

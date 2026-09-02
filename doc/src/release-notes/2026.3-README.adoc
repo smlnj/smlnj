@@ -49,6 +49,8 @@ system.
 
 === Runtime System
 
+* Changed the heap layout to include an arena for "mixed" records.
+
 === Basis Library
 
 A number of *Basis Library bugs were fixed (see the list below for details).

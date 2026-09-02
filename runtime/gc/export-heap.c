@@ -201,6 +201,44 @@ PVT export_table_t *ScanHeap (heap_t *heap)
 	PatchArena(RECORD_INDX);
 	PatchArena(PAIR_INDX);
 	PatchArena(ARRAY_INDX);
+
+        /* patch the mixed arena */
+        {
+            arena_t *ap = heap->gen[i]->arena[MIXED_INDX];
+            bool_t needsRepair = FALSE;
+            Word_t objLen, ptrLen;
+
+            ml_val_t *p = ap->tospBase;
+            ml_val_t *q = ap->nextw;
+            while (p < q) {
+                ml_val_t hdr = *p++;
+                ASSERT(isDESC(hdr));
+                switch (GET_TAG(hdr)) {
+                  case DTAG_vec_hdr:
+                  case DTAG_arr_hdr:
+                    /* vector/array headers are pairs of data-ptr and length */
+                    objLen = 2;
+                    ptrLen = 1;
+                    break;
+                  case DTAG_mixed:
+                    objLen = MIXED_GET_LEN(hdr);
+                    ptrLen = MIXED_GET_PTRLEN(hdr);
+                    break;
+                  default:
+                    Die ("invalid header tag %#x in mixed arena (gen 1)\n", hdr);
+                }
+                ASSERT(ptrLen < objLen);
+                for (int j = 0;  j < ptrLen;  ++j) {
+                    ml_val_t w = p[j];
+                    if (isEXTERN(bibop, w)) {
+                        p[j] = ExportCSymbol(tbl, w);
+                        needsRepair = TRUE;
+                    }
+                }
+                p += objLen;
+            }
+            ASSERT(p == q);
+        }
     }
 
     return tbl;
@@ -390,6 +428,44 @@ PVT void RepairHeap (export_table_t *tbl, heap_t *heap)
 	RepairArena(RECORD_INDX);
 	RepairArena(PAIR_INDX);
 	RepairArena(ARRAY_INDX);
+
+        /* repair the mixed-record arena */
+        {
+            arena_t *ap = heap->gen[i]->arena[MIXED_INDX];
+            if (ap->needsRepair) {
+                ml_val_t *p = ap->tospBase;
+                ml_val_t *q = ap->nextw;
+                Word_t objLen, ptrLen;
+
+                while (p < q) {
+                    ml_val_t hdr = *p++;
+                    ASSERT(isDESC(hdr));
+                    switch (GET_TAG(hdr)) {
+                      case DTAG_vec_hdr:
+                      case DTAG_arr_hdr:
+                        /* vector/array headers are pairs of data-ptr and length */
+                        objLen = 2;
+                        ptrLen = 1;
+                        break;
+                      case DTAG_mixed:
+                        objLen = MIXED_GET_LEN(hdr);
+                        ptrLen = MIXED_GET_PTRLEN(hdr);
+                        break;
+                      default:
+                        Die ("invalid header tag %#x in mixed arena (gen 1)\n", hdr);
+                    }
+                    ASSERT(ptrLen < objLen);
+                    for (int j = 0;  j < ptrLen;  ++j) {
+                        ml_val_t w = p[j];
+                        if (isEXTERNTAG(w)) {
+                            p[j] = AddrOfCSymbol(tbl, w);
+                        }
+                    }
+                    p += objLen;
+                }
+                ASSERT(p == q);
+            }
+        }
     }
 
 } /* end of RepairHeap */

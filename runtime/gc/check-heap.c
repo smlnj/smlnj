@@ -22,6 +22,7 @@
 /* local routines */
 PVT void CheckRecordArena (arena_t *ap);
 PVT void CheckPairArena (arena_t *ap);
+PVT void CheckMixedArena (arena_t *ap);
 PVT void CheckStringArena (arena_t *ap);
 PVT void CheckArrayArena (arena_t *ap, card_map_t *cm);
 PVT int CheckPtr (ml_val_t *p, ml_val_t w, int srcGen, int srcKind, int dstKind);
@@ -34,10 +35,11 @@ extern char	*ArenaName[];
 #define OBJC_NEWFLG	(1 << OBJC_new)
 #define OBJC_RECFLG	(1 << OBJC_record)
 #define OBJC_PAIRFLG	(1 << OBJC_pair)
+#define OBJC_MIXFLG	(1 << OBJC_mixed)
 #define OBJC_STRFLG	(1 << OBJC_string)
 #define OBJC_ARRFLG	(1 << OBJC_array)
 #define OBJC_any	\
-	(OBJC_NEWFLG|OBJC_RECFLG|OBJC_PAIRFLG|OBJC_STRFLG|OBJC_ARRFLG)
+	(OBJC_NEWFLG|OBJC_RECFLG|OBJC_PAIRFLG|OBJC_MIXFLG|OBJC_STRFLG|OBJC_ARRFLG)
 
 #define ERROR	{					\
 	if (++ErrCount > 20) {				\
@@ -121,6 +123,7 @@ void CheckHeap (heap_t *heap, int maxSweptGen)
 
 	CheckRecordArena (g->arena[RECORD_INDX]);
 	CheckPairArena (g->arena[PAIR_INDX]);
+	CheckMixedArena (g->arena[MIXED_INDX]);
 	CheckStringArena (g->arena[STRING_INDX]);
 	CheckArrayArena (g->arena[ARRAY_INDX], g->dirty);
     }
@@ -196,38 +199,6 @@ PVT void CheckRecordArena (arena_t *ap)
 		}
 	    }
 	    break;
-	  case DTAG_arr_hdr:
-	  case DTAG_vec_hdr:
-	    switch (GET_LEN(desc)) {
-	      case SEQ_poly:
-		if (GET_TAG(desc) == DTAG_arr_hdr) {
-		    CheckPtr (p, *p, gen, OBJC_record, OBJC_ARRFLG);
-                }
-		else {
-		    CheckPtr (p, *p, gen, OBJC_record, OBJC_RECFLG|OBJC_PAIRFLG);
-                }
-		break;
-	      case SEQ_word8:
-	      case SEQ_word16:
-	      case SEQ_word32:
-	      case SEQ_word64:
-	      case SEQ_real32:
-	      case SEQ_real64:
-		CheckPtr (p, *p, gen, OBJC_record, OBJC_STRFLG);
-		break;
-	      default:
-		ERROR;
-		SayDebug ("** @%p: strange sequence kind %d in record arena\n",
-		    p-1, GET_LEN(desc));
-		return;
-	    }
-	    if (! isUNBOXED(p[1])) {
-		ERROR;
-		SayDebug ("** @%p: %s header length field not an int (%p)\n",
-		    p+1, SeqHdrKind(desc), p[1]);
-	    }
-	    p += 2;
-	    break;
 	  default:
 	    ERROR;
 	    SayDebug ("** @%p: strange tag (%#x) in record arena\n",
@@ -268,6 +239,102 @@ PVT void CheckPairArena (arena_t *ap)
     }
 
 } /* end of CheckPairArena */
+
+/* CheckMixedArena:
+ *
+ * Check the mixed-record arena.
+ */
+PVT void CheckMixedArena (arena_t *ap)
+{
+    ml_val_t	*p, *stop, desc, w;
+    int		i, len, ptrLen;
+    int		gen = EXTRACT_GEN(ap->id);
+
+    if (! isACTIVE(ap))
+	return;
+
+    SayDebug ("  mixed records [%d]: [%p..%p:%p)\n",
+	gen, ap->tospBase, ap->nextw, ap->tospTop);
+
+    p = ap->tospBase;
+    stop = ap->nextw;
+    while (p < stop) {
+	desc = *p++;
+	if (! isDESC(desc)) {
+	    ERROR;
+	    SayDebug (
+		"** @%p: expected descriptor, but found %p in mixed-record arena\n",
+		p-1, desc);
+	    return;
+	}
+	switch (GET_TAG(desc)) {
+	  case DTAG_arr_hdr:
+	  case DTAG_vec_hdr:
+	    switch (GET_LEN(desc)) {
+	      case SEQ_poly:
+		if (GET_TAG(desc) == DTAG_arr_hdr) {
+		    CheckPtr (p, *p, gen, OBJC_record, OBJC_ARRFLG);
+                }
+		else {
+                    /* polymorphic-vector data is represented as a tuple */
+		    CheckPtr (p, *p, gen, OBJC_record, OBJC_RECFLG|OBJC_PAIRFLG);
+                }
+		break;
+	      case SEQ_word8:
+	      case SEQ_word16:
+	      case SEQ_word32:
+	      case SEQ_word64:
+	      case SEQ_real32:
+	      case SEQ_real64:
+		CheckPtr (p, *p, gen, OBJC_record, OBJC_STRFLG);
+		break;
+	      default:
+		ERROR;
+		SayDebug ("** @%p: strange sequence kind %d in mixed-record arena\n",
+		    p-1, GET_LEN(desc));
+		return;
+	    }
+	    if (! isUNBOXED(p[1])) {
+		ERROR;
+		SayDebug ("** @%p: %s header length field not an int (%p)\n",
+		    p+1, SeqHdrKind(desc), p[1]);
+	    }
+	    p += 2;
+	    break;
+	  case DTAG_mixed:
+            len = MIXED_GET_LEN(desc);
+            ptrLen = MIXED_GET_PTRLEN(desc);
+            if (ptrLen >= len) {
+                ERROR;
+                SayDebug ("** @%p: bogus mixed-record descriptor (%#x)\n", p-1, desc);
+                return;
+            }
+            /* check the pointer part of the record */
+	    for (i = 0;  i < ptrLen;  i++, p++) {
+		w = *p;
+		if (isDESC(w)) {
+		    ERROR;
+		    SayDebug (
+			"** @%p: unexpected descriptor %p in mixed-record slot %d of %d\n",
+			p, w, i, GET_LEN(desc));
+		    return;
+		}
+		else if (isBOXED(w)) {
+		    CheckPtr(p, w, gen, OBJC_record, OBJC_any);
+		}
+	    }
+            /* skip the raw part */
+            p += (len - ptrLen);
+	    break;
+	  default:
+	    ERROR;
+	    SayDebug ("** @%p: strange tag (%#x) in mixed-record arena\n",
+		p-1, GET_TAG(desc));
+	    return;
+	} /* end of switch */
+    }
+
+} /* end of CheckMixedArena */
 
 /* CheckStringArena:
  *
@@ -388,6 +455,7 @@ PVT int CheckPtr (ml_val_t *p, ml_val_t w, int srcGen, int srcKind, int dstKind)
     switch (objc) {
       case OBJC_record:
       case OBJC_pair:
+      case OBJC_mixed:
       case OBJC_string:
       case OBJC_array:
 	if (!(dstKind & (1 << objc))) {
@@ -426,7 +494,9 @@ PVT int CheckPtr (ml_val_t *p, ml_val_t w, int srcGen, int srcKind, int dstKind)
 	    }
 	    dstGen = MAX_NUM_GENS;
 	}
-	else Die("bogus object class in BIBOP\n");
+	else {
+            Die("bogus object class in BIBOP\n");
+        }
 	break;
     } /* end of switch */
 

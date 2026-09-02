@@ -1,6 +1,6 @@
 /*! \file minor-gc.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the code for doing minor collections (i.e., collecting the
@@ -83,16 +83,16 @@ void MinorGC (ml_state_t *msp, ml_val_t **roots)
 
 #ifdef VERBOSE
 {
-  int i;
-  SayDebug ("Before MinorGC:\n");
-  SayDebug("  Nursery: [%p..%p]\n",
+    int i;
+    SayDebug ("Before MinorGC:\n");
+    SayDebug("  Nursery: [%p..%p]\n",
         (void*)(heap->allocBase), (void*)((Addr_t)heap->allocBase + heap->allocSzB));
-  SayDebug ("  Generation 1:\n");
-  for (i = 0;  i < NUM_ARENAS;  i++) {
-    SayDebug ("    %s: base = %p, oldTop = %p, nextw = %p\n",
-      ArenaName[i+1], gen1->arena[i]->tospBase,
-      gen1->arena[i]->oldTop, gen1->arena[i]->nextw);
-  }
+    SayDebug ("  Generation 1:\n");
+    for (i = 0;  i < NUM_ARENAS;  i++) {
+        SayDebug ("    %s: base = %p, oldTop = %p, nextw = %p\n",
+            ArenaName[i+1], gen1->arena[i]->tospBase,
+            gen1->arena[i]->oldTop, gen1->arena[i]->nextw);
+    }
 }
 #endif
 
@@ -272,6 +272,39 @@ PVT void MinorGC_SweepToSpace (gen_t *gen1)
 	MinorGC_SweepToSpArena(PAIR_INDX);
 	MinorGC_SweepToSpArena(ARRAY_INDX);
 
+      /* sweep the mixed-record arena */
+        {
+            arena_t *ap = gen1->arena[MIXED_INDX];
+            ml_val_t *p = ap->sweep_nextw;
+            if (p < ap->nextw) {
+                Word_t objLen, ptrLen;
+                swept = TRUE;
+                do {
+                    ml_val_t hdr = *p++;
+                    ASSERT(isDESC(hdr));
+                    switch (GET_TAG(hdr)) {
+                      case DTAG_vec_hdr:
+                      case DTAG_arr_hdr:
+                        /* vector/array headers are pairs of data-ptr and length */
+                        objLen = 2;
+                        ptrLen = 1;
+                        break;
+                      case DTAG_mixed:
+                        objLen = MIXED_GET_LEN(hdr);
+                        ptrLen = MIXED_GET_PTRLEN(hdr);
+                        break;
+                      default:
+                        Die ("invalid header tag %#x in mixed arena (gen 1)\n", hdr);
+                    }
+                    for (int j = 0;  j < ptrLen;  ++j) {
+                        MinorGC_CheckWord(allocBase, allocSz, gen1, p+j);
+                    }
+                    p += objLen;
+                } while (p < ap->nextw);
+                ap->sweep_nextw = p;
+            }
+        }
+
     } while (swept);
 
 } /* end of MinorGC_SweepToSpace. */
@@ -327,14 +360,12 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
       case DTAG_arr_hdr:
 	len = 2;
 #ifdef CHECK_HEAP
-        for (int i = 0;  i < len;  ++i) {
-            if (! isValidWord(obj[i])) {
-                Die("ForwardObj: invalid header slot[%d/%d] = %p; base address = %p; desc = %p\n",
-                    i, len, obj[i], obj, desc);
-            }
+        if (! isBOXED(obj[0])) {
+            Die("ForwardObj: invalid data pointer %p in header; base address = %p; desc = %p\n",
+                obj[0], obj, desc);
         }
 #endif
-	arena = gen1->arena[RECORD_INDX];
+	arena = gen1->arena[MIXED_INDX];
         break;
       case DTAG_arr_data:
 	len = GET_LEN(desc);
@@ -347,6 +378,10 @@ PVT ml_val_t MinorGC_ForwardObj (gen_t *gen1, ml_val_t v)
         }
 #endif
 	arena = gen1->arena[ARRAY_INDX];
+	break;
+      case DTAG_mixed:
+        len = MIXED_GET_LEN(desc);
+	arena = gen1->arena[MIXED_INDX];
 	break;
       case DTAG_raw:
 	len = GET_LEN(desc);

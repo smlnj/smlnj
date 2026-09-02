@@ -1,6 +1,6 @@
 /*! \file blast-gc.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the garbage collector for compacting a blasted object.
@@ -256,6 +256,20 @@ SayDebug ("Repairing blast GC (maxGen = %d of %d)\n", maxGen, heap->numGens);
 	REPAIR(PAIR_INDX);
 	REPAIR(STRING_INDX);
 	REPAIR(ARRAY_INDX);
+
+        /* repair the mixed-record arena */
+        {
+            arena_t *ap = gen->arena[MIXED_INDX];
+            if (isACTIVE(ap)) {
+                repair_t *stop, *rp;
+                stop = (repair_t *)(ap->tospTop);
+                for (rp = ap->repairList;  rp < stop;  rp++) {
+                    ml_val_t *p = rp->loc;
+                    p[-1] = FOLLOW_FWDOBJ(p)[-1];
+                    p[0] = rp->val;
+                }
+            }
+        }
 
       /* free the to-space object, and reset the BIBOP marks */
 	for (j = 0;  j < NUM_ARENAS;  j++) {
@@ -628,15 +642,12 @@ PVT ml_val_t BlastGC_ForwardObj (heap_t *heap, ml_val_t v, aid_t id)
       case OBJC_record: {
 	desc = obj[-1];
 	switch (GET_TAG(desc)) {
-	  case DTAG_vec_hdr:
-	  case DTAG_arr_hdr:
-	    len = 2;
-	    break;
 	  case DTAG_forward:
 	  /* This object has already been forwarded */
 	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
 	  default:
 	    len = GET_LEN(desc);
+            break;
 	}
 	arena = heap->gen[gen-1]->arena[RECORD_INDX];
       } break;
@@ -658,6 +669,23 @@ PVT ml_val_t BlastGC_ForwardObj (heap_t *heap, ml_val_t v, aid_t id)
 	    NOTE_REPAIR(arena, obj, w);
 	    obj[0] =  MAKE_PAIR_FP(new_obj);
 	    return PTR_CtoML(new_obj);
+	}
+      } break;
+
+      case OBJC_mixed: {
+	arena = heap->gen[gen-1]->arena[MIXED_INDX];
+	desc = obj[-1];
+	switch (GET_TAG(desc)) {
+	  case DTAG_vec_hdr:
+	  case DTAG_arr_hdr:
+	    len = 2;
+	    break;
+	  case DTAG_forward:
+	  /* This object has already been forwarded */
+	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
+	  default:
+	    len = MIXED_GET_LEN(desc);
+            break;
 	}
       } break;
 
