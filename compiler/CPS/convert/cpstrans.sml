@@ -11,7 +11,7 @@
  *   to avoid spilling in some cases.
  *)
 
-functor CPStrans (MachSpec : MACH_SPEC) : sig
+functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 
     val cpstrans : CPS.function -> CPS.function
 

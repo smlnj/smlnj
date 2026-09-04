@@ -33,11 +33,11 @@ signature CPS_COMP =
 
 functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
 
-    structure Convert = Convert(MachSpec)
-    structure CPStrans = CPStrans(MachSpec)
-    structure CPSopt = CPSopt(MachSpec)
-    structure Closure = Closure(MachSpec)
-    structure Spill = SpillFn(MachSpec)
+    structure Convert = ConvertFn (MachSpec)
+    structure CPSTrans = CPSTransFn (MachSpec)
+    structure CPSopt = CPSopt (MachSpec)
+    structure Closure = Closure (MachSpec)
+    structure Spill = SpillFn (MachSpec)
 
     structure CPStoCFG = CPStoCFGFn (MachSpec)
 
@@ -49,7 +49,7 @@ functor CPSCompFn (MachSpec : MACH_SPEC) : CPS_COMP = struct
     fun phase x = Stats.doPhase (Stats.makePhase x)
 
     val convert   = phase "CPS 060 convert" Convert.convert
-    val cpstrans  = phase "CPS 065 cpstrans" CPStrans.cpstrans
+    val cpstrans  = phase "CPS 065 cpstrans" CPSTrans.translate
     val cpsopt    = phase "CPS 070 cpsopt" CPSopt.reduce
     val litsplit  = phase "CPS 075 litsplit" Literals.split
     val closure   = phase "CPS 080 closure"  Closure.closeCPS

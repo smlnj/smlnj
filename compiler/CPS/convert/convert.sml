@@ -18,7 +18,7 @@ signature CONVERT =
 
   end (* signature CONVERT *)
 
-functor Convert (MachSpec : MACH_SPEC) : CONVERT =
+functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
   struct
 
     structure DA = Access

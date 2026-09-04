@@ -192,10 +192,12 @@ fun prRoots roots = Control.Print.say (concat["Roots = ", roots2s roots, "\n"])
                 end;
             { nParams = n, roots = Array.toList gcRoots }
           end
+(* +DEBUG *)
 handle ex => (
 print(concat["# assignRoots: isCont = ", Bool.toString isCont, ", params = [",
 String.concatWithMap "," PPCfg.paramToString params, "]\n"]);
 raise ex)
+(* -DEBUG *)
 
     fun fromListMap f l = Vector.fromList (List.map f l)
 
