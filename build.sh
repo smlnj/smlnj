@@ -398,6 +398,15 @@ if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
 fi
 
 #
+# if we are building the development version, then we first remove the
+# existing runtime system
+#
+if [ x"$INSTALL_DEV" = xyes ]; then
+  vsay $cmd: remove existing run-time system.
+  rm -f "$RUNDIR"/run*
+fi
+
+#
 # build the run-time system
 #
 if [ -x "$RUNDIR"/run.$ARCH-$OPSYS ]; then
