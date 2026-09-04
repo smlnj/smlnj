@@ -11,9 +11,9 @@
 
 
 this=$0
-cmddir=`dirname $0`
-cmddir=`cd "$cmddir"; pwd`
-bindir=`cd "$cmddir/../bin"; pwd`
+cmddir=$(dirname "$0")
+cmddir=$(cd "$cmddir" || exit 1; pwd)
+bindir=$(cd "$cmddir/../bin" || exit 1; pwd)
 
 ARGS=""
 
@@ -40,16 +40,16 @@ done
 #
 # use the arch-n-opsys script to determine the ARCH/OS if possible
 #
-if [ -f $twoup/bin/.arch-n-opsys ]; then
-    ARCH_N_OPSYS=`"$bindir/.arch-n-opsys"`
+if [ -f "$bindir/.arch-n-opsys" ]; then
+    ARCH_N_OPSYS=$("$bindir/.arch-n-opsys")
     if [ "$?" = "0" ]; then
-	eval $ARCH_N_OPSYS
+	eval "$ARCH_N_OPSYS"
     fi
 fi
 
-heapdir=`dirname $HEAP_IMAGE`
+heapdir=$(dirname "$HEAP_IMAGE")
 [ -f "$heapdir/$HEAP_IMAGE.$HEAP_SUFFIX" ] || heapdir="$cmddir/$heapdir"
-HEAP_IMAGE=`cd "$heapdir"; pwd`/$HEAP_IMAGE
+HEAP_IMAGE=$(cd "$heapdir" || exit 1; pwd)/$HEAP_IMAGE
 
 LIB_DIR="${HEAP_IMAGE}.lib"
 LPC="${LIB_DIR}/local_pathconfig"
