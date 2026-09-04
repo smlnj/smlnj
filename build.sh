@@ -113,7 +113,7 @@ dsay() {
   fi
 }
 
-vsay "$cmd: SML root is $SMLNJ_ROOT."
+vsay "$cmd: SML root is $SMLNJ_ROOT"
 
 export CM_VERBOSE
 if [ x${QUIET} = xyes ] ; then
@@ -124,15 +124,23 @@ fi
 
 # pre-flight cleanup
 #
+cd "$SMLNJ_ROOT" || exit 1
 if [ x${CLEAN_INSTALL} = xyes ] ; then
   vsay "$cmd: remove existing executables and libraries"
   rm -rf bin include lib runtime/$LLVM_DIRNAME/build
+elif [ x${INSTALL_DEV} = xyes ]; then
+  # since we are building the development version, we first remove the
+  # existing runtime system
+  #
+  vsay "$cmd: remove existing run-time system"
+  rm -rf "bin/.run" runtime/$LLVM_DIRNAME/build
 fi
+
 #
 # create the preloads.standard file
 #
 if [ ! -r config/preloads ]; then
-  complain "File config/preloads is missing."
+  complain "File config/preloads is missing"
 fi
 cp config/preloads preloads.standard
 
@@ -395,15 +403,6 @@ if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
   else
     XDEFS="$XDEFS -fsanitize=address"
   fi
-fi
-
-#
-# if we are building the development version, then we first remove the
-# existing runtime system
-#
-if [ x"$INSTALL_DEV" = xyes ]; then
-  vsay $cmd: remove existing run-time system.
-  rm -f "$RUNDIR"/run*
 fi
 
 #
