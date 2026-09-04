@@ -1,6 +1,6 @@
 (* amd64spec.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * See dev-notes/amd64-stack-frame.numbers for stack-frame layout information.
@@ -20,15 +20,11 @@ structure AMD64Spec : MACH_SPEC =
     val llvmTargetName = "x86_64"
     val bigEndian = false
 
-  (* spill-area info; this should match the layout in runtime/mach-dep/AMD.prim.asm,
-   * which is also documented in dev-info/amd64-stack-frame.numbers.
-   *)
-    val spillAreaSz = 8 * 1024
-
-    val numRegs = 10	        (* length AMD64CpsRegs.miscregs + 3 *)
-    val numArgRegs = 4          (* non-callee-save misc regs *)
+    (* the AMD64 has 7 misc regs and 16 float regs *)
+    val numRegs = 10	        (* #misc regs + 3 *)
+    val numArgRegs = 5          (* non-callee-save misc regs + stdArg *)
     val numFloatRegs = 16
-    val numFloatArgRegs = 16
+    val numFloatArgRegs = 14
     val numFloatCalleeSaves = 0
 
   end

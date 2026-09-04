@@ -1,6 +1,6 @@
 (* arm64-spec.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * See dev-notes/amd64-stack-frame.numbers for stack-frame layout information.
@@ -20,9 +20,10 @@ structure Arm64Spec : MACH_SPEC =
     val llvmTargetName = "aarch64"
     val bigEndian = false
 
+    (* the ARM64 has 18 misc regs and 32 float regs *)
     val numRegs = 21	                (* #misc regs + 3 *)
-    val numArgRegs = 15                 (* non-callee-save misc regs *)
+    val numArgRegs = 16                 (* non-callee-save misc regs + stdArg *)
     val numFloatRegs = 32               (* number of floating-point registers *)
-    val numFloatArgRegs = 32            (* number of floating-point argument registers *)
+    val numFloatArgRegs = 30            (* number of floating-point argument registers *)
 
   end

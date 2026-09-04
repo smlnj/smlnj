@@ -13,7 +13,7 @@
 
 functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 
-    val cpstrans : CPS.function -> CPS.function
+    val translate : CPS.function -> CPS.function
 
   end = struct
 
@@ -28,7 +28,7 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
   (**************************************************************************
    *                    TOP OF THE MAIN FUNCTION                            *
    **************************************************************************)
-    fun cpstrans fe = let
+    fun translate fe = let
         (* variable substitution table *)
 	  exception CPSSUBST
 	  val M : value LV.Tbl.hash_table = LV.Tbl.mkTable(32,CPSSUBST)
@@ -51,9 +51,8 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 	(** the following values must be consistent with the choices made
 	 ** in the closure or spilling phases
 	 *)
-	  val fpnum = Int.min(MachSpec.numFloatRegs-2, MachSpec.numArgRegs)
-	  val nregs = MachSpec.numRegs - MachSpec.numCalleeSaves
-	  val gpnum = Int.min(nregs - 3, MachSpec.numArgRegs)
+	  val fpnum = Int.min(MachSpec.numFloatArgRegs, MachSpec.numArgRegs)
+	  val gpnum = MachSpec.numArgRegs
 
         (* analyze a list of arguments to determine if they fit in the available
          * target-machine registers or if we need to spill some of them to the heap.
@@ -281,6 +280,6 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 
           in
 	    functrans fe
-	  end (* cpstrans *)
+	  end (* translate *)
 
   end (* structure CPStrans *)

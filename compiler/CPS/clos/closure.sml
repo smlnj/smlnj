@@ -1224,10 +1224,10 @@ fun closeCPS(fk,f,vl,cl,ce) = let
 
 (* get the current register configuration *)
 val maxgpregs = MachSpec.numRegs
-val maxfpregs = MachSpec.numFloatRegs - 2  (* need 1 or 2 temps *)
+val maxfpregs = MachSpec.numFloatArgRegs
 val numCSgpregs = MachSpec.numCalleeSaves
 val numCSfpregs = MachSpec.numFloatCalleeSaves
-val unboxedfloat = MachSpec.unboxedFloats
+val unboxedfloat = MachSpec.unboxedFloats (* always true *)
 
 (* check the validity of the callee-save configurations *)
 val (numCSgpregs,numCSfpregs) =

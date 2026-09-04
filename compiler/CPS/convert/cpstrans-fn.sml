@@ -9,10 +9,9 @@
  *   implemented something like useless-variable elimination, we might be able
  *   to avoid spilling in some cases.
  *
- * QUESTION: it appears that FLINT limits the number of arguments to a function
- *   more tightly than the limit on some machines.  Experiments on the arm64
- *   show that a function with 10 or more arguments is passed a tuple by FLINT,
- *   even though the arm64 target has 15 argument registers.
+ * TODO: FLINT limits the number of arguments to a function to 9.  This limit
+ *   is controlled by the `flatten_limit` variable in `FLINT/kernel/ltykernel.sml`.
+ *
  *
  * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
