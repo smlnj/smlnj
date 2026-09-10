@@ -2,6 +2,14 @@
  *
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * TODO:
+ *      * the `BOX`/`UNBOX` primops that are generated in this phase are
+ *        immediately eliminated in the `CPStrans` pass.  We should get
+ *        rid of them here and in the definition of the `pure` primop.
+ *
+ *      * likewise, the `WRAP`/`UNWRAP` primops for tagged integers are
+ *        removed by `CPStrans`, so we do not need to generate them here.
  *)
 
 (***************************************************************************
