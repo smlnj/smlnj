@@ -59,7 +59,7 @@ structure ObjectDesc :> OBJECT_DESC =
           if (ptrLen = 0) orelse (rawLen = 0)
             then raise Fail "mixed record with zero sub-length"
             else II.orb(
-              II.<<(II.fromInt rawLen, 0w32),
+              II.<<(II.fromInt ptrLen, 0w32),
               makeDesc(ptrLen+rawLen, tag_mixed))
 
   (* array/vector header codes; note that sequences of tagged integers use
