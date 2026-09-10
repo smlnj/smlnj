@@ -8,6 +8,7 @@
 signature CGCONTROL =
   sig
     val closureStrategy : int ref
+    val mixedClosures : bool ref
     val cpsopt : string list ref		(* list of cpsopt phases *)
     val rounds : int ref
     val betacontract : bool ref
