@@ -12,7 +12,6 @@
  * TODO: FLINT limits the number of arguments to a function to 9.  This limit
  *   is controlled by the `flatten_limit` variable in `FLINT/kernel/ltykernel.sml`.
  *
- *
  * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
