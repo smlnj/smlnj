@@ -107,6 +107,16 @@ Here is an update to the entry
 //--------------------------------------------------------------------
 [2026-09-02]::
 +
+The `ConvertFn` module has been rewritten to use mixed records in closure
+conversion.  This change was covered by Pull Request {pull-base}/461[#461
+(Add ENUM number kind in FLINT and CPS; implement mixed closure generation
+in closure conversion)].
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2026-09-02]::
++
 The `InvokeGC` module has been rewritten to use mixed records to
 preserve live vars across GC calls.
 +
