@@ -21,7 +21,9 @@ structure ObjectDesc :> OBJECT_DESC =
     type tag = II.int
 
   (* taken from runtime/tags.h *)
-    val tagWidth = 0w7		(* 5 minor tag bits plus 2 major tag bits *)
+    val majorTagWidth = 0w3
+    val minorTagWidth = 0w5
+    val tagWidth = minorTagWidth + majorTagWidth
 
     val bitsPerWord = Word.fromInt Target.mlValueSz
 
@@ -34,7 +36,8 @@ structure ObjectDesc :> OBJECT_DESC =
 
   (* tag values *)
     local
-      fun mkTag t = II.orb(II.<<(t, 0w2), 2)
+      (* "010" is the major tag for headers *)
+      fun mkTag t = II.orb(II.<<(t, majorTagWidth), 2)
     in
     val tag_record	= mkTag 0       (* records of uniform values *)
     val tag_vec_hdr	= mkTag 1       (* immutable vector-descriptor object *)
@@ -59,7 +62,7 @@ structure ObjectDesc :> OBJECT_DESC =
           if (ptrLen = 0) orelse (rawLen = 0)
             then raise Fail "mixed record with zero sub-length"
             else II.orb(
-              II.<<(II.fromInt rawLen, 0w32),
+              II.<<(II.fromInt ptrLen, 0w32),
               makeDesc(ptrLen+rawLen, tag_mixed))
 
   (* array/vector header codes; note that sequences of tagged integers use
