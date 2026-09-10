@@ -40,7 +40,8 @@ structure Control_CG : CGCONTROL =
 	    r
 	  end
 
-    val closureStrategy = new (i, "closure-strategy", "?", 0)	(* see CPS/clos/closure.sml *)
+    val closureStrategy = new (i, "closure-strategy", "specify the closure strategy", 0)	(* see CPS/clos/closure.sml *)
+    val mixedClosures = new (b, "mixed-closures", "use mixed records for closures", true)
     (* CPS optimization phases (this is initialized in CPS/opt/cpsopt.sml) *)
     val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [])
     val rounds = new (i, "rounds", "max # of cpsopt rounds", 10)
