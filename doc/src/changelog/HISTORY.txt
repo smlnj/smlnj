@@ -108,9 +108,11 @@ Here is an update to the entry
 [2026-09-02]::
 +
 The `ConvertFn` module has been rewritten to use mixed records in closure
-conversion.  This change was covered by Pull Request {pull-base}/461[#461
-(Add ENUM number kind in FLINT and CPS; implement mixed closure generation
-in closure conversion)].
+conversion.  Mixed closures are `Control.CG.mixedClosures` flag and are
+enabled by default.  Also added a distinct `ENUM` constant type to
+represent datatype constructor tags.  These change was covered by the
+{pull-base}/461[Pull Request #461 (Add ENUM number kind in FLINT and
+CPS; implement mixed closure generation in closure conversion)].
 +
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
