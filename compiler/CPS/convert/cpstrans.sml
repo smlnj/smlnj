@@ -49,11 +49,12 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 	 *          UTILITY FUNCTIONS THAT DO THE ARGUMENT SPILLING               *
 	 **************************************************************************)
 
-	(** the following values must be consistent with the choices made
-	 ** in the closure or spilling phases
+	(* The following values must be consistent with the choices made
+	 * in the closure or spilling phases.  We reserve a GP register in case
+         * we need to spill floating-point args into a separate raw record.
 	 *)
 	  val fpnum = Int.min(MachSpec.numFloatArgRegs, MachSpec.numArgRegs)
-	  val gpnum = MachSpec.numArgRegs
+	  val gpnum = MachSpec.numArgRegs - 1
 
         (* analyze a list of arguments to determine if they fit in the available
          * target-machine registers or if we need to spill some of them to the heap.
@@ -79,9 +80,6 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
                  * The accumulators are all in reverse order.
                  * REAL32: need to track types of spilled real arguments too
                  *)
-(* QUESTION: if we spill floating-point arguments, that should increase the pressure
- * on the integer arguments by one, but this code does not seem to account for that.
- *)
 		fun h ([], [], ngp, nfp, ovs, ots, [], [], []) = NONE
 		  | h ([], [], ngp, nfp, ovs, ots, [x], [_], []) = NONE
 		  | h ([], [], ngp, nfp, ovs, ots, gvs, gts, fvs) =

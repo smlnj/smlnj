@@ -22,8 +22,7 @@ structure AMD64Spec : MACH_SPEC =
 
     (* the AMD64 has 7 misc regs and 16 float regs *)
     val numRegs = 10	        (* #misc regs + 3 *)
-(* FIXME: the number of argument registers should be (7 - 3) + 1 = 5!! *)
-    val numArgRegs = 4          (* non-callee-save misc regs + stdArg *)
+    val numArgRegs = 5          (* non-callee-save misc regs + stdArg *)
     val numFloatRegs = 16
     val numFloatArgRegs = 14
     val numFloatCalleeSaves = 0
