@@ -47,6 +47,8 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
                       go (ctys, uArgs, eArgs+1, rArgs, fArgs)
                   | C.NUMt _ =>
                       go (ctys, uArgs, eArgs, rArgs+1, fArgs)
+                  | C.ENUMt =>
+                      go (ctys, uArgs, eArgs+1, rArgs, fArgs)
                   | C.PTRt _ =>
                       go (ctys, uArgs+1, eArgs, rArgs, fArgs)
                   | C.FUNt =>
@@ -100,6 +102,7 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
                             else (nUniform, Int.min(nEnum, nGPR - nRawInt), nRawInt, nHeapFP > 0)
                         end
 val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget" else ()
+                val bF = Int.min (MS.numFloatArgRegs, nFloat)
                 (* assign arguments to slots given budgets for each kind of variable
                  * the parameters are:
                  *   i          -- the argument index
@@ -113,14 +116,13 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
                  *   rFlds      -- argument indices of raw record arguments
                  *)
                 fun assign (i, ty::tys, bU, bT, bR, bF, args, uFlds, rFlds) = (case ty
-                       of C.NUMt{tag=true, ...} => if (bT > 0)
-                              then assign (i+1, tys, bU, bT-1, bR, bF, i::args, uFlds, rFlds)
-                            else if anyRaw
-                              then assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
-                              else assign (i+1, tys, bU, bT, bR, bF, args, i::uFlds, rFlds)
+                       of C.NUMt{tag=true, ...} =>
+                            assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
                         | C.NUMt _ => if (bR > 0)
                             then assign (i+1, tys, bU, bT, bR-1, bF, i::args, uFlds, rFlds)
                             else assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
+                        | C.ENUMt =>
+                            assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
                         | C.PTRt _ => assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
                         | C.FUNt => assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
                         | C.FLTt _ => if (bF > 0)
@@ -133,11 +135,17 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
                         args = List.rev args,
                         flds = List.revAppend(uFlds, List.rev rFlds)
                       }
+                and assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds) =
+                      if (bT > 0)
+                        then assign (i+1, tys, bU, bT-1, bR, bF, i::args, uFlds, rFlds)
+                      else if anyRaw
+                        then assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
+                        else assign (i+1, tys, bU, bT, bR, bF, args, i::uFlds, rFlds)
                 and assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds) = if (bU > 0)
                       then assign (i+1, tys, bU-1, bT, bR, bF, i::args, uFlds, rFlds)
                       else assign (i+1, tys, bU, bT, bR, bF, args, i::uFlds, rFlds)
                 in
-                  assignPtr (0, tys, bU, bT, bR, MS.numFloatArgRegs, [], [], [])
+                  assign (0, tys, bU, bT, bR, bF, [], [], [])
                 end
           end (* callingConv *)
 
@@ -158,7 +166,7 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
                 val flds' = List.foldr
                       (fn (i, vs) => (Array.sub(argMap, i), C.OFFp 0) :: vs)
                       []
-                      args
+                      flds
                 val rk = (case rep
                        of {ptrLen, rawLen=0} => C.RK_RECORD
                         | {ptrLen=0, rawLen} => C.RK_RAWBLOCK
@@ -185,6 +193,7 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
                           in (x::xs, ty::tys) end)
                       ([rp], [C.PTRt(C.RPT rep)])
                       args
+                (* header code for extracting the extra paramters *)
                 fun hdr e = let
                       fun wrap (_, []) = e
                         | wrap (i, idx::idxs) = let
@@ -229,25 +238,24 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
 		  | C.APP(v, vl) => let
                       val (nvl, hdr) = mkArgs (List.map vtrans vl, List.map grabty vl)
                       in
-		        hdr (C.APP (vtrans v, nvl))
+		        hdr (C.APP(vtrans v, nvl))
 		      end
 		  | C.FIX(l, ce) => C.FIX(map rewriteFun l, rewrite ce)
-		  | C.SWITCH(v, c, l) => C.SWITCH(vtrans v,c,map rewrite l)
+		  | C.SWITCH(v, c, l) => C.SWITCH(vtrans v, c, map rewrite l)
 		  | C.LOOKER(p, vl, w, t, ce) => let
 		      val _ = addty(w, t)
 		      val vl' = map vtrans vl
-		      val ce' = rewrite ce
 		      in
-			C.LOOKER(p, vl', w, getty w, ce')
+			C.LOOKER(p, vl', w, getty w, rewrite ce)
 		      end
 		  | C.SETTER(p, vl, ce) => C.SETTER(p, map vtrans vl, rewrite ce)
-		  | C.ARITH(p, vl, w, t, cd) => (
+		  | C.ARITH(p, vl, w, t, ce) => (
 		      addty(w, t);
 		      C.ARITH(p, map vtrans vl, w, t, rewrite ce))
 		  | C.RCC(k, l, p, vl, wtl, ce) => (
 		      List.app addty wtl;
 		      C.RCC(k, l, p, map vtrans vl, wtl, rewrite ce))
-		  | C.PURE(P.BOX, [u], w, t, ce) => (addvl(w,vtrans u); rewrite ce)
+		  | C.PURE(P.BOX, [u], w, t, ce) => (addvl(w, vtrans u); rewrite ce)
 		  | C.PURE(P.UNBOX, [u], w, t, ce) => (
 		      case u of C.VAR z => addty(z, t) | _ => ();
 		      addvl(w, vtrans u); rewrite ce)
@@ -273,22 +281,21 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
 			else (addvl(w,vtrans u); rewrite ce)
 		  | C.PURE(p as P.UNWRAP(P.FLOAT _), [u], w, t, ce) =>
 		      if unboxedfloat
-			then (addty(w,t); C.PURE(p, [vtrans u], w, t, rewrite ce))
-			else (addvl(w,vtrans u); rewrite ce)
-		  | C.PURE(P.GETCON,[u], w, t, cd) => (
+			then (addty(w ,t); C.PURE(p, [vtrans u], w, t, rewrite ce))
+			else (addvl(w, vtrans u); rewrite ce)
+		  | C.PURE(P.GETCON, [u], w, t, ce) => (
 		      addty (w, t);
-		      C.SELECT(0,vtrans u,w,t,rewrite ce))
-		  | C.PURE(P.GETEXN,[u], w, t, cd) => (
+		      C.SELECT(0,vtrans u, w, t, rewrite ce))
+		  | C.PURE(P.GETEXN, [u], w, t, ce) => (
 		      addty (w, t);
-		      C.SELECT(0,vtrans u,w,t,rewrite ce))
-		  | C.PURE(p,vl, w, t, cd) => let
-		      val _ = addty(w,t)
+		      C.SELECT(0, vtrans u, w, t, rewrite ce))
+		  | C.PURE(p, vl, w, t, ce) => let
+		      val _ = addty(w, t)
 		      val vl' = map vtrans vl
-		      val ce' = rewrite ce
 		      in
-			C.PURE(p, vl', w, getty w, ce')
+			C.PURE(p, vl', w, getty w, rewrite ce)
 		      end
-		  | C.BRANCH(p,vl,c,e1,e2) =>
+		  | C.BRANCH(p, vl, c, e1, e2) =>
 		      C.BRANCH(p, map vtrans vl, c, rewrite e1, rewrite e2)
 		(* end case *))
 
