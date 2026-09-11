@@ -169,7 +169,7 @@ structure Literals : LITERALS =
 
     fun largeIntToBytes (32, n) = largeIntToBytes32 n
       | largeIntToBytes (64, n) = largeIntToBytes64 n
-      | largeIntToBytes _ = bug "bogus integer size"
+      | largeIntToBytes (sz, _) = bug ("bogus integer size " ^ Int.toString sz)
 
     fun real64ToBytes r = #1(Real64ToBits.toBits r)
 
@@ -601,6 +601,10 @@ structure Literals : LITERALS =
 	  val addRaw = LitEnv.addRaw env
 	  fun fieldToValue (u, C.OFFp 0) = u
 	    | fieldToValue _ = bug "unexpected access in field"
+          fun isImmed (C.NUM _) = true
+            | isImmed (C.ENUM _) = true
+            | isImmed (C.REAL _) = true
+            | isImmed _ = false
 	(* process a CPS function *)
 	  fun doFun (fk, f, vl, cl, e) = doExp e
 	(* process a CPS expression *)
@@ -610,9 +614,6 @@ structure Literals : LITERALS =
 		      in
 			case rk
 			 of C.RK_RAWBLOCK => let
-			      fun isImmed (C.NUM _) = true
-                                | isImmed (C.REAL _) = true
-				| isImmed _ = false
 			      fun encode (C.NUM{ty={sz, ...}, ival}) =
 				    largeIntToBytes(sz, ival)
                                 | encode (C.REAL{ty, rval}) = real64ToBytes rval
