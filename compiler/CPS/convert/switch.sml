@@ -63,7 +63,6 @@ structure Switch : sig
   (* operator numkinds for default tagged ints and words *)
     val tagIntKind = CPS.P.INT Target.defaultIntSz
     val tagWordKind = CPS.P.UINT Target.defaultIntSz
-    val tagEnumKind = CPS.P.UINT Target.defaultIntSz
     end
 
   (* sort cases tagged by integers *)
@@ -114,11 +113,11 @@ structure Switch : sig
 	    List.foldr separate [] initialChunks
 	  end
 
-  (* generate a switch for a tagged integer/word type.  If the optRange is `SOME n`, then
+  (* generate a switch for a tagged numeric type.  If the optRange is `SOME n`, then
    * the range of possible values is `0..n`.
    *)
-    fun taggedNumSwitchWith (_, _, _, _, [], default, _) = default
-      | taggedNumSwitchWith (tagTy, tagValue, arg, nk, cases, default, optRange) = let
+    fun taggedNumSwitchWith _ (_, [], default, _) = default
+      | taggedNumSwitchWith {tagValue, kind=nk} (arg, cases, default, optRange) = let
 	  val nCases = List.length cases
 	(* sort cases *)
 	  val cases = numSort cases
@@ -128,6 +127,17 @@ structure Switch : sig
 	(* less-than test branch *)
 	  fun ifless (a, b, tr, fl) =
 		CPS.BRANCH(CPS.P.CMP{oper=CPS.P.LT, kind=nk}, [a, b], mkv(), tr, fl)
+	(* Convert the selected tag to a zero-based numeric switch index. *)
+	  fun subtract (arg, lb, k) = (case nk
+		 of CPS.P.ENUM => pure(CPS.P.CAST, [arg], tagNumTy,
+		      fn arg' => pure(
+			(* Subtraction produces an index, not an ENUM value. *)
+			CPS.P.PURE_ARITH{oper=CPS.P.SUB, kind=tagWordKind},
+			[arg', tagNum lb], tagNumTy, k))
+		  | _ => pure(
+		      (* Because lb <= arg, this subtraction cannot overflow. *)
+		      CPS.P.PURE_ARITH{oper=CPS.P.SUB, kind=nk},
+		      [arg, tagNum lb], tagNumTy, k))
 	(* map cases to CPS.SWITCH, where we know that lo0 <= arg <= hi0 *)
 	  fun switch' (lo0, hi0) = let
 	      (* group cases into dense chunks *)
@@ -143,9 +153,7 @@ structure Switch : sig
 		    (* the switch *)
 		      val exp = if (lb = 0)
 			    then CPS.SWITCH(arg, mkv(), actions)
-			    else pure(
-			    (* NOTE: because lb <= arg, this subtraction cannot Overflow *)
-			      CPS.P.PURE_ARITH{oper=CPS.P.SUB, kind=nk}, [arg, tagValue lb], tagTy,
+			    else subtract(arg, lb,
 			      fn arg' => CPS.SWITCH(arg', mkv(), actions))
 		    (* add lower-bound check (if necessary) *)
 		      val exp = if (lo < lb)
@@ -189,7 +197,10 @@ structure Switch : sig
 			 of (i, _)::_ => (i, #1(List.last cases))
 			  | [] => bug "taggedNumSwitch: empty cases"
 			(* end case *))
-		  val unsigned = (case nk of CPS.P.UINT _ => true | _ => false)
+		  val unsigned = (case nk
+			 of CPS.P.UINT _ => true
+			  | CPS.P.ENUM => true
+			  | _ => false)
 		(* switch with upper-bound test *)
 		  val exp = ifless(tagValue hi, arg, default, switch'(lo, hi))
 		(* add lower-bound test, if necessary *)
@@ -204,10 +215,12 @@ structure Switch : sig
 	  end
 
     fun taggedNumSwitch (arg, nk, cases, default, optRange) =
-	  taggedNumSwitchWith (tagNumTy, tagNum, arg, nk, cases, default, optRange)
+	  taggedNumSwitchWith {tagValue=tagNum, kind=nk}
+	    (arg, cases, default, optRange)
 
-    fun enumSwitch (arg, nk, cases, default, optRange) =
-	  taggedNumSwitchWith (tagEnumTy, tagEnum, arg, nk, cases, default, optRange)
+    fun enumSwitch (arg, cases, default, optRange) =
+	  taggedNumSwitchWith {tagValue=tagEnum, kind=CPS.P.ENUM}
+	    (arg, cases, default, optRange)
 
   (* generate a switch for a boxed integer/word type. *)
     fun boxedNumSwitch (arg, CPS.NUMt ty, nk, cases, default) = let
@@ -299,10 +312,10 @@ structure Switch : sig
 	    case sign
 	     of A.CSIG(0, n) =>
 		  pure(CPS.P.UNBOX, [arg], tagEnumTy,
-		    fn x => enumSwitch(x, tagEnumKind, unboxed, default, SOME(n-1)))
+		    fn x => enumSwitch(x, unboxed, default, SOME(n-1)))
 	      | A.CSIG(n, 0) =>
 		  pure(CPS.P.GETCON, [arg], tagEnumTy,
-		    fn x => enumSwitch(x, tagEnumKind, boxed, default, SOME(n-1)))
+		    fn x => enumSwitch(x, boxed, default, SOME(n-1)))
 	      | A.CSIG(1, nu) => let
 		(* only one boxed constructor, so get the action for that case *)
 		  val boxedAct = (case boxed
@@ -312,7 +325,7 @@ structure Switch : sig
 		  val unboxedAct = (case unboxed
 			 of [] => default
 			  | _ => pure(CPS.P.UNBOX, [arg], tagEnumTy,
-			      fn x => enumSwitch(x, tagEnumKind, unboxed, default, SOME(nu-1)))
+			      fn x => enumSwitch(x, unboxed, default, SOME(nu-1)))
 			(* end case *))
 		  in
 		    CPS.BRANCH(CPS.P.BOXED, [arg], mkv(), boxedAct, unboxedAct)
@@ -321,12 +334,12 @@ structure Switch : sig
 		  val boxedAct = (case boxed
 			 of [] => default
 			  | _ => pure(CPS.P.GETCON, [arg], tagEnumTy,
-			      fn x => enumSwitch(x, tagEnumKind, boxed, default, SOME(nb-1)))
+			      fn x => enumSwitch(x, boxed, default, SOME(nb-1)))
 			(* end case *))
 		  val unboxedAct = (case unboxed
 			 of [] => default
 			  | _ => pure(CPS.P.UNBOX, [arg], tagEnumTy,
-			      fn x => enumSwitch(x, tagEnumKind, unboxed, default, SOME(nu-1)))
+			      fn x => enumSwitch(x, unboxed, default, SOME(nu-1)))
 			(* end case *))
 		  in
 		    CPS.BRANCH(CPS.P.BOXED, [arg], mkv(), boxedAct, unboxedAct)

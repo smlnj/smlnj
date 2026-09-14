@@ -63,6 +63,7 @@ structure PPCps : PPCPS =
     fun numkindToString (P.INT bits) = "i" ^ Int.toString bits
       | numkindToString (P.UINT bits) = "u" ^ Int.toString bits
       | numkindToString (P.FLOAT bits) = "f" ^ Int.toString bits
+      | numkindToString P.ENUM = "enum"
 
     val arithopToString = ArithOps.toString
 

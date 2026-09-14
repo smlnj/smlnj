@@ -12,6 +12,7 @@ signature PRIM_OPS =
       = INT of int
       | UINT of int
       | FLOAT of int
+      | ENUM
 
   (* primitive operators that are expanded to lambdas during the translation
    * to PLambda.

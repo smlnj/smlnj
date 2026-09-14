@@ -67,6 +67,9 @@ structure ValueNumbering : sig
       | cmpNumKind (P.UINT _, _) = LESS
       | cmpNumKind (_, P.UINT _) = GREATER
       | cmpNumKind (P.FLOAT n1, P.FLOAT n2) = cmpCode(n1, n2)
+      | cmpNumKind (P.FLOAT _, _) = LESS
+      | cmpNumKind (_, P.FLOAT _) = GREATER
+      | cmpNumKind (P.ENUM, P.ENUM) = EQUAL
 
     fun cmpRecordKind (rk1, rk2) = let
           fun toCode C.RK_VECTOR = 0
@@ -330,6 +333,7 @@ structure ValueNumbering : sig
           fun sameNumKind (P.INT n1, P.INT n2) = (n1 = n2)
             | sameNumKind (P.UINT n1, P.UINT n2) = (n1 = n2)
             | sameNumKind (P.FLOAT n1, P.FLOAT n2) = (n1 = n2)
+            | sameNumKind (P.ENUM, P.ENUM) = true
             | sameNumKind _ = false
           in
             case (op1, op2)
