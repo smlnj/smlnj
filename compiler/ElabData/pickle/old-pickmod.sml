@@ -309,6 +309,7 @@ structure PickMod :> PICKMOD =
         fun nk (P.INT i) = "A" $ [int i]
           | nk (P.UINT i) = "B" $ [int i]
           | nk (P.FLOAT i) = "C" $ [int i]
+          | nk P.ENUM = bug "unexpected enum"
         in
           nk arg
         end

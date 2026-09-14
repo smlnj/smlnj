@@ -41,7 +41,7 @@ signature CPS =
     structure P : sig
 
       (* numkind includes kind and size *)
-        datatype numkind = INT of int | UINT of int | FLOAT of int
+        datatype numkind = INT of int | UINT of int | FLOAT of int | ENUM
 
       (* arithmetic operations that may overflow; for the division operators,
        * we assume that the second argument is never zero (i.e., an explicit

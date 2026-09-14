@@ -77,6 +77,7 @@ end
 fun sizeOfKind (P.INT sz) = sz
   | sizeOfKind (P.UINT sz) = sz
   | sizeOfKind (P.FLOAT _) = bug "sizeOfKind(FLOAT _)"
+  | sizeOfKind P.ENUM = bug "sizeOfKind(ENUM)"
 
 exception ConstFold
 

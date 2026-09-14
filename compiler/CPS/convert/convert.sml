@@ -65,7 +65,7 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
     val tagIntTy = NUMt tt
     fun tagInt n = NUM{ival = n, ty = tt}
     fun tagInt' n = tagInt(IntInf.fromInt n)
-    fun enumTag n = ENUM n
+    fun enumTag n = CPS.ENUM n
     val unitVal = enumTag 0
     fun boxIntTy sz = NUMt(bt sz)
     fun boxInt (sz, i) = NUM{ival = i, ty = bt sz}
@@ -154,13 +154,13 @@ functor ConvertFn (MachSpec : MACH_SPEC) : CONVERT =
 
   (* primwrap: cty -> P.pure *)
     fun primwrap (NUMt{sz, ...}) = P.WRAP(NK.INT sz)
-      | primwrap ENUMt = P.BOX (* or CAST? *)
+      | primwrap ENUMt = P.WRAP NK.ENUM
       | primwrap (FLTt sz) = P.WRAP(NK.FLOAT sz)
       | primwrap _ = P.BOX
 
   (* primunwrap: cty -> P.pure *)
     fun primunwrap (NUMt{sz, ...}) = P.UNWRAP(NK.INT sz)
-      | primunwrap ENUMt = P.UNBOX (* or CAST? *)
+      | primunwrap ENUMt = P.UNWRAP NK.ENUM
       | primunwrap (FLTt sz) = P.UNWRAP(NK.FLOAT sz)
       | primunwrap _ = P.UNBOX
 
