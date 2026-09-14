@@ -205,7 +205,7 @@ structure Math64Common : sig
     fun exp (x:real) = let  (* propagates and generates inf's and nan's correctly *)
 	  fun exp_norm x = let
 	      (* argument reduction : x --> x - k*ln2 *)
-		val k = floor(invln2*x+copysign(half,x)) (* k=NINT(x/ln2) *)
+		val k = floor(invln2*x+half) (* k=NINT(x/ln2) *)
 		val K = real k
 	      (* express x-k*ln2 as z+c *)
 		val hi = x-K*ln2hi
