@@ -1,6 +1,6 @@
 (* cps.sig
  *
- * COPYRIGHT (c) 2-26 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
