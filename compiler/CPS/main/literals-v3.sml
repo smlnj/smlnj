@@ -304,6 +304,7 @@ structure Literals : LITERALS =
           }
       | IMMED of C.intty IntConst.t     (* immediate integer/word literal *)
       | ENUM of int                     (* data-constructor tags *)
+(* TODO: to support sharing of real literals, we may need more info here *)
       | REAL of int RealConst.t
 
     fun useLit (OBJ{useCnt, ...}) = useCnt := !useCnt + 1
@@ -626,21 +627,9 @@ structure Literals : LITERALS =
                  of C.RECORD(rk, fields, v, e) => let
                       val ul = List.map fieldToValue fields
                       in
-                        case rk
-                         of C.RK_RAWBLOCK => let
-                              fun encode (C.NUM{ty={sz, ...}, ival}) =
-                                    largeIntToBytes(sz, ival)
-                                | encode (C.REAL{ty, rval}) = real64ToBytes rval
-                                | encode _ = bug "RAWBLOCK: impossible"
-                              in
-                                if List.all isImmed ul
-                                  then addRaw (W8V.concat(List.map encode ul), v)
-                                  else useValues ul
-                              end
-                          | _ => if List.all isConst ul
-                              then addRecord (rk, List.map useValue' ul, v)
-                              else useValues ul
-                        (* end case *);
+                        if List.all isConst ul
+                          then addRecord (rk, List.map useValue' ul, v)
+                          else useValues;
                         doExp e
                       end
                   | C.SELECT(i, u, v, t, e) => (useValue u; doExp e)
@@ -652,13 +641,9 @@ structure Literals : LITERALS =
                   | C.SETTER(p, ul, e) => (useValues ul; doExp e)
                   | C.LOOKER(p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.ARITH(p, ul, v, t, e) => (useValues ul; doExp e)
-                  | C.PURE(C.P.WRAP(C.P.INT sz), [C.NUM{ival, ...}], v, t, e) => (
-                      addRaw (largeIntToBytes(sz, ival), v);
-                      doExp e)
-(* REAL32: FIXME *)
-                  | C.PURE(C.P.WRAP(C.P.FLOAT 64), [C.REAL{ty=64, rval}], v, t, e) => (
-                      addRaw (real64ToBytes rval, v);
-                      doExp e)
+                  | C.PURE(C.P.WRAP nk, [u], v, t, e) => if isConst u
+                      then (addWrap(nk, useValue' u); doExp e)
+                      else doExp e
                   | C.PURE (p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.RCC (k, l, p, ul, vtl, e) => (useValues ul; doExp e)
                 (* end case *))
