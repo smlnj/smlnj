@@ -339,6 +339,8 @@ structure Literals : LITERALS =
 		      case rk
 		       of C.RK_VECTOR => say(concat["VECTOR ", suffix, "\n"])
 			| C.RK_RECORD => say(concat["RECORD ", suffix, "\n"])
+                        | C.RK_MIXED{ptrLen, rawLen} => say(concat["MIXED ", suffix, "\n"])
+                        | _ => raise Fail "bogus record kind"
 		      (* end case *);
 		      List.app (prLiteral (indent+1)) lits)
 		  | (LV_RAW v) => say(concat[
