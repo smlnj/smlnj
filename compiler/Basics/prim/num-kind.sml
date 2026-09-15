@@ -8,13 +8,15 @@ structure NumKind =
   struct
 
     (* the numeric types are divided into signed integers, unsigned
-     * words, and reals with varying precisions specified in bits.
+     * words, reals with varying precisions specified in bits, and
+     * datatype-constructor tags.
      * We use `INT ~1` to represent arbitraty precision integers.
      *)
     datatype t
       = INT of int
       | UINT of int
       | FLOAT of int
+      | ENUM
 
     val intInfKind = INT ~1
     val dfltIntKind = INT Target.defaultIntSz
@@ -24,10 +26,12 @@ structure NumKind =
     fun same (INT n1, INT n2) = (n1 = n2)
       | same (UINT n1, UINT n2) = (n1 = n2)
       | same (FLOAT n1, FLOAT n2) = (n1 = n2)
+      | same (ENUM, ENUM) = true
       | same _ = false
 
     fun toString (INT bits) = "i" ^ Int.toString bits
       | toString (UINT bits) = "u" ^ Int.toString bits
       | toString (FLOAT bits) = "f" ^ Int.toString bits
+      | toString ENUM = "enum"
 
   end

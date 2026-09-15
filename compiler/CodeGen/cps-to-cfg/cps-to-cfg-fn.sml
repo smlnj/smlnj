@@ -163,10 +163,12 @@ C.NUMt{sz=sz}
 		else load
 	  end
       | rawLoad (P.FLOAT sz, args) = looker(TP.RAW_LOAD{kind=TP.FLT, sz = sz}, args)
+      | rawLoad (P.ENUM, _) = error ["RAWLOAD cannot use ENUM"]
 
     fun rawStore (P.INT sz) = TP.RAW_STORE{kind=TP.INT, sz = normSz sz}
       | rawStore (P.UINT sz) = TP.RAW_STORE{kind=TP.INT, sz = normSz sz}
       | rawStore (P.FLOAT sz) = TP.RAW_STORE{kind=TP.FLT, sz = sz}
+      | rawStore P.ENUM = error ["RAWSTORE cannot use ENUM"]
 
     fun gen info = let
 	  val isEntry = CPSInfo.isEntry info
@@ -443,6 +445,7 @@ C.NUMt{sz=sz}
 			 of P.INT sz => set (TP.INT, sz, coerceInt (sz, true))
 			  | P.UINT sz => set (TP.INT, sz, coerceInt (sz, false))
 			  | P.FLOAT sz => set (TP.FLT, sz, genV v)
+			  | P.ENUM => error ["NUMUPDATE cannot use ENUM"]
 			(* end case *)
 		      end
 		  | (P.UNBOXEDUPDATE, [arr, ix, v]) =>
@@ -689,6 +692,8 @@ C.NUMt{sz=sz}
 			mkBr (TP.CMP{oper=oper, signed=true, sz=normSz sz})
 		    | (P.CMP{oper, kind=CPS.P.UINT sz}, _) =>
 			mkBr (TP.CMP{oper=oper, signed=false, sz=normSz sz})
+		    | (P.CMP{oper, kind=CPS.P.ENUM}, _) =>
+			mkBr (TP.CMP{oper=oper, signed=false, sz=ity})
 		    | (P.FCMP{oper, size}, _) =>
 			mkBr (TP.FCMP{oper=oper, sz=size})
 		    | (P.FSGN sz, _) => mkBr (TP.FSGN sz)
