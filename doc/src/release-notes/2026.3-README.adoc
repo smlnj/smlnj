@@ -62,6 +62,10 @@ A number of *Basis Library bugs were fixed (see the list below for details).
 A number of *SML/NJ Library* bugs were fixed (see the list below or the
 `smlnj-lib/CHANGES` file for details).
 
+=== ML-LPT
+
+* Fixed regression in `ml-lex-mode` (Issue #463)
+
 == Bugs
 
 Here is a list of the issues and pull requests that are closed with this release.
@@ -172,6 +176,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
 | [.bugid]#456#
 | {issue-base}/456[`Timer.checkCPUTimer` double-counts garbage collector time]
+| [.bugid]#463#
+| {issue-base}/463[`ml-ulex --ml-lex-mode` generates duplicate `yystart_state` datatype declaration]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
