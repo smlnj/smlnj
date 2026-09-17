@@ -18,7 +18,7 @@ structure LiteralBytecode : sig
       | REAL64 of RealLit.t
       | RECORD of int           (* record of uniform values *)
       | RAW of int              (* record of raw values *)
-      | MIXED of int * int      (* mixed record *)
+      | MIXED of CPS.record_rep (* mixed record *)
       | VEC of int              (* vector literal *)
       | SAVE of int
       | LOAD of int
@@ -44,7 +44,7 @@ structure LiteralBytecode : sig
       | REAL64 of RealLit.t
       | RECORD of int           (* record of uniform values *)
       | RAW of int              (* record of raw values *)
-      | MIXED of int * int      (* mixed record *)
+      | MIXED of CPS.record_rep (* mixed record *)
       | VEC of int              (* vector literal *)
       | SAVE of int
       | LOAD of int
@@ -58,7 +58,7 @@ structure LiteralBytecode : sig
             | pr (REAL64 r) = sayl ["REAL64(", RealLit.toString r, ")\n"]
             | pr (RECORD n) = sayl ["RECORD(", Int.toString n, ")\n"]
             | pr (RAW n) = sayl ["RAW(", Int.toString n, ")\n"]
-            | pr (MIXED(ptrLen, rawLen)) = sayl [
+            | pr (MIXED{ptrLen, rawLen}) = sayl [
                   "MIXED(", Int.toString ptrLen, ", ", Int.toString rawLen, ")\n"
                 ]
             | pr (VEC n) = sayl ["VEC(", Int.toString n, ")\n"]
@@ -126,7 +126,7 @@ structure LiteralBytecode : sig
                         in
                           continue (OBJ::stk', d'+1)
                         end
-                    | MIXED(ptrLen, rawLen) => let
+                    | MIXED{ptrLen, rawLen} => let
                         val (stk', d') = popn isRaw (n, stk, d)
                         val (stk'', d'') = popn isUniform (n, stk', d')
                         in
@@ -471,7 +471,7 @@ structure LiteralBytecode : sig
             | enc (STR8 s) = encSTR8 (buf, s)
             | enc (RECORD n) = encRECORD (buf, n)
             | enc (RAW n) = encRAW (buf, n)
-            | enc (MIXED(pl, rl)) = encMIXED (buf, {ptrLen=pl, rawLen=rl})
+            | enc (MIXED rep) = encMIXED (buf, rep)
             | enc (VEC n) = encVEC (buf, n)
             | enc (SAVE i) = encSAVE (buf, i)
             | enc (LOAD i) = encLOAD (buf, i)
