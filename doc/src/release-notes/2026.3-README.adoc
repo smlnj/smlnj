@@ -59,8 +59,10 @@ A number of *Basis Library bugs were fixed (see the list below for details).
 
 === SML/NJ Library
 
-A number of *SML/NJ Library* bugs were fixed (see the list below or the
-`smlnj-lib/CHANGES` file for details).
+* A number of *SML/NJ Library* bugs were fixed (see the list below or the
+  `smlnj-lib/CHANGES` file for details).
+
+* Added `listKeys` function to `HASH_TABLE` and `MONO_HASH_TABLE` signatures
 
 === ML-LPT
 

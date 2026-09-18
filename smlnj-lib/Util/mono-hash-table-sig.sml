@@ -73,6 +73,9 @@ signature MONO_HASH_TABLE =
     val listItemsi : 'a hash_table -> (Key.hash_key * 'a) list
 	(* Return a list of the items (and their keys) in the table *)
 
+    val listKeys : 'a hash_table -> Key.hash_key list
+        (* Return a list of the keys in the table *)
+
     val app  : ('a -> unit) -> 'a hash_table -> unit
     val appi : ((Key.hash_key * 'a) -> unit) -> 'a hash_table -> unit
 	(* Apply a function to the entries of the table *)

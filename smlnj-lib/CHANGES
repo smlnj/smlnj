@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-09-18]
+	Add `listKeys` function to the `HASH_TABLE` and `MONO_HASH_TABLE`
+	signatures
+
 [2026-08-30]
         * Fix for Issue #370 (The SExp parser re-parses top-level quoted symbols)
         * Fix for Issue #371 (The SExp parser parses negative numbers as symbols)

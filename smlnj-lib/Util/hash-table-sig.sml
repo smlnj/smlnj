@@ -73,6 +73,9 @@ signature HASH_TABLE =
     val listItemsi : ('a, 'b) hash_table -> ('a * 'b) list
 	(* Return a list of the items (and their keys) in the table *)
 
+    val listKeys : ('a, 'b) hash_table -> 'a list
+        (* Return a list of the keys in the table *)
+
     val app  : ('b -> unit) -> ('a, 'b) hash_table -> unit
     val appi : (('a * 'b) -> unit) -> ('a, 'b) hash_table -> unit
 	(* Apply a function to the entries of the table *)

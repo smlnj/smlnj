@@ -36,6 +36,7 @@ structure HashTableRep : sig
 
     val listItems  : (('a, 'b) table * int ref) -> 'b list
     val listItemsi : (('a, 'b) table * int ref) -> ('a * 'b) list
+    val listKeys   : (('a, 'b) table * int ref) -> 'a list
 
     val appi : ('a * 'b -> 'c) -> ('a, 'b) table -> unit
     val app : ('a -> 'b) -> ('c, 'a) table -> unit
@@ -121,12 +122,12 @@ structure HashTableRep : sig
 	    | f (~1, l, _) = l
 	    | f (i, l, n) = let
 		fun g (NIL, l, n) = f (i-1, l, n)
-		  | g (B(_, k, v, r), l, n) = g(r, v::l, n-1)
+		  | g (B(_, _, v, r), l, n) = g(r, v::l, n-1)
 		in
 		  g (Array.sub(table, i), l, n)
 		end
 	  in
-	    f ((Array.length table) - 1, [], !nItems)
+	    f (Array.length table - 1, [], !nItems)
 	  end (* listItems *)
     fun listItemsi (table, nItems) = let
 	  fun f (_, l, 0) = l
@@ -138,7 +139,19 @@ structure HashTableRep : sig
 		  g (Array.sub(table, i), l, n)
 		end
 	  in
-	    f ((Array.length table) - 1, [], !nItems)
+	    f (Array.length table - 1, [], !nItems)
+	  end (* listItems *)
+    fun listKeys (table, nItems) = let
+	  fun f (_, l, 0) = l
+	    | f (~1, l, _) = l
+	    | f (i, l, n) = let
+		fun g (NIL, l, n) = f (i-1, l, n)
+		  | g (B(_, k, _, r), l, n) = g(r, k::l, n-1)
+		in
+		  g (Array.sub(table, i), l, n)
+		end
+	  in
+	    f (Array.length table - 1, [], !nItems)
 	  end (* listItems *)
 
   (* Apply a function to the entries of the table *)

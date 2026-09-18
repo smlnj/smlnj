@@ -187,6 +187,9 @@ structure HashTable : HASH_TABLE =
     fun listItemsi (HT{table = ref arr, n_items, ...}) =
 	  HTRep.listItemsi (arr, n_items)
 
+    fun listKeys (HT{table = ref arr, n_items, ...}) =
+	  HTRep.listKeys (arr, n_items)
+
   (* Apply a function to the entries of the table *)
     fun appi f (HT{table, ...}) = HTRep.appi f (! table)
     fun app f (HT{table, ...}) = HTRep.app f (! table)
