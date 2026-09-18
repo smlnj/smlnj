@@ -17,7 +17,7 @@ structure LiteralBytecode : sig
       | STR8 of string
       | REAL64 of RealLit.t
       | RECORD of int           (* record of uniform values *)
-      | RAW of int              (* record of raw values *)
+      | RAWBLOCK of int         (* record of raw values *)
       | MIXED of CPS.record_rep (* mixed record *)
       | VEC of int              (* vector literal *)
       | SAVE of int
@@ -43,7 +43,7 @@ structure LiteralBytecode : sig
       | STR8 of string
       | REAL64 of RealLit.t
       | RECORD of int           (* record of uniform values *)
-      | RAW of int              (* record of raw values *)
+      | RAWBLOCK of int         (* record of raw values *)
       | MIXED of CPS.record_rep (* mixed record *)
       | VEC of int              (* vector literal *)
       | SAVE of int
@@ -57,7 +57,7 @@ structure LiteralBytecode : sig
             | pr (STR8 s) = sayl ["STR8(", Int.toString(size s), ")\n"]
             | pr (REAL64 r) = sayl ["REAL64(", RealLit.toString r, ")\n"]
             | pr (RECORD n) = sayl ["RECORD(", Int.toString n, ")\n"]
-            | pr (RAW n) = sayl ["RAW(", Int.toString n, ")\n"]
+            | pr (RAWBLOCK n) = sayl ["RAWBLOCK(", Int.toString n, ")\n"]
             | pr (MIXED{ptrLen, rawLen}) = sayl [
                   "MIXED(", Int.toString ptrLen, ", ", Int.toString rawLen, ")\n"
                 ]
@@ -86,7 +86,7 @@ structure LiteralBytecode : sig
       structure Tbl = IntHashTable
       type slot_info = {first : int, last : int ref, ty : ty}
     in
-    fun analyse (code as [ENUM 0, RETURN]) =
+    fun analyse (code as [INT63 0, RETURN]) =
           ({maxDepth=1, maxSaved=0, nInstrs=2}, code)
       | analyse code = let
           val tbl : slot_info Tbl.hash_table = Tbl.mkTable (16, Fail "slot table")
@@ -108,6 +108,7 @@ structure LiteralBytecode : sig
                   | popn pred (n, ty::stk, d) = if pred ty
                       then popn pred (n-1, stk, d-1)
                       else bug "insufficient arguments"
+                  | popn _ _ = bug "empty stack"
                 fun push ty = pass1 (pc+1, code, ty::stk, d+1, Int.max(d+1, maxD))
                 fun continue (stk', d') = pass1 (pc+1, code, stk', d', maxD)
                 in
@@ -121,19 +122,19 @@ structure LiteralBytecode : sig
                         in
                           continue (OBJ::stk', d'+1)
                         end
-                    | RAW n => let
+                    | RAWBLOCK n => let
                         val (stk', d') = popn isRaw (n, stk, d)
                         in
                           continue (OBJ::stk', d'+1)
                         end
                     | MIXED{ptrLen, rawLen} => let
-                        val (stk', d') = popn isRaw (n, stk, d)
-                        val (stk'', d'') = popn isUniform (n, stk', d')
+                        val (stk', d') = popn isRaw (ptrLen, stk, d)
+                        val (stk'', d'') = popn isUniform (rawLen, stk', d')
                         in
                           continue (OBJ::stk', d''+1)
                         end
                     | VEC n => let
-                        val (stk', d') = popn (n, isUniform)
+                        val (stk', d') = popn isUniform (n, stk, d)
                         in
                           continue (OBJ::stk', d'+1)
                         end
@@ -162,7 +163,6 @@ structure LiteralBytecode : sig
           val (code, maxSaved) = if nPseudoSlots <= 1
                 then (code, nPseudoSlots)
                 else let
-                  va
                   (* the assignment of pseudo-slots to slots *)
                   val assign = Array.tabulate (Tbl.numItems tbl, Fn.id)
                   (* construct the initial worklist *)
@@ -170,7 +170,7 @@ structure LiteralBytecode : sig
                         val {first, last, ty} = lookup i
                         in
                           {first=first, last=last, id=i}
-                        end
+                        end)
                   (* insert an interval into the active list, which is ordered
                    * by inceasing `last` fields.
                    *)
@@ -190,11 +190,11 @@ structure LiteralBytecode : sig
                    *    avail   -- available slots
                    *    next    -- the next slot to assign when avail is empty
                    *)
-                  fun go ([], [], _, _) = next
+                  fun go ([], [], _, next) = next
                     | go ({first, last, id}::wl, active, avail, next) = let
                         (* free any slots whose last use preceeds `first` *)
                         fun free (active as {last, slot}::rest, avail) =
-                              if b < first
+                              if last < first
                                 then free(rest, slot::avail)
                                 else (active, avail)
                           | free arg = arg
@@ -203,13 +203,13 @@ structure LiteralBytecode : sig
                           case avail
                            of [] => (
                                 Array.update(assign, id, next);
-                                go (wl, addActive(active, last, next), [], next+1))
+                                go (wl, addActive(active, !last, next), [], next+1))
                             | slot::avail => (
                                 Array.update(assign, id, slot);
-                                go (wl, addActive(active, last, slot), avail, next))
+                                go (wl, addActive(active, !last, slot), avail, next))
                           (* end case *)
                         end
-                  val maxSaved = go ()
+                  val maxSaved = go (wl, [], [], 0)
                   (* rewrite an instruction to use the slot assignments *)
                   fun rewrite (SAVE i) = SAVE(Array.sub(assign, i))
                     | rewrite (LOAD i) = LOAD(Array.sub(assign, i))
@@ -253,7 +253,8 @@ structure LiteralBytecode : sig
   (* `STR8` opcodes *)
     val opSTR8_0 : Word8.word = 0wx88
     val opSTR8b : Word8.word = 0wx89
-    val opSTR8n : Word8.word = 0wx8A
+    val opSTR8h : Word8.word = 0wx8A
+    val opSTR8w : Word8.word = 0wx8B
   (* record opcodes *)
     fun opRECORD_1_14 len = Word8.fromInt(0xA0 + len)
     val opRECORDb: Word8.word = 0wxAE
@@ -271,9 +272,9 @@ structure LiteralBytecode : sig
     val opVECh: Word8.word = 0wxD6
     val opVECw: Word8.word = 0wxD7
   (* save/load opcodes *)
-    fun opSTORE_0_6 slot = Word.fromInt(0xE8 + slot)
-    val opSTOREh : Word8.word = 0wxEF
-    fun opLOAD_0_6 slot = Word.fromInt(0xF0 + slot)
+    fun opSAVE_0_6 slot = Word8.fromInt(0xE8 + slot)
+    val opSAVEh : Word8.word = 0wxEF
+    fun opLOAD_0_6 slot = Word8.fromInt(0xF0 + slot)
     val opLOADh : Word8.word = 0wxF7
   (* return *)
     val opRETURN : Word8.word = 0wxff
@@ -299,7 +300,7 @@ structure LiteralBytecode : sig
           W8B.add1(buf, Word8.fromInt(>>(n, 0w8)));
           W8B.add1(buf, Word8.fromInt n))
     fun addLargeUInt16 (buf, n) = (
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.>>(n, 0w8)));
+          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
           W8B.add1(buf, Word8.fromLargeInt n))
   (* encode a 32-bit signed value as a byte list *)
     fun addInt32 (buf, n) = (
@@ -319,9 +320,9 @@ structure LiteralBytecode : sig
           W8B.add1(buf, Word8.fromInt(>>(n, 0w8)));
           W8B.add1(buf, Word8.fromInt n))
     fun addLargeUInt32 (buf, n) = (
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.>>(n, 0w24)));
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.>>(n, 0w16)));
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.>>(n, 0w8)));
+          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w24)));
+          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w16)));
+          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
           W8B.add1(buf, Word8.fromLargeInt n))
   (* encode a 64-bit signed value as a byte list *)
     fun addLargeInt64 (buf, n) = (
@@ -363,14 +364,22 @@ structure LiteralBytecode : sig
 
     fun real64ToBytes r = #1(Real64ToBits.toBits r)
 
+    (* bounds *)
+    val minInt8 : IntInf.int = ~128
+    val maxInt8 : IntInf.int = 127
+    val minInt16 : IntInf.int = ~32768
+    val maxInt16 : IntInf.int = 32767
+    val minInt32 : IntInf.int = ~2147483648
+    val maxInt32 : IntInf.int = 2147483647
+
     (* encode tagged integers *)
     fun encINT63 (buf, n) = if (0 <= n) andalso (n <= 31)
             then W8B.add1(buf, opINT63_0_31 n)
           else if (n < 0) andalso (n >= ~32)
             then W8B.add1(buf, opINT63_m32_m1 n)
-          else if (~128 <= n) andalso (n <= 127)
+          else if (minInt8 <= n) andalso (n <= maxInt8)
             then (W8B.add1(buf, opINT63b); addLargeInt8(buf, n))
-          else if (~32768 <= n) andalso (n <= 32767)
+          else if (minInt16 <= n) andalso (n <= maxInt16)
             then (W8B.add1(buf, opINT63h); addLargeInt16(buf, n))
           else if (minInt32 <= n) andalso (n <= maxInt32)
             then (W8B.add1(buf, opINT63w); addLargeInt32(buf, n))
@@ -381,9 +390,9 @@ structure LiteralBytecode : sig
             then W8B.add1(buf, opINT64_0_31 n)
           else if (n < 0) andalso (n >= ~32)
             then W8B.add1(buf, opINT64_m32_m1 n)
-          else if (~128 <= n) andalso (n <= 127)
+          else if (minInt8 <= n) andalso (n <= maxInt8)
             then (W8B.add1(buf, opRAWINT64b); addLargeInt8(buf, n))
-          else if (~32768 <= n) andalso (n <= 32767)
+          else if (minInt16 <= n) andalso (n <= maxInt16)
             then (W8B.add1(buf, opRAWINT64h); addLargeInt16(buf, n))
           else if (minInt32 <= n) andalso (n <= maxInt32)
             then (W8B.add1(buf, opRAWINT64w); addLargeInt32(buf, n))
@@ -393,13 +402,20 @@ structure LiteralBytecode : sig
     (* endcode a 64-bit real literal *)
     fun encREAL64 (buf, r) = (
           W8B.add1(buf, opREAL64);
-          W8B.addVec(buf, Real64ToBits.toBits r))
+          W8B.addVec(buf, #1(Real64ToBits.toBits r)))
 
-    (* encode a STR8 opcode and length *)
-    fun encSTR8 (buf, 0) = W8B.add1(buf, opSTR8_0)
-      | encSTR8 (buf, len) = if (len <= 255)
-            then (W8B.add1(buf, opSTRb); addUInt8(buf, len))
-            else (W8B.add1(buf, opSTRn); W8B.addVec(buf, intToBytes len))
+    (* encode a STR8 opcode *)
+    fun encSTR8 (buf, "") = W8B.add1(buf, opSTR8_0)
+      | encSTR8 (buf, s) = let
+          val len = size s
+          in
+            if (len <= 255)
+              then (W8B.add1(buf, opSTR8b); addUInt8(buf, len))
+            else if (len < 65535)
+              then (W8B.add1(buf, opSTR8h); addUInt16(buf, len))
+              else (W8B.add1(buf, opSTR8w); addUInt32(buf, len));
+            W8B.addVec(buf, Byte.stringToBytes s)
+          end
 
     (* encode a RECORD opcode and length *)
     fun encRECORD (buf, len) = if (len <= 14)
@@ -432,7 +448,7 @@ structure LiteralBytecode : sig
 
   (* encode a VECTOR opcode and length *)
     fun encVEC (buf, len) = if (len <= 12)
-            then W8B.add1(buf, opVEC_1_12)
+            then W8B.add1(buf, opVEC_1_12 len)
           else if (len <= 255)
             then (W8B.add1(buf, opVECb); addUInt8(buf, len))
           else if (len <= 65535)
@@ -441,14 +457,14 @@ structure LiteralBytecode : sig
             then (W8B.add1(buf, opVECw); addUInt32(buf, len))
             else bug "vector too big"
 
-    (* encode a STORE/LOAD opcode *)
+    (* encode a SAVE/LOAD opcode *)
     local
-      fun enc (opb, oph) (buf, slot) = if (slot <= 255)
-          then (W8B.add1(buf, opb); addUInt8(buf, slot))
+      fun enc (op_0_6, oph) (buf, slot) = if (slot <= 6)
+          then W8B.add1(buf, op_0_6 slot)
           else (W8B.add1(buf, oph); addUInt16(buf, slot))
     in
-    val encSAVE = enc (opSAVEb, opSAVEh)
-    val encLOAD = enc (opLOADb, opLOADh)
+    val encSAVE = enc (opSAVE_0_6, opSAVEh)
+    val encLOAD = enc (opLOAD_0_6, opLOADh)
     end (* local *)
 
     (* encode a return *)
@@ -463,14 +479,14 @@ structure LiteralBytecode : sig
 
     fun encode code = let
           val ({maxDepth, maxSaved, nInstrs}, code) = analyse code
-          val buf = W8B.new (4 * nInstrs * valueSzb)
+          val buf = W8B.new (4 * nInstrs)
           (* encode an instruction *)
           fun enc (INT63 n) = encINT63 (buf, n)
             | enc (RAWINT64 n) = encINT64 (buf, n)
             | enc (REAL64 r) = encREAL64 (buf, r)
             | enc (STR8 s) = encSTR8 (buf, s)
             | enc (RECORD n) = encRECORD (buf, n)
-            | enc (RAW n) = encRAW (buf, n)
+            | enc (RAWBLOCK n) = encRAW (buf, n)
             | enc (MIXED rep) = encMIXED (buf, rep)
             | enc (VEC n) = encVEC (buf, n)
             | enc (SAVE i) = encSAVE (buf, i)

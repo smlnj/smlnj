@@ -22,13 +22,13 @@
 signature LITERALS =
   sig
 
-  (** `litsplit f` takes a CPS function and splits out the heap-allocated
-   * literal values from it.  At runtime, these literals will be accessed via
-   * a record of literals that is allocated by the runtime system.  This
-   * function returns a rewriten version of its argument that accesses
-   * literals from the record and a byte-vector that encodes the program
-   * for generating the literals.
-   *)
+    (** `litsplit f` takes a CPS function and splits out the heap-allocated
+     * literal values from it.  At runtime, these literals will be accessed via
+     * a record of literals that is allocated by the runtime system.  This
+     * function returns a rewriten version of its argument that accesses
+     * literals from the record and a byte-vector that encodes the program
+     * for generating the literals.
+     *)
     val split : CPS.function -> CPS.function * Word8Vector.vector
 
   end
@@ -47,6 +47,13 @@ structure Literals : LITERALS =
 
     val debugFlg = Control.CG.debugLits
     val say = Control.Print.say
+
+    fun hashRConst {ty=32, rval} = RealLit.hash rval + 0w179
+      | hashRConst {ty=64, rval} = RealLit.hash rval + 0w283
+      | hashRConst _ = bug "bogus real-const size"
+
+    fun sameRConst ({ty=t1, rval=rv1} : int RealConst.t, {ty=t2, rval=rv2}) =
+          (t1 = t2) andalso RealLit.same(rv1, rv2)
 
   (****************************************************************************
    *                    LIFTING LITERALS ON CPS                               *
@@ -77,42 +84,37 @@ structure Literals : LITERALS =
       | REAL of int RealConst.t
 
     (* count a use of a literal *)
-    fun useLit (OBJ{useCnt, ...}) = useCnt := !useCnt + 1
+    fun useLit (lit as OBJ{useCnt, ...}) = (useCnt := !useCnt + 1)
       | useLit _ = ()
+
     (* count a reference to a literal from another literal record *)
-    fun refUseLit (OBJ{useCnt, refCnt, ...}) = (
+    fun refUseLit (lit as OBJ{useCnt, refCnt, ...}) = (
           useCnt := !useCnt + 1;
           refCnt := !refCnt + 1)
       | refUseLit _ = ()
 
-  (* return the CPS type for a literal *)
-    fun cpsTypeOf (OBJ{ty, ...}) = ty
-      | cpsTypeOf (IMMED{ty, ...}) = C.NUMT ty
-      | cpsTypeOf (ENUM _) = C.ENUMt
-      | cpsTypeOf (REAL{ty, ...}) = C.FLTt ty
-
-  (* is a literal used as value outside of being part of another literal? *)
+    (* is a literal used as value outside of being part of another literal? *)
     fun litIsUsed (OBJ{refCnt, useCnt, ...}) = (!refCnt < !useCnt)
       | litIsUsed _ = bug "impossible"
 
-  (* is a literal shared?  This happens when its refCnt is > 1
-   * or when its refCnt = 1 and its useCnt > 1.
-   *)
+    (* is a literal shared?  This happens when its refCnt is > 1
+     * or when its refCnt = 1 and its useCnt > 1.
+     *)
     fun litIsShared (OBJ{refCnt=ref rc, useCnt, ...}) =
           (rc > 1) orelse ((rc = 1) andalso (!useCnt > 1))
       | litIsShared _ = bug "impossible"
 
-  (* print the list of "top-level" literals (for debugging purposes) *)
+    (* print a list of "top-level" literals (for debugging purposes) *)
     fun printLits lits = let
           val id2s = Word.fmt StringCvt.DEC
           fun prIndent 0 = ()
             | prIndent n = (say "  "; prIndent(n-1))
-          fun prObj indent (RECORD{rk, args}, suffix) = (
+          fun prObj indent (RECORD(rk, args), suffix) = (
                 case rk
                  of C.RK_VECTOR => say(concat["VECTOR ", suffix, "\n"])
                   | C.RK_RECORD => say(concat["RECORD ", suffix, "\n"])
                   | C.RK_MIXED{ptrLen, rawLen} => say(concat["MIXED ", suffix, "\n"])
-                  | C.RK_RAWBLOCK => say(concat["RAW ", suffix, "\n"])
+                  | C.RK_RAWBLOCK => say(concat["RAWBLOCK ", suffix, "\n"])
                   | _ => raise Fail "bogus record kind"
                 (* end case *);
                 List.app (prLiteral (indent+1)) lits)
@@ -136,15 +138,15 @@ structure Literals : LITERALS =
                   | ENUM n => say(concat["ENUM ", Int.toString n, "\n"])
                   | REAL{rval, ...} => say(concat["REAL ", RealLit.toString rval, "\n"])
                 (* end case *))
-          fun prSlot (i, OBJ arg) = (
+          fun prSlot (i, OBJ{value, ...}) = (
                 say (StringCvt.padLeft #" " 4 (Int.toString i) ^ ": ");
-                prOBJ 3 arg)
+                prObj 3 (value, ""))
             | prSlot (i, _) = bug "expected top-level OBJ"
           in
             List.appi prSlot lits
           end (* printLits *)
 
-  (* an environment for tracking literals *)
+    (* an environment for tracking literals *)
     structure LitEnv : sig
 
         type t
@@ -155,39 +157,19 @@ structure Literals : LITERALS =
          *)
         type var_info = bool * literal
 
-        datatype value
-          = NoLit
-          | Lit of literal
-          | Real of int
-
         (* create a new environment *)
         val new : unit -> t
         (* add a literal record value to the environment *)
-        val addRecord : t -> C.record_kind * literal list * C.lvar -> unit
-        (* return the literal that a variable is bound to *)
-        val findVar : t -> C.lvar -> var_info option
+        val addRecord : t -> C.record_kind * C.value list * C.lvar -> unit
         (* `isConst lenv v` returns true when either `v` is a variable bound to a
          * literal or `v` is a constant value.
          *)
         val isConst : t -> C.value -> bool
-        (* find the literal value for the given value.  Note that for NUM and REAL
-         * values, we return NONE, since they are represented as IMMED literals.
-         *)
-        val findValue : t -> C.value -> value
         (* record the use of a value in a non-literal context *)
         val useValue : t -> C.value -> unit
-        (* like useValue, but for constant values embedded in literal records.  This
-         * function returns the literal that the value maps to.
-         *)
-        val useLitValue : t -> C.value -> literal
-        (* return the number of literals in the environment *)
-        val numLits : t -> int
+
         (* return true if there are no literals defined in the environment *)
         val isEmpty : t -> bool
-        (* return true if the environment has unbound 64-bit real literals (e.g.,
-         * the arguments to arithmetic operations).
-         *)
-        val hasReal64 : t -> bool
         (* get the literal objects and reals that are used outside of constructing
          * literal records.
          *)
@@ -195,10 +177,12 @@ structure Literals : LITERALS =
                 usedLits : literal list,
                 realLits : int RealConst.t list
               }
-        (* return a list of the variables that are bound to top-level literals paired
-         * with their binding.
-         *)
-        val boundVars : t -> (C.lvar * literal) list
+        (* return the literal that a variable is bound to *)
+        val findVar : t -> C.lvar -> var_info option
+        (* get the index of a real literal *)
+        val lookupReal : t -> int RealConst.t -> int
+        (* find a string literal *)
+        val lookupString : t -> string -> literal
 
       end = struct
 
@@ -206,11 +190,11 @@ structure Literals : LITERALS =
         type key = obj
 
 (* TODO: use the Hash module from the SML/NJ Library *)
-        fun hashObj (RECORD(rk, args)) = let
+        fun hashObj (RECORD(rk, lits)) = let
               fun hashArg (OBJ{id, ...}, h) = 0w3 * id + 0w293 + h
-                | hashArg (IMMED ic, h) => hashIConst ic + h
+                | hashArg (IMMED ic, h) = hashIConst ic + h
                 | hashArg (ENUM n, h) = 0w3 * Word.fromInt n + 0w157 + h
-                | hashArg (REAL rc, h) => hashRConst rc + h
+                | hashArg (REAL rc, h) = hashRConst rc + h
               val h0 = (case rk
                      of C.RK_VECTOR => 0w197
                       | C.RK_RECORD => 0w313
@@ -219,31 +203,27 @@ structure Literals : LITERALS =
                       | _ => bug("unexpected record kind " ^ PPCps.rkToString rk)
                     (* end case *))
               in
-                List.foldl f h0 lits
+                List.foldl hashArg h0 lits
               end
-          | hashOBJ (STRING s) = HashString.hashString s + 0w419
-        and hashIConst {ty={tag=true, ...}, ival}) =
+          | hashObj (STRING s) = HashString.hashString s + 0w419
+        and hashIConst {ty={tag=true, ...}, ival} =
               Word.fromLargeInt ival + 0w157
-          | hashIConst {ty={sz, ...}, ival}) =
+          | hashIConst {ty={sz, ...}, ival} =
               Word.fromLargeInt ival + Word.fromInt sz + 0w257
-        and hashRConst {ty=32, rval} = RealLit.hash rval + 0w179
-          | hashRConst {ty=64, rval} = RealLit.hash rval + 0w283
 
         fun sameObj (RECORD(rk1, args1), RECORD(rk2, args2)) = let
               fun sameLit (OBJ{useCnt=u1, ...}, OBJ{useCnt=u2, ...}) = (u1 = u2)
                 | sameLit (IMMED ic1, IMMED ic2) = sameIConst (ic1, ic2)
                 | sameLit (ENUM n1, ENUM n2) = (n1 = n2)
-                | sameLit (REAL rc1, REAL rc2) = sameRConst (rc1, tc2)
+                | sameLit (REAL rc1, REAL rc2) = sameRConst (rc1, rc2)
                 | sameLit _ = false
               in
                 (rk1 = rk2) andalso ListPair.allEq sameLit (args1, args2)
               end
-          | sameKey (STRING s1, STRING s2) = (s1 = s2)
-          | sameKey _ = false
+          | sameObj (STRING s1, STRING s2) = (s1 = s2)
+          | sameObj _ = false
         and sameIConst ({ty={sz=s1, ...}, ival=iv1}, {ty={sz=s2, ...}, ival=iv2}) =
               (s1 = s2) andalso (iv1 = iv2)
-        and sameRConst ({ty=t1, rval=rv1}, {ty=t2, rval=rv2}) =
-              (t1 = t2) andalso RealLit.same(rv1, rv2)
 
         structure LTbl = HashTableFn(
           struct
@@ -276,39 +256,64 @@ structure Literals : LITERALS =
 
         fun new () = LE{
                 lits = LTbl.mkTable(32, Fail "LitTbl"),
-                reals = RSet.mkEmpty 32,
+                reals = RTbl.mkTable(32, Fail "RealTbl"),
                 vMap = LV.Tbl.mkTable(32, Fail "VarTbl")
               }
 
-        fun hasReal64 (LE{reals, ...}) = RSet.isEmpty reals
+        fun litExists (LE{lits, ...}) = LTbl.inDomain lits
 
-        local
-          fun addLit mkKey (LE{lits, ...}) = let
-                val find = LTbl.find lits
-                val insert = LTbl.insert lits
-                in
-                  fn arg => let
-                      val key = mkKey arg
-                      in
-                        case find key
-                         of SOME lit => lit
-                          | NONE => let
-                              val lit = OBJ{
-                                      useCnt = ref 0, refCnt = ref 0,
-                                      id = Word.fromInt(LTbl.numItems lits),
-                                      value = key
-                                    }
-                              in
-                                insert (key, lit);
-                                lit
-                              end
-                        (* end case *)
-                      end
-                end
-        in
-        val addRecord = addLit RECORD
-        val addString addLit STRING
-        end
+        fun findLit (LE{lits, ...}) = LTbl.find lits
+
+        (* insert a heap-allocated object into the literal environemt.  We assume
+         * that the object is not already in the table and we return the literal
+         * value.
+         *)
+        fun newLit (LE{lits, ...}) = let
+              val insert = LTbl.insert lits
+              in
+                fn (obj : obj) => let
+                    val lit = OBJ{
+                            useCnt = ref 0, refCnt = ref 0,
+                            id = Word.fromInt(LTbl.numItems lits),
+                            value = obj,
+                            ty = ??
+                          }
+                    in
+                      insert (obj, lit);
+                      lit
+                    end
+              end (* newLit *)
+
+        fun insertString env = let
+              val find = findLit env
+              val insert = newLit env
+              in
+                fn s => (case find (STRING s)
+                     of SOME lit => lit
+                      | NONE => insert (STRING s)
+                    (* end case *))
+              end
+
+        fun lookupReal (LE{reals, ...}) = RTbl.lookup reals
+
+        fun insertReal (LE{reals, ...}) = let
+              val find = RTbl.find reals
+              val insert = RTbl.insert reals
+              in
+                fn rc => (case find rc
+                     of NONE => insert (rc, RTbl.numItems reals)
+                      | SOME _ => ()
+                    (* end case *))
+              end
+
+        fun lookupString env = let
+              val find = findLit env
+              in
+                fn s => (case find (STRING s)
+                   of SOME lit => lit
+                    | NONE => bug "string not found"
+                  (* end case *))
+              end
 
         fun findVar (LE{vMap, ...}) = LV.Tbl.find vMap
 
@@ -326,101 +331,89 @@ structure Literals : LITERALS =
                  | C.VOID => false
               end
 
-        datatype value
-          = NoLit
-          | Lit of literal
-          | Real of int
-
-        fun findValue (LE{lits, reals, vMap, ...}) = let
-              val findLit = LTbl.find lits
-              val findVar = LV.Tbl.find vMap
+        fun addRecord env = let
+              val findLit = findLit env
+              val findVar = findVar env
+              val insVar = insertVar env
+              val insReal = insertReal env
+              val insStr = insertString env
+              val newLit = newLit env
+              (* resolve the record fields to their corresponding literal reps *)
+              fun resolveField (C.VAR x) = (case findVar x
+                      of SOME(_, lit) => lit
+                       | NONE => bug "expected literal"
+                     (* end case *))
+                | resolveField (C.LABEL _) = bug "unexpected LABEL value"
+                | resolveField (C.NUM n) = IMMED n
+                | resolveField (C.ENUM n) = ENUM n
+                | resolveField (C.REAL rc) = (insReal rc; REAL rc)
+                | resolveField (C.STRING s) = insStr s
+                | resolveField C.VOID = bug "unexpected VOID value"
               in
-                fn (C.VAR x) => (case findVar x
-                      of SOME(_, lit) => Lit lit
-                       | NONE => NoLit
-                     (* end case *))
-                 | (C.LABEL _) => bug "unexpected LABEL"
-                 | (C.NUM n) => NoLit
-                 | (C.ENUM _) => NoLit
-                 | (C.REAL r) => (case findReal r
-                      of SOME i => Real i
-                       | NONE => NoLit
-                     (* end case *))
-                 | (C.STRING s) => (case findLit (STRING s)
-                      of SOME lit => Lit lit
-                       | NONE => NoLit
-                     (* end case *))
-                 | C.VOID => bug "unexpected VOID"
+                fn (rk, fields, v) => let
+                    val flds = List.map resolveField fields
+                    val obj = RECORD(rk, flds)
+                    val lit = (case findLit obj
+                           of SOME lit => lit
+                            | NONE => let
+                                val lit = newLit obj
+                                in
+                                  (* record the references and uses of the fields *)
+                                  List.app refUseLit flds;
+                                  lit
+                                end
+                          (* end case *))
+                    in
+                      insVar (v, (false, lit))
+                    end
               end
 
         fun useValue env = let
               val findVar = findVar env
-              val addReal = addReal env
-              val addString = addString env
-              val insert = insertVar env
+              val insReal = insertReal env
+              val insStr = insertString env
+              val insVar = insertVar env
               in
                 fn (C.VAR x) => (case findVar x
                        of SOME(flg, lit) => (
                             useLit lit;
-                            if flg then () else insert (x, (true, lit)))
+                            if flg then () else insVar (x, (true, lit)))
                         | NONE => ()
                       (* end case *))
                  | (C.LABEL _) => bug "unexpected LABEL"
                  | (C.NUM n) => ()
                  | (C.ENUM _) => ()
-                 | (C.REAL r) => (setHasReal64 env; useLit(addReal r))
-                 | (C.STRING s) => useLit(addString s)
+                 | (C.REAL rc) => insReal rc
+                 | (C.STRING s) => useLit (insStr s)
                  | C.VOID => ()
               end
 
-        fun useLitValue env = let
-              val findVar = findVar env
-              val addReal = addReal env
-              val addString = addString env
-              fun use lit = (refUseLit lit; lit)
-              in
-                fn (C.VAR x) => (case findVar x
-                      of SOME(_, lit) => use lit
-                       | NONE => bug "expected literal"
-                     (* end case *))
-                 | (C.LABEL _) => bug "unexpected LABEL"
-                 | (C.NUM n) => IMMED n
-                 | (C.ENUM n) => ENUM n
-                 | (C.REAL r) => addReal r
-                 | (C.STRING s) => use(addString s)
-                 | C.VOID => bug "unexpected VOID"
-              end
-
-        fun numLits (LE{lits, ...}) = LTbl.numItems lits
-
         fun isEmpty (LE{lits, reals, ...}) =
-              (LTbl.numItems lits = 0) andalso (RSet.isEmpty reals)
+              (LTbl.numItems lits + RTbl.numItems reals = 0)
 
         fun getLiterals (LE{lits, reals, ...}) = {
-                usedLiterals = List.filter litIsUsed (LTbl.listItems lits),
-                realLiterals = RSet.listItems reals
+                usedLits = List.filter litIsUsed (LTbl.listItems lits),
+                realLits = RTbl.listKeys reals
               }
-
-        fun boundVars (LE{vMap, ...}) =
-              LV.Tbl.foldi
-                (fn (x, (true, lit), acc) => (x, lit)::acc | (_, _, acc) => acc)
-                  [] vMap
 
       end (* structure LitEnv *)
 
-  (* The first pass initializes the literal table by walking the CPS module.  After
-   * this pass, we have identified any literal value that needs to be included in the
-   * literal section.  Furthermore, we have identified which literal values are used
-   * in non-literal contexts.
-   *)
+    (****************************************************************************
+     *                                FIRST PASS                                *
+     ****************************************************************************)
+
+    (* The first pass initializes the literal table by walking the CPS module.  After
+     * this pass, we have identified any literal value that needs to be included in the
+     * literal section.  Furthermore, we have identified which literal values are used
+     * in non-literal contexts.
+     *)
     fun identifyLiterals body = let
           val env = LitEnv.new()
           val isConst = LitEnv.isConst env
           val useValue = LitEnv.useValue env
           val useValues = List.app useValue
-          val useLitValue = LitEnv.useLitValue env
           val addRecord = LitEnv.addRecord env
-          fun addWrap (nk, lit) = let
+          fun addWrap (nk, u, v) = let
                 val rk = (case nk
                        of P.INT 64 => C.RK_RAWBLOCK
                         | P.UINT 64 => C.RK_RAWBLOCK
@@ -428,7 +421,7 @@ structure Literals : LITERALS =
                         | _ => raise Fail("unexpected wrap of " ^ NumKind.toString nk)
                       (* end case *))
                 in
-                  addRecord (rk, [lit])
+                  addRecord (rk, [u], v)
                 end
           fun fieldToValue (u, C.OFFp 0) = u
             | fieldToValue _ = bug "unexpected access in field"
@@ -440,7 +433,7 @@ structure Literals : LITERALS =
                       val ul = List.map fieldToValue fields
                       in
                         if List.all isConst ul
-                          then addRecord (rk, List.map useLitValue ul, v)
+                          then addRecord (rk, ul, v)
                           else useValues ul;
                         doExp e
                       end
@@ -454,7 +447,7 @@ structure Literals : LITERALS =
                   | C.LOOKER(p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.ARITH(p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.PURE(P.WRAP nk, [u], v, t, e) => if isConst u
-                      then (addWrap(nk, useLitValue u); doExp e)
+                      then (addWrap(nk, u, v); doExp e)
                       else doExp e
                   | C.PURE (p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.RCC (k, l, p, ul, vtl, e) => (useValues ul; doExp e)
@@ -464,50 +457,17 @@ structure Literals : LITERALS =
             env
           end
 
-  (* literal values are either in the main literal vector or in the vector
-   * of real literals.
-   *)
-    datatype lit_loc = LitSlot of int | Real64Slot of int
+    (****************************************************************************
+     *                               SECOND PASS                                *
+     ****************************************************************************)
 
     (* build the representation of the literals; return a table mapping literal IDs
      * to their locations, the bytecode for building the literal vector, and a boolean
      * that is true if there is a real-literal vector.
      *)
     fun buildLiterals env = let
-          val {usedLits, realLits} = LitEnv.getLiterals env
-          (* get a list of the literals that are bound to variables in order of their
-           * definition.
-           *)
-          val lits = let
-                fun gt (OBJ{id=a, ...}, OBJ{id=b, ...}) = (a > b)
-                  | gt _ = bug "unexpected immediate literal"
-                in
-                  ListMergeSort.sort gt usedLits
-                end
-          val numLits = List.length lits
-          val numReals = List.length realLits
-          val litIdTbl = WordTbl.mkTable(numLits, Fail "litIdTbl")
-          val insertLit = let
-                val insert = WordTbl.insert litIdTbl
-                in
-                  fn id => let val slot = !nLits
-                      in
-                        nLits := slot + 1;
-                        insert (id, LitSlot slot)
-                      end
-                end
-          val insertReal64 = let
-                val insert = WordTbl.insert litIdTbl
-                in
-                  fn (id, rval) => let val slot = !nReal64Lits
-                      in
-                        nReal64Lits := slot + 1;
-                        insert (id, Real64Slot slot);
-                        real64Lits := real64ToBytes rval :: !real64Lits
-                      end
-                end
-          (* table to track shared literals (indexed by literal ID) *)
-          val sharedLitTbl = WordTbl.mkTable(numNamedLits, Fail "sharedLitTbl")
+          (* table to track shared literals (indexed by CPS value) *)
+          val sharedLitTbl = WordTbl.mkTable (32, Fail "sharedLitTbl")
           val insertSharedLit = let
                 val insert = WordTbl.insert sharedLitTbl
                 in
@@ -517,6 +477,37 @@ structure Literals : LITERALS =
                       end
                 end
           val findSharedLit = WordTbl.find sharedLitTbl
+          (* a table to map object IDs to slots in the top-level literal record *)
+          val slotTbl : (int * C.cty) WordTbl.hash_table =
+                WordTbl.mkTable (16, Fail "slot table")
+          val assignSlot = let
+                val insert = WordTbl.insert slotTbl
+                in
+                  fn (id, ty) => insert (id, (WordTbl.numItems slotTbl, ty))
+                end
+          (* a function for mapping CPS values to slots in the top-level literal
+           * vector
+           *)
+          val slotForValue : C.value -> (int * C.cty) option = let
+                val findVar = LitEnv.findVar env
+                val lookupReal = LitEnv.lookupReal env
+                val lookupString = LitEnv.lookupString env
+                val findSlot = WordTbl.find slotTbl
+                fun getSlot (OBJ{id, ty, ...}) = (case findSlot id
+                       of NONE => bug ("no slot for " ^ Word.fmt StringCvt.DEC id)
+                        | someSlot => someSlot
+                      (* end case *))
+                  | getSlot _ = bug "getSlot for non-object"
+                in
+                  fn (C.VAR x) => (case findVar x
+                       of SOME(true, lit) => getSlot lit
+                        | SOME _ => bug "impossible: bad variable"
+                        | NONE => NONE
+                      (* end case *))
+                   | (C.REAL rc) => SOME(lookupReal rc, C.FLTt(#ty rc))
+                   | (C.STRING s) => getSlot (lookupString s)
+                   | _ => NONE
+                end
           (* generate code to create a record *)
           fun genRecord (rk, lits, code) = let
                 val code = List.foldl genLiteral code lits
@@ -525,11 +516,11 @@ structure Literals : LITERALS =
                    of C.RK_VECTOR => BC.VEC(List.length lits) :: code
                     | C.RK_RECORD => BC.RECORD(List.length lits) :: code
                     | C.RK_MIXED rep => BC.MIXED rep :: code
-                    | C.RK_RAWBLOCK => BC.RAW(List.length lits) :: code
+                    | C.RK_RAWBLOCK => BC.RAWBLOCK(List.length lits) :: code
                     | _ => bug "unexpected record kind"
                   (* end case *)
                 end
-          fun genLiteral (OBJ{refCnt, useCnt, value, id, ...}, code) = if (!refCnt > 1)
+          and genLiteral (OBJ{refCnt, useCnt, value, id, ...}, code) = if (!refCnt > 1)
                 then (case findSharedLit id
                    of SOME slot => BC.LOAD slot :: code
                     | NONE => let
@@ -541,9 +532,9 @@ structure Literals : LITERALS =
                             | STRING s => BC.SAVE slot :: BC.STR8 s :: code
                           (* end case *)
                         end
-                  (* end case *)
+                  (* end case *))
                 else (case value
-                   of RECORD(rk, lits) => enRecord(rk, lits, code)
+                   of RECORD(rk, lits) => genRecord(rk, lits, code)
                     | STRING s => BC.STR8 s :: code
                   (* end case *))
             | genLiteral (IMMED{ty={sz=63, ...}, ival}, code) =
@@ -553,23 +544,49 @@ structure Literals : LITERALS =
             | genLiteral (ENUM n, code) =
                 BC.INT63(IntInf.fromInt n) :: code
             | genLiteral (REAL{ty=64, rval}, code) =
-                BC.REAL rval :: code
+                BC.REAL64 rval :: code
             | genLiteral _ = bug "bogus literal"
-          val code = List.foldl genLiteral [] lits
+          fun genTopLiteral (lit as OBJ{id, ty, ...}, code) = (
+                assignSlot (id, ty);
+                genLiteral (lit, code))
+            | genTopLiteral _ = bug "bogus top-level literal"
+          (* get the literal values from the environment *)
+          val {usedLits, realLits} = LitEnv.getLiterals env
+          (* sort the used literals by order of their definition *)
+          val usedLits = let
+                fun gt (OBJ{id=a, ...}, OBJ{id=b, ...}) = (a > b)
+                  | gt _ = bug "unexpected immediate literal"
+                in
+                  ListMergeSort.sort gt usedLits
+                end
+          val numLits = List.length usedLits
+          val numReals = List.length realLits
+          (* generate the code for the top-level literals *)
+          val code = List.foldl genTopLiteral [] usedLits
           (* add code to generate the real literals (if any) *)
-          val code = ??
+          val code = let
+(* REAL32: FIXME *)
+                fun genReal ({ty=64, rval}, code) = BC.REAL64 rval :: code
+                  | genReal _ = bug "bogus real literal"
+                in
+                  List.foldl genReal code realLits
+                end
           (* create the top-level literal record *)
-          val code = (case (numLits, numReal)
-                 of (0, 0) => [BC.ENUM 0]
-                  | (0, _) => BC.RAW numReal :: code
-                  | (_, 0) => BC.RECORD numLits :: code
-                  | _ => BC.MIXED{ptrLen=numLits, rawLen=numReal}
+          val (code, litPtrTy) = (case (numLits, numReals)
+                 of (0, 0) => bug "unexpected empty literal environment"
+                  | (0, _) => (BC.RAWBLOCK numReals :: code, C.fPtrTy numReals)
+                  | (_, 0) => (BC.RECORD numLits :: code, C.rPtrTy numLits)
+                  | (n, m) => (
+                      BC.MIXED{ptrLen=n, rawLen=m} :: code,
+                      C.PTRt(C.RPT{ptrLen=n, rawLen=m})
+                    )
                 (* end case *))
           val code = List.rev (BC.RETURN :: code)
           in
+(*
             if !debugFlg
               then let
-                fun prBV (x, LIT{id, ...}) = (
+                fun prBV (x, OBJ{id, ...}) = (
                       say(concat["LET ", LV.lvarName x, " = "]);
                       case WordTbl.find litIdTbl id
                        of NONE => say "<no slot>\n"
@@ -593,30 +610,26 @@ structure Literals : LITERALS =
                   say "==========\n"
                 end
               else ();
-            (litIdTbl, code, litVecSz, !nReal64Lits)
+*)
+            (code, slotForValue, litPtrTy)
           end
+
+    (****************************************************************************
+     *                               THIRD PASS                                 *
+     ****************************************************************************)
 
 (* TODO: keep an environment of available literal bindings to avoid redundant SELECTs *)
   (* rewrite the program, removing unused variables *)
-    fun liftLiterals (env, idTbl, litVec, fltVec, body) = let
-          val findValue = LitEnv.findValue env
+    fun liftLiterals (env, slotForValue, litVec, body) = let
           val findVar = LitEnv.findVar env
-          fun getSlot id = (case WordTbl.find idTbl id
-                 of SOME slot => slot
-                  | NONE => bug("no slot for literal " ^ Word.fmt StringCvt.DEC id)
-                (* end case *))
         (* rewrite a value *)
-          fun rewriteValue (u, k : C.value -> C.cexp) = (case findValue u
-                 of SOME(LIT{id, value, ...}) => let
+          fun rewriteValue (u, k : C.value -> C.cexp) = (case slotForValue u
+                 of NONE => k u
+                  | SOME(slot, ty) => let
                       val v = LambdaVar.mkLvar()
-                      val ty = cpsTypeOf value
                       in
-                        case getSlot id
-                         of LitSlot n => C.SELECT(n, litVec, v, ty, k(C.VAR v))
-                          | Real64Slot n => C.SELECT(n, fltVec, v, ty, k(C.VAR v))
-                        (* end case *)
+                        C.SELECT(slot, litVec, v, ty, k(C.VAR v))
                       end
-                  | _ => k u
                 (* end case *))
 handle ex => (say(concat["rewriteValue (", PPCps.value2str u, ", -): error\n"]); raise ex)
         (* rewrite a list of values *)
@@ -692,19 +705,14 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
                 else ()
           val env = identifyLiterals body
           val (nbody, code) = if LitEnv.isEmpty env
-                then (body, [BC.ENUM 0, BC.RETURN])
+                then (body, [BC.INT63 0, BC.RETURN])
                 else let
 (* REAL32: FIXME *)
-                  val (idTbl, code, nLits, nReal64Lits) = buildLiterals env
+                  val (code, slotForValue, litPtrTy) = buildLiterals env
                   val lvv = LambdaVar.mkLvar()
-                  val rvv = LambdaVar.mkLvar()
-                  val nbody = liftLiterals (env, idTbl, C.VAR lvv, C.VAR rvv, body)
-                (* add code to bind the real-literal vector (if necessary) *)
-                  val nbody = if nReal64Lits > 0
-                        then C.SELECT(0, C.VAR lvv, rvv, C.fPtrTy nReal64Lits, nbody)
-                        else nbody
-                (* add code to bind the literal vector *)
-                  val nbody = C.SELECT(n, C.VAR x, lvv, C.rPtrTy nLits, nbody)
+                  val nbody = liftLiterals (env, slotForValue, C.VAR lvv, body)
+                  (* add code to bind the literal vector *)
+                  val nbody = C.SELECT(n, C.VAR x, lvv, litPtrTy, nbody)
                   in
                     (nbody, code)
                   end
