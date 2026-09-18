@@ -40,6 +40,7 @@ structure Literals : LITERALS =
     structure LVTbl = LV.Tbl
     structure WordTbl = WordHashTable
     structure C = CPS
+    structure P = C.P
     structure BC = LiteralBytecode
 
     fun bug msg = ErrorMsg.impossible ("Literals: "^msg)
@@ -154,18 +155,25 @@ structure Literals : LITERALS =
          *)
         type var_info = bool * literal
 
+        datatype value
+          = NoLit
+          | Lit of literal
+          | Real of int
+
         (* create a new environment *)
         val new : unit -> t
         (* add a literal record value to the environment *)
         val addRecord : t -> C.record_kind * literal list * C.lvar -> unit
         (* return the literal that a variable is bound to *)
         val findVar : t -> C.lvar -> var_info option
-        (* is a value representable as a literal? *)
+        (* `isConst lenv v` returns true when either `v` is a variable bound to a
+         * literal or `v` is a constant value.
+         *)
         val isConst : t -> C.value -> bool
         (* find the literal value for the given value.  Note that for NUM and REAL
          * values, we return NONE, since they are represented as IMMED literals.
          *)
-        val findValue : t -> C.value -> literal option
+        val findValue : t -> C.value -> value
         (* record the use of a value in a non-literal context *)
         val useValue : t -> C.value -> unit
         (* like useValue, but for constant values embedded in literal records.  This
@@ -318,16 +326,30 @@ structure Literals : LITERALS =
                  | C.VOID => false
               end
 
-        fun findValue (LE{lits, vMap, ...}) = let
+        datatype value
+          = NoLit
+          | Lit of literal
+          | Real of int
+
+        fun findValue (LE{lits, reals, vMap, ...}) = let
               val findLit = LTbl.find lits
               val findVar = LV.Tbl.find vMap
               in
-                fn (C.VAR x) => Option.map #2 (findVar x)
+                fn (C.VAR x) => (case findVar x
+                      of SOME(_, lit) => Lit lit
+                       | NONE => NoLit
+                     (* end case *))
                  | (C.LABEL _) => bug "unexpected LABEL"
-                 | (C.NUM n) => NONE
-                 | (C.ENUM _) => NONE
-                 | (C.REAL r) => findLit (LV_REAL r)
-                 | (C.STRING s) => findLit (LV_STR s)
+                 | (C.NUM n) => NoLit
+                 | (C.ENUM _) => NoLit
+                 | (C.REAL r) => (case findReal r
+                      of SOME i => Real i
+                       | NONE => NoLit
+                     (* end case *))
+                 | (C.STRING s) => (case findLit (STRING s)
+                      of SOME lit => Lit lit
+                       | NONE => NoLit
+                     (* end case *))
                  | C.VOID => bug "unexpected VOID"
               end
 
@@ -384,8 +406,7 @@ structure Literals : LITERALS =
                 (fn (x, (true, lit), acc) => (x, lit)::acc | (_, _, acc) => acc)
                   [] vMap
 
-      end (* LitEnv *)
-
+      end (* structure LitEnv *)
 
   (* The first pass initializes the literal table by walking the CPS module.  After
    * this pass, we have identified any literal value that needs to be included in the
@@ -399,6 +420,16 @@ structure Literals : LITERALS =
           val useValues = List.app useValue
           val useLitValue = LitEnv.useLitValue env
           val addRecord = LitEnv.addRecord env
+          fun addWrap (nk, lit) = let
+                val rk = (case nk
+                       of P.INT 64 => C.RK_RAWBLOCK
+                        | P.UINT 64 => C.RK_RAWBLOCK
+                        | P.FLOAT _ => C.RK_RAWBLOCK
+                        | _ => raise Fail("unexpected wrap of " ^ NumKind.toString nk)
+                      (* end case *))
+                in
+                  addRecord (rk, [lit])
+                end
           fun fieldToValue (u, C.OFFp 0) = u
             | fieldToValue _ = bug "unexpected access in field"
         (* process a CPS function *)
@@ -417,12 +448,12 @@ structure Literals : LITERALS =
                   | C.OFFSET _ => bug "unexpected OFFSET in doExp"
                   | C.APP(u, ul) => useValues ul
                   | C.FIX(fns, e) => (List.app doFun fns; doExp e)
-                  | C.SWITCH(u, v, es) => (useValue u; List.app doExp es)
+                  | C.SWITCH(u, v, es) => List.app doExp es
                   | C.BRANCH(p, ul, v, e1, e2) => (useValues ul; doExp e1; doExp e2)
                   | C.SETTER(p, ul, e) => (useValues ul; doExp e)
                   | C.LOOKER(p, ul, v, t, e) => (useValues ul; doExp e)
                   | C.ARITH(p, ul, v, t, e) => (useValues ul; doExp e)
-                  | C.PURE(C.P.WRAP nk, [u], v, t, e) => if isConst u
+                  | C.PURE(P.WRAP nk, [u], v, t, e) => if isConst u
                       then (addWrap(nk, useLitValue u); doExp e)
                       else doExp e
                   | C.PURE (p, ul, v, t, e) => (useValues ul; doExp e)
@@ -443,7 +474,7 @@ structure Literals : LITERALS =
      * that is true if there is a real-literal vector.
      *)
     fun buildLiterals env = let
-          val {usedLits, realLits} = Litenv.getLiterals env
+          val {usedLits, realLits} = LitEnv.getLiterals env
           (* get a list of the literals that are bound to variables in order of their
            * definition.
            *)
@@ -634,9 +665,9 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
                       rewriteValues (ul, fn ul' => C.LOOKER(p, ul', v, t, doExp e))
                   | C.ARITH(p, ul, v, t, e) =>
                       rewriteValues (ul, fn ul' => C.ARITH(p, ul', v, t, doExp e))
-                  | C.PURE(C.P.WRAP nk, [u], v, t, e) =>
+                  | C.PURE(P.WRAP nk, [u], v, t, e) =>
                       rewriteVar (v,
-                        fn () => rewriteValue (u, fn u' => C.PURE(C.P.WRAP nk, [u'], v, t, doExp e)),
+                        fn () => rewriteValue (u, fn u' => C.PURE(P.WRAP nk, [u'], v, t, doExp e)),
                         fn () => doExp e)
                   | C.PURE(p, ul, v, t, e) =>
                       rewriteValues (ul, fn ul' => C.PURE(p, ul', v, t, doExp e))
