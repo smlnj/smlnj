@@ -221,6 +221,13 @@ functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 		  | PURE(P.UNBOX, [u], w, t, ce) => (
 		      case u of VAR z => addty(z, t) | _ => ();
 		      addvl(w,vtrans u); cexptrans ce)
+		  | PURE(P.WRAP P.ENUM, [u], w, t, ce) => (
+		      addvl(w, vtrans u);
+		      cexptrans ce)
+		  | PURE(P.UNWRAP P.ENUM, [u], w, t, ce) => (
+		      case u of VAR z => addty(z, t) | _ => ();
+		      addvl(w, vtrans u);
+		      cexptrans ce)
 		  | PURE(p as P.WRAP(P.INT sz), [u], w, t, ce) =>
 		      if (sz <= Target.defaultIntSz)
 			then (  (* remove wrapping of tagged ints *)

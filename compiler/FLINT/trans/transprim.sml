@@ -169,6 +169,7 @@ structure TransPrim : sig
 			  PL.REAL{rval = RealLit.zero false, ty = sz},
 			  PL.REAL{rval = RealLit.m_one, ty = sz} (* unused *)
 			) end
+		    | PO.ENUM => bug "mkInlineOps(ENUM)"
 		  (* end case *))
 	    val lt_cmp = lt_arw (lt_argpair, lt_bool)
 	    val less = pCMP(CmpP.LT, nk, lt_cmp, [])
@@ -185,12 +186,14 @@ structure TransPrim : sig
       fun sameNK (PO.INT sz1, PO.INT sz2) = (sz1 = sz2)
 	| sameNK (PO.UINT sz1, PO.UINT sz2) = (sz1 = sz2)
 	| sameNK (PO.FLOAT sz1, PO.FLOAT sz2) = (sz1 = sz2)
+	| sameNK (PO.ENUM, PO.ENUM) = true
 	| sameNK _ = false
 
     (* hash number kinds *)
       fun hashNK (PO.INT sz) = Word.fromInt sz
 	| hashNK (PO.UINT sz) = Word.fromInt sz + 0w1
 	| hashNK (PO.FLOAT sz) = Word.fromInt sz + 0w3
+	| hashNK PO.ENUM = 0w7
 
     (* hash tables keyed by number kinds *)
       structure NKTbl = HashTableFn (

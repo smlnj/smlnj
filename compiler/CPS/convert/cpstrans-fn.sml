@@ -259,6 +259,13 @@ val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid bu
 		  | C.PURE(P.UNBOX, [u], w, t, ce) => (
 		      case u of C.VAR z => addty(z, t) | _ => ();
 		      addvl(w, vtrans u); rewrite ce)
+		  | C.PURE(P.WRAP P.ENUM, [u], w, t, ce) => (
+		      addvl(w, vtrans u);
+		      rewrite ce)
+		  | C.PURE(P.UNWRAP P.ENUM, [u], w, t, ce) => (
+		      case u of C.VAR z => addty(z, t) | _ => ();
+		      addvl(w, vtrans u);
+		      rewrite ce)
 		  | C.PURE(p as P.WRAP(P.INT sz), [u], w, t, ce) =>
 		      if (sz <= Target.defaultIntSz)
 			then (  (* remove wrapping of tagged ints *)
