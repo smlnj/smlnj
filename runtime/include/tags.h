@@ -126,4 +126,7 @@
 #define MIXED_GET_LEN(D)        ((Unsigned32_t)(Addr_t)(D) >> TAG_SHIFTW)
 #define MIXED_GET_PTRLEN(D)     ((Addr_t)(D) >> 32)
 
+/* make a mixed-record descriptor */
+#define MAKE_MIXED_DESC(PL,RL)  (MAKE_DESC((PL)+(RL),DTAG_mixed)|((PL) << 32))
+
 #endif /* !_TAGS_ */
