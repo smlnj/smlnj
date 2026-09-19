@@ -87,7 +87,6 @@ structure Control_CG : CGCONTROL =
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)
-    val newLiterals = new (b, "new-literals", "use new literal representation", false)
     val debugRep = new (b, "debug-rep", "?", false)
     val deadup = new (b, "deadup", "?", true)
     val printit = new (b, "printit", "whether to show CPS", false)
