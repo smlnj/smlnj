@@ -457,18 +457,17 @@ ml_val_t BuildLiteralsV1 (ml_state_t *msp, Byte_t *lits, int pc, int len);
 #  define GC_MESSAGE
 #endif
 
-/* BuildLiterals:
+/* BuildLiteralsV2:
  *
  * NOTE: we allocate all of the objects in the first generation, and allocate
  * the vector of literals in the allocation space.
  */
-ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
+ml_val_t BuildLiteralsV2 (ml_state_t *msp, Byte_t *code, int len, int maxDepth, int pc)
 {
-    int		pc = 0;
 #ifdef DEBUG_LITERALS
     int		depth = 0;
 #endif
-    Unsigned32_t magic, maxDepth, wordSz, maxSaved;
+    Unsigned32_t wordSz, maxSaved;
     ml_val_t	stk;
     ml_val_t	res;
     Int32_t	availSpace, spaceReq;
@@ -493,27 +492,6 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 	else											\
 	    availSpace -= spaceReq;								\
     } while (0)
-
-#ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: code = %p, len = %d\n", (void *)code, len);
-#endif
-    if (len <= 8) return ML_nil;
-
-    magic = GetU32Arg(code+pc); pc += 4;
-    maxDepth = GetU32Arg(code+pc); pc += 4;
-
-    if (magic == V1_MAGIC) {
-#ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: VERSION 1\n");
-#endif
-	return BuildLiteralsV1 (msp, code, pc, len);
-    }
-    else if (magic != V2_MAGIC) {
-	Die("bogus literal magic number %#x", magic);
-    }
-#ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: VERSION 2\n");
-#endif
 
   /* get the rest of the V2 header */
     wordSz = GetU32Arg(code+pc); pc += 4;

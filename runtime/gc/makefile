@@ -1,3 +1,7 @@
+# makefile
+#
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
 #
 # the makefile for the garbage collector and heap I/O library
 #
@@ -10,8 +14,8 @@ RANLIB =	ranlib
 LIB =		libgc.a
 
 GC_OBJS =	init-gc.o call-gc.o minor-gc.o major-gc.o flip.o gc-util.o \
-		big-objects.o ml-objects.o obj-info.o build-literals.o \
-		old-literals.o \
+		big-objects.o ml-objects.o obj-info.o \
+		build-literals-v3.o build-literals.o old-literals.o \
 		record-ops.o \
 		$(CHECK_HEAP)
 
@@ -102,6 +106,13 @@ ml-objects.o:	ml-objects.c \
 		$(INC_DIR)/bibop.h $(INC_DIR)/tags.h \
 		heap.h arena-id.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) ml-objects.c
+
+build-literals-v3.o: \
+		build-literals-v3.c \
+		$(OBJS_DIR)/ml-sizes.h \
+		$(INC_DIR)/ml-base.h $(INC_DIR)/ml-objects.h $(INC_DIR)/tags.h \
+		heap.h arena-id.h
+	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) build-literals-v3.c
 
 build-literals.o: \
 		build-literals.c \

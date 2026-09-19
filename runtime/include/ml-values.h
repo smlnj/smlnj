@@ -33,6 +33,9 @@
  */
 #define PTR_CAST(ty, p)		((ty)(p))
 
+STATIC_INLINE Int_t TagInt (Int_t n) { return 2*(n) + 1; }
+STATIC_INLINE Int_t UntagInt (Int_t n) { return n >> 1; }
+
 #define INT_MLtoC(n)		(((Int_t)(n)) >> 1)
 #define INT_CtoML(n)		((ml_val_t)(Int_t)(2*(n) + 1))
 #define PTR_MLtoC(ty,p)		PTR_CAST(ty *, p)

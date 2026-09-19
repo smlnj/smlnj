@@ -30,6 +30,15 @@
 #define V2_MAGIC        0x20190921
 #define V3_MAGIC        0x20260912
 
+/* the amount of free space that we want in the allocation arena; this value must be
+ * less than MIN_ALLOC_SZB (defined in include/ml-limits.h)
+ */
+#define FREE_REQ_SZB    64*ONE_K
+
+/* for backward compatibility */
+ml_val_t BuildLiteralsV1 (ml_state_t *msp, Byte_t *lits, int pc, int len);
+ml_val_t BuildLiteralsV2 (ml_state_t *msp, Byte_t *code, int len, int maxDepth, int pc);
+
 #define VK_TAGINT       0
 #define VK_RAWINT       1
 #define VK_REAL32       2
@@ -46,165 +55,285 @@ typedef struct {                /* items on the stack */
     Byte_t kind;
 } StkItem_t;
 
-STATIC_INLINE void StoreTaggedInt (StkItem_t *dst, Int64_t n)
+/****** The Interpreter State *****/
+typedef struct {
+    ml_state_t *msp;    /*<! the ML state pointer */
+    Byte_t *code;       /*!< the bytecode being interpreted */
+    StkItem_t *stk;     /*!< the stack */
+    ml_val_t *saved;    /*!< the scratch memory for saving values */
+    int codeSz;         /*!< the size of the code */
+    int pc;             /*!< the current program counter */
+    int tos;            /*!< the top of the stack; -1 means an empty stack */
+    int maxDepth;       /*!< the maximum depth of the stack (i.e., tos < maxDepth) */
+    int maxSaved;       /*!< the size of the scratch memory */
+} State_t;
+
+/* invoke the garbage collector while preserving
+ * the heap-allocated parts of the interpreter state.
+ */
+PVT void GC (State_t *stp, int gcLevel)
 {
-    dst->kind = VK_TAGINT;
-    dst->val.i = (Unsigned64_t)n;
-}
-STATIC_INLINE void StoreRawInt64 (StkItem_t *dst, Int64_t n)
+    ml_val_t rootObj;
+
+#ifdef DEBUG_LITERALS
+    SayDebug("BuildLiterals: invoke GC; avail = %" PRIu64 ", req = %" PRIu64 "\n",
+        availSpace, reqSpace);
+#endif
+
+    /* construct an object containing the roots that are in the state */
+    {
+        /* the roots cover the size of the save area plus the current stack depth */
+        int nRoots = stp->maxSaved + stp->tos + 1;
+
+        ML_AllocWrite(stp->msp, 0, MAKE_DESC(nRoots, DTAG_record));
+        /* first we copy the values from the saved array */
+        for (int i = 0;  i < stp->maxSaved;  ++i) {
+            ML_AllocWrite(stp->msp, i+1, stp->saved[i]);
+        }
+        /* copy the stack roots starting from the bottom */
+        for (int i = 0;  i <= stp->tos;  ++i) {
+            if (stp->stk[i].kind == VK_OBJ) {
+                ML_AllocWrite(stp->msp, stp->maxSaved+1+i, stp->stk[i].val.ml);
+            } else {
+                /* we store unit for non-object stack slots */
+                ML_AllocWrite(stp->msp, stp->maxSaved+1+i, ML_unit);
+            }
+        }
+        rootObj = ML_Alloc(stp->msp, nRoots);
+    }
+
+    /* invoke the collector */
+    InvokeGCWithRoots (
+        stp->msp, gcLevel, (ml_val_t *)&stp->code, &rootObj, NIL(ml_val_t *));
+
+    /* restore the roots */
+    {
+        ml_val_t *p = (ml_val_t *)rootObj;
+
+        /* restore the saved array */
+        for (int i = 0;  i < stp->maxSaved;  ++i, p++) {
+            stp->saved[i] = *p;
+        }
+
+        /* restore the objects in the stack. */
+        for (int i = 0;  i <= stp->tos;  ++i, p++) {
+            if (stp->stk[i].kind == VK_OBJ) {
+                stp->stk[i].val.ml = *p;
+            }
+        }
+    }
+
+} /* GC */
+
+/* conditionally invoke the garbage collector while preserving
+ * the heap-allocated parts of the interpreter state.
+ */
+STATIC_INLINE void CheckGC (State_t *stp, Addr_t reqSpace)
 {
-    dst->kind = VK_RAWINT;
-    dst->val.i = (Unsigned64_t)n;
-}
-STATIC_INLINE void StoreReal64 (StkItem_t *dst, double d)
-{
-    dst->kind = VK_TAGINT;
-    dst->val.d = d;
-}
-STATIC_INLINE void StoreMLValue (StkItem_t *dst, ml_val_t v)
-{
-    dst->kind = VK_OBJ;
-    dst->val.ml = v;
+    ml_val_t rootObj;
+
+    Addr_t availSpace = ((Addr_t)stp->msp->ml_limitPtr - (Addr_t)stp->msp->ml_allocPtr);
+    if (reqSpace > availSpace) {
+        GC(stp, 0);
+    }
 }
 
 /* copy bytes from the instruction stream in correct byte order (the
  * instruction stream is in bigendian order)
  */
-STATIC_INLINE void GetBytes (Byte_t *dst, Byte_t *code, int n)
+STATIC_INLINE void GetBytes (Byte_t *dst, State_t *stp, int n)
 {
-    int i;
-    for (i = 0;  i < n;  i++) {
+    int pc = stp->pc;
+    for (int i = 0;  i < n;  i++) {
 #ifdef BYTE_ORDER_LITTLE
-        dst[n-1-i] = code[i];
+        dst[n-1-i] = stp->code[pc++];
 #else
-        dst[i] = code[i];
+        dst[i] = stp->code[pc++];
 #endif
     }
+    stp->pc = pc;
 }
 
 /* inline functions for fetching arguments */
-STATIC_INLINE signed char GetI8Arg (Byte_t *code)
+STATIC_INLINE signed char GetI8Arg (State_t *stp)
 {
-    signed char i = code[0];
+    int pc = stp->pc;
+    signed char i = stp->code[pc++];
+    stp->pc = pc;
     return i;
 }
-STATIC_INLINE unsigned char GetU8Arg (Byte_t *code)
+STATIC_INLINE unsigned char GetU8Arg (State_t *stp)
 {
-    unsigned char i = code[0];
+    int pc = stp->pc;
+    unsigned char i = stp->code[pc++];
+    stp->pc = pc;
     return i;
 }
-STATIC_INLINE Int16_t GetI16Arg (Byte_t *code)
+STATIC_INLINE Int16_t GetI16Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Int16_t)]; Int16_t i; } arg;
-    GetBytes(arg.b, code, sizeof(Int16_t));
+    GetBytes(arg.b, stp, sizeof(Int16_t));
     return arg.i;
 }
-STATIC_INLINE Unsigned16_t GetU16Arg (Byte_t *code)
+STATIC_INLINE Unsigned16_t GetU16Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Unsigned16_t)]; Unsigned16_t u; } arg;
-    GetBytes(arg.b, code, sizeof(Unsigned16_t));
+    GetBytes(arg.b, stp, sizeof(Unsigned16_t));
     return arg.u;
 }
-STATIC_INLINE Int32_t GetI32Arg (Byte_t *code)
+STATIC_INLINE Int32_t GetI32Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Int32_t)]; Int32_t i; } arg;
-    GetBytes(arg.b, code, sizeof(Int32_t));
+    GetBytes(arg.b, stp, sizeof(Int32_t));
     return arg.i;
 }
-STATIC_INLINE Unsigned32_t GetU32Arg (Byte_t *code)
+STATIC_INLINE Unsigned32_t GetU32Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Unsigned32_t)]; Unsigned32_t u; } arg;
-    GetBytes(arg.b, code, sizeof(Unsigned32_t));
+    GetBytes(arg.b, stp, sizeof(Unsigned32_t));
     return arg.u;
 }
-STATIC_INLINE Int64_t GetI64Arg (Byte_t *code)
+STATIC_INLINE Int64_t GetI64Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Int64_t)]; Int64_t i; } arg;
-    GetBytes(arg.b, code, sizeof(Int64_t));
+    GetBytes(arg.b, stp, sizeof(Int64_t));
     return arg.i;
 }
-STATIC_INLINE Unsigned64_t GetU64Arg (Byte_t *code)
+STATIC_INLINE Unsigned64_t GetU64Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(Unsigned64_t)]; Unsigned64_t u; } arg;
-    GetBytes(arg.b, code, sizeof(Unsigned64_t));
+    GetBytes(arg.b, stp, sizeof(Unsigned64_t));
     return arg.u;
 }
-STATIC_INLINE float GetR32Arg (Byte_t *code)
+STATIC_INLINE float GetR32Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(float)]; float r; } arg;
-    GetBytes(arg.b, code, sizeof(float));
+    GetBytes(arg.b, stp, sizeof(float));
     return arg.r;
 }
-STATIC_INLINE double GetR64Arg (Byte_t *code)
+STATIC_INLINE double GetR64Arg (State_t *stp)
 {
     union { Byte_t b[sizeof(double)]; double r; } arg;
-    GetBytes(arg.b, code, sizeof(double));
+    GetBytes(arg.b, stp, sizeof(double));
     return arg.r;
 }
-#ifdef SIZE_64
-#define GetRawArg       GetU64Arg
-#else /* SIZE_32 */
-#define GetRawArg       GetU32Arg
-#endif
 
-/* the size of a list cons cell in bytes */
-#define CONS_SZB        (WORD_SZB*3)
-
-/* the amount of free space that we want in the allocation arena; this value must be
- * less than MIN_ALLOC_SZB (defined in include/ml-limits.h)
- */
-#define FREE_REQ_SZB    64*ONE_K
-
-/* for backward compatibility */
-ml_val_t BuildLiteralsV1 (ml_state_t *msp, Byte_t *lits, int pc, int len);
-ml_val_t BuildLiteralsV2 (ml_state_t *msp, Byte_t *lits, int pc, int len);
-
-#ifdef DEBUG_LITERALS
-#  define GC_MESSAGE    SayDebug("BuildLiterals: invoke GC\n");
-#else
-#  define GC_MESSAGE
-#endif
-
-/* save roots in the heap prior to GC */
-PVT ml_val_t SaveRoots (ml_state_t *msp, int maxSaved, ml_val_t *saved, int tos, StkItem_t *stk)
+STATIC_INLINE void PushTaggedInt (State_t *stp, Int64_t n)
 {
-    /* the roots cover the size of the save area plus the current stack depth */
-    int nRoots = maxSaved + tos + 1;
-
-    ML_AllocWrite(msp, 0, MAKE_DESC(nRoots, DTAG_record));
-    /* first we copy the values from the saved array */
-    for (int i = 0;  i < maxSaved;  ++i) {
-        ML_AllocWrite(msp, i+1, saved[i]);
-    }
-    /* copy the stack roots starting from the bottom */
-    for (int i = 0;  i <= tos;  ++i) {
-        if (stk[i].kind == VK_OBJ) {
-            ML_AllocWrite(msp, maxSaved+1+i, stk[i].val.ml);
-        } else {
-            /* we store unit for non-object stack slots */
-            ML_AllocWrite(msp, maxSaved+1+i, ML_unit);
-        }
-    }
-    return ML_Alloc(msp, nRoots);
+    int tos = ++stp->tos;
+    stp->stk[tos].kind = VK_TAGINT;
+    stp->stk[tos].val.i = (Unsigned64_t)n;
+}
+STATIC_INLINE void PushRawInt64 (State_t *stp, Int64_t n)
+{
+    int tos = ++stp->tos;
+    stp->stk[tos].kind = VK_RAWINT;
+    stp->stk[tos].val.i = (Unsigned64_t)n;
+}
+STATIC_INLINE void PushReal32 (State_t *stp, float f)
+{
+    int tos = ++stp->tos;
+    stp->stk[tos].kind = VK_REAL32;
+    stp->stk[tos].val.d = f;
+}
+STATIC_INLINE void PushReal64 (State_t *stp, double d)
+{
+    int tos = ++stp->tos;
+    stp->stk[tos].kind = VK_REAL64;
+    stp->stk[tos].val.d = d;
+}
+STATIC_INLINE void PushMLValue (State_t *stp, ml_val_t v)
+{
+    int tos = ++stp->tos;
+    stp->stk[tos].kind = VK_OBJ;
+    stp->stk[tos].val.ml = v;
 }
 
-/* restore the roots after a GC */
-PVT void RestoreRoots (ml_val_t roots, int maxSaved, ml_val_t *saved, int tos, StkItem_t *stk)
+/* create a record and push it on the stack */
+STATIC_INLINE void PushRecord (State_t *stp, int sz)
 {
-    ml_val_t *p = (ml_val_t *)roots;
+    ASSERT (sz <= stp->tos + 1);
 
-    /* restore the saved array */
-    for (int i = 0;  i < maxSaved;  ++i, p++) {
-        saved[i] = *p;
+    CheckGC (stp, WORD_SZB * (sz + 1));
+
+    ML_AllocWrite(stp->msp, 0, MAKE_DESC(sz, DTAG_record));
+    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+        ASSERT ((stp->stk[j].kind == VK_TAGINT) || (stp->stk[j].kind == VK_OBJ));
+        ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
+    }
+    stp->tos -= sz;
+    PushMLValue(stp, ML_Alloc(stp->msp, sz));
+
+} /* PushRecord */
+
+/* create a raw record and push it on the stack */
+STATIC_INLINE void PushRawRecord (State_t *stp, int sz)
+{
+    ASSERT (sz <= stp->tos + 1);
+
+    CheckGC (stp, WORD_SZB * (sz + 1));
+
+    ML_AllocWrite(stp->msp, 0, MAKE_DESC(sz, DTAG_raw));
+    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+        ASSERT (stp->stk[j].kind != VK_OBJ);
+        ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
+    }
+    stp->tos -= sz;
+    PushMLValue(stp, ML_Alloc(stp->msp, sz));
+
+} /* PushRawRecord */
+
+/* create a mixed record and push it on the stack */
+STATIC_INLINE void PushMixedRecord (State_t *stp, int ptrLen, int rawLen)
+{
+    int sz = ptrLen + rawLen;
+
+    ASSERT (sz <= tos + 1);
+
+    CheckGC (stp, WORD_SZB * (sz + 1));
+
+    ML_AllocWrite(stp->msp, 0, MAKE_MIXED_DESC(ptrLen, rawLen));
+    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+        ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
+    }
+    stp->tos -= sz;
+    PushMLValue(stp, ML_Alloc(stp->msp, sz));
+
+} /* PushMixedRecord */
+
+/* create a string literal and push it on the stack */
+STATIC_INLINE void PushString (State_t *stp, int sz)
+{
+    ASSERT (stp->pc + sz < stp->codeSz);
+
+    int szw = BYTES_TO_WORDS(sz+1);  /* include space for '\0' */
+
+    if (szw > SMALL_OBJ_SZW) {
+/* TODO */
+    } else {
+        CheckGC (stp, WORD_SZB * (szw + 1 + 3));
+/* TODO */
     }
 
-    /* restore the objects in the stack. */
-    for (int i = 0;  i <= tos;  ++i, p++) {
-        if (stk[i].kind == VK_OBJ) {
-            stk[i].val.ml = *p;
-        }
+} /* PushString */
+
+STATIC_INLINE void PushVector (State_t *stp, int sz)
+{
+    ASSERT (sz <= stp->tos + 1);
+
+    if (sz > SMALL_OBJ_SZW) {
+      /* Since we want to avoid pointers from the 1st generation record space
+       * into the allocation space, we need to do a GC before creating the vector.
+       */
+        arena_t *ap = stp->msp->ml_heap->gen[0]->arena[RECORD_INDX];
+/* TODO */
+    } else {
+        CheckGC (stp, WORD_SZB * (sz + 1 + 3));
+/* TODO */
     }
-}
+Die("PushVector unimplemented");
+
+} /* PushVector */
 
 /* BuildLiterals:
  *
@@ -213,60 +342,48 @@ PVT void RestoreRoots (ml_val_t roots, int maxSaved, ml_val_t *saved, int tos, S
  */
 ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 {
-    int         pc = 0;
 #ifdef DEBUG_LITERALS
-    int         depth = 0;
+    int depth = 0;
 #endif
-    Unsigned32_t magic, maxDepth, wordSz, maxSaved;
-    ml_val_t    res;
-    Int32_t     availSpace, spaceReq;
-    Unsigned32_t ui;
-
-/* A check that the available space is sufficient for the literal object that
- * we are about to allocate.  Note that the cons cell has already been accounted
- * for in availSpace (but not in spaceReq).
- */
-#define GC_CHECK                                                                                \
-    do {                                                                                        \
-        if (spaceReq > availSpace) {                                                            \
-            GC_MESSAGE                                                                          \
-            InvokeGCWithRoots (msp, 0, (ml_val_t *)&code, &stk, &saved, NIL(ml_val_t *));       \
-            availSpace = ((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr) - CONS_SZB;      \
-        }                                                                                       \
-        else                                                                                    \
-            availSpace -= spaceReq;                                                             \
-    } while (0)
+    Unsigned32_t magic, wordSz;
+    size_t availSpace, spaceReq;
+    State_t state;
 
 #ifdef DEBUG_LITERALS
     SayDebug("BuildLiterals: code = %p, len = %d\n", (void *)code, len);
 #endif
-    if (len <= 8) return ML_nil;
+    if (len <= 8) return ML_unit;
 
-    magic = GetU32Arg(code+pc); pc += 4;
-    maxDepth = GetU32Arg(code+pc); pc += 4;
+    state.code = code;
+    state.codeSz = len;
+    state.pc = 0;
+    state.tos = ~1;
+
+    magic = GetU32Arg(&state);
+    state.maxDepth = GetU32Arg(&state);
 
     if (magic == V1_MAGIC) {
 #ifdef DEBUG_LITERALS
         SayDebug("BuildLiterals: VERSION 1\n");
 #endif
-        return BuildLiteralsV1 (msp, code, pc, len);
+        return BuildLiteralsV1 (msp, code, state.pc, len);
     }
     else if (magic == V2_MAGIC) {
 #ifdef DEBUG_LITERALS
         SayDebug("BuildLiterals: VERSION 2\n");
 #endif
-        return BuildLiteralsV2 (msp, code, pc, len);
+        return BuildLiteralsV2 (msp, code, len, state.maxDepth, state.pc);
     }
     else if (magic != V3_MAGIC) {
         Die("bogus literal magic number %#x", magic);
     }
 #ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: VERSION 3\n");
+    SayDebug("BuildLiterals: VERSION 3\n");
 #endif
 
   /* get the rest of the header */
-    wordSz = GetU32Arg(code+pc); pc += 4;
-    maxSaved = GetU32Arg(code+pc); pc += 4;
+    wordSz = GetU32Arg(&state);
+    state.maxSaved = GetU32Arg(&state);
 
     if (wordSz != 64) {
         Die("expected word size = 64, but found %d\n", wordSz);
@@ -275,55 +392,36 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
   /* We represent the saved array as a C array of ML values.  When we do a GC, we
    * copy these into a heap-allocated root record.
    */
-    ml_val_t *saved;
     /* allocate space for the saved area */
-    if (maxSaved > 0) {
-        saved = NEW_VEC(ml_val_t, maxSaved);
-        for (int i = 0;  i < maxSaved;  ++i) {
-            saved[i] = ML_unit;
+    if (state.maxSaved > 0) {
+        state.saved = NEW_VEC(ml_val_t, state.maxSaved);
+        for (int i = 0;  i < state.maxSaved;  ++i) {
+            state.saved[i] = ML_unit;
         }
     }
     else {
-        saved = NIL(ml_val_t *);
+        state.saved = NIL(ml_val_t *);
     }
 
     /* allocate space for the stack */
-    StkItem_t *stk = NEW_VEC(StkItem_t, maxDepth);
-    int tos = -1;
+    state.stk = NEW_VEC(StkItem_t, state.maxDepth);
 
 #ifdef DEBUG_LITERALS
     SayDebug("BuildLiterals: avail = %d bytes; maxDepth = %d, maxSaved = %d\n",
-        (int)availSpace, (int)maxDepth, (int)maxSaved);
+        (int)((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr),
+        state.maxDepth, state.maxSaved);
 #endif
     while (TRUE) {
         availSpace = ((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr);
-        ASSERT(pc < len);
-        ASSERT(availSpace <= (Int32_t)((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr));
+        ASSERT(state.pc < len);
 
-        /* an upper bound on the amount of space needed for the stack and saved
-         * literal
-        if (availSpace < 512 * WORD_SZB) {
-            if (NeedGC(msp, FREE_REQ_SZB)) {
-                GC_MESSAGE
-                InvokeGCWithRoots (msp, 0, (ml_val_t *)&code, &stk, &saved, NIL(ml_val_t *));
-            }
-            availSpace = ((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr);
-        }
-        availSpace -= CONS_SZB; /* space for stack cons cell */
+/* top of stack pointer */
+#define TOP     (state.stk+state.tos)
 
-#ifdef DEBUG_LITERALS
-        int startPC = pc;
-#endif
+        /* get the next instruction */
+        Byte_t opcode = state.code[state.pc++];
 
-/* top of stack */
-#define TOP     (stk+tos)
-#define PUSH    (&stk[++tos])
-#define POP     (&stk[tos--])
-
-    /* get the next instruction */
-        Byte_t opcode = code[pc++];
-
-    /* handle the operation */
+        /* handle the operation */
         switch (opcode) {
           case 0x00:
           case 0x01:
@@ -357,8 +455,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x1D:
           case 0x1E:
           case 0x1F:
-            /* push opcode as tagged int */
-            StoreTaggedInt (PUSH, INT_CtoML(int)opcode);
+            /* push opcode as a tagged int */
+            PushTaggedInt (&state, TagInt((int)opcode));
             break;
           case 0x20:
           case 0x21:
@@ -392,8 +490,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x3D:
           case 0x3E:
           case 0x3F:
-            /* push (opcode - 64) as tagged int */
-            StoreTaggedInt (PUSH, INT_CtoML((int)opcode - 64);
+            /* push (opcode - 64) as a tagged int; it will be < 0 */
+            PushTaggedInt (&state, TagInt((int)opcode - 64));
             break;
           case 0x40:
           case 0x41:
@@ -427,8 +525,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x5D:
           case 0x5E:
           case 0x5F:
-            /* push (opcode - 64) as raw int64 */
-            StoreRawInt64 (PUSH, (Int64_t)opcode - 64);
+            /* push (opcode - 64) as a raw int64 */
+            PushRawInt64 (&state, (Int64_t)opcode - 64);
             break;
           case 0x60:
           case 0x61:
@@ -462,54 +560,48 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x7D:
           case 0x7E:
           case 0x7F:
-            /* push (opcode - 128) as raw int64 */
-            StoreRawInt64 (PUSH, (Int64_t)opcode - 128);
+            /* push (opcode - 128) as a raw int64; it will be < 0 */
+            PushRawInt64 (&state, (Int64_t)opcode - 128);
             break;
           case 0x80: /* INT63(b) */
-            StoreTaggedInt (PUSH, (Int64_t)GetI8Arg(&(code[pc])));  pc += 1;
+            PushTaggedInt (&state, (Int64_t)GetI8Arg(&state));
             break;
           case 0x81: /* INT63(h) */
-            StoreTaggedInt (PUSH, (Int64_t)GetI16Arg(&(code[pc])));  pc += 2;
+            PushTaggedInt (&state, (Int64_t)GetI16Arg(&state));
             break;
           case 0x82: /* INT63(w) */
-            StoreTaggedInt (PUSH, (Int64_t)GetI32Arg(&(code[pc])));  pc += 4;
+            PushTaggedInt (&state, (Int64_t)GetI32Arg(&state));
             break;
           case 0x83: /* INT63(l) */
-            StoreTaggedInt (PUSH, (Int64_t)GetI64Arg(&(code[pc])));  pc += 8;
+            PushTaggedInt (&state, (Int64_t)GetI64Arg(&state));
             break;
           case 0x84: /* REAL32 */
-            StoreReal32(PUSH, GetR32Arg(&(code[pc])));  pc += 4;
+            PushReal32(&state, GetR32Arg(&state));
             break;
           case 0x85: /* REAL64 */
-            StoreReal64(PUSH, GetR64Arg(&(code[pc])));  pc += 8;
+            PushReal64(&state, GetR64Arg(&state));
             break;
           case 0x86:
           case 0x87: {
                 /* BIGINT(sign, uh) */
                 bool_t sign = ((opcode & 1) == 1);
-                int nDigits = GetU16Arg(&(code[pc]));  pc += 2;
+                int nDigits = GetU16Arg(&state);
 /* TODO: build a list from the digits */
 	        Die("BIGINT -- not supported yet");
             } break;
           case 0x88: /* STR8(0) */
             /* push the empty string */
-            StoreMLValue(PUSH, ML_string0);
+            PushMLValue (&state, ML_string0);
             break;
-          case 0x89: { /* STR8(ub) */
-                int len = GetU8Arg(&(code[pc]));  pc += 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0x8A: { /* STR8(uh) */
-                int len = GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0x8B: { /* STR8(uw) */
-                Unsigned32_t len = GetU32Arg(&(code[pc]));  pc += 4;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
+          case 0x89: /* STR8(ub) */
+            PushString (&state, GetU8Arg(&state));
+            break;
+          case 0x8A: /* STR8(uh) */
+            PushString (&state, GetU16Arg(&state));
+            break;
+          case 0x8B: /* STR8(uw) */
+            PushString (&state, GetU32Arg(&state));
+            break;
           case 0x8C: /* UTF8(0) */
           case 0x8D: /* UTF8(ub) */
           case 0x8E: /* UTF8(uh) */
@@ -545,16 +637,16 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             break;
           /* 0x9B UNUSED */
           case 0x9C: /* RAWINT(64,8) */
-            StoreRawInt64 (PUSH, (Int64_t)GetI8Arg(&(code[pc])));  pc += 1;
+            PushRawInt64 (&state, (Int64_t)GetI8Arg(&state));
             break;
           case 0x9D: /* RAWINT(64,16) */
-            StoreRawInt64 (PUSH, (Int64_t)GetI16Arg(&(code[pc])));  pc += 2;
+            PushRawInt64 (&state, (Int64_t)GetI16Arg(&state));
             break;
           case 0x9E: /* RAWINT(64,32) */
-            StoreRawInt64 (PUSH, (Int64_t)GetI32Arg(&(code[pc])));  pc += 4;
+            PushRawInt64 (&state, (Int64_t)GetI32Arg(&state));
             break;
           case 0x9F: /* RAWINT(64,64) */
-            StoreRawInt64 (PUSH, (Int64_t)GetI64Arg(&(code[pc])));  pc += 8;
+            PushRawInt64 (&state, (Int64_t)GetI64Arg(&state));
             break;
           case 0xA0:
           case 0xA1:
@@ -569,22 +661,15 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xAA:
           case 0xAB:
           case 0xAC:
-          case 0xAD: {
-                /* RECORD */
-                int len = (int)(opcode & 0xF) + 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0xAE: { /* RECORD(ub) */
-                int len = GetU8Arg(&(code[pc]));  pc += 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0xAF: { /* RECORD(uh) */
-                int len = GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
+          case 0xAD: /* RECORD */
+            PushRecord (&state, (int)(opcode & 0xF) + 1);
+            break;
+          case 0xAE: /* RECORD(ub) */
+            PushRecord (&state, GetU8Arg(&state));
+            break;
+          case 0xAF: /* RECORD(uh) */
+            PushRecord (&state, GetU16Arg(&state));
+            break;
           case 0xB0:
           case 0xB1:
           case 0xB2:
@@ -598,33 +683,24 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xBA:
           case 0xBB:
           case 0xBC:
-          case 0xBD: {
-                /* RAW */
-                int len = (int)(opcode & 0xF) + 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0xBE: { /* RAW(ub) */
-                int len = GetU8Arg(&(code[pc]));  pc += 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
-          case 0xBF: { /* RAW(uh) */
-                int len = GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT (len <= tos + 1);
-/* TODO */
-            } break;
+          case 0xBD: /* RAW */
+            PushRawRecord (&state, (int)(opcode & 0xF) + 1);
+            break;
+          case 0xBE: /* RAW(ub) */
+            PushRawRecord (&state, GetU8Arg(&state));
+            break;
+          case 0xBF: /* RAW(uh) */
+            PushRawRecord (&state, GetU16Arg(&state));
+            break;
           case 0xC0: { /* MIXED(ub, ub) */
-                int ptrLen = GetU8Arg(&(code[pc]));  pc += 1;
-                int rawLen = GetU8Arg(&(code[pc]));  pc += 1;
-                ASSERT (ptrLen + rawLen <= tos + 1);
-/* TODO */
+                int ptrLen = GetU8Arg(&state);
+                int rawLen = GetU8Arg(&state);
+                PushMixedRecord (&state, ptrLen, rawLen);
             } break;
-          case 0xC1{ : /* MIXED(uh, uh) */
-                int ptrLen = GetU16Arg(&(code[pc]));  pc += 2;
-                int rawLen = GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT (ptrLen + rawLen <= tos + 1);
-/* TODO */
+          case 0xC1: { /* MIXED(uh, uh) */
+                int ptrLen = GetU16Arg(&state);
+                int rawLen = GetU16Arg(&state);
+                PushMixedRecord (&state, ptrLen, rawLen);
             } break;
           /* 0xC2 -- 0xC7 UNUSED */
           case 0xC8:
@@ -647,19 +723,19 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             } break;
           case 0xD5: { /* VEC(ub) */
                 /* VEC */
-                int len = GetU8Arg(&(code[pc]));  pc += 1;
+                int len = GetU8Arg(&state);
                 ASSERT (len <= tos + 1);
 /* TODO */
             } break;
           case 0xD6: { /* VEC(uh) */
                 /* VEC */
-                int len = GetU16Arg(&(code[pc]));  pc += 2;
+                int len = GetU16Arg(&state);
                 ASSERT (len <= tos + 1);
 /* TODO */
             } break;
           case 0xD7: { /* VEC(uw) */
                 /* VEC */
-                Unsigned32_t len = GetU32Arg(&(code[pc]));  pc += 4;
+                Unsigned32_t len = GetU32Arg(&state);
                 ASSERT (len <= tos + 1);
 /* TODO */
             } break;
@@ -669,9 +745,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xDB: {
                 /* RAWVEC(sz, ub) */
                 int elemSz = 1 << (opcode & 0x7);
-                int len = GetU8Arg(&(code[pc]));  pc += 1;
-                ASSERT (len <= tos + 1);
-/* TODO */
+                int len = GetU8Arg(&state);
+	        Die("RAWVEC(%d,%d) -- reserved for future use", elemSz, len);
             } break;
           case 0xDC:
           case 0xDD:
@@ -679,9 +754,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xDF: {
                 /* RAWVEC(sz, uh) */
                 int elemSz = 1 << (opcode & 0x7);
-                int len = GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT (len <= tos + 1);
-/* TODO */
+                int len = GetU16Arg(&state);
+	        Die("RAWVEC(%d,%d) -- reserved for future use", elemSz, len);
             } break;
           case 0xE0:
           case 0xE1:
@@ -689,9 +763,8 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xE3: {
                 /* RAWVEC(sz, uw) */
                 int elemSz = 1 << (opcode & 0x7);
-                Unsigned32_t len = GetU32Arg(&(code[pc]));  pc += 4;
-                ASSERT (len <= tos + 1);
-/* TODO */
+                Unsigned32_t len = GetU32Arg(&state);
+	        Die("RAWVEC(%d,%d) -- reserved for future use", elemSz, len);
             } break;
           /* 0xE4 -- 0xE7 UNUSED */
           case 0xE8:
@@ -704,14 +777,14 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
                 /* STORE */
                 int slot = (int)(opcode & 0x7);
                 ASSERT (TOP->kind == VK_OBJ);
-                ASSERT(slot < maxSaved);
-                saved[slot] = TOP->val.ml;
+                ASSERT(slot < state.maxSaved);
+                state.saved[slot] = TOP->val.ml;
             } break;
           case 0xEF: { /* STORE(uh) */
-                int slot = (int)GetU16Arg(&(code[pc]));  pc += 2;
+                int slot = (int)GetU16Arg(&state);
                 ASSERT (TOP->kind == VK_OBJ);
-                ASSERT(slot < maxSaved);
-                saved[slot] = TOP->val.ml;
+                ASSERT(slot < state.maxSaved);
+                state.saved[slot] = TOP->val.ml;
             } break;
           case 0xF0:
           case 0xF1:
@@ -722,13 +795,13 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xF6: {
                 /* LOAD */
                 int slot = (int)(opcode & 0x7);
-                ASSERT(slot < maxSaved);
-                StoreMLValue(PUSH, saved[slot]);
+                ASSERT(slot < state.maxSaved);
+                PushMLValue(&state, state.saved[slot]);
             } break;
           case 0xF7: { /* LOAD(uh) */
-                int slot = (int)GetU16Arg(&(code[pc]));  pc += 2;
-                ASSERT(slot < maxSaved);
-                StoreMLValue(PUSH, saved[slot]);
+                int slot = (int)GetU16Arg(&state);
+                ASSERT(slot < state.maxSaved);
+                PushMLValue(&state, state.saved[slot]);
             } break;
           case 0xF8:
           case 0xF9:
@@ -742,16 +815,17 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 /* TODO */
             }
           case 0xFF: { /* RETURN */
-                ASSERT(tos == 0);
+                ASSERT(state.tos == 0);
                 ASSERT(TOP->kind == VK_OBJ);
                 ml_val_t res = TOP->val.ml;
                 /* free memory */
-                if (saved != NIL(ml_val_t *)) { FREE(saved); }
-                FREE(stk);
+                if (state.saved != NIL(ml_val_t *)) { FREE(state.saved); }
+                FREE(state.stk);
                 return res;
             }
           default:
-            Die ("BuildLiterals: bogus literal opcode #%04x @ %d", (int)opcode, pc-1);
+            Die ("BuildLiterals: bogus literal opcode #%04x @ %d",
+                (int)opcode, state.pc-1);
         } /* switch */
     } /* while */
 
