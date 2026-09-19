@@ -397,7 +397,7 @@ structure Literals : LITERALS =
        * the IMMED literals, which are not recorded in the environment)
        *)
 	val allLits : t -> literal list
-      (* return a list of the variables that are bound to top-level literalsn paired
+      (* return a list of the variables that are bound to top-level literals paired
        * with their binding.
        *)
 	val boundVars : t -> (C.lvar * literal) list
