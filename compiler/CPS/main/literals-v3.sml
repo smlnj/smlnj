@@ -105,7 +105,7 @@ structure Literals : LITERALS =
       | litIsShared _ = bug "impossible"
 
     (* print a list of "top-level" literals (for debugging purposes) *)
-    fun printLits lits = let
+    fun printLits (lits : literal list) = let
           val id2s = Word.fmt StringCvt.DEC
           fun prIndent 0 = ()
             | prIndent n = (say "  "; prIndent(n-1))
@@ -145,6 +145,14 @@ structure Literals : LITERALS =
           in
             List.appi prSlot lits
           end (* printLits *)
+    fun printReals (reals : int RealConst.t list) = let
+          fun prSlot (i, {ty, rval}) = say (concat[
+                  StringCvt.padLeft #" " 4 (Int.toString i), ": REAL",
+                  Int.toString ty, " ", RealLit.toString rval, "\n"
+                ])
+          in
+            List.appi prSlot reals
+          end
 
     (* an environment for tracking literals *)
     structure LitEnv : sig
@@ -183,6 +191,11 @@ structure Literals : LITERALS =
         val lookupReal : t -> int RealConst.t -> int
         (* find a string literal *)
         val lookupString : t -> string -> literal
+
+      (* return a list of the variables that are bound to top-level literalsn paired
+       * with their binding (for debugging).
+       *)
+	val boundVars : t -> (C.lvar * literal) list
 
       end = struct
 
@@ -271,12 +284,12 @@ structure Literals : LITERALS =
         fun newLit (LE{lits, ...}) = let
               val insert = LTbl.insert lits
               in
-                fn (obj : obj) => let
+                fn (obj : obj, cty) => let
                     val lit = OBJ{
                             useCnt = ref 0, refCnt = ref 0,
                             id = Word.fromInt(LTbl.numItems lits),
                             value = obj,
-                            ty = ??
+                            ty = cty
                           }
                     in
                       insert (obj, lit);
@@ -286,11 +299,11 @@ structure Literals : LITERALS =
 
         fun insertString env = let
               val find = findLit env
-              val insert = newLit env
+              val newLit = newLit env
               in
                 fn s => (case find (STRING s)
                      of SOME lit => lit
-                      | NONE => insert (STRING s)
+                      | NONE => newLit (STRING s, C.ptrTy)
                     (* end case *))
               end
 
@@ -356,7 +369,14 @@ structure Literals : LITERALS =
                     val lit = (case findLit obj
                            of SOME lit => lit
                             | NONE => let
-                                val lit = newLit obj
+                                val cty = (case rk
+                                       of C.RK_VECTOR => C.ptrTy
+                                        | C.RK_RECORD => C.rPtrTy(length flds)
+                                        | C.RK_MIXED rep => C.PTRt(C.RPT rep)
+                                        | C.RK_RAWBLOCK => C.fPtrTy(length flds)
+                                        | _ => bug "unexpected record kind"
+                                      (* end case *))
+                                val lit = newLit (obj, cty)
                                 in
                                   (* record the references and uses of the fields *)
                                   List.app refUseLit flds;
@@ -395,6 +415,11 @@ structure Literals : LITERALS =
                 usedLits = List.filter litIsUsed (LTbl.listItems lits),
                 realLits = RTbl.listKeys reals
               }
+
+	fun boundVars (LE{vMap, ...}) =
+	      LV.Tbl.foldi
+		(fn (x, (true, lit), acc) => (x, lit)::acc | (_, _, acc) => acc)
+		  [] vMap
 
       end (* structure LitEnv *)
 
@@ -583,15 +608,15 @@ structure Literals : LITERALS =
                 (* end case *))
           val code = List.rev (BC.RETURN :: code)
           in
-(*
             if !debugFlg
               then let
                 fun prBV (x, OBJ{id, ...}) = (
-                      say(concat["LET ", LV.lvarName x, " = "]);
-                      case WordTbl.find litIdTbl id
-                       of NONE => say "<no slot>\n"
-                        | SOME(LitSlot n) => say(concat["literal-", Int.toString n, "\n"])
-                        | SOME(Real64Slot n) => say(concat["real64-", Int.toString n, "\n"])
+                      say(concat["LET ", LV.lvarName x, " : "]);
+                      case WordTbl.find slotTbl id
+                       of NONE => say "? = <no slot>\n"
+                        | SOME(n, ty) => say(concat[
+                              CPSUtil.ctyToString ty, " = slot-", Int.toString n, "\n"
+                            ])
                       (* end case *))
                 fun prByte (i, w) = (
                       say(StringCvt.padLeft #"0" 2 (Word8.toString w));
@@ -600,17 +625,16 @@ structure Literals : LITERALS =
                         else say " ")
                 in
                   say "==========\n";
-                  say(concat["== bytecode size: ", Int.toString(W8V.length code), "\n"]);
-                  printLits lits;
+                  printLits usedLits;
+                  say "==========\n";
+                  printReals realLits;
                   say "==========\n";
                   List.app prBV (LitEnv.boundVars env);
                   say "==========\n";
-                  W8V.appi prByte code;
-                  if (W8V.length code mod 16 <> 15) then say "\n" else ();
+                  LiteralBytecode.dump code;
                   say "==========\n"
                 end
               else ();
-*)
             (code, slotForValue, litPtrTy)
           end
 
