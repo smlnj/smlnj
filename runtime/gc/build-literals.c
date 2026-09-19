@@ -493,9 +493,12 @@ ml_val_t BuildLiteralsV2 (ml_state_t *msp, Byte_t *code, int len, int maxDepth, 
 	    availSpace -= spaceReq;								\
     } while (0)
 
+SayDebug("# BuildLiteralsV2: code = %p, len = %d, maxDepth = %d, pc = %d\n",
+    code, len, maxDepth, pc);
   /* get the rest of the V2 header */
     wordSz = GetU32Arg(code+pc); pc += 4;
     maxSaved = GetU32Arg(code+pc); pc += 4;
+SayDebug("## wordSz = %d, maxSaved = %d\n", wordSz, maxSaved);
 
 #ifdef SIZE_64
     if (wordSz != 64) {

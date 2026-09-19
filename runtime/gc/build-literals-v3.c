@@ -75,11 +75,6 @@ PVT void GC (State_t *stp, int gcLevel)
 {
     ml_val_t rootObj;
 
-#ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: invoke GC; avail = %" PRIu64 ", req = %" PRIu64 "\n",
-        availSpace, reqSpace);
-#endif
-
     /* construct an object containing the roots that are in the state */
     {
         /* the roots cover the size of the save area plus the current stack depth */
@@ -134,6 +129,10 @@ STATIC_INLINE void CheckGC (State_t *stp, Addr_t reqSpace)
 
     Addr_t availSpace = ((Addr_t)stp->msp->ml_limitPtr - (Addr_t)stp->msp->ml_allocPtr);
     if (reqSpace > availSpace) {
+#ifdef DEBUG_LITERALS
+        SayDebug("BuildLiterals: invoke GC; avail = %" PRIu64 ", req = %" PRIu64 "\n",
+            availSpace, reqSpace);
+#endif
         GC(stp, 0);
     }
 }
@@ -288,7 +287,7 @@ STATIC_INLINE void PushMixedRecord (State_t *stp, int ptrLen, int rawLen)
 {
     int sz = ptrLen + rawLen;
 
-    ASSERT (sz <= tos + 1);
+    ASSERT (sz <= stp->tos + 1);
 
     CheckGC (stp, WORD_SZB * (sz + 1));
 
@@ -302,33 +301,45 @@ STATIC_INLINE void PushMixedRecord (State_t *stp, int ptrLen, int rawLen)
 } /* PushMixedRecord */
 
 /* create a string literal and push it on the stack */
-STATIC_INLINE void PushString (State_t *stp, int sz)
+STATIC_INLINE void PushString (State_t *stp, int len)
 {
-    ASSERT (stp->pc + sz < stp->codeSz);
+    ml_val_t res;
 
-    int szw = BYTES_TO_WORDS(sz+1);  /* include space for '\0' */
+    ASSERT (stp->pc + len < stp->codeSz);
+
+    int szw = BYTES_TO_WORDS(len+1);  /* include space for '\0' */
 
     if (szw > SMALL_OBJ_SZW) {
 /* TODO */
+        Die ("unimplemented");
     } else {
         CheckGC (stp, WORD_SZB * (szw + 1 + 3));
-/* TODO */
+        /* allocate and initialize the data object in the nursery */
+        ML_AllocWrite(stp->msp, 0, MAKE_DESC(szw, DTAG_raw));
+        ML_AllocWrite (stp->msp, szw, 0);  /* so word-by-word string equality works */
+        ml_val_t data = ML_Alloc (stp->msp, szw);
+        memcpy (PTR_MLtoC(void, res), stp->code + stp->pc, len);
+        stp->pc += len;
+        /* allocate the header object */
+        SEQHDR_ALLOC(stp->msp, res, DESC_string, res, len);
     }
+    PushMLValue(stp, res);
 
 } /* PushString */
 
-STATIC_INLINE void PushVector (State_t *stp, int sz)
+STATIC_INLINE void PushVector (State_t *stp, int len)
 {
-    ASSERT (sz <= stp->tos + 1);
+    ASSERT (len <= stp->tos + 1);
+    ASSERT (0 < len);
 
-    if (sz > SMALL_OBJ_SZW) {
+    if (len > SMALL_OBJ_SZW) {
       /* Since we want to avoid pointers from the 1st generation record space
        * into the allocation space, we need to do a GC before creating the vector.
        */
         arena_t *ap = stp->msp->ml_heap->gen[0]->arena[RECORD_INDX];
 /* TODO */
     } else {
-        CheckGC (stp, WORD_SZB * (sz + 1 + 3));
+        CheckGC (stp, WORD_SZB * (len + 1 + 3));
 /* TODO */
     }
 Die("PushVector unimplemented");
@@ -345,46 +356,55 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
 #ifdef DEBUG_LITERALS
     int depth = 0;
 #endif
-    Unsigned32_t magic, wordSz;
-    size_t availSpace, spaceReq;
     State_t state;
 
-#ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: code = %p, len = %d\n", (void *)code, len);
-#endif
-    if (len <= 8) return ML_unit;
+    /* the V2 generator produces a one-byte code object when there are no literals */
+    if (len < 4*sizeof(Unsigned32_t) + 1) {
+        return ML_unit;
+    }
 
+    state.msp = msp;
     state.code = code;
     state.codeSz = len;
     state.pc = 0;
-    state.tos = ~1;
 
-    magic = GetU32Arg(&state);
-    state.maxDepth = GetU32Arg(&state);
+#ifdef DEBUG_LITERALS
+    SayDebug("# BuildLiterals: code = %p, len = %d\n", (void *)code, len);
+#endif
+
+    /* the V2 and V3 headers consist of four 32-bit words:
+     *
+     *    struct literal_header {
+     *        uint32_t    magic;
+     *        uint32_t    maxDepth;
+     *        uint32_t    wordSz;
+     *        uint32_t    maxSaved;
+     *    };
+     */
+    Unsigned32_t magic = GetU32Arg(&state);
+    Unsigned32_t maxDepth = GetU32Arg(&state);
 
     if (magic == V1_MAGIC) {
 #ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: VERSION 1\n");
+        SayDebug("# BuildLiterals: VERSION 1\n");
 #endif
         return BuildLiteralsV1 (msp, code, state.pc, len);
     }
     else if (magic == V2_MAGIC) {
 #ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: VERSION 2\n");
+        SayDebug("# BuildLiterals: VERSION 2\n");
 #endif
-        return BuildLiteralsV2 (msp, code, len, state.maxDepth, state.pc);
+        return BuildLiteralsV2 (msp, code, len, maxDepth, state.pc);
     }
     else if (magic != V3_MAGIC) {
         Die("bogus literal magic number %#x", magic);
     }
 #ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: VERSION 3\n");
+    SayDebug("# BuildLiterals: VERSION 3\n");
 #endif
 
   /* get the rest of the header */
-    wordSz = GetU32Arg(&state);
-    state.maxSaved = GetU32Arg(&state);
-
+    Unsigned32_t wordSz = GetU32Arg(&state);
     if (wordSz != 64) {
         Die("expected word size = 64, but found %d\n", wordSz);
     }
@@ -392,10 +412,10 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
   /* We represent the saved array as a C array of ML values.  When we do a GC, we
    * copy these into a heap-allocated root record.
    */
-    /* allocate space for the saved area */
-    if (state.maxSaved > 0) {
-        state.saved = NEW_VEC(ml_val_t, state.maxSaved);
-        for (int i = 0;  i < state.maxSaved;  ++i) {
+    Unsigned32_t maxSaved = GetU32Arg(&state);
+    if (maxSaved > 0) {
+        state.saved = NEW_VEC(ml_val_t, maxSaved);
+        for (int i = 0;  i < maxSaved;  ++i) {
             state.saved[i] = ML_unit;
         }
     }
@@ -406,13 +426,18 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
     /* allocate space for the stack */
     state.stk = NEW_VEC(StkItem_t, state.maxDepth);
 
+    /* initialize the rest of the state */
+    state.tos = -1;
+    state.maxDepth = maxDepth;
+    state.maxSaved = maxSaved;
+    ASSERT (state.pc == 4*sizeof(Unsigned32_t));
+
 #ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: avail = %d bytes; maxDepth = %d, maxSaved = %d\n",
+    SayDebug("# BuildLiterals: avail = %d bytes; maxDepth = %d, maxSaved = %d\n",
         (int)((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr),
         state.maxDepth, state.maxSaved);
 #endif
     while (TRUE) {
-        availSpace = ((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr);
         ASSERT(state.pc < len);
 
 /* top of stack pointer */
@@ -421,6 +446,10 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
         /* get the next instruction */
         Byte_t opcode = state.code[state.pc++];
 
+#ifdef DEBUG_LITERALS
+    SayDebug("## pc = %d, opcode = %02x, tos = %d\n",
+        state.pc, (int)opcode, state.tos);
+#endif
         /* handle the operation */
         switch (opcode) {
           case 0x00:
@@ -703,7 +732,9 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
                 PushMixedRecord (&state, ptrLen, rawLen);
             } break;
           /* 0xC2 -- 0xC7 UNUSED */
-          case 0xC8:
+          case 0xC8: /* VEC(0) */
+            PushMLValue(&state, ML_vector0);
+            break;
           case 0xC9:
           case 0xCA:
           case 0xCB:
@@ -718,26 +749,22 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0xD4: {
                 /* VEC */
                 int len = (int)(opcode & 0xF);
-                ASSERT (len <= tos + 1);
-/* TODO */
+                PushVector (&state, len);
             } break;
           case 0xD5: { /* VEC(ub) */
                 /* VEC */
                 int len = GetU8Arg(&state);
-                ASSERT (len <= tos + 1);
-/* TODO */
+                PushVector (&state, len);
             } break;
           case 0xD6: { /* VEC(uh) */
                 /* VEC */
                 int len = GetU16Arg(&state);
-                ASSERT (len <= tos + 1);
-/* TODO */
+                PushVector (&state, len);
             } break;
           case 0xD7: { /* VEC(uw) */
                 /* VEC */
                 Unsigned32_t len = GetU32Arg(&state);
-                ASSERT (len <= tos + 1);
-/* TODO */
+                PushVector (&state, len);
             } break;
           case 0xD8:
           case 0xD9:

@@ -117,7 +117,7 @@ structure Literals : LITERALS =
                   | C.RK_RAWBLOCK => say(concat["RAWBLOCK ", suffix, "\n"])
                   | _ => raise Fail "bogus record kind"
                 (* end case *);
-                List.app (prLiteral (indent+1)) lits)
+                List.app (prLiteral (indent+1)) args)
 (* TODO: trim large strings *)
             | prObj _ (STRING s, suffix) = say (concat[
                   "STRING ", suffix, " \"", String.toString s, "\" ", suffix, "\n"
@@ -359,7 +359,7 @@ structure Literals : LITERALS =
                 | resolveField (C.LABEL _) = bug "unexpected LABEL value"
                 | resolveField (C.NUM n) = IMMED n
                 | resolveField (C.ENUM n) = ENUM n
-                | resolveField (C.REAL rc) = (insReal rc; REAL rc)
+                | resolveField (C.REAL rc) = REAL rc
                 | resolveField (C.STRING s) = insStr s
                 | resolveField C.VOID = bug "unexpected VOID value"
               in

@@ -256,18 +256,18 @@ structure LiteralBytecode : sig
     val opSTR8h : Word8.word = 0wx8A
     val opSTR8w : Word8.word = 0wx8B
   (* record opcodes *)
-    fun opRECORD_1_14 len = Word8.fromInt(0xA0 + len)
+    fun opRECORD_1_14 len = Word8.fromInt(0x9F + len)
     val opRECORDb: Word8.word = 0wxAE
     val opRECORDh: Word8.word = 0wxAF
   (* raw records *)
-    fun opRAW_1_14 n = Word8.fromInt(0xB0 + n)
+    fun opRAW_1_14 n = Word8.fromInt(0xAF + n)
     val opRAWb : Word8.word = 0wxBE
     val opRAWh : Word8.word = 0wxBF
   (* mixed records *)
     val opMIXEDbb : Word8.word = 0wxC0
     val opMIXEDhh : Word8.word = 0wxC1
   (* vector opcodes *)
-    fun opVEC_1_12 len = Word8.fromInt(0xC8 + len)
+    fun opVEC_0_12 len = Word8.fromInt(0xC8 + len)
     val opVECb: Word8.word = 0wxD5
     val opVECh: Word8.word = 0wxD6
     val opVECw: Word8.word = 0wxD7
@@ -448,7 +448,7 @@ structure LiteralBytecode : sig
 
   (* encode a VECTOR opcode and length *)
     fun encVEC (buf, len) = if (len <= 12)
-            then W8B.add1(buf, opVEC_1_12 len)
+            then W8B.add1(buf, opVEC_0_12 len)
           else if (len <= 255)
             then (W8B.add1(buf, opVECb); addUInt8(buf, len))
           else if (len <= 65535)
