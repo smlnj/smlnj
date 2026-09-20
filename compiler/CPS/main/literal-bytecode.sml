@@ -285,7 +285,6 @@ structure LiteralBytecode : sig
     val opVEC_0 : Word8.word = 0wxC8
     val opVECb : Word8.word = 0wxC9
     val opVECh : Word8.word = 0wxCA
-    val opVECw : Word8.word = 0wxCB
   (* save/load opcodes *)
     fun opSAVE_0_6 slot = Word8.fromInt(0xE8 + slot)
     val opSAVEh : Word8.word = 0wxEF
@@ -467,8 +466,6 @@ structure LiteralBytecode : sig
             then (W8B.add1(buf, opVECb); addUInt8(buf, len))
           else if (len <= 65535)
             then (W8B.add1(buf, opVECh); addUInt16(buf, len))
-          else if (len <= 4294967295)
-            then (W8B.add1(buf, opVECw); addUInt32(buf, len))
             else bug "vector too big"
 
     (* encode a SAVE/LOAD opcode *)
