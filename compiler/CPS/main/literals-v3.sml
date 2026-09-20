@@ -618,21 +618,15 @@ structure Literals : LITERALS =
                               CPSUtil.ctyToString ty, " = slot-", Int.toString n, "\n"
                             ])
                       (* end case *))
-                fun prByte (i, w) = (
-                      say(StringCvt.padLeft #"0" 2 (Word8.toString w));
-                      if (i mod 16 = 15)
-                        then say "\n"
-                        else say " ")
                 in
-                  say "==========\n";
+                  say "==== Literals\n";
                   printLits usedLits;
-                  say "==========\n";
+                  say "==== Real literals\n";
                   printReals realLits;
-                  say "==========\n";
+                  say "==== Bound variables\n";
                   List.app prBV (LitEnv.boundVars env);
-                  say "==========\n";
-                  LiteralBytecode.dump code;
-                  say "==========\n"
+                  say "==== Byte code\n";
+                  LiteralBytecode.dump code
                 end
               else ();
             (code, slotForValue, litPtrTy)
@@ -724,7 +718,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
           val nt = C.rPtrTy(n+1)
           val _ = if !debugFlg
                 then (
-                  say (concat["\n==== Before Literals.liftLiterals\n"]);
+                  say (concat["\n==== CPS before Literals.liftLiterals\n"]);
                   PPCps.printcps0 func)
                 else ()
           val env = identifyLiterals body
@@ -742,11 +736,22 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
                   end
           val bytes = LiteralBytecode.encode code
           val nfunc = (fk, f, vl, [kontTy, nt], nbody)
+(*+DEBUG*)
+          fun prByte (i, w) = (
+                say(StringCvt.padLeft #"0" 2 (Word8.toString w));
+                if (i mod 16 = 15)
+                  then say "\n"
+                  else say " ")
+(*-DEBUG*)
           in
             if !debugFlg
               then (
-                say (concat["==== After Literals.liftLiterals\n"]);
-                PPCps.printcps0 nfunc)
+                say "==== Bytes\n";
+                Word8Vector.appi prByte bytes;
+                if (Word8Vector.length bytes mod 16 <> 15) then say "\n" else ();
+                say (concat["==== CPS after Literals.liftLiterals\n"]);
+                PPCps.printcps0 nfunc;
+                say "==========\n")
               else ();
             (nfunc, bytes)
           end
