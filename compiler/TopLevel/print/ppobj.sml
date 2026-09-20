@@ -555,33 +555,36 @@ structure PPObj : PPOBJ =
                       end
               end
 
-        and ppList(obj:object, ty:T.ty, membersOp, depth:int, length: int,accu) =
-            let fun list_case p =
-                    case switch(p, listDcons)
-                      of {domain=NONE,...} => NONE
-                       | dcon => (case Obj.toTuple(decon(p, dcon)) of
-                                      [a, b] => SOME(a, b)
-                                    | _ => bug "ppList [a, b]")
-
-               fun ppTail(p, len) =
-                   case list_case p
-                     of NONE => ()
-                      | SOME(hd,tl) =>
-                          if len <= 0 then (PP.string ppstrm  "...")
-                          else (case list_case tl
-                                 of NONE =>
-                                      ppValShare (hd, ty, membersOp, depth-1,accu)
-                                  | _ =>
-                                      (ppValShare (hd, ty, membersOp, depth-1,accu);
-                                       PP.string ppstrm  ",";
-                                       PP.break ppstrm {nsp=0,offset=0};
-                                       ppTail(tl,len-1)))
-
-             in PP.openHOVBox ppstrm (PP.Rel 1);
-                PP.string ppstrm  "[";
-                ppTail(obj,length);
-                PP.string ppstrm  "]";
-                PP.closeBox ppstrm
+        and ppList(obj:object, ty:T.ty, membersOp, depth:int, maxLen: int,accu) = let
+            fun list_case p = (case switch(p, listDcons)
+                 of {domain=NONE,...} => NONE
+                  | dcon => (case Obj.toTuple(decon(p, dcon))
+                     of [a, b] => SOME(a, b)
+                      | xs => bug(concat[
+                          "ppList: expected 2, but got ", Int.toString(length xs),
+                          " args"
+                        ])
+                    (* end case *))
+                (* end case *))
+           fun ppTail(p, len) = (case list_case p
+                 of NONE => ()
+                  | SOME(hd,tl) => if len <= 0
+                      then (PP.string ppstrm  "...")
+                      else (case list_case tl
+                         of NONE => ppValShare (hd, ty, membersOp, depth-1,accu)
+                          | _ => (
+                            ppValShare (hd, ty, membersOp, depth-1,accu);
+                            PP.string ppstrm  ",";
+                            PP.break ppstrm {nsp=0,offset=0};
+                            ppTail(tl,len-1))
+                        (* end case *))
+                (* end case *))
+            in
+              PP.openHOVBox ppstrm (PP.Rel 1);
+              PP.string ppstrm  "[";
+              ppTail(obj, maxLen);
+              PP.string ppstrm  "]";
+              PP.closeBox ppstrm
             end
 
         and ppUrList(obj:object, ty:T.ty, membersOp, depth:int, length: int,accu) =
