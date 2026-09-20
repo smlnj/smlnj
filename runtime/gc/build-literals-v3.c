@@ -333,7 +333,7 @@ STATIC_INLINE void PushString (State_t *stp, int len)
         ML_AllocWrite(stp->msp, 0, MAKE_DESC(szw, DTAG_raw));
         ML_AllocWrite (stp->msp, szw, 0);  /* so word-by-word string equality works */
         ml_val_t data = ML_Alloc (stp->msp, szw);
-        memcpy (PTR_MLtoC(void, res), stp->code + stp->pc, len);
+        memcpy (PTR_MLtoC(void, data), stp->code + stp->pc, len);
         stp->pc += len;
         /* allocate the header object */
         SEQHDR_ALLOC(stp->msp, res, DESC_string, res, len);
