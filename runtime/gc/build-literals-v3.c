@@ -256,7 +256,9 @@ STATIC_INLINE void PushRecord (State_t *stp, int sz)
     CheckGC (stp, WORD_SZB * (sz + 1));
 
     ML_AllocWrite(stp->msp, 0, MAKE_DESC(sz, DTAG_record));
-    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+    int first = stp->tos - sz;
+    for (int i = 1;  i <= sz;  ++i) {
+        int j = first + i;
         ASSERT ((stp->stk[j].kind == VK_TAGINT) || (stp->stk[j].kind == VK_OBJ));
         ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
     }
@@ -273,7 +275,9 @@ STATIC_INLINE void PushRawRecord (State_t *stp, int sz)
     CheckGC (stp, WORD_SZB * (sz + 1));
 
     ML_AllocWrite(stp->msp, 0, MAKE_DESC(sz, DTAG_raw));
-    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+    int first = stp->tos - sz;
+    for (int i = 1;  i <= sz;  ++i) {
+        int j = first + i;
         ASSERT (stp->stk[j].kind != VK_OBJ);
         ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
     }
@@ -292,7 +296,18 @@ STATIC_INLINE void PushMixedRecord (State_t *stp, int ptrLen, int rawLen)
     CheckGC (stp, WORD_SZB * (sz + 1));
 
     ML_AllocWrite(stp->msp, 0, MAKE_MIXED_DESC(ptrLen, rawLen));
-    for (int i = 1, j = stp->tos;  i <= sz;  ++i, --j) {
+    int first = stp->tos - sz;
+    int i = 1;
+    /* initialize the pointer fields */
+    for (;  i <= ptrLen;  ++i) {
+        int j = first + i;
+        ASSERT ((stp->stk[j].kind == VK_TAGINT) || (stp->stk[j].kind == VK_OBJ));
+        ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
+    }
+    /* initialize the raw fields */
+    for (;  i <= sz;  ++i) {
+        int j = first + i;
+        ASSERT (stp->stk[j].kind != VK_OBJ);
         ML_AllocWrite(stp->msp, i, stp->stk[j].val.ml);
     }
     stp->tos -= sz;
@@ -843,7 +858,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             }
           case 0xFF: { /* RETURN */
                 ASSERT(state.tos == 0);
-                ASSERT(TOP->kind == VK_OBJ);
+                ASSERT((TOP->kind == VK_OBJ) || (TOP->kind == VK_TAGINT));
                 ml_val_t res = TOP->val.ml;
                 /* free memory */
                 if (state.saved != NIL(ml_val_t *)) { FREE(state.saved); }

@@ -190,7 +190,7 @@ structure LiteralBytecode : sig
                    *    avail   -- available slots
                    *    next    -- the next slot to assign when avail is empty
                    *)
-                  fun go ([], [], _, next) = next
+                  fun go ([], _, _, next) = next
                     | go ({first, last, id}::wl, active, avail, next) = let
                         (* free any slots whose last use preceeds `first` *)
                         fun free (active as {last, slot}::rest, avail) =
