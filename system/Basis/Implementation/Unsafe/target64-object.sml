@@ -128,14 +128,7 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 		  List.tabulate (InlineT.objlength obj, f)
 		end
 	    | Raw => let
-		val len = InlineT.objlength obj
-		in
-		  if (len = 1)
-		    then [obj]
-		    else raise Representation
-		end
-(*
-	    | Raw => let
+                (* note that FLINT flattens tuples of reals into raw records *)
 		val len = InlineT.objlength obj
 		fun f i = (InlineT.cast(InlineT.raw64Sub(obj, i)) : object)
 		in
@@ -143,7 +136,6 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 		    then [obj]
 		    else List.tabulate (len, f)
 		end
-*)
 	    | _ => raise Representation
 	  (* end case *))
     fun toString obj = (case (rep obj)
