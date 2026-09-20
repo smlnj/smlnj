@@ -15,7 +15,7 @@ LIB =		libgc.a
 
 GC_OBJS =	init-gc.o call-gc.o minor-gc.o major-gc.o flip.o gc-util.o \
 		big-objects.o ml-objects.o obj-info.o \
-		build-literals-v3.o build-literals.o old-literals.o \
+		build-literals-v3.o build-literals-v2.o old-literals.o \
 		record-ops.o \
 		$(CHECK_HEAP)
 
@@ -114,12 +114,12 @@ build-literals-v3.o: \
 		heap.h arena-id.h
 	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) build-literals-v3.c
 
-build-literals.o: \
-		build-literals.c \
+build-literals-v2.o: \
+		build-literals-v2.c \
 		$(OBJS_DIR)/ml-sizes.h \
 		$(INC_DIR)/ml-base.h $(INC_DIR)/ml-objects.h $(INC_DIR)/tags.h \
 		heap.h arena-id.h
-	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) build-literals.c
+	$(CC) -c $(CFLAGS) $(DEFS) $(INCLUDES) build-literals-v2.c
 
 old-literals.o: \
 		old-literals.c \
