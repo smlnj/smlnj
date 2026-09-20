@@ -50,21 +50,22 @@ structure LiteralBytecode : sig
       | LOAD of int
       | RETURN
 
+    fun opToString (INT63 n) = concat ["INT63(", IntInf.toString n, ")"]
+      | opToString (RAWINT64 n) = concat ["RAWINT(64, ", IntInf.toString n, ")"]
+      | opToString (STR8 s) = concat ["STR8(", Int.toString(size s), ")"]
+      | opToString (REAL64 r) = concat ["REAL64(", RealLit.toString r, ")"]
+      | opToString (RECORD n) = concat ["RECORD(", Int.toString n, ")"]
+      | opToString (RAWBLOCK n) = concat ["RAWBLOCK(", Int.toString n, ")"]
+      | opToString (MIXED{ptrLen, rawLen}) = concat [
+            "MIXED(", Int.toString ptrLen, ", ", Int.toString rawLen, ")"
+          ]
+      | opToString (VEC n) = concat ["VEC(", Int.toString n, ")"]
+      | opToString (SAVE i) = concat ["SAVE(", Int.toString i, ")"]
+      | opToString (LOAD i) = concat ["LOAD(", Int.toString i, ")"]
+      | opToString RETURN = "RETURN"
+
     fun dump code = let
-          fun sayl msg = say(concat msg)
-          fun pr (INT63 n) = sayl ["INT63(", IntInf.toString n, ")\n"]
-            | pr (RAWINT64 n) = sayl ["RAWINT(64, ", IntInf.toString n, ")\n"]
-            | pr (STR8 s) = sayl ["STR8(", Int.toString(size s), ")\n"]
-            | pr (REAL64 r) = sayl ["REAL64(", RealLit.toString r, ")\n"]
-            | pr (RECORD n) = sayl ["RECORD(", Int.toString n, ")\n"]
-            | pr (RAWBLOCK n) = sayl ["RAWBLOCK(", Int.toString n, ")\n"]
-            | pr (MIXED{ptrLen, rawLen}) = sayl [
-                  "MIXED(", Int.toString ptrLen, ", ", Int.toString rawLen, ")\n"
-                ]
-            | pr (VEC n) = sayl ["VEC(", Int.toString n, ")\n"]
-            | pr (SAVE i) = sayl ["SAVE(", Int.toString i, ")\n"]
-            | pr (LOAD i) = sayl ["LOAD(", Int.toString i, ")\n"]
-            | pr RETURN = say "RETURN\n"
+          fun pr opc = (say(opToString opc); say "\n")
           in
             List.app pr code
           end
@@ -78,10 +79,17 @@ structure LiteralBytecode : sig
      * allocation.
      *)
     local
-      datatype ty = TAG | RAW | OBJ
+      datatype ty = TAG | RAW | PTR
+      fun tyToString TAG = "I"
+        | tyToString RAW = "R"
+        | tyToString PTR = "P"
+      (* return the string representation of the stack with the top on the right *)
+      fun stkToString stk = concat[
+              "[", String.concatWithMap "," tyToString (List.rev stk), "]"
+            ]
       fun isUniform RAW = false
         | isUniform _ = true
-      fun isRaw OBJ = false
+      fun isRaw PTR = false
         | isRaw _ = true
       structure Tbl = IntHashTable
       type slot_info = {first : int, last : int ref, ty : ty}
@@ -97,60 +105,67 @@ structure LiteralBytecode : sig
            * from pseudo-slots to intervals.  It also typechecks the code.
            *)
           fun pass1 (_, [], _, _, _) = bug "missing RETURN"
-            | pass1 (pc, [RETURN], [OBJ], _, maxD) = (pc+1, maxD)
+            | pass1 (pc, [RETURN], [PTR], _, maxD) = (pc+1, maxD)
             | pass1 (_, [RETURN], _, _, _) = bug "invalid stack on return"
             | pass1 (pc, opc::code, stk, d, maxD) = let
+                fun bad msg = bug(concat[
+                        msg, " at ", Int.toString pc, " (", opToString opc,
+                        "); stk = ", stkToString stk
+                      ])
                 fun top () = (case stk
-                       of [] => bug "empty stack"
+                       of [] => bad "empty stack"
                         | ty::_ => ty
                       (* end case *))
+                (* pop elements off of the stack while checking that
+                 * they satisfy the type predicate.
+                 *)
                 fun popn pred (0, stk, d) = (stk, d)
                   | popn pred (n, ty::stk, d) = if pred ty
                       then popn pred (n-1, stk, d-1)
-                      else bug "insufficient arguments"
-                  | popn _ _ = bug "empty stack"
+                      else bad "insufficient arguments"
+                  | popn _ _ = bad "empty stack"
                 fun push ty = pass1 (pc+1, code, ty::stk, d+1, Int.max(d+1, maxD))
                 fun continue (stk', d') = pass1 (pc+1, code, stk', d', maxD)
                 in
                   case opc
                    of INT63 _ => push TAG
                     | RAWINT64 _ => push RAW
-                    | STR8 _ => push OBJ
+                    | STR8 _ => push PTR
                     | REAL64 _ => push RAW
                     | RECORD n => let
                         val (stk', d') = popn isUniform (n, stk, d)
                         in
-                          continue (OBJ::stk', d'+1)
+                          continue (PTR::stk', d'+1)
                         end
                     | RAWBLOCK n => let
                         val (stk', d') = popn isRaw (n, stk, d)
                         in
-                          continue (OBJ::stk', d'+1)
+                          continue (PTR::stk', d'+1)
                         end
                     | MIXED{ptrLen, rawLen} => let
-                        val (stk', d') = popn isRaw (ptrLen, stk, d)
-                        val (stk'', d'') = popn isUniform (rawLen, stk', d')
+                        val (stk', d') = popn isRaw (rawLen, stk, d)
+                        val (stk'', d'') = popn isUniform (ptrLen, stk', d')
                         in
-                          continue (OBJ::stk', d''+1)
+                          continue (PTR::stk'', d''+1)
                         end
                     | VEC n => let
                         val (stk', d') = popn isUniform (n, stk, d)
                         in
-                          continue (OBJ::stk', d'+1)
+                          continue (PTR::stk', d'+1)
                         end
                     | SAVE i => (case find i
-                         of SOME _ => bug "store to full slot"
+                         of SOME _ => bad "store to full slot"
                           | NONE => (
                               insert (i, {first=pc, last=ref pc, ty=top()});
                               continue (stk, d))
                         (* end case *))
                     | LOAD i => (case find i
-                         of NONE => bug "load from empty slot"
+                         of NONE => bad "load from empty slot"
                           | SOME{last, ty, ...} => (
                               last := pc;
                               push ty)
                         (* end case *))
-                    | RETURN => bug "unexpected return"
+                    | RETURN => bad "unexpected return"
                   (* end case *)
                 end
           val (nInstrs, maxDepth) = pass1 (0, code, [], 0, 0)
@@ -267,10 +282,10 @@ structure LiteralBytecode : sig
     val opMIXEDbb : Word8.word = 0wxC0
     val opMIXEDhh : Word8.word = 0wxC1
   (* vector opcodes *)
-    fun opVEC_0_12 len = Word8.fromInt(0xC8 + len)
-    val opVECb: Word8.word = 0wxD5
-    val opVECh: Word8.word = 0wxD6
-    val opVECw: Word8.word = 0wxD7
+    val opVEC_0 : Word8.word = 0wxC8
+    val opVECb : Word8.word = 0wxC9
+    val opVECh : Word8.word = 0wxCA
+    val opVECw : Word8.word = 0wxCB
   (* save/load opcodes *)
     fun opSAVE_0_6 slot = Word8.fromInt(0xE8 + slot)
     val opSAVEh : Word8.word = 0wxEF
@@ -447,9 +462,8 @@ structure LiteralBytecode : sig
             else bug "mixed record too big"
 
   (* encode a VECTOR opcode and length *)
-    fun encVEC (buf, len) = if (len <= 12)
-            then W8B.add1(buf, opVEC_0_12 len)
-          else if (len <= 255)
+    fun encVEC (buf, 0) = W8B.add1(buf, opVEC_0)
+      | encVEC (buf, len) = if (len <= 255)
             then (W8B.add1(buf, opVECb); addUInt8(buf, len))
           else if (len <= 65535)
             then (W8B.add1(buf, opVECh); addUInt16(buf, len))
@@ -499,5 +513,12 @@ structure LiteralBytecode : sig
                 W8B.contents buf
               ]
           end
+(*+DEBUG*)
+            handle ex => (
+              say("### Bytecode ###\n");
+              dump code;
+              say "###\n";
+              raise ex)
+(*-DEBUG*)
 
   end (* LiteralBytecode *)
