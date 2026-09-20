@@ -636,16 +636,15 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             break;
           case 0x80: /* INT63(b) */
             PushTaggedInt (&state, GetI8Arg(&state));
-SayDebug("### TOP = %p\n", TOP->val.ml);
             break;
           case 0x81: /* INT63(h) */
             PushTaggedInt (&state, GetI16Arg(&state));
             break;
           case 0x82: /* INT63(w) */
-            PushTaggedInt (&state, (Int64_t)GetI32Arg(&state));
+            PushTaggedInt (&state, GetI32Arg(&state));
             break;
           case 0x83: /* INT63(l) */
-            PushTaggedInt (&state, (Int64_t)GetI64Arg(&state));
+            PushTaggedInt (&state, GetI64Arg(&state));
             break;
           case 0x84: /* REAL32 */
             PushReal32(&state, GetR32Arg(&state));
