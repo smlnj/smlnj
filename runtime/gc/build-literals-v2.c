@@ -448,11 +448,8 @@ STATIC_INLINE double GetR64Arg (Byte_t *code)
  */
 #define FREE_REQ_SZB    64*ONE_K
 
-/* for backward compatibility */
-ml_val_t BuildLiteralsV1 (ml_state_t *msp, Byte_t *lits, int pc, int len);
-
 #ifdef DEBUG_LITERALS
-#  define GC_MESSAGE	SayDebug("BuildLiterals: invoke GC\n");
+#  define GC_MESSAGE	SayDebug("BuildLiteralsV2: invoke GC\n");
 #else
 #  define GC_MESSAGE
 #endif
@@ -493,12 +490,9 @@ ml_val_t BuildLiteralsV2 (ml_state_t *msp, Byte_t *code, int len, int maxDepth, 
 	    availSpace -= spaceReq;								\
     } while (0)
 
-SayDebug("# BuildLiteralsV2: code = %p, len = %d, maxDepth = %d, pc = %d\n",
-    code, len, maxDepth, pc);
   /* get the rest of the V2 header */
     wordSz = GetU32Arg(code+pc); pc += 4;
     maxSaved = GetU32Arg(code+pc); pc += 4;
-SayDebug("## wordSz = %d, maxSaved = %d\n", wordSz, maxSaved);
 
 #ifdef SIZE_64
     if (wordSz != 64) {
@@ -520,7 +514,7 @@ SayDebug("## wordSz = %d, maxSaved = %d\n", wordSz, maxSaved);
     stk = ML_nil;
     availSpace = ((size_t)msp->ml_limitPtr - (size_t)msp->ml_allocPtr);
 #ifdef DEBUG_LITERALS
-    SayDebug("BuildLiterals: avail = %d bytes; maxDepth = %d, maxSaved = %d\n",
+    SayDebug("BuildLiteralsV2: avail = %d bytes; maxDepth = %d, maxSaved = %d\n",
 	(int)availSpace, (int)maxDepth, (int)maxSaved);
 #endif
     while (TRUE) {
@@ -859,8 +853,8 @@ SayDebug("## wordSz = %d, maxSaved = %d\n", wordSz, maxSaved);
 	    return (LIST_hd(stk));
 
 	  default:
-	    Die ("BuildLiterals: bogus literal opcode #%x @ %d", opcode, pc-1);
+	    Die ("BuildLiteralsV2: bogus literal opcode #%x @ %d", opcode, pc-1);
 	} /* switch */
     } /* while */
 
-} /* end of BuildLiterals */
+} /* end of BuildLiteralsV2 */
