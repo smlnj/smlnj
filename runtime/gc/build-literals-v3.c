@@ -157,7 +157,7 @@ STATIC_INLINE void GetBytes (Byte_t *dst, State_t *stp, int n)
 STATIC_INLINE signed char GetI8Arg (State_t *stp)
 {
     int pc = stp->pc;
-    signed char i = stp->code[pc++];
+    signed char i = (signed char)stp->code[pc++];
     stp->pc = pc;
     return i;
 }
@@ -217,12 +217,12 @@ STATIC_INLINE double GetR64Arg (State_t *stp)
     return arg.r;
 }
 
-STATIC_INLINE void PushTaggedInt (State_t *stp, Int64_t n)
+STATIC_INLINE void PushTaggedInt (State_t *stp, Int_t n)
 {
     int tos = ++stp->tos;
     ASSERT((0 <= tos) && (tos < stp->maxDepth));
     stp->stk[tos].kind = VK_TAGINT;
-    stp->stk[tos].val.i = (Unsigned64_t)n;
+    stp->stk[tos].val.ml = INT_CtoML(n);
 }
 STATIC_INLINE void PushRawInt64 (State_t *stp, Int64_t n)
 {
@@ -527,7 +527,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x1E:
           case 0x1F:
             /* push opcode as a tagged int */
-            PushTaggedInt (&state, TagInt((int)opcode));
+            PushTaggedInt (&state, (int)opcode);
             break;
           case 0x20:
           case 0x21:
@@ -562,7 +562,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
           case 0x3E:
           case 0x3F:
             /* push (opcode - 64) as a tagged int; it will be < 0 */
-            PushTaggedInt (&state, TagInt((int)opcode - 64));
+            PushTaggedInt (&state, (int)opcode - 64);
             break;
           case 0x40:
           case 0x41:
@@ -635,10 +635,11 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             PushRawInt64 (&state, (Int64_t)opcode - 128);
             break;
           case 0x80: /* INT63(b) */
-            PushTaggedInt (&state, (Int64_t)GetI8Arg(&state));
+            PushTaggedInt (&state, GetI8Arg(&state));
+SayDebug("### TOP = %p\n", TOP->val.ml);
             break;
           case 0x81: /* INT63(h) */
-            PushTaggedInt (&state, (Int64_t)GetI16Arg(&state));
+            PushTaggedInt (&state, GetI16Arg(&state));
             break;
           case 0x82: /* INT63(w) */
             PushTaggedInt (&state, (Int64_t)GetI32Arg(&state));
@@ -658,7 +659,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
                 bool_t sign = ((opcode & 1) == 1);
                 int nDigits = GetU16Arg(&state);
 /* TODO: build a list from the digits */
-	        Die("BIGINT -- not supported yet");
+	        Die("BIGINT -- reserved for future use");
             } break;
           case 0x88: /* STR8(0) */
             /* push the empty string */
@@ -785,11 +786,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
                 int len = GetU16Arg(&state);
                 PushVector (&state, len);
              } break;
-          case 0xCB: { /* VEC(uw) */
-                Unsigned32_t len = GetU32Arg(&state);
-                PushVector (&state, len);
-            } break;
-          /* 0xCC -- 0xD7 UNUSED */
+          /* 0xCB -- 0xD7 UNUSED */
           case 0xD8:
           case 0xD9:
           case 0xDA:
