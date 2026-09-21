@@ -22,6 +22,14 @@
 #include <string.h>
 #include <inttypes.h>
 
+#define DEBUG_LITERALS
+
+#ifdef DEBUG_LITERALS
+#include <stdio.h>
+
+PVT void OpcodeToString (Byte_t opcode, char *buf, size_t sz);
+#endif
+
 /* printf formats for Int_t/Word_t types */
 #  define PRINT         PRId64
 #  define PRWORD        PRIu64
@@ -352,10 +360,10 @@ STATIC_INLINE void PushString (State_t *stp, int len)
     }
 
     /* initialize the data object and allocate the header object */
-    ((Word_t *)data)[szw-1] = 0;  /* so word-by-word string equality works */
+    PTR_MLtoC(Word_t, data)[szw-1] = 0;  /* so word-by-word string equality works */
     memcpy (PTR_MLtoC(void, data), stp->code + stp->pc, len);
     stp->pc += len;
-    ASSERT(((char *)data)[len] == '\0');
+    ASSERT(PTR_MLtoC(char, data)[len] == '\0');
     SEQHDR_ALLOC(msp, res, DESC_string, data, len);
 
     PushMLValue(stp, res);
@@ -499,8 +507,12 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
         Byte_t opcode = state.code[state.pc++];
 
 #ifdef DEBUG_LITERALS
-        SayDebug("## pc = %d, opcode = %02x, tos = %d\n",
-            state.pc, (int)opcode, state.tos);
+        {
+            char buf[20];
+            OpcodeToString (opcode, buf, sizeof(buf));
+            SayDebug("## %04d: [0x%02x] %-16s  tos = %d\n",
+                state.pc, (int)opcode, buf, state.tos);
+        }
 #endif
         ASSERT(state.tos < maxDepth);
         /* handle the operation */
@@ -697,24 +709,19 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
             break;
           /* 0x91 -- 0x93 UNUSED */
           case 0x94: /* RAWINT(16,8) */
-            /* reserved for future use */
 	    Die("RAWINT(16,8) -- reserved for future use");
             break;
           case 0x95: /* RAWINT(16,16) */
-            /* reserved for future use */
 	    Die("RAWINT(16,16) -- reserved for future use");
             break;
           /* 0x96 -- 0x97 UNUSED */
           case 0x98: /* RAWINT(32,8) */
-            /* reserved for future use */
 	    Die("RAWINT(32,8) -- reserved for future use");
             break;
           case 0x99: /* RAWINT(32,16) */
-            /* reserved for future use */
 	    Die("RAWINT(32,16) -- reserved for future use");
             break;
           case 0x9A: /* RAWINT(32,32) */
-            /* reserved for future use */
 	    Die("RAWINT(32,32) -- reserved for future use");
             break;
           /* 0x9B UNUSED */
@@ -892,3 +899,349 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
     } /* while */
 
 } /* end of BuildLiterals */
+
+#ifdef DEBUG_LITERALS
+/* convert an opcode byte to its name */
+PVT void OpcodeToString (Byte_t opcode, char *buf, size_t sz)
+{
+    switch (opcode) {
+      case 0x00:
+      case 0x01:
+      case 0x02:
+      case 0x03:
+      case 0x04:
+      case 0x05:
+      case 0x06:
+      case 0x07:
+      case 0x08:
+      case 0x09:
+      case 0x0A:
+      case 0x0B:
+      case 0x0C:
+      case 0x0D:
+      case 0x0E:
+      case 0x0F:
+      case 0x10:
+      case 0x11:
+      case 0x12:
+      case 0x13:
+      case 0x14:
+      case 0x15:
+      case 0x16:
+      case 0x17:
+      case 0x18:
+      case 0x19:
+      case 0x1A:
+      case 0x1B:
+      case 0x1C:
+      case 0x1D:
+      case 0x1E:
+      case 0x1F:
+        snprintf(buf, sz, "INT63(%d)", opcode);
+        break;
+      case 0x20:
+      case 0x21:
+      case 0x22:
+      case 0x23:
+      case 0x24:
+      case 0x25:
+      case 0x26:
+      case 0x27:
+      case 0x28:
+      case 0x29:
+      case 0x2A:
+      case 0x2B:
+      case 0x2C:
+      case 0x2D:
+      case 0x2E:
+      case 0x2F:
+      case 0x30:
+      case 0x31:
+      case 0x32:
+      case 0x33:
+      case 0x34:
+      case 0x35:
+      case 0x36:
+      case 0x37:
+      case 0x38:
+      case 0x39:
+      case 0x3A:
+      case 0x3B:
+      case 0x3C:
+      case 0x3D:
+      case 0x3E:
+      case 0x3F:
+        snprintf(buf, sz, "INT63(%d)", (int)opcode - 64);
+        break;
+      case 0x40:
+      case 0x41:
+      case 0x42:
+      case 0x43:
+      case 0x44:
+      case 0x45:
+      case 0x46:
+      case 0x47:
+      case 0x48:
+      case 0x49:
+      case 0x4A:
+      case 0x4B:
+      case 0x4C:
+      case 0x4D:
+      case 0x4E:
+      case 0x4F:
+      case 0x50:
+      case 0x51:
+      case 0x52:
+      case 0x53:
+      case 0x54:
+      case 0x55:
+      case 0x56:
+      case 0x57:
+      case 0x58:
+      case 0x59:
+      case 0x5A:
+      case 0x5B:
+      case 0x5C:
+      case 0x5D:
+      case 0x5E:
+      case 0x5F:
+        snprintf(buf, sz, "INT64(%d)", (int)opcode - 64);
+        break;
+      case 0x60:
+      case 0x61:
+      case 0x62:
+      case 0x63:
+      case 0x64:
+      case 0x65:
+      case 0x66:
+      case 0x67:
+      case 0x68:
+      case 0x69:
+      case 0x6A:
+      case 0x6B:
+      case 0x6C:
+      case 0x6D:
+      case 0x6E:
+      case 0x6F:
+      case 0x70:
+      case 0x71:
+      case 0x72:
+      case 0x73:
+      case 0x74:
+      case 0x75:
+      case 0x76:
+      case 0x77:
+      case 0x78:
+      case 0x79:
+      case 0x7A:
+      case 0x7B:
+      case 0x7C:
+      case 0x7D:
+      case 0x7E:
+      case 0x7F:
+        snprintf(buf, sz, "INT64(%d)", (int)opcode - 128);
+        break;
+      case 0x80: /* INT63(b) */
+        snprintf(buf, sz, "INT63(b)");
+        break;
+      case 0x81: /* INT63(h) */
+        snprintf(buf, sz, "INT63(h)");
+        break;
+      case 0x82: /* INT63(w) */
+        snprintf(buf, sz, "INT63(w)");
+        break;
+      case 0x83: /* INT63(l) */
+        snprintf(buf, sz, "INT63(l)");
+        break;
+      case 0x84: /* REAL32 */
+        snprintf(buf, sz, "REAL32(-)");
+        break;
+      case 0x85: /* REAL64 */
+        snprintf(buf, sz, "REAL64(-)");
+        break;
+      case 0x86:
+      case 0x87:
+        /* BIGINT(sign, uh) */
+        snprintf(buf, sz, "BIGINT(%c, uh)", ((opcode & 1) == 1) ? '-' : '+');
+        break;
+      case 0x88: /* STR8(0) */
+        snprintf(buf, sz, "STR8(0)");
+        break;
+      case 0x89: /* STR8(ub) */
+        snprintf(buf, sz, "STR8(ub)");
+        break;
+      case 0x8A: /* STR8(uh) */
+        snprintf(buf, sz, "STR8(uh)");
+        break;
+      case 0x8B: /* STR8(uw) */
+        snprintf(buf, sz, "STR8(uw)");
+        break;
+      case 0x8C: /* UTF8(0) */
+        snprintf(buf, sz, "UTF8(0)");
+        break;
+      case 0x8D: /* UTF8(ub) */
+        snprintf(buf, sz, "UTF8(ub)");
+        break;
+      case 0x8E: /* UTF8(uh) */
+        snprintf(buf, sz, "UTF8(uh)");
+        break;
+      case 0x8F: /* UTF8(uw) */
+        snprintf(buf, sz, "UTF8(uw)");
+        break;
+      case 0x90: /* RAWINT(8,8) */
+        snprintf(buf, sz, "RAWINT(8,8)");
+        break;
+      /* 0x91 -- 0x93 UNUSED */
+      case 0x94: /* RAWINT(16,8) */
+        snprintf(buf, sz, "RAWINT(16,8)");
+        break;
+      case 0x95: /* RAWINT(16,16) */
+        snprintf(buf, sz, "RAWINT(16,16)");
+        break;
+      /* 0x96 -- 0x97 UNUSED */
+      case 0x98: /* RAWINT(32,8) */
+        snprintf(buf, sz, "RAWINT(32,8)");
+        break;
+      case 0x99: /* RAWINT(32,16) */
+        snprintf(buf, sz, "RAWINT(32,16)");
+        break;
+      case 0x9A: /* RAWINT(32,32) */
+        snprintf(buf, sz, "RAWINT(32,32)");
+        break;
+      /* 0x9B UNUSED */
+      case 0x9C: /* RAWINT(64,8) */
+        snprintf(buf, sz, "RAWINT(64,8)");
+        break;
+      case 0x9D: /* RAWINT(64,16) */
+        snprintf(buf, sz, "RAWINT(64,16)");
+        break;
+      case 0x9E: /* RAWINT(64,32) */
+        snprintf(buf, sz, "RAWINT(64,32)");
+        break;
+      case 0x9F: /* RAWINT(64,64) */
+        snprintf(buf, sz, "RAWINT(64,64)");
+        break;
+      case 0xA0:
+      case 0xA1:
+      case 0xA2:
+      case 0xA3:
+      case 0xA4:
+      case 0xA5:
+      case 0xA6:
+      case 0xA7:
+      case 0xA8:
+      case 0xA9:
+      case 0xAA:
+      case 0xAB:
+      case 0xAC:
+      case 0xAD: /* RECORD */
+        snprintf(buf, sz, "RECORD(%d)", (int)(opcode & 0xF) + 1);
+        break;
+      case 0xAE: /* RECORD(ub) */
+        snprintf(buf, sz, "RECORD(ub)");
+        break;
+      case 0xAF: /* RECORD(uh) */
+        snprintf(buf, sz, "RECORD(uh)");
+        break;
+      case 0xB0:
+      case 0xB1:
+      case 0xB2:
+      case 0xB3:
+      case 0xB4:
+      case 0xB5:
+      case 0xB6:
+      case 0xB7:
+      case 0xB8:
+      case 0xB9:
+      case 0xBA:
+      case 0xBB:
+      case 0xBC:
+      case 0xBD: /* RAW */
+        snprintf(buf, sz, "RAW(%d)", (int)(opcode & 0xF) + 1);
+        break;
+      case 0xBE: /* RAW(ub) */
+        snprintf(buf, sz, "RAW(ub)");
+        break;
+      case 0xBF: /* RAW(uh) */
+        snprintf(buf, sz, "RAW(uh)");
+        break;
+      case 0xC0: /* MIXED(ub, ub) */
+        snprintf(buf, sz, "MIXED(ub, ub)");
+        break;
+      case 0xC1: /* MIXED(uh, uh) */
+        snprintf(buf, sz, "MIXED(uh, uh)");
+        break;
+      /* 0xC2 -- 0xC7 UNUSED */
+      case 0xC8: /* VEC(0) */
+        snprintf(buf, sz, "VEC(0)");
+        break;
+      case 0xC9: /* VEC(ub) */
+        snprintf(buf, sz, "VEC(ub)");
+        break;
+      case 0xCA: /* VEC(uh) */
+        snprintf(buf, sz, "VEC(uh)");
+        break;
+      /* 0xCB -- 0xD7 UNUSED */
+      case 0xD8:
+      case 0xD9:
+      case 0xDA:
+      case 0xDB:
+        snprintf(buf, sz, "RAWVEC(%d, ub)", opcode & 0x7);
+        break;
+      case 0xDC:
+      case 0xDD:
+      case 0xDE:
+      case 0xDF:
+        snprintf(buf, sz, "RAWVEC(%d, uh)", opcode & 0x7);
+        break;
+      case 0xE0:
+      case 0xE1:
+      case 0xE2:
+      case 0xE3:
+        snprintf(buf, sz, "RAWVEC(%d, uw)", opcode & 0x7);
+        break;
+      /* 0xE4 -- 0xE7 UNUSED */
+      case 0xE8:
+      case 0xE9:
+      case 0xEA:
+      case 0xEB:
+      case 0xEC:
+      case 0xED:
+      case 0xEE:
+        snprintf(buf, sz, "STORE(%d)", opcode & 0x7);
+        break;
+      case 0xEF: /* STORE(uh) */
+        snprintf(buf, sz, "STORE(uh)");
+        break;
+      case 0xF0:
+      case 0xF1:
+      case 0xF2:
+      case 0xF3:
+      case 0xF4:
+      case 0xF5:
+      case 0xF6:
+        snprintf(buf, sz, "LOAD(%d)", opcode & 0x7);
+        break;
+      case 0xF7: /* LOAD(uh) */
+        snprintf(buf, sz, "LOAD(uh)");
+        break;
+      case 0xF8:
+      case 0xF9:
+      case 0xFA:
+      case 0xFB:
+      case 0xFC:
+      case 0xFD:
+      case 0xFE:
+        snprintf(buf, sz, "CONCAT(%d)", (int)(opcode & 0x7) + 2);
+        break;
+      case 0xFF: /* RETURN */
+        snprintf(buf, sz, "RETURN");
+        break;
+      default:
+        snprintf(buf, sz, "UNUSED(0x%2x)", opcode);
+        break;
+    } /* switch */
+
+} /* end of BuildLiterals */
+
+#endif /* DEBUG_LITERALS */
