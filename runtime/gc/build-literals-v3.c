@@ -3,7 +3,7 @@
  * This file implements a simple bytecode interpreter that implements a language
  * for initializing a record of compile-time constant values.
  *
- * This code needs to agree with the code generator in base/CPS/main/literals.sml
+ * This code needs to agree with the encoding used in CPS/main/literal-bytecode.sml
  *
  * See https://github.com/smlnj/.github/wiki/Literals-v3 for a description of
  * the bytecode.
@@ -130,7 +130,7 @@ STATIC_INLINE void CheckGC (State_t *stp, Addr_t reqSpace)
     Addr_t availSpace = ((Addr_t)stp->msp->ml_limitPtr - (Addr_t)stp->msp->ml_allocPtr);
     if (reqSpace > availSpace) {
 #ifdef DEBUG_LITERALS
-        SayDebug("BuildLiterals: invoke GC; avail = %" PRIu64 ", req = %" PRIu64 "\n",
+        SayDebug("# BuildLiterals: invoke GC; avail = %" PRIu64 ", req = %" PRIu64 "\n",
             availSpace, reqSpace);
 #endif
         GC(stp, 0);
@@ -197,12 +197,6 @@ STATIC_INLINE Int64_t GetI64Arg (State_t *stp)
     union { Byte_t b[sizeof(Int64_t)]; Int64_t i; } arg;
     GetBytes(arg.b, stp, sizeof(Int64_t));
     return arg.i;
-}
-STATIC_INLINE Unsigned64_t GetU64Arg (State_t *stp)
-{
-    union { Byte_t b[sizeof(Unsigned64_t)]; Unsigned64_t u; } arg;
-    GetBytes(arg.b, stp, sizeof(Unsigned64_t));
-    return arg.u;
 }
 STATIC_INLINE float GetR32Arg (State_t *stp)
 {
@@ -327,26 +321,43 @@ STATIC_INLINE void PushMixedRecord (State_t *stp, int ptrLen, int rawLen)
 /* create a string literal and push it on the stack */
 STATIC_INLINE void PushString (State_t *stp, int len)
 {
-    ml_val_t res;
+    ml_state_t *msp = stp->msp;
+    ml_val_t data, res;
 
     ASSERT (stp->pc + len < stp->codeSz);
 
     int szw = BYTES_TO_WORDS(len+1);  /* include space for '\0' */
+    ml_val_t desc = MAKE_DESC(szw, DTAG_raw);
 
     if (szw > SMALL_OBJ_SZW) {
-/* TODO */
-        Die ("STRING(%d) unimplemented", len);
+        arena_t *ap = msp->ml_heap->gen[0]->arena[STRING_INDX];
+        Addr_t szb = WORD_SZB*(szw + 1);
+        if ((! isACTIVE(ap)) || (AVAIL_SPACE(ap) <= szb)) {
+            /* we need to do a GC to grow the arena for this allocation */
+            ap->reqSizeB += szb;
+            GC(stp, 1);
+            ap->reqSizeB = 0;
+        }
+        /* allocate the data object in the first generation */
+        *(ap->nextw++) = desc;
+        ml_val_t data = PTR_CtoML(ap->nextw);
+        ap->nextw += szw;
+        ASSERT(ap->nextw < ap->tospTop);
+        CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
     } else {
         CheckGC (stp, WORD_SZB * (szw + 1 + 3));
-        /* allocate and initialize the data object in the nursery */
-        ML_AllocWrite(stp->msp, 0, MAKE_DESC(szw, DTAG_raw));
-        ML_AllocWrite (stp->msp, szw, 0);  /* so word-by-word string equality works */
-        ml_val_t data = ML_Alloc (stp->msp, szw);
-        memcpy (PTR_MLtoC(void, data), stp->code + stp->pc, len);
-        stp->pc += len;
-        /* allocate the header object */
-        SEQHDR_ALLOC(stp->msp, res, DESC_string, data, len);
+        /* allocate the data object in the nursery */
+        ML_AllocWrite(msp, 0, desc);
+        data = ML_Alloc (msp, szw);
     }
+
+    /* initialize the data object and allocate the header object */
+    ((Word_t *)data)[szw-1] = 0;  /* so word-by-word string equality works */
+    memcpy (PTR_MLtoC(void, data), stp->code + stp->pc, len);
+    stp->pc += len;
+    ASSERT(((char *)data)[len] == '\0');
+    SEQHDR_ALLOC(msp, res, DESC_string, data, len);
+
     PushMLValue(stp, res);
 
 } /* PushString */
@@ -870,7 +881,7 @@ ml_val_t BuildLiterals (ml_state_t *msp, Byte_t *code, int len)
                 if (state.saved != NIL(ml_val_t *)) { FREE(state.saved); }
                 FREE(state.stk);
 #ifdef DEBUG_LITERALS
-                SayDebug("BuildLiterals: return %p\n", res);
+                SayDebug("# BuildLiterals: return %p\n", res);
 #endif
                 return res;
             }
