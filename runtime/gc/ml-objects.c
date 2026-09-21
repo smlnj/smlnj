@@ -21,17 +21,6 @@
 #define IFGC(ap, szb)   \
         if ((! isACTIVE(ap)) || (AVAIL_SPACE(ap) <= (szb)))
 
-#ifdef COLLECT_STATS
-/* FIXME: this is redundant, since we now always track allocation */
-#define COUNT_ALLOC(msp, nbytes)        {       \
-        heap_t          *__h = msp->ml_heap;    \
-        CNTR_INCR(&(__h->numAlloc), (nbytes));  \
-    }
-#else
-#define COUNT_ALLOC(msp, nbytes)        /* null */
-#endif
-
-
 /* ML_CString:
  *
  * Allocate an ML string using a C string as an initializer.  We assume
@@ -150,7 +139,6 @@ ml_val_t ML_AllocRaw (ml_state_t *msp, Word_t nwords)
         ap->nextw += nwords;
         ASSERT(ap->nextw < ap->tospTop);
         CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
-        COUNT_ALLOC(msp, szb);
     }
     else {
         ML_AllocWrite (msp, 0, desc);
@@ -213,7 +201,6 @@ ml_val_t ML_AllocRaw64 (ml_state_t *msp, Word_t nelems)
         res = PTR_CtoML(ap->nextw);
         ap->nextw += nwords;
         CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
-        COUNT_ALLOC(msp, szb);
     }
     else {
         ML_AllocWrite (msp, 0, desc);
@@ -249,7 +236,6 @@ ml_val_t ML_AllocCode (ml_state_t *msp, void *code, Word_t len)
     dp->next = gen->bigObjs[CODE_INDX];
     gen->bigObjs[CODE_INDX] = dp;
     dp->objc = CODE_INDX;
-    COUNT_ALLOC(msp, len);
 
     /* initialize the code object */
     memcpy(PTR_MLtoC(void, dp->obj), code, len);
@@ -330,7 +316,6 @@ ml_val_t ML_AllocArrayData (ml_state_t *msp, Word_t len, ml_val_t initVal)
         ap->nextw += len;
         ap->sweep_nextw = ap->nextw;
         CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
-        COUNT_ALLOC(msp, szb);
     }
     else {
         ML_AllocWrite (msp, 0, desc);
@@ -395,7 +380,6 @@ ml_val_t ML_AllocVector (ml_state_t *msp, Word_t len, ml_val_t initVal)
         ap->nextw += len;
         ap->sweep_nextw = ap->nextw;
         CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
-        COUNT_ALLOC(msp, szb);
     }
     else {
         ML_AllocWrite (msp, 0, desc);
