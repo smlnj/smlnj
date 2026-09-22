@@ -40,6 +40,7 @@
 #define DTAG_WID	5
 #define DTAG_MASK	(((1 << DTAG_WID)-1) << DTAG_SHIFTW)
 #define TAG_SHIFTW	(DTAG_SHIFTW+DTAG_WID)
+#define MIXED_SHIFTW    32
 
 #define DTAG_record	HEXLIT(0)	/* records (including pairs) */
 #define DTAG_vec_hdr	HEXLIT(1)	/* vector header; length is kind */
@@ -76,7 +77,15 @@
 /* Build a descriptor from a descriptor tag and a length */
 #ifndef _ASM_
 #define MAKE_TAG(t)	((Word_t)(((t) << DTAG_SHIFTW) | TAG_desc))
-#define MAKE_DESC(l,t)	((ml_val_t)(Word_t)(((l) << TAG_SHIFTW) | MAKE_TAG(t)))
+#define MAKE_DESC(l,t)	((ml_val_t)(((Word_t)(l) << TAG_SHIFTW) | MAKE_TAG(t)))
+/* make a mixed-record descriptor: p is "pointer" len, r is "raw" len */
+STATIC_INLINE ml_val_t MAKE_MIXED_DESC (int ptrLen, int rawLen)
+{
+    return (ml_val_t)(
+        ((Word_t)(ptrLen) << MIXED_SHIFTW) |
+        ((Word_t)(ptrLen + rawLen) << TAG_SHIFTW) |
+        MAKE_TAG(DTAG_mixed));
+}
 #else
 #define MAKE_TAG(t)	(((t)*4) + TAG_desc)
 #define MAKE_DESC(l,t)	(((l)*128) + MAKE_TAG(t))
@@ -124,9 +133,6 @@
 
 /* extract descriptor fields from mixed records */
 #define MIXED_GET_LEN(D)        ((Unsigned32_t)(Addr_t)(D) >> TAG_SHIFTW)
-#define MIXED_GET_PTRLEN(D)     ((Addr_t)(D) >> 32)
-
-/* make a mixed-record descriptor */
-#define MAKE_MIXED_DESC(PL,RL)  MAKE_DESC(((Addr_t)(PL) << 32)|(Addr_t)((PL)+(RL)),DTAG_mixed)
+#define MIXED_GET_PTRLEN(D)     ((Addr_t)(D) >> MIXED_SHIFTW)
 
 #endif /* !_TAGS_ */
