@@ -301,7 +301,6 @@ structure LiteralBytecode : sig
     fun addLargeInt8 (buf, n) = W8B.add1(buf, Word8.fromLargeInt n)
   (* encode an 8-bit unsigned value as a byte list *)
     val addUInt8 = addInt8
-    val addLargeUInt8 = addLargeInt8
   (* encode a 16-bit signed value as a byte list *)
     fun addInt16 (buf, n) = (
           W8B.add1(buf, Word8.fromInt(~>>(n, 0w8)));
@@ -313,9 +312,6 @@ structure LiteralBytecode : sig
     fun addUInt16 (buf, n) = (
           W8B.add1(buf, Word8.fromInt(>>(n, 0w8)));
           W8B.add1(buf, Word8.fromInt n))
-    fun addLargeUInt16 (buf, n) = (
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
-          W8B.add1(buf, Word8.fromLargeInt n))
   (* encode a 32-bit signed value as a byte list *)
     fun addInt32 (buf, n) = (
           W8B.add1(buf, Word8.fromInt(~>>(n, 0w24)));
@@ -333,11 +329,6 @@ structure LiteralBytecode : sig
           W8B.add1(buf, Word8.fromInt(>>(n, 0w16)));
           W8B.add1(buf, Word8.fromInt(>>(n, 0w8)));
           W8B.add1(buf, Word8.fromInt n))
-    fun addLargeUInt32 (buf, n) = (
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w24)));
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w16)));
-          W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w8)));
-          W8B.add1(buf, Word8.fromLargeInt n))
   (* encode a 64-bit signed value as a byte list *)
     fun addLargeInt64 (buf, n) = (
           W8B.add1(buf, Word8.fromLargeInt(IntInf.~>>(n, 0w56)));
