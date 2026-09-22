@@ -346,9 +346,10 @@ STATIC_INLINE void PushString (State_t *stp, int len)
             GC(stp, 1);
             ap->reqSizeB = 0;
         }
+        ASSERT(isACTIVE(ap) && (szb < AVAIL_SPACE(ap)));
         /* allocate the data object in the first generation */
         *(ap->nextw++) = desc;
-        ml_val_t data = PTR_CtoML(ap->nextw);
+        data = PTR_CtoML(ap->nextw);
         ap->nextw += szw;
         ASSERT(ap->nextw < ap->tospTop);
         CNTR_INCR(&msp->ml_heap->numAlloc1, szb);
