@@ -1,6 +1,6 @@
 (* flint.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -17,6 +17,7 @@ structure FLINT : FLINT =
       = VAR of LV.lvar
       | INT of int IntConst.t	(* "ty" = size = 0 for IntInf.int *)
       | WORD of int IntConst.t
+      | ENUM of int
       | REAL of int RealConst.t
       | STRING of string
 
@@ -46,7 +47,7 @@ structure FLINT : FLINT =
     withtype fundec = FR.fkind * LV.lvar * (LV.lvar * LT.lty) list * lexp
     and tfundec = FR.tfkind * LV.lvar * (LT.tvar * LT.tkind) list * lexp
     and dict = {default: LV.lvar, table: (LT.tyc list * LV.lvar) list}
-    and primop = dict option * Primop.primop * LT.lty * LT.tyc list
+    and primop = dict option * FPrimOps.t * LT.lty * LT.tyc list
 	    (* Invariant: primop's lty is always fully closed *)
 
     type prog = fundec  (* was "lvar * lty * lexp" *)

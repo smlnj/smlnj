@@ -1,6 +1,10 @@
 #!/bin/sh
 #
-# Wrapper for ml-ulex heap image
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
+#
+# Wrapper for ml-ulex heap image; this scrit is for debugging the tool
+# during devlopment
 #
 
 mlulexdir=$0
@@ -9,10 +13,10 @@ scripthome=${mlulexdir%ml-ulex}
 case `uname -s` in
   Darwin)
     case `uname -p` in
-      i386) heap=${scripthome}ml-ulex.x86-darwin ;;
-      powerpc) heap=${scripthome}ml-ulex.ppc-darwin ;;
+      i386) heap=${scripthome}ml-ulex.amd64-darwin ;;
+      arm) heap=${scripthome}ml-ulex.arm64-darwin ;;
     esac ;;
-  *) heap=${scripthome}ml-ulex.x86-linux ;;
+  *) heap=${scripthome}ml-ulex.amd64-linux ;;
 esac
 
 if test ! -r $heap ; then
@@ -20,5 +24,5 @@ if test ! -r $heap ; then
   exit 1
 fi
 
-exec sml @SMLload=$heap $@
+exec sml @SMLload=$heap "$@"
 

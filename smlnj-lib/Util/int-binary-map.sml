@@ -1,6 +1,6 @@
 (* int-binary-map.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.

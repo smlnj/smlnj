@@ -1,6 +1,6 @@
 (* html4-attr.l
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Lexer for parsing HTML 4 attributes.

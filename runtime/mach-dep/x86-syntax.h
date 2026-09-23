@@ -1,6 +1,6 @@
 /*! \file x86-syntax.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This file abstracts over the syntax of x86 (and x86-64) assembly

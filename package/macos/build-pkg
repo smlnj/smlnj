@@ -1,0 +1,388 @@
+#!/usr/bin/env python3
+#
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
+#
+# Script to build the installer package for macOS
+#
+# usage: build-pkg [ <options> ] <version>
+#
+# The optional arguments are:
+#
+#     -h, --help      show this help message and exit
+#     -v, --verbose   output information as the build proceeds
+#     --info <file>   specify the package info JSON file
+#     --no-clean      do not remove the intermediate files after packaging
+#     --build-only    build the distribution in 'smlnj', but do
+#                     not sign, package, or notarize it.
+#     -s, --sign      sign, package, and notarize the distribution in 'smlnj'.
+#     --no-notarize   do not notarize the distribution.
+#     -a <arch>
+#     --arch <arch>   specify the architecture of the distribution when the
+#                     '-sign' option is specified
+#
+
+import argparse
+import glob
+import json
+import os
+import platform
+import re
+import subprocess
+import shlex
+import shutil
+import sys
+
+dist_name="smlnj"
+
+# some paths
+#
+default_info_file = os.path.expanduser("~/Library/SMLNJ/package-info.json")
+root_dir = os.path.dirname(os.path.abspath(__file__))
+components_dir = os.path.join(root_dir, "components")
+dist_dir = os.path.join(root_dir, dist_name)
+bin_dir = os.path.join(dist_dir, "bin")
+doc_dir = os.path.join(dist_dir, "doc")
+llvm_dir=os.path.join(dist_dir, "runtime/llvm*")
+
+github_url = "https://github.com/smlnj/smlnj.git"
+
+##### UTILITIES
+
+# report an error and exit
+#
+def error(msg):
+  print(msg, file=sys.stderr)
+  sys.exit(1)
+
+# verbose messages flag
+#
+verbose=False
+
+# output a status message (if the verbose flag is true)
+#
+def vsay(msg):
+  if (verbose):
+    print("# " + msg, file=sys.stdout)
+
+# run a shell command
+#
+def run_command(prog, args, *, cwd=None, timeout=None):
+  cmd = shlex.split(prog) + args
+  if (verbose):
+    vsay(" ".join(cmd))
+    process = subprocess.run(
+      cmd,
+      text=True,
+      stdout=None,
+      stderr=None,
+      check=True,
+      cwd=cwd, timeout=timeout)
+  else:
+    process = subprocess.run(
+      cmd,
+      text=True,
+      stdout=subprocess.DEVNULL,
+      stderr=subprocess.DEVNULL,
+      check=True,
+      cwd=cwd, timeout=timeout)
+
+# expand a "@foo@" string as specified by the dictionary `substs` (i.e., by `substs[foo]`)
+#
+def expand_match(substs, m):
+  if (m.group(1) in substs):
+    return substs[m.group(1)]
+  else:
+    return m.group(1)
+
+# copy the file at `src` to `dst` while substituting strings of the form "@foo@"
+# as specified by the dictionary `substs` (i.e., by `substs[foo]`)
+#
+def expand_file(*, src, dst, substs):
+  with open(src, 'rt', encoding="utf-8") as inS:
+    with open(dst, "wt", encoding="utf-8") as outS:
+      for ln in inS:
+        outS.write(re.sub(r"@([A-Za-z0-9_-]+)@", lambda m : expand_match(substs,m), ln))
+
+# remove files/directories; this function supports glob patterns
+#
+def remove_files(dir, files):
+  if (not isinstance(files, list)):
+    files = [files]
+  for stem in files:
+    file = os.path.join(dir, stem)
+    for f in glob.glob(file):
+      if (os.path.exists(f)):
+        vsay(f"remove {f}")
+        if (os.path.isdir(f)):
+          shutil.rmtree(f)
+        else:
+          os.remove(f)
+
+##### BUILD DISTRIBUTION
+
+def build_distribution(info):
+  if (os.path.exists(dist_dir)):
+    error (f"please remove {dist_dir} first")
+  # fetch the distribution from GitHub
+  git_args = [
+    "--depth", "1",
+    "--recurse-submodules",
+    "--branch", f"v{info['version']}",
+    github_url,
+    dist_name]
+  run_command("git clone", git_args, cwd=root_dir)
+  # remove unused files
+  remove_files(dist_dir, [".git", ".gitignore", ".gitmodules", ".github", "package"])
+  remove_files(llvm_dir, [".git", ".gitignore", ".github"])
+  # build the distribution
+  build_args = ["-doc", "-verbose"] if verbose else ["-doc"]
+  run_command(os.path.join(dist_dir, "build.sh"), build_args, cwd=dist_dir)
+  # replace the document source tree with the generated documentation
+  tmp_doc_dir = os.path.join(dist_dir, "tmp_doc")
+  shutil.move(os.path.join(doc_dir, "doc"), tmp_doc_dir)
+  remove_files(dist_dir, "doc")
+  shutil.move(tmp_doc_dir, doc_dir)
+  # cleanup
+  remove_files(dist_dir, ["*.tgz"])
+  remove_files(llvm_dir, ["build"])
+
+##### SIGNING
+
+# helper function for loading the package info dictionary from a JSON file
+#
+def get_package_info(path):
+  try:
+    with open(path, "r", encoding="utf-8") as in_strm:
+      info = json.load(in_strm)
+  except json.JSONDecodeError as exn:
+    error([f'error loading {path}', '  ' + exn.msg])
+  # validate the contents
+  for key in ["application_id", "installer_id", "keychain_profile"]:
+    if (key not in info):
+      error(f"JSON file {path} is missing {key}")
+  return (info)
+
+# the executables; we split these into SML executables, which require extra
+# entitlements, and the regular executables
+#
+sml_execs = [
+    ".run/run.amd64-darwin",
+    ".run/run.arm64-darwin"
+  ]
+tool_execs = ["cfgc", "heap2obj", "llc", "llvm-config"]
+
+# codesign the given executable
+#
+def codesign_exec(executable, entitlements, info):
+  exec_path = os.path.join(bin_dir, executable)
+  if (not os.path.exists(exec_path)):
+    return
+  args = [
+      "-f",
+      "--options", "runtime",
+      "--entitlements", entitlements,
+      "--sign", info["application_id"],
+      "--timestamp"
+    ]
+  if (verbose):
+    args.append("-v")
+  args.append(exec_path)
+  run_command(
+    "codesign",
+    args,
+    cwd=f"{dist_dir}/bin")
+
+# codesign pass
+#
+def codesign(info):
+  for e in tool_execs:
+    codesign_exec(e, f"{components_dir}/tool-entitlements.plist", info)
+  for e in sml_execs:
+    codesign_exec(e, f"{components_dir}/sml-entitlements.plist", info)
+
+# build and sign the distribution package
+#
+def package(info):
+  # configure the distribution file
+  expand_file(
+    src = os.path.join(components_dir, "distribution_xml.in"),
+    dst = os.path.join(root_dir, "distribution.xml"),
+    substs = {
+      "VERSION" : info["version"],
+      "PRODUCT_ARCH" : info["product_arch"],
+      "ARCH" : info["arch"]})
+  # create the "Resources" directory
+  rsrc_dir=f"{root_dir}/Resources"
+  if (os.path.exists(rsrc_dir)):
+    vsay(f"removing old {rsrc_dir} directory")
+    shutil.rmtree(rsrc_dir)
+  os.mkdir(rsrc_dir)
+  # copy files to the resources
+  for f in ["background.jpg", "license.html", "conclusion.html"]:
+    shutil.copyfile(os.path.join(components_dir, f), os.path.join(rsrc_dir, f))
+  # add the welcome message to the resources
+  expand_file(
+    src = os.path.join(components_dir, "welcome_html.in"),
+    dst = os.path.join(rsrc_dir, "welcome.html"),
+    substs = {"VERSION" : info["version"], "ARCH" : info["arch"]})
+    # copy the readme, while adjusting the fontsize for the installer panel
+    # NOTE: this command relies on the fact that there is only one absolute
+    # font-size command in the README file (the others are relative)
+    #
+  readme = os.path.join(doc_dir, f"html/readme/{info['version_stem']}-README.html")
+  if (not os.path.exists(readme)):
+    error (f"cannot find {readme}")
+  with open(readme, 'rt', encoding="utf-8") as inS:
+    with open(os.path.join(rsrc_dir, "readme.html"), "wt", encoding="utf-8") as outS:
+      for ln in inS:
+        outS.write(re.sub(r"font-size: [0-9]+pt;", "font-size: 9pt;", ln))
+  # create the smlnj.pkg file
+  run_command("pkgbuild",
+    [ "--identifier", info["package_id"],
+      "--version", info["version"],
+      "--scripts", os.path.join(components_dir, "scripts"),
+      "--install-location", "/usr/local/smlnj",
+      "--root", dist_dir,
+      "smlnj.pkg"],
+    cwd=root_dir)
+  # sign the smlnj.pkg file
+  run_command("productbuild",
+    [ "--distribution", os.path.join(root_dir, "distribution.xml"),
+      "--package-path", components_dir,
+      "--resources", rsrc_dir,
+      "--sign", info["installer_id"],
+      os.path.join(root_dir, info["package_file"])],
+    cwd=root_dir)
+
+# notarize the package and staple the notarization ticket
+def notarize(info):
+  # notarize the package
+  notary_args = [
+      "--wait",
+      "--keychain-profile", info["keychain_profile"],
+      info["package_file"]
+    ]
+  run_command("xcrun notarytool submit", notary_args, cwd=root_dir)
+  # staple the result
+  staple_args = ["-v", info["package_file"]] if verbose else [info["package_file"]]
+  run_command("stapler staple", staple_args, cwd=root_dir)
+
+# sign the executables, build the installer package and sign it,
+# notarize the package, and then staple the notarization ticket to
+# the package
+def sign_distribution(info):
+  # sign the executables
+  codesign(info)
+  # build and sign the distribution package
+  package(info)
+  # conditionally notarize the package
+  if (info["notarize"]):
+    notarize(info)
+  else:
+    vsay("skip notarization")
+
+##### CLEANUP
+
+def cleanup():
+  vsay ("removing intermediate files")
+  remove_files(root_dir, [dist_name, "Resources", "smlnj.pkg", "distribution.xml"])
+
+##### MAIN
+
+# create the command-line argument parser
+#
+def create_arg_parser():
+  parser = argparse.ArgumentParser(
+    prog="build-pkg",
+    description="Script for packaging the SML/NJ distribution for macOS")
+  parser.add_argument(
+    '-v', '--verbose', action='store_true',
+    help='output information as the build proceeds')
+  parser.add_argument(
+    "--info",
+    action="store",
+    default=default_info_file,
+    help=f"specify the package info JSON file (default: {default_info_file})")
+  parser.add_argument(
+    '--no-clean', action='store_true',
+    help='do not remove the intermediate files after packaging')
+  group = parser.add_mutually_exclusive_group()
+  group.add_argument(
+    '--build-only', action='store_true',
+    help=f"build the distribution in '{dist_dir}', but do not sign, package, or notarize it.")
+  group.add_argument(
+    '-s', '--sign',
+    action='store_true',
+    help=f"sign, package, and notarize the distribution in '{dist_dir}'.")
+  parser.add_argument(
+    '--no-notarize',
+    action='store_true',
+    help=f"do not notarize the distribution.")
+  parser.add_argument(
+    '-a', '--arch',
+    action='store', default=None,
+    help="specify the architecture of the distribution when the '-sign' option is specified")
+  parser.add_argument(
+    'version', action='store',
+    help="the version of SML/NJ to package")
+  return (parser)
+
+# this program is only useful on macOS
+#
+if (platform.system() != 'Darwin'):
+  error("not a macOS system")
+
+# set up the command-line option parsing
+#
+args = create_arg_parser().parse_args()
+
+verbose = args.verbose
+
+# define the info dictionary
+#
+# process the version string
+version_pieces=args.version.split("-")
+if (len(version_pieces) == 1):
+  info = {"version_stem" : version_pieces[0], "version_suffix" : ""}
+elif (len(version_pieces) == 2):
+  info = {"version_stem" : version_pieces[0], "version_suffix" : version_pieces[1]}
+else:
+  error(f"bogus version '{args.version}'")
+info["version"] = args.version
+# normalize the architecture name
+if (not args.sign or not args.arch):
+  info["arch"] = platform.machine()
+if (info["arch"] == "x86_64" or info["arch"] == "amd64"):
+  info["arch"] = "amd64"
+  info["product_arch"] = "x86_64"
+elif (info["arch"] == "arm64" or info["arch"] == "aarch64"):
+  info["arch"] = "arm64"
+  info["product_arch"] = "arm64"
+else:
+  error(f"unrecognized architecture \"{info['arch']}\"")
+info["package_id"] = f"org.smlnj.{info['arch']}.pkg"
+info["package_file"] = f"smlnj-{info['arch']}-{info['version']}.pkg"
+
+if (args.no_notarize):
+  info["notarize"] = False
+else:
+  info["notarize"] = True
+
+if (not args.sign):
+  # build the distribution
+  build_distribution(info)
+
+if (not args.build_only):
+  # verify the existence of the dist_dir
+  if (not os.path.isdir(dist_dir)):
+    error(f"the distribution directory {distdir} is missing")
+  # extend the `info` dictionary with the package info
+  pkg_info = get_package_info(args.info)
+  info.update(pkg_info)
+  # sign, package, and notarize the distribution
+  sign_distribution(info)
+
+if (not (args.no_clean or args.build_only or args.sign)):
+  # remove intermediate files
+  cleanup()

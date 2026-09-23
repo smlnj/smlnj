@@ -53,6 +53,7 @@ structure PPCps : PPCPS =
       | value2str (NUM{ival, ty={sz, ...}}) = concat[
 	    "(I", Int.toString sz, ")", IntInf.toString ival
 	  ]
+      | value2str (ENUM i) = "(E)" ^ Int.toString i
       | value2str (REAL{rval, ty}) = concat[
 	    "(R", Int.toString ty, ")", RealLit.toString rval
 	  ]
@@ -63,11 +64,11 @@ structure PPCps : PPCPS =
       | numkindToString (P.UINT bits) = "u" ^ Int.toString bits
       | numkindToString (P.FLOAT bits) = "f" ^ Int.toString bits
 
-    val arithopToString = ArithOps.arithopToString
+    val arithopToString = ArithOps.toString
 
-    val pureopToString = ArithOps.pureopToString
+    val pureopToString = PureOps.toString
 
-    val cmpopToString = ArithOps.cmpopToString
+    val cmpopToString = CompareOps.toString
 
     fun fcmpopToString P.F_EQ   = "="
       | fcmpopToString P.F_ULG = "?<>"
@@ -87,6 +88,7 @@ structure PPCps : PPCPS =
     fun branchToString (P.CMP{oper, kind}) = numkindToString kind ^ cmpopToString oper
       | branchToString (P.FCMP{oper, size}) = numkindToString (P.FLOAT size) ^ fcmpopToString oper
       | branchToString (P.FSGN sz) = numkindToString (P.FLOAT sz) ^ "sgn"
+      | branchToString (P.IS_POW2 sz) = "ispowerof2u" ^ Int.toString sz
       | branchToString P.BOXED = "boxed"
       | branchToString P.UNBOXED = "unboxed"
       | branchToString P.PEQL = "peql"
@@ -161,7 +163,8 @@ structure PPCps : PPCPS =
 	    | RK_CONT => "RK_CONT"
 	    | RK_FCONT => "RK_FCONT"
 	    | RK_KNOWN => "RK_KNOWN"
-	    | RK_RAW64BLOCK => "RK_RAW64BLOCK"
+            | RK_MIXED{ptrLen,rawLen} =>
+                concat["RK_MIXED<", Int.toString ptrLen, ":", Int.toString rawLen, ">"]
 	    | RK_RAWBLOCK => "RK_RAWBLOCK"
 	  (* end case *))
 

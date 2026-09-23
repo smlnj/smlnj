@@ -1,6 +1,6 @@
 (* word.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Default word structure (63 bits) for 64-bit targets.
@@ -75,8 +75,20 @@ structure WordImp : WORD =
 	  end
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = Word.rotateL
+    val rotateR = Word.rotateR
 
-    fun popCount w = W64PopCount.popCount (Word.toLarge w)
+    val countZeros = Word.cntZeros
+    val countOnes = Word.cntOnes
+
+    val countLeadingZeros = Word.cntLeadingZeros
+    val countLeadingOnes = Word.cntLeadingOnes
+
+    val countTrailingZeros = Word.cntTrailingZeros
+    val countTrailingOnes = Word.cntTrailingOnes
+
+    val isPowerOf2 = Word.isPowOf2
+    val ceilLog2 = Word.ceilLog2
 
   end  (* structure WordImp *)

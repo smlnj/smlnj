@@ -26,8 +26,8 @@ structure Num64Cnv : sig
 
     fun isNum64Ty (C.NUMt{sz = 64, ...}) = true
       | isNum64Ty _ = false
-    val pairTy = C.PTRt C.VPT
-    val box32Ty = C.PTRt C.VPT
+    val pairTy = C.ptrTy
+    val box32Ty = C.ptrTy
     val raw32ITy = {sz = 32, tag = false}
     val raw32Ty = C.NUMt raw32ITy		(* assuming a 32-bit machine *)
     val tagNumTy = C.NUMt{sz = 31, tag = true}

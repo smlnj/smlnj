@@ -1,6 +1,6 @@
 /*! \file blast-gc.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the garbage collector for compacting a blasted object.
@@ -256,6 +256,20 @@ SayDebug ("Repairing blast GC (maxGen = %d of %d)\n", maxGen, heap->numGens);
 	REPAIR(PAIR_INDX);
 	REPAIR(STRING_INDX);
 	REPAIR(ARRAY_INDX);
+
+        /* repair the mixed-record arena */
+        {
+            arena_t *ap = gen->arena[MIXED_INDX];
+            if (isACTIVE(ap)) {
+                repair_t *stop, *rp;
+                stop = (repair_t *)(ap->tospTop);
+                for (rp = ap->repairList;  rp < stop;  rp++) {
+                    ml_val_t *p = rp->loc;
+                    p[-1] = FOLLOW_FWDOBJ(p)[-1];
+                    p[0] = rp->val;
+                }
+            }
+        }
 
       /* free the to-space object, and reset the BIBOP marks */
 	for (j = 0;  j < NUM_ARENAS;  j++) {
@@ -628,15 +642,12 @@ PVT ml_val_t BlastGC_ForwardObj (heap_t *heap, ml_val_t v, aid_t id)
       case OBJC_record: {
 	desc = obj[-1];
 	switch (GET_TAG(desc)) {
-	  case DTAG_vec_hdr:
-	  case DTAG_arr_hdr:
-	    len = 2;
-	    break;
 	  case DTAG_forward:
 	  /* This object has already been forwarded */
 	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
 	  default:
 	    len = GET_LEN(desc);
+            break;
 	}
 	arena = heap->gen[gen-1]->arena[RECORD_INDX];
       } break;
@@ -661,28 +672,31 @@ PVT ml_val_t BlastGC_ForwardObj (heap_t *heap, ml_val_t v, aid_t id)
 	}
       } break;
 
+      case OBJC_mixed: {
+	arena = heap->gen[gen-1]->arena[MIXED_INDX];
+	desc = obj[-1];
+	switch (GET_TAG(desc)) {
+	  case DTAG_vec_hdr:
+	  case DTAG_arr_hdr:
+	    len = 2;
+	    break;
+	  case DTAG_forward:
+	  /* This object has already been forwarded */
+	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
+	  default:
+	    len = MIXED_GET_LEN(desc);
+            break;
+	}
+      } break;
+
       case OBJC_string: {
 	arena = heap->gen[gen-1]->arena[STRING_INDX];
 	desc = obj[-1];
 	switch (GET_TAG(desc)) {
 	  case DTAG_forward:
 	    return PTR_CtoML(FOLLOW_FWDOBJ(obj));
-/* 64BIT: on 64-bit machines, DTAG_raw and DTAG_raw64 can be handled in the same way */
 	  case DTAG_raw:
 	    len = GET_LEN(desc);
-	    break;
-	  case DTAG_raw64:
-	    len = GET_LEN(desc);
-#ifdef ALIGN_REALDS
-#  ifdef CHECK_HEAP
-	    if (((Addr_t)arena->nextw & WORD_SZB) == 0) {
-		*(arena->nextw) = (ml_val_t)0;
-		arena->nextw++;
-	    }
-#  else
-	    arena->nextw = (ml_val_t *)(((Addr_t)arena->nextw) | WORD_SZB);
-#  endif
-#endif
 	    break;
 	  default:
 	    Die ("bad string tag %d, obj = %#x, desc = %#x",
@@ -817,9 +831,6 @@ PVT void BlastGC_AssignLits (Addr_t addr, void *_closure, void *_info)
 	} break;
       case EMB_REALD:
 	objSzB = OBJ_LEN(PTR_CtoML(addr)) * REALD_SZB;
-#ifdef ALIGN_REALDS
-	closure->offset |= WORD_SZB;
-#endif
 	break;
       default:
 	Die("BlastGC_AssignLits: unexpected kind %d\n", info->kind);
@@ -872,15 +883,6 @@ PVT void BlastGC_ExtractLits (Addr_t addr, void *_closure, void *_info)
 	} break;
       case EMB_REALD:
 	objSzB = OBJ_LEN(PTR_CtoML(addr)) * REALD_SZB;
-#ifdef ALIGN_REALDS
-	if ((closure->offset & (REALD_SZB-1)) == 0) {
-	    /* the descriptor would be 8-byte aligned, which means that the
-	     * real number would not be, so add some padding.
-	     */
-	    WR_Put(closure->wr, 0);
-	    closure->offset += 4;
-	}
-#endif
 	break;
       default:
 	Die("BlastGC_ExtractLits: unexpected kind %d\n", info->kind);

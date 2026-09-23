@@ -1,6 +1,6 @@
 (* win32-process.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Simulate some of the Posix.Process structure on Win32 machines

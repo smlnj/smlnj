@@ -1,6 +1,6 @@
 (* word64.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Implementation of Word64 for 64-bit targets.
@@ -73,8 +73,20 @@ structure Word64Imp : sig
     val scan = NumScan64.scanWord
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = W64.rotateL
+    val rotateR = W64.rotateR
 
-    val popCount = W64PopCount.popCount
+    val countZeros = W64.cntZeros
+    val countOnes = W64.cntOnes
+
+    val countLeadingZeros = W64.cntLeadingZeros
+    val countLeadingOnes = W64.cntLeadingOnes
+
+    val countTrailingZeros = W64.cntTrailingZeros
+    val countTrailingOnes = W64.cntTrailingOnes
+
+    val isPowerOf2 = W64.isPowOf2
+    val ceilLog2 = W64.ceilLog2
 
   end

@@ -1,6 +1,6 @@
 (* typeoper.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -37,7 +37,7 @@ local
   structure LB = LtyBasic
   structure LE = LtyExtern
   structure LV = LambdaVar
-  structure PO = Primop
+  structure PO = FPrimOps
   structure PT = PrimTyc
   structure BT = BasicTypes
   structure TP = Types
@@ -146,7 +146,7 @@ fun UNWRAPg (z, b, e) =
 fun WRAPcast (z, b, e) =
   let val (v, h) = split e
       val pt = LD.ltc_arrow(LD.ffc_fixed, [LD.ltc_tyc z], [LB.ltc_void])
-      val pv = (NONE,PO.CAST,pt,[])
+      val pv = (NONE, PO.PRIM CommonOps.CAST, pt, [])
       val x = mkv()
    in h(PRIMOP(pv, [v], x, RET[VAR x]))
   end
@@ -154,7 +154,7 @@ fun WRAPcast (z, b, e) =
 fun UNWRAPcast (z, b, e) =
   let val (v, h) = split e
       val pt = LD.ltc_arrow(LD.ffc_fixed, [LB.ltc_void], [LD.ltc_tyc z])
-      val pv = (NONE,PO.CAST,pt,[])
+      val pv = (NONE, PO.PRIM CommonOps.CAST, pt, [])
       val x = mkv()
    in h(PRIMOP(pv, [v], x, RET[VAR x]))
   end
@@ -216,12 +216,44 @@ val isFloat  = RT.isFloat
 val isPair = RT.isPair
 
 fun tagInt i = INT{ival = IntInf.fromInt i, ty = Target.defaultIntSz}
+fun enum i = ENUM i
 
 (****************************************************************************
  *                      TYPED INTERPRETATION OF UNTAGGED                    *
  ****************************************************************************)
 
-(** tc is of kind Omega; this function tests whether tc can be a tagged int ? *)
+(** tc is of kind Omega; this function tests whether tc can be a tagged int ?
+ *    YES: some inhabitants of the type `tc` may be represented as a tagged
+ *      integer. Therefore, when this type is given an UNTAGGED representation
+ *      in a datatype: e.g. datatype t = A | B of tc, where A is represented by
+ *      a constant, and (B x), by box(x). Pattern matching on (a: t) is compiled
+ *      as (see utgd below):
+ *        if boxed(a) then
+ *          a' = unwrap[tuple[tc]](a)
+ *          x  = select a' 0
+ *        else
+ *          ...
+ *    NO: all inhabitants of type `tc` are represented by pointers, so (B x) as
+ *      defined above is represented by identity(x). Pattern matching on (a: T)
+ *      is compiled as follows:
+ *        if boxed(a) then
+ *          x = unwrap[tc](a)
+ *        else
+ *          ...
+ *    MAYBE(runtime_type_code): this cannot be decided statically, so the cases
+ *      are selected based on a runtime type code.
+ *        if boxed(a) then
+ *          x =
+ *            if runtime_type_code = tcode_void then
+ *              .. YES branch ..
+ *            else
+ *              .. NO branch ..
+ *        else
+ *          ..
+ * This function must adhere to the logic of ConRep.infer
+ * (compiler/ElabData/types/conrep.sml).
+ *                                                                         -BZ
+ * *)
 fun tcTag (kenv, tc) =
   let fun loop x =     (* a lot of approximations in this function *)
 	(case (LK.tc_whnm_out x)
@@ -235,7 +267,7 @@ fun tcTag (kenv, tc) =
 	   | (LT.TC_FIX _) => YES
 	   | (LT.TC_APP(tx, _)) =>
 		(case LK.tc_whnm_out tx
-		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _) =>
+		  of (LT.TC_APP _ | LT.TC_PROJ _ | LT.TC_VAR _ | LT.TC_NVAR _) =>
 		       MAYBE (tcLexp kenv x)
 		   | _ => YES)
 	   | _ => (MAYBE (tcLexp kenv x)))
@@ -276,15 +308,15 @@ fun utgd (tc, kenv, rt) =
 
 (* val tgdc : int * tyc * kenv * tyc -> value -> lexp *)
 fun tgdc (i, tc, kenv, rt) =
-  let val nt = LD.tcc_tuple [LB.tcc_int, rt]
+  let val nt = LD.tcc_tuple [LB.tcc_enum, rt]
    in fn u => let val x = mkv()
-               in RECORD(FU_rk_tuple, [tagInt i, u], x, WRAP(nt, VAR x))
+               in RECORD(FU_rk_tuple, [enum i, u], x, WRAP(nt, VAR x))
               end
   end
 
 (* val tgdd : int * tyc * kenv * tyc -> value -> lexp *)
 fun tgdd (i, tc, kenv, rt) =
-  let val nt = LD.tcc_tuple [LB.tcc_int, rt]
+  let val nt = LD.tcc_tuple [LB.tcc_enum, rt]
    in fn u => let val x = mkv() and v = mkv()
                in FU_UNWRAP(nt, [u], x, SELECT(VAR x, 1, v, RET[VAR v]))
               end
@@ -458,4 +490,3 @@ fun mkuwp (tc, kenv, b, nt) =
 
 end (* toplevel local *)
 end (* structure TypeOper *)
-

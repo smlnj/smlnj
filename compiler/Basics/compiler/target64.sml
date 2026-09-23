@@ -1,6 +1,6 @@
 (* target64.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Definition of TARGET for 64-bit targets

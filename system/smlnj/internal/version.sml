@@ -32,15 +32,15 @@ structure SMLNJVersion : sig
     val size = Int.toString(SMLofNJ.SysInfo.getArchSize())
 
     (* use buildDate (i.e., boot time) if no release date *)
-    val releaseDate = (case "March 11, 2026"
+    val releaseDate = (case "September 2, 2026"
            of "" => Date.toString (Date.fromTimeLocal (Time.now ()))
             | d => d
           (* end case *))
 
     val version = {
 	    system = "Standard ML of New Jersey",
-	    version_id = [2026, 1],
-	    suffix = "rc1",
+	    version_id = [2026, 3],
+	    suffix = "beta",
 	    releaseDate = releaseDate
           }
 

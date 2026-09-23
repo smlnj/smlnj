@@ -6,7 +6,7 @@
 :VERSION: {smlnj-version}
 
 The `JSONParser` structure implements a parser for the
-xref:str-JSON.adoc#type:value[`JSON.value`] type.
+xref:../Util/str-JSON.adoc#type:value[`JSON.value`] type.
 
 == Synopsis
 

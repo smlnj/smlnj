@@ -50,6 +50,7 @@ signature RANDOM
 signature RAND48
 signature SCAN
 signature SPLAY_TREE
+signature TRILEAN
 signature UREF
 signature UTF8
 
@@ -104,6 +105,7 @@ structure Rand48
 structure Scan
 structure SimpleURef
 structure TimeLimit
+structure Trilean
 structure URef
 structure WordHashTable
 structure WordRedBlackMap
@@ -246,6 +248,8 @@ splay-set-fn.sml
 splaytree-sig.sml
 splaytree.sml
 time-limit.sml
+trilean-sig.sml
+trilean.sml
 uref-sig.sml
 uref.sml
 word-hash-table.sml

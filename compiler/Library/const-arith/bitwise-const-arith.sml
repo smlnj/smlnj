@@ -2,7 +2,7 @@
  *
  * Operations for constant-folding bitwise operations on constant integers.
  *
- * COPYRIGHT (c) 2017 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2025 John Reppy (https://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,5 +45,25 @@ structure BitwiseConstArith : BITWISE_CONST_ARITH =
     fun bOr (wid, a, b) = narrow (wid, IntInf.orb(a, b))
     fun bXor (wid, a, b) = narrow (wid, IntInf.xorb(a, b))
     fun bNot (wid, a) = narrow (wid, IntInf.xorb(a, pow2 wid - 1))
+
+    fun bRotateL (wid, a, b) = let
+          val w = Word.fromInt wid
+          val a = if (a < 0) then narrow(wid, a) else a
+          in
+            case Word.fromLargeInt(b mod IntInf.fromInt wid)
+             of 0w0 => a
+              | n => narrow (wid, IntInf.orb(IntInf.<<(a, n), IntInf.~>>(a, w-n)))
+            (* end case *)
+          end
+
+    fun bRotateR (wid, a, b) = let
+          val w = Word.fromInt wid
+          val a = if (a < 0) then narrow(wid, a) else a
+          in
+            case Word.fromLargeInt(b mod IntInf.fromInt wid)
+             of 0w0 => a
+              | n => narrow (wid, IntInf.orb(IntInf.<<(a, w-n), IntInf.~>>(a, n)))
+            (* end case *)
+          end
 
   end

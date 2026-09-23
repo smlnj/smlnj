@@ -1,6 +1,6 @@
 (* fcontract.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Author: monnier@cs.yale.edu
@@ -232,7 +232,7 @@ struct
     structure PU = PrintUtil
     structure PF = PrintFlint
     structure OU = OptUtils
-    structure PO = Primop
+    structure PO = FPrimOps
     structure C  = Collect
 
     val debugging = FLINT_Control.fcdebugging
@@ -406,6 +406,7 @@ struct
 	  fun eqConValue (PL.INTcon i1,    F.INT i2)    = (#ival i1 = #ival i2)
 	    | eqConValue (PL.WORDcon i1,   F.WORD i2)   = (#ival i1 = #ival i2)
 	    | eqConValue (PL.STRINGcon s1, F.STRING s2) = (s1 = s2)
+	    | eqConValue (PL.DATAcon((_, A.CONSTANT i1, _), _, _), F.ENUM i2) = (i1 = i2)
 	    | eqConValue (con, v) = bugval("unexpected comparison with val", v)
 
           (* lookup : bindings * LV.lvar -> sval
@@ -1011,7 +1012,7 @@ struct
 		     in case subjectSval
 			  of Con (x as (_, _, (_, conrep, _), _)) =>
 			       (* check for EXN conrep, if so call fcsDefault subjectSval instead of fcsCon *)
- 			       (case conrep 
+ 			       (case conrep
 				  of A.EXN _ => fcsDefault subjectSval
 				   | _ => fcsCon x)
 			   | Val v => fcsVal v
@@ -1117,7 +1118,7 @@ struct
                 (* fcexp/fcPrimop : F.primop * F.value list * LV.lvar * F.lexp -> F.lexp -- PRIMOP args *)
 		fun fcPrimop (po,vs,lv,le) =
 		      let val lvinfo = C.getInfo lv
-			  val pure = not(PrimopUtil.effect(#2 po))
+			  val pure = not(PO.impurePO(#2 po))
 		       in if pure andalso C.dead lvinfo then (click_deadval(); loop (m, le, cont)) else
 			  let val nvs = map substval vs
 			      val npo = cpo po

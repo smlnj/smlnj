@@ -1,6 +1,6 @@
 (* os-prim-io.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is an interface to a PrimIO structure augmented with OS specific

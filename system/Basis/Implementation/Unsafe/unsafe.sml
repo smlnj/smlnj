@@ -133,6 +133,10 @@ structure Unsafe :> UNSAFE =
 
     val cast = InlineT.cast
 
+    (* "pointer" equality *)
+    val == : 'a * 'a -> bool = InlineT.ptrEq
+    val != : 'a * 'a -> bool = InlineT.ptrNeq
+
     (* actual representation of pStruct *)
     datatype runDynEnv
       = NILrde

@@ -1,6 +1,6 @@
 (* compiler-pp.sig
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A specialization and extension of the PrettyPrint structure for the

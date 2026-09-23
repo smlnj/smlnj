@@ -42,9 +42,6 @@ is
 
   binfile/binfile.sig
   binfile/binfile.sml
-(*
-  binfile/old-binfile.sml
-*)
 
   (* binfile I/O *)
   binfile/binfile-io.sig

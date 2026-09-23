@@ -1,6 +1,6 @@
 (* primop-bind.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Representation of primop bindings that define the Inline structure. These are
@@ -14,18 +14,15 @@ structure PrimopBind :> sig
 
     type primop_bind
 
-    val mk : string * Types.ty * Primop.primop -> primop_bind
+    val mk : string * Types.ty * PrimOps.t -> primop_bind
 
     val nameOf : primop_bind -> string
     val typeOf : primop_bind -> Types.ty
-    val defnOf : primop_bind -> Primop.primop
+    val defnOf : primop_bind -> PrimOps.t
 
   end = struct
 
-    structure T = Types
-    structure P = Primop
-
-    type primop_bind = string * T.ty * P.primop
+    type primop_bind = string * Types.ty * PrimOps.t
 
     fun mk arg = arg
 

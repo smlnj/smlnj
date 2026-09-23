@@ -1,6 +1,6 @@
 (* w32-popcount.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This structure implements population count (Basis Proposal 2016-001) for 32-bit

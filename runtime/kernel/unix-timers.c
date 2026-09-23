@@ -43,7 +43,7 @@ typedef struct tms time_struct_t;
  * calls to getrusage.  To avoid problems in the SML code, which assumes that
  * time is monotonically increasing, we latch the time values.
  *
- * NOTE: this should probably be move to the VProc structure to avoid problems
+ * NOTE: these should probably be moved to the VProc structure to avoid problems
  * on MP machines.
  */
 PVT Time_t		lastU, lastS;

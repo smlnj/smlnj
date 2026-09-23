@@ -1,6 +1,7 @@
-/* ml-heap-image.h
+/*! \file ml-heap-image.h
  *
- * COPYRIGHT (c) 1992 by AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *
  * The definitions and typedefs that describe the layout of an ML
  * heap image in a file.  This can be either an exported heap, or
@@ -35,10 +36,10 @@
 #define ORDER		0x00112233
 
 /* heap image version identifier (date in mmddyyyy form) */
-#define IMAGE_MAGIC	0x02102025
+#define IMAGE_MAGIC     0x08192026
 
 /* blasted heap image version identifier (date in 00mmddyy form) */
-#define BLAST_MAGIC	0x00070995
+#define BLAST_MAGIC     0x08192026
 
 /* the kind of heap image */
 #define EXPORT_HEAP_IMAGE	1

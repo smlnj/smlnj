@@ -94,9 +94,6 @@ Group
         (* signature TEXT_2015 *) (* superseded by TEXT_2018 *)
         signature VECTOR_2015
 
-      (* basis signatures with extensions from proposal 2016-001 added *)
-        signature WORD_2016
-
       (* basis signatures with extensions from proposal 2018-002 added *)
         signature ARRAY_SLICE_2018
         signature MONO_ARRAY_SLICE_2018
@@ -107,6 +104,9 @@ Group
       (* basis signatures with extensions from proposal 2022-001 added *)
         signature MATH_2022
         signature REAL_2022
+
+      (* basis signatures with extensions from proposal 2026-001 added *)
+        signature WORD_2026
 
       (* backward compatibility with the SML'90 version of the basis *)
         signature SML90
@@ -468,20 +468,7 @@ is
         Real/string-to-frep.sml (* NEW *)
 
 #if defined(SIZE_32)
-        Target32Bit/bind-structs.sml
-        Target32Bit/int.sml
-        Target32Bit/int64.sml
-        Target32Bit/intinf-to-real64.sml
-        Target32Bit/num-scan.sml
-        Target32Bit/num-format.sml
-        Target32Bit/num-scan32.sml
-        Target32Bit/num-format32.sml
-        Target32Bit/pack-word-b64.sml
-        Target32Bit/pack-word-l64.sml
-        Target32Bit/pointer.sml
-        Target32Bit/real64-to-intinf.sml
-        Target32Bit/word.sml
-        Target32Bit/word64.sml
+	/* no longer supported */
 #else
         Target64Bit/bind-structs.sml
         Target64Bit/int.sml
@@ -497,7 +484,6 @@ is
         Target64Bit/real64-to-intinf.sml
         Target64Bit/word.sml
         Target64Bit/word64.sml
-        Target64Bit/w64-popcount.sml
 #endif
 
         bind-structs.sml

@@ -1,6 +1,6 @@
 (* html4-printer.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

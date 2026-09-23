@@ -2,7 +2,7 @@
  *
  * Operations for constant-folding bitwise operations on constant integers.
  *
- * COPYRIGHT (c) 2017 John Reppy (http://cs.uchicago.edu/~jhr)
+ * COPYRIGHT (c) 2025 John Reppy (https://cs.uchicago.edu/~jhr)
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,5 +41,8 @@ signature BITWISE_CONST_ARITH =
     val bOr  : width * t * t -> t
     val bXor : width * t * t -> t
     val bNot : width * t -> t
+
+    val bRotateL : width * t * t -> t
+    val bRotateR : width * t * t -> t
 
   end

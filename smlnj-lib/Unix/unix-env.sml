@@ -67,7 +67,7 @@ structure UnixEnv : UNIX_ENV =
 	    | look (s::r) = let
 		val (n, v) = splitBinding s
 		in
-		  if (n = name) then r else (s :: look r)
+		  if (n = name) then nameValue :: r else (s :: look r)
 		end
 	  in
 	    look env

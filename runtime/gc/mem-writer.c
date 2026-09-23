@@ -1,6 +1,6 @@
 /*! \file mem-writer.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An implementation of the abstract writers on top of memory regions.

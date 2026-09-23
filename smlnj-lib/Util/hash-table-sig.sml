@@ -1,6 +1,6 @@
 (* hash-table-sig.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The signature of the polymorphic hash table structure.
@@ -72,6 +72,9 @@ signature HASH_TABLE =
     val listItems  : ('a, 'b) hash_table -> 'b list
     val listItemsi : ('a, 'b) hash_table -> ('a * 'b) list
 	(* Return a list of the items (and their keys) in the table *)
+
+    val listKeys : ('a, 'b) hash_table -> 'a list
+        (* Return a list of the keys in the table *)
 
     val app  : ('b -> unit) -> ('a, 'b) hash_table -> unit
     val appi : (('a * 'b) -> unit) -> ('a, 'b) hash_table -> unit

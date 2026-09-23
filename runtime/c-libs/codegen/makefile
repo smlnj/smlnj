@@ -1,20 +1,27 @@
 #
 # the makefile for the LLVM code generator library
 #
-# COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 
 SHELL =		/bin/sh
 
-RUNTIME_ROOT =	../..
+#
+# these variables are set by the build.sh script, but we define them
+# here for when the makefile is used directly
+#
+SMLNJ_ROOT ?=	../../..
+LIBDIR ?=	$(SMLNJ_ROOT)/lib
+INSTALLDIR ?=   $(SMLNJ_ROOT)
+
+RUNTIME_ROOT =	$(SMLNJ_ROOT)/runtime
 CLIB_DIR =	$(RUNTIME_ROOT)/c-libs
 INC_DIR =	$(RUNTIME_ROOT)/include
 OBJS_DIR =	$(RUNTIME_ROOT)/objs
-CFGCG_DIR =	$(RUNTIME_ROOT)/llvm/smlnj
 
 INCLUDES =	-I$(INC_DIR) -I$(CLIB_DIR) -I$(OBJS_DIR)
-CXX_INCLUDES =	-I$(CFGCG_DIR)/include
+CXX_INCLUDES =	$(INCLUDES) -I$(INSTALLDIR)/include
 
 MAKE =		make
 AR =		ar
@@ -24,7 +31,7 @@ RANLIB =	ranlib
 #
 # LLVM configuration
 #
-LLVM_CONFIG =	$(RUNTIME_ROOT)/bin/llvm-config
+LLVM_CONFIG =	$(SMLNJ_ROOT)/bin/llvm-config
 
 TARGETS_BUILT =	$(shell $(LLVM_CONFIG) --targets-built)
 ifeq ($(findstring AArch64,$(TARGETS_BUILT)),AArch64)
@@ -36,7 +43,7 @@ endif
 
 LLVM_CXX_FLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
 #LLVM_CPP_FLAGS = -Iinclude $(INCLUDES)
-LLVM_CPP_FLAGS = -DNDEBUG -Iinclude $(INCLUDES) $(ARCH_DEFS)
+LLVM_CPP_FLAGS = -DNDEBUG $(CXX_INCLUDES) $(ARCH_DEFS)
 
 LIBRARY =	libcodegen.a
 

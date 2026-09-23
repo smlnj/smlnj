@@ -1,6 +1,6 @@
 (* expand-file.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Copy a template file to an output file while expanding placeholders.
@@ -9,6 +9,7 @@
 
 structure ExpandFile :> sig
 
+    (* a hook writes the substitution text to the output stream *)
     type hook = TextIO.outstream -> unit
 
     type template
@@ -26,57 +27,38 @@ structure ExpandFile :> sig
 
     structure TIO = TextIO
     structure SS = Substring
-    structure RE = RegExpFn (
-      structure P = AwkSyntax
-      structure E = BackTrackEngine)
-    structure M = MatchTree
+    structure Tbl = HashTableFn (
+      struct
+        type hash_key = substring
+        val hashVal = HashString.hashSubstring
+        fun sameKey (ss1, ss2) = (SS.compare (ss1, ss2) = EQUAL)
+      end)
 
     type hook = TextIO.outstream -> unit
-    type template = string list
+    type template = string
 
     fun mkTemplateFromFile fname = let
           val file = TIO.openIn fname
 	  fun done () = TIO.closeIn file
-	  fun read () = (case TIO.inputLine file
-		 of NONE => []
-		  | SOME line => line::read()
-		(* end case *))
 	  in
-            read() handle ex => (done(); raise ex)
+            TIO.inputAll file handle ex => (done(); raise ex)
 	    before done()
 	  end
 
-    fun mkTemplateFromList l = l
-
-    val placeholderRE = RE.compileString "[\\t ]*@([a-zA-Z][-a-zA-Z0-9_]*)@[\\t ]*"
-    val prefixPlaceholder = RE.prefix placeholderRE SS.getc
-
-    fun findPlaceholder s = (case prefixPlaceholder(SS.full s)
-	   of SOME(M.Match(_, [M.Match({pos, len}, _)]), _) =>
-		SOME(SS.string(SS.slice(pos, 0, SOME len)))
-	    | _ => NONE
-	  (* end case *))
-
-  (* copy from inStrm to outStrm expanding placeholders *)
-    fun copy (inStrm, outStrm, hooks) = let
-	  fun lp [] = ()
-	    | lp (s::ss) = (
-	        case findPlaceholder s
-		 of NONE => TIO.output (outStrm, s)
-		  | (SOME id) => (
-		      case (List.find (fn (id', h) => id = id') hooks)
-		       of (SOME(_, h)) => h outStrm
-			| NONE => raise Fail(concat["bogus placeholder '", id, "'"])
-		      (* end case *))
-	        (* end case *);
-		lp(ss))
-	  in
-	    lp(inStrm)
-	  end
+    fun mkTemplateFromList l = String.concat l
 
     exception OpenOut
 
-    fun expandTemplate {src, dst, hooks} = (let
+    fun expandTemplate {src, dst, hooks} = let
+          (* build the substitution table and return the `find` function *)
+          val find = let
+                val tbl = Tbl.mkTable (List.length hooks, Fail "subst-tbl")
+                fun ins ("", _) = raise Fail "Illegal empty placeholder"
+                  | ins (s1, s2) = Tbl.insert tbl (SS.full s1, s2)
+                in
+                  List.app ins hooks;
+                  Tbl.find tbl
+                end
 	  val dstStrm = TIO.openOut dst
 		handle ex => (
 		  TIO.output(TIO.stdErr, concat[
@@ -84,11 +66,39 @@ structure ExpandFile :> sig
 		      dst, "\"\n"
 		    ]);
 		  raise OpenOut)
-	  fun done () = (TIO.closeOut dstStrm)
-	  in
-	    copy (src, dstStrm, hooks) handle ex => (done(); raise ex);
-	    done()
-	  end
-	    handle OpenOut => ())
+          (* scan the substring looking for the next placeholder. *)
+          fun scan ss = (case SS.getc ss
+                 of SOME(#"@", rest) => let
+                      val (hook, rest) = scanPlaceholder rest
+                      in
+                        hook dstStrm;
+                        scan rest
+                      end
+                  | SOME(c, rest) => (
+                      TextIO.output1(dstStrm, c);
+                      scan rest)
+                  | NONE => TextIO.closeOut dstStrm
+                (* end case *))
+          and scanPlaceholder start = let
+                fun scan (ss, n) = (case SS.getc ss
+                       of NONE => raise Fail "incomplete placeholder"
+                        | SOME(#"@", rest) => (SS.slice(start, 0, SOME n), rest)
+                        | SOME(_, rest) => scan (rest, n+1)
+                      (* end case *))
+                val (placeholder, rest) = scan (start, 0)
+                in
+                  if SS.isEmpty placeholder
+                    then (fn outS => TextIO.output1(outS, #"@"), rest)
+                    else (case find placeholder
+                       of SOME hook => (hook, rest)
+                        | NONE => raise Fail(concat[
+                              "unknown placeholder @", SS.string placeholder, "@"
+                            ])
+                      (* end case *))
+                end
+          in
+            scan (SS.full src)
+          end
+	    handle OpenOut => ()
 
   end

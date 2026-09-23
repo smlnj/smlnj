@@ -1,6 +1,6 @@
 (* word32.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -63,8 +63,20 @@ structure Word32Imp : WORD =
     val scan = NumScan32.scanWord
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL = W32.rotateL
+    val rotateR = W32.rotateR
 
-    val popCount = W32PopCount.popCount
+    val countZeros = W32.cntZeros
+    val countOnes = W32.cntOnes
+
+    val countLeadingZeros = W32.cntLeadingZeros
+    val countLeadingOnes = W32.cntLeadingOnes
+
+    val countTrailingZeros = W32.cntTrailingZeros
+    val countTrailingOnes = W32.cntTrailingOnes
+
+    val isPowerOf2 = W32.isPowOf2
+    val ceilLog2 = W32.ceilLog2
 
   end  (* structure Word32 *)

@@ -1,6 +1,6 @@
 /* cache-flush.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * System dependent includes and macros for flushing the cache.

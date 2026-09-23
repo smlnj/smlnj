@@ -1,6 +1,6 @@
 (* collect.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Author: monnier@cs.yale.edu
@@ -99,7 +99,7 @@ local
   structure LV = LambdaVar
   structure PU = PrintUtil
   structure PF = PrintFlint
-  structure PO = Primop
+  structure PO = FPrimOps
 
   val debugging = FLINT_Control.fcdebugging
 
@@ -234,7 +234,7 @@ fun kill (lvar: LV.lvar) : unit =
 
 (* ********************************************************************** *)
 
-fun impurePO (po:F.primop) = PrimopUtil.effect (#2 po)
+fun impurePO (po : F.primop) = PO.impurePO (#2 po)
 
 (* analyze: F.lexp -> unit -- the main collection function *)
 val analyze: F.lexp -> unit =

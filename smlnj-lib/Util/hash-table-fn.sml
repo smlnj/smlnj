@@ -144,7 +144,9 @@ functor HashTableFn (Key : HASH_KEY) : MONO_HASH_TABLE =
                   end
           val (v, bucket) = look (Array.sub (arr, indx))
           in
-            Array.update (arr, indx, bucket); SOME v
+            Array.update (arr, indx, bucket);
+            n_items := !n_items - 1;
+            SOME v
 	  end
             handle _ => NONE
 
@@ -175,6 +177,10 @@ functor HashTableFn (Key : HASH_KEY) : MONO_HASH_TABLE =
 	  HTRep.listItems (arr, n_items)
     fun listItemsi (HT{table = ref arr, n_items, ...}) =
 	  HTRep.listItemsi (arr, n_items)
+
+    fun listKeys (HT{table = ref arr, n_items, ...}) =
+	  HTRep.listKeys (arr, n_items)
+
 
   (* Apply a function to the entries of the table *)
     fun appi f (HT{table, ...}) = HTRep.appi f (! table)

@@ -1,6 +1,6 @@
 (* target64-object.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Implementation of the UNSAFE_OBJECT signature for 64-bit targets.
@@ -17,7 +17,6 @@ structure UnsafeObject :> UNSAFE_OBJECT =
     datatype representation
       = Unboxed
       | Raw
-      | Raw64
       | Pair
       | Record
       | Ref
@@ -72,7 +71,6 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 		    then Ref
 		    else raise Fail "Unknown arr_data"
 	      | 0x12 (* tag_raw *) => Raw
-	      | 0x16 (* tag_raw64 *) => Raw64
 	      | 0x1a (* tag_special *) => (case (InlineT.getspecial obj)
 		 of (0 | 1) => Susp
 		  | (2 | 3) => WeakPtr
@@ -100,13 +98,18 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 		    then InlineT.recordSub(obj, n)
 		    else raise Representation
 		end
-	    | Raw64 => let val len = InlineT.objlength obj
+	    | Raw => let val len = InlineT.objlength obj
 		in
+                  if (n = 0)
+                    then obj
+                    else raise Representation
+(*
 		  if ((n < 0) orelse (len <= n))
 		    then raise Representation
 		  else if (n = 0)
 		    then obj	(* flat singleton tuple *)
 		    else InlineT.cast(InlineT.raw64Sub(obj, n))
+*)
 		end
 	    | _ => raise Representation
 	  (* end case *))
@@ -124,7 +127,8 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 		in
 		  List.tabulate (InlineT.objlength obj, f)
 		end
-	    | Raw64 => let
+	    | Raw => let
+                (* note that FLINT flattens tuples of reals into raw records *)
 		val len = InlineT.objlength obj
 		fun f i = (InlineT.cast(InlineT.raw64Sub(obj, i)) : object)
 		in
@@ -167,7 +171,7 @@ structure UnsafeObject :> UNSAFE_OBJECT =
 	    then ((InlineT.cast obj) : exn)
 	    else raise Representation
     fun toReal64 obj = (case (rep obj)
-	   of Raw64 => ((InlineT.cast obj) : Real64.real)
+	   of Raw => ((InlineT.cast obj) : Real64.real)
 	    | _ => raise Representation
 	  (* end case *))
     fun toInt obj = if (unboxed obj)

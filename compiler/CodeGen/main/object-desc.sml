@@ -1,6 +1,6 @@
 (* object-desc.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The encoding of object description headers.
@@ -21,11 +21,13 @@ structure ObjectDesc :> OBJECT_DESC =
     type tag = II.int
 
   (* taken from runtime/tags.h *)
-    val tagWidth = 0w7		(* 5 minor tag bits plus 2 major tag bits *)
+    val majorTagWidth = 0w2
+    val minorTagWidth = 0w5
+    val tagWidth = minorTagWidth + majorTagWidth
 
     val bitsPerWord = Word.fromInt Target.mlValueSz
 
-    val wordsPerReal= IntInf.fromInt(Target.defaultRealSz div Target.mlValueSz)
+    val wordsPerReal= II.fromInt(Target.defaultRealSz div Target.mlValueSz)
 
   (* one greater than the maximum length field value (sign should be 0) *)
     val maxLength = II.<<(1, bitsPerWord - (tagWidth+0w1))
@@ -34,22 +36,34 @@ structure ObjectDesc :> OBJECT_DESC =
 
   (* tag values *)
     local
-      fun mkTag t = II.orb(II.<<(t, 0w2), 2)
+      (* "10" is the major tag for headers *)
+      fun mkTag t = II.orb(II.<<(t, majorTagWidth), 2)
     in
-    val tag_record	= mkTag 0
-    val tag_vec_hdr	= mkTag 1
-    val tag_vec_data	= tag_record
-    val tag_arr_hdr	= mkTag 2
-    val tag_arr_data	= mkTag 3
-    val tag_ref		= tag_arr_data
-    val tag_raw		= mkTag 4
-    val tag_raw64	= mkTag 5
-    val tag_special	= mkTag 6
+    val tag_record	= mkTag 0       (* records of uniform values *)
+    val tag_vec_hdr	= mkTag 1       (* immutable vector-descriptor object *)
+    val tag_vec_data	= tag_record    (* polymorphic vector data (same as records) *)
+    val tag_arr_hdr	= mkTag 2       (* mutable array-descriptor object *)
+    val tag_arr_data	= mkTag 3       (* polymorphic array data *)
+    val tag_ref		= tag_arr_data  (* references are length-one array data *)
+    val tag_raw		= mkTag 4       (* raw data; i.e., strings, floats, etc *)
+    val tag_mixed	= mkTag 5       (* records of mixed uniform and raw data *)
+    val tag_special	= mkTag 6       (* special objects *)
     end (* local *)
 
   (* build a descriptor from a tag and length *)
-    fun makeDesc (len, t) = II.orb(II.<<(len, tagWidth), t)
-    fun makeDesc' (len, t) = II.orb(II.<<(II.fromInt len, tagWidth), t)
+    fun makeDesc' (len, t) = II.orb(II.<<(len, tagWidth), t)
+    fun makeDesc (len, t) = makeDesc'(II.fromInt len, t)
+
+  (* the layout of a mixed-record header consists of the tag in bits 0-6
+   * with the total object length (in words) in bits 7-31, and the length of the
+   * pointer data in bits 32-63.
+   *)
+    fun makeMixedDesc {ptrLen, rawLen} =
+          if (ptrLen = 0) orelse (rawLen = 0)
+            then raise Fail "mixed record with zero sub-length"
+            else II.orb(
+              II.<<(II.fromInt ptrLen, 0w32),
+              makeDesc(ptrLen+rawLen, tag_mixed))
 
   (* array/vector header codes; note that sequences of tagged integers use
    * the next largest size (e.g., 31 ==> 32).
@@ -63,12 +77,12 @@ structure ObjectDesc :> OBJECT_DESC =
     val seq_real64 : IntInf.int	= 6	(* elements are 64-bit raw floats *)
 
   (* fixed descriptors *)
-    val desc_pair = makeDesc(2, tag_record)
-    val desc_ref = makeDesc(1, tag_ref)
-    val desc_real64 = makeDesc(wordsPerReal, tag_raw64)
-    val desc_polyvec = makeDesc(seq_poly, tag_vec_hdr)
-    val desc_polyarr = makeDesc(seq_poly, tag_arr_hdr)
-    val desc_special = makeDesc(0, tag_special)
+    val desc_pair = makeDesc'(2, tag_record)
+    val desc_ref = makeDesc'(1, tag_ref)
+    val desc_real64 = makeDesc'(wordsPerReal, tag_raw)
+    val desc_polyvec = makeDesc'(seq_poly, tag_vec_hdr)
+    val desc_polyarr = makeDesc'(seq_poly, tag_arr_hdr)
+    val desc_special = makeDesc'(0, tag_special)
 
   (* length codes for special descriptors *)
     val special_unevaled_susp : IntInf.int	= 0
@@ -76,4 +90,4 @@ structure ObjectDesc :> OBJECT_DESC =
     val special_weak : IntInf.int		= 2
     val special_nulled_weak : IntInf.int	= 3
 
-  end;
+  end

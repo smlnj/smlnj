@@ -1,6 +1,6 @@
 (* cpstrans.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This module implements a CPS -> CPS transformation that ensures that function
@@ -11,9 +11,9 @@
  *   to avoid spilling in some cases.
  *)
 
-functor CPStrans (MachSpec : MACH_SPEC) : sig
+functor CPSTransFn (MachSpec : MACH_SPEC) : sig
 
-    val cpstrans : CPS.function -> CPS.function
+    val translate : CPS.function -> CPS.function
 
   end = struct
 
@@ -28,7 +28,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
   (**************************************************************************
    *                    TOP OF THE MAIN FUNCTION                            *
    **************************************************************************)
-    fun cpstrans fe = let
+    fun translate fe = let
         (* variable substitution table *)
 	  exception CPSSUBST
 	  val M : value LV.Tbl.hash_table = LV.Tbl.mkTable(32,CPSSUBST)
@@ -41,6 +41,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
 	  val getty = LV.Tbl.lookup CT
 	  fun grabty (VAR v) = ((getty v) handle _ => CPSUtil.BOGt)
 	    | grabty (NUM{ty, ...}) = NUMt ty
+	    | grabty (ENUM _) = ENUMt
 	    | grabty (REAL{ty, ...}) = FLTt ty
 	    | grabty _ = CPSUtil.BOGt
 
@@ -48,12 +49,12 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
 	 *          UTILITY FUNCTIONS THAT DO THE ARGUMENT SPILLING               *
 	 **************************************************************************)
 
-	(** the following values must be consistent with the choices made
-	 ** in the closure or spilling phases
+	(* The following values must be consistent with the choices made
+	 * in the closure or spilling phases.  We reserve a GP register in case
+         * we need to spill floating-point args into a separate raw record.
 	 *)
-	  val fpnum = Int.min(MachSpec.numFloatRegs-2, MachSpec.numArgRegs)
-	  val nregs = MachSpec.numRegs - MachSpec.numCalleeSaves
-	  val gpnum = Int.min(nregs - 3, MachSpec.numArgRegs)
+	  val fpnum = Int.min(MachSpec.numFloatArgRegs, MachSpec.numArgRegs)
+	  val gpnum = MachSpec.numArgRegs - 1
 
         (* analyze a list of arguments to determine if they fit in the available
          * target-machine registers or if we need to spill some of them to the heap.
@@ -79,9 +80,6 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                  * The accumulators are all in reverse order.
                  * REAL32: need to track types of spilled real arguments too
                  *)
-(* QUESTION: if we spill floating-point arguments, that should increase the pressure
- * on the integer arguments by one, but this code does not seem to account for that.
- *)
 		fun h ([], [], ngp, nfp, ovs, ots, [], [], []) = NONE
 		  | h ([], [], ngp, nfp, ovs, ots, [x], [_], []) = NONE
 		  | h ([], [], ngp, nfp, ovs, ots, gvs, gts, fvs) =
@@ -111,8 +109,8 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                           (* we have floating-point arguments to spill *)
 			    val v = mkv()
 			    val vs = map (fn x => (x, OFFp 0)) spfvars
-			    val ct = PTRt(FPT (length vs))
-			    fun fh e = RECORD(RK_RAW64BLOCK, vs, v, e)
+			    val ct = fPtrTy (length vs)
+			    fun fh e = RECORD(RK_RAWBLOCK, vs, v, e)
 			    in
 			      (fh, (VAR v)::spgvars, ct::spgctys)
 			    end
@@ -146,7 +144,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                             fun fh e = List.foldri
                                   (fn (i, sv, e) => SELECT(i, v', sv, FLTt 64, e)) (* REAL32: FIXME *)
                                     e spfvars
-			    val ct = PTRt(FPT(List.length spfvars))
+			    val ct = fPtrTy (List.length spfvars)
 			    in
 			      (SOME v, fh, v::spgvars, ct::spgctys)
 			    end
@@ -162,7 +160,7 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
                                   (fn (i, sv, st, e) => SELECT(i, v', sv, st, e))
                                     (fhdr e)
                                       (spgvars, spgctys)
-			    val ct = PTRt(RPT(List.length spgvars))
+			    val ct = rPtrTy(List.length spgvars)
 			    in
 			      (SOME (v, ct), gh)
 			    end
@@ -281,6 +279,6 @@ functor CPStrans (MachSpec : MACH_SPEC) : sig
 
           in
 	    functrans fe
-	  end (* cpstrans *)
+	  end (* translate *)
 
   end (* structure CPStrans *)

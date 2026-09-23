@@ -244,7 +244,8 @@ module CFG (
           bool reentrant,               -- true for reentrant calls
           string linkage,               -- ??
           CTypes.c_proto proto,         -- function prototype
-          exp* args,                    -- arguments
+          exp cfn,                      -- the C function
+          exp* args,                    -- the arguments
           param* results,               -- result variables (with types)
           param* live,                  -- live variables across call (with types)
           stm k)                        -- the continuation
@@ -286,6 +287,20 @@ view Cpp {
 
 %%
     <file> <= suppress : pickler
+
+-- c_type
+    { CTypes.c_type } <= public_code %%
+        virtual llvm::Type *toLLVM (smlnj::cfgcg::Context *cxt) = 0;
+        bool isVoid () const { return this->_tag == _con_C_void; }
+%%
+    { CTypes.c_type.* } <= public_code %%
+        llvm::Type *toLLVM (smlnj::cfgcg::Context *cxt);
+%%
+
+-- c_proto
+    { CTypes.c_proto } <= public_code %%
+        llvm::FunctionType *toLLVM (smlnj::cfgcg::Context *cxt);
+%%
 
 -- alloc
     { CFG_Prim.alloc }  <= public_code %%

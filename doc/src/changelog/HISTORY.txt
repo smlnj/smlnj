@@ -102,15 +102,223 @@ Here is an update to the entry
 //////////////////////////////////////////////////////////////////////
 
 //====================================================================
-//== Recent updates
+== Recent updates
+
+//--------------------------------------------------------------------
+[2026-09-22]::
++
+The literal-lifting pass over CPS has been rewritten to use a Version 3
+of the literal bytecode.  This new version is described in the Wiki
+page https://github.com/smlnj/.github/wiki/Literals-v3[**Literals v3**].
+It includes support for mixed records and handles raw numbers (both
+integers and reals) more robustly than before.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2026-09-02]::
++
+The `ConvertFn` module has been rewritten to use mixed records in closure
+conversion.  Mixed closures are `Control.CG.mixedClosures` flag and are
+enabled by default.  Also added a distinct `ENUM` constant type to
+represent datatype constructor tags.  These change was covered by the
+{pull-base}/461[Pull Request #461 (Add ENUM number kind in FLINT and
+CPS; implement mixed closure generation in closure conversion)].
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2026-09-02]::
++
+The `InvokeGC` module has been rewritten to use mixed records to
+preserve live vars across GC calls.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-09-02]::
++
+Added support for "mixed" records that contain both uniform and raw
+data to the runtime system.  This change breaks backward compatibility
+with older heap images, since we have added an additional arena to
+hold such records.  We are experimenting with using such records to
+hold live data across GC calls, to hold excess arguments to function
+calls, and to represent closures.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-31]::
++
+Changed the tracking of GC time to include system time (as specified in
+the *Standard ML Basis Library* specification.  This change also includes
+a fix for Issue #456 (`Timer.checkCPUTimer` double-counts garbage
+collector time).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-29]::
++
+Added constant folding for the rotation operators.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-20]::
++
+Removed the redundant `LV_RAW64` constructor from the literal-lifting
+code and renamed the `NewLiterals` structure as `Literals`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-19]::
++
+Modified `TransPrim` to instantiate the numeric subscript/update
+primitive operators with monomorphic types (instead of type constructor
+applications).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //====================================================================
-== Version 2026.1; 2026/03/13
+== Version 2026.2; 2026/08/14
+
+//--------------------------------------------------------------------
+[2026-08-14]::
++
+Rewrote the **macOS** packaging script in Python.  The new script
+implements code signing and notarization.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-13]::
++
+Changed the names of primitive operations that work on the default
+integer and word types in the `InLine` structure.  The names are
+now consistent with the primitive operations for other sizes of
+types; for example, `int_add` is now `int63_add`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-07]::
++
+Implemented "pointer equality" functions in the `Unsafe` structure
+as requested in {legacy-issue-base}/327[Legacy Issue #327].  The
+functions are called `==` and `!=`.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-08-05]::
++
+Removed the redundant `raw64` object descriptor tag.  This tag was a
+relic from the days when we supported 32-bit systems, where the heap
+objects containing reals had to be double-word aligned.  We plan to
+reuse this tag to support mixed records (_i.e._, records that contain
+both uniform values and raw numeric data) in a future version of the
+system.
++
+Also removed the `Raw64` constructor from the `Object.representation`
+datatype.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-06-18]::
++
+Implemented inline bit operations for words as described in the Basis
+Library proposal
+https://github.com/SMLFamily/BasisLibrary/wiki/2026-001-Additional-Bitops-for-WORD-signature[2026-001]
+(Additional Bitops for WORD signature).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-06-07]::
+Updated `ElabData/pickle/pickmod.sml` and `ElabData/pickle/unpickmod.sml`
+to match the new structure of the primitive-operator datatypes.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-06-07]::
+Refactor the representation of primops so that the invariants about which
+primops are valid in which IRs are more strictly enforced.  Have also added
+inline primops for the new bitops (counting bits, etc.)
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-06-04]::
+Add specialized code to support the printing of reals in the REPL,
+which fixes {legacy-issue-base}/330[Legacy Issue 330 (REPL should always
+print reals as valid SML real literals)].  This code should be
+forward-compatible with 32-bit reals, since it works by converting
+`IEEEReal.decimal_approx` values to strings.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-28]::
+Fixed a long-standing FLINT representation-analysis bug for untagged,
+polymorphic values. The `tcTag` function in `FLINT/reps/typeoper.sml`
+handled de-Bruijn-indexed type variables (`LT.TC_VAR`) but not named
+type variables (`LT.TC_NVAR`). Since `deb2name` runs before `reify`,
+type variables had already been converted back to named variables,
+causing FLINT to incorrectly omit some representation coercions.
++
+This change fixes issues {legacy-issue-base}/353[legacy/#353] and
+{legacy-issue-base}/368[legacy/#368]. See {pull-base}/345[Pull Request
+#345 (Fix missing case in FLINT/reify)] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
+[2026-04-24]::
+Changed `PEqual.test` (`FLINT/trans/pequal.sml`) to always defer to
+the underlying concrete type when handling abstract types.  This change
+fixes {issue-base}/344[Issue #344 (Spurious "calling polyEqual"
+warnings)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-20]::
+Added internal support for equality testing on monomorphic arrays
+(see `FLINT/trans/pequal.sml`).  The basic idea is to generate a
+function that does pointer equality on the sequence data pointers.
+We should also use this operation to implement equality on polymorphic
+arrays, but that may require a more sophisticated handling of FLINT
+types.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-19]::
+Fix for {issue-base}/343[Issue #343 (Comparison of
+`Word8Vector.vector`s results in polymorphic equality)].
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-04-15]::
+Updated the *LLVM* submodule to fix {issue-base}/318[Issue #318
+(Segmentation fault with SML/NJ compiled MLton)].  See
+{pull-base}/342[Pull Request #342] for a detailed discussion of
+the problem.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//====================================================================
+== Version 2026.1; 2026/03/14
 
 //--------------------------------------------------------------------
 [2026-03-10]::
-Fix for Issue #338[incorrect compilation of some large integer literals].
-This bug was in the **LLVM** submodule.
+Fix for {issue-base}/338[Issue #338 (incorrect compilation of some
+large integer literals)].  This bug was in the **LLVM** submodule.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
@@ -123,19 +331,22 @@ the command-line option `-Ccm.verbose=false`)
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/12/23]::
+[2025-12-23]::
 Added `Unsafe.Int` structure to provide typed access to integer addition
 and subtraction without overflow checking.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/12/23]::
+[2025-12-23]::
 Switch to using `Real.fmt StringCvt.EXACT` when printing real values
 in the REPL.  This change addresses Issue #335 (REPL should always
 print reals as valid SML real literals).  Note, we might want to
 eventually implement something more specialized, since values like
 `1.2` are rendered using scientific notation (_i.e._, `0.12E1`).
++
+*NOTE:* a better fix for this issue was ported from the legacy
+branch on 2026-06-04.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
@@ -143,7 +354,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2025.3; 2025/12/22
 
 //--------------------------------------------------------------------
-[2025/12/13]::
+[2025-12-13]::
 Bind the bit-counting and rotation primops that were added in 2025.2
 in the `Inline` structure.  This change will allow them to be used in
 the Basis Library in 2026.1.
@@ -151,7 +362,7 @@ the Basis Library in 2026.1.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/12/10]::
+[2025-12-10]::
 Reorganized some of the **CM** internal library structure.  The file
 `system/smlnj/internal/cm-sig-lib.cm` has been deleted.  It just defined
 the `CM` and `CMB` signatures.  These definitions have been moved into
@@ -162,7 +373,7 @@ is defined in `cm/bootstrap`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/12/09]::
+[2025-12-09]::
 Changed some names in *CM* to avoid confusion with modules of
 the same name in the compiler.  Specifically, the following
 were changed:
@@ -176,7 +387,7 @@ were changed:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/12/07]::
+[2025-12-07]::
 Added support for normalizing the CFG before export (normalization
 means alpha-renaming the lambda variables to canonical names).
 There is a new control (-Ccg.normalize-cfg or `CG.normalizeCFG`) for
@@ -186,14 +397,14 @@ pickles, and printing of the CFG.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/08/19]::
+[2025-08-19]::
 Remove `preserveLvarNames` control from `Control` structure, since it
 is not used and can be confused with `Control.ElabData.saveLvarNames`.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/08/19]::
+[2025-08-19]::
 Changed the base pointer of a pair arena to be page-aligned,
 consistent with the base pointers of all other arenas.
 Previously, the convention is to make the base pointer offset by two
@@ -207,7 +418,7 @@ caused by pair arena offsets)] for details.
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
 //--------------------------------------------------------------------
-[2025/08/11]::
+[2025-08-11]::
 Reworked type unification. When unifying two types, sometimes the
 types cannot be unified directly, but their head-reduced forms can.
 Because eagerly head-reducing all types can lead to an explosion of
@@ -234,7 +445,7 @@ abbreviations through transparent functor application)].
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
 //--------------------------------------------------------------------
-[2025/08/10]::
+[2025-08-10]::
 Replaced the pickler for skeleton files in **CM** with one that is
 generated from an **ASDL** specification.  This change is a first step
 in replacing the pickler-combinators with **ASDL** picklers.  See
@@ -244,7 +455,7 @@ details.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/08/05]::
+[2025-08-05]::
 Changed the way external references are passed during translation to
 PLambda. Previously, the external references are grouped by the PIDs
 of their compilation units, and the units are sorted by the PIDs. As a
@@ -263,13 +474,13 @@ owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 == Version 2025.2; 2025/07/29
 
 //--------------------------------------------------------------------
-[2025/07/19]::
+[2025-07-19]::
 Changed the **CPS** IR to track the argument types of continuations.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/07/19]::
+[2025-07-19]::
 Changed the way that GC invocation code is generated to not distinguish
 between different types that have uniform representation (*i.e.*, `LABt`,
 `PTRt` and `TAGt`). This change results in significant shrinkage in the
@@ -279,14 +490,14 @@ matches the behavior of the old **MLRISC** code generator.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/07/16]::
+[2025-07-16]::
 Ported various bug fixes for real/string conversions from the legacy
 repository.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/07/16]::
+[2025-07-16]::
 A number of changes to the CFG IR mostly affecting the *pure* primops:
 +
 --
@@ -306,7 +517,7 @@ generator.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/07/09]::
+[2025-07-09]::
 Added `charSize` and `realSize` functions to the `Unsafe` module.  These
 are placeholders for eventual primops that can be used for compile-time
 tests for the sizes of the default `char` and `real` types (similar
@@ -315,14 +526,14 @@ to the `wordSize` primop).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/06/23]::
+[2025-06-23]::
 Add build targets for a standalone runtime system library, `runx.<arch>-<os>`,
 for `arm64-darwin`, `amd64-darwin`, and `amd64-linux` to support `heap2exec`.
 +
 owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
 
 //--------------------------------------------------------------------
-[2025/04/11]::
+[2025-04-11]::
 Add a pass to eliminate redundant computation in the CPS IR.  This
 pass does value numbering for most pure and arithmetic expressions
 and also eliminates redundant conditional control flow.  It needs
@@ -331,21 +542,21 @@ more tuning, however, so it is currently disabled by default.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/04/11]::
+[2025-04-11]::
 Port fix for {legacy-issue-base}/347[Legacy Issue #347 (`Unsafe.cast`
 causes Compiler bug)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/03/26]::
+[2025-03-26]::
 Removed deprecated fuctions from `SMLofNJ.SysInfo` module and changed
 the `WIN32` constructor to `WINDOWS`.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/03/25]::
+[2025-03-25]::
 Fixed the **macOS** installation for **arm64** processors; these changes
 fix {issue-base}/297[Issue #297 (macOS installer does not initialize
 CM paths correctly)].  Also made the **macOS** install target consistent
@@ -355,7 +566,7 @@ Version 11 (Big Sur).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/26]::
+[2025-02-26]::
 Reworked the mechanism for grouping the first-order CPS functions into
 clusters.  The new implementation will remove unreachable known functions.
 Furthermore, the normalization pass will not signal an error if a cluster
@@ -366,7 +577,7 @@ in such situations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/20]::
+[2025-02-20]::
 Add a mechanism for dumping out the cluster graph as a ".dot" file
 before and after normalization of the clusters.  Have also restructured
 the handling of clusters to make normalization mandatory, since that
@@ -375,7 +586,7 @@ is a requirement of the LLVM backend.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/19]::
+[2025-02-19]::
 Fixed a bug in the **arm64** assembly code for `Assembly.A.scalb` (bad
 allocation of the result).
 +
@@ -385,7 +596,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2025.1; 2025/02/14
 
 //--------------------------------------------------------------------
-[2025/02/12]::
+[2025-02-12]::
 Reimplementation of the `heap2exec` script to use the `heap2obj` program
 (instead of `heap2asm`).  The `heap2obj` program is part of the *LLVM*
 infrastructure and takes advantage of the fact the *LLVM* knows how to
@@ -399,14 +610,14 @@ executable from the heap-image file that it normally generates.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/10]::
+[2025-02-10]::
 A minor change to the heap-image layout (the new version number is
 `0x02102025`) and other improvements to heap import/export.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/08]::
+[2025-02-08]::
 Changed the representation of big-object regions in the heap to avoid
 issues with write protection for executable code on **macOS**/**arm64**.
 The old design put the region header into the first page of the region,
@@ -418,7 +629,7 @@ this avoids the write-protect issues.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/02/07]::
+[2025-02-07]::
 Reworked the implementation of code objects in both the compiler and
 runtime system.  The new design should make is easier to deal with
 the problems related to write protection for executable code on
@@ -427,42 +638,42 @@ the problems related to write protection for executable code on
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/01/31]::
+[2025-01-31]::
 Fix for {issue-base}/295[Issue #295 (Incorrect constant folding of
 word equality)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2025/01/21]::
+[2025-01-21]::
 Fix for {issue-base}/294[Issue #294 (compiler bug aborts build of
 istari)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/10/25]::
+[2024-10-25]::
 Ported fix for {legacy-issue-base}/328[Legacy Issue #328 (`Real.fromString`
 broken in 110.99.5 and 110.99.6)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/10/25]::
+[2024-10-25]::
 Ported fix for {legacy-issue-base}/305[Legacy Issue #305 (`Date.date`
 incorrectly modifies local time with timezone offset)].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/10/11]::
+[2024-10-11]::
 Changed the startup behavior so that if the `@SMLquiet` command-line
 option is specified, then the banner is not printed.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/10/11]::
+[2024-10-11]::
 Taking advantage of the previous change by moving the fusion of
 integer/word conversions to the `ContractPrim` structure.  This
 change means that conversions do not have to be adjacent in the
@@ -472,7 +683,7 @@ the conversions.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/10/11]::
+[2024-10-11]::
 +
 Improved the tracing of variable bindings in contraction by adding
 the `ARITHinfo` and `PUREinfo` constructors (the `WRPinfo` constructor
@@ -492,7 +703,7 @@ that are not adjacent in the IR.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/08/05]::
+[2024-08-05]::
 +
 Renamed the *LLVM* submodule directory to include a version number
 (_e.g._, `llvm10` or `llvm18`).  The `build.sh` script has been modified
@@ -507,7 +718,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2024.2; 2024/07/07
 
 //--------------------------------------------------------------------
-[2024/06/15]::
+[2024-06-15]::
 +
 Restructured the repository so that the **LLVM** library is now
 a submodule (_e.g._, `git@github.com:smlnj/smlnj-llvm-10.git`).
@@ -522,7 +733,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2024.1; 2024/05/17
 
 //--------------------------------------------------------------------
-[2024/03/06]::
+[2024-03-06]::
 +
 Changed `Unsafe.Real64.toBits` to `Unsafe.Real64.castToWord` and
 `Unsafe.Real64.fromBits` to `Unsafe.Real64.castFromWord`.  These new
@@ -531,7 +742,7 @@ names match MLton's names for these operations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/03/05]::
+[2024-03-05]::
 +
 Reimplement the `PackReal64Big` and `PackReal64Big` structures to use
 the bit-casts between 64-bit reals and 64-bit words.  This change
@@ -541,7 +752,7 @@ is not implemented)].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/02/05]::
+[2024-02-05]::
 +
 Added `host_word_size` and `host_big_endian` primops.  These will expand
 into constant functions (e.g., `fn () => 64` for `host_word_size` on a
@@ -559,7 +770,7 @@ available to user code via the `Unsafe` structure.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/03/13]::
+[2024-03-13]::
 +
 Ported various fixes and improvements from the legacy version.  These
 include
@@ -582,7 +793,7 @@ include
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/03/03]::
+[2024-03-03]::
 +
 Expose the machine property functions as `Unsafe.isBigEndian` and
 `Unsafe.wordSize`.  These functions are inlined by the compiler, which
@@ -593,7 +804,7 @@ user code via the `Unsafe` structure.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/03/01]::
+[2024-03-01]::
 +
 Improved the `Unsafe.Real64.fromBits` implementation to use a cast
 and a reference (instead of pack/unpack from a byte array).
@@ -601,7 +812,7 @@ and a reference (instead of pack/unpack from a byte array).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2024/02/25]::
+[2024-02-25]::
 +
 Fixed {issue-base}/284[Issue #284 (Incorrect printing of source code
 in error message)].
@@ -609,7 +820,7 @@ in error message)].
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2024/02/05]::
+[2024-02-05]::
 +
 The implementations of `PackWord64Little.update` and `PackWord64Big.update`
 were swapped on 64-bit platforms (resulting in byte-order reversal).  These
@@ -621,7 +832,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2023.1; 2023/12/10
 
 //--------------------------------------------------------------------
-[2023/12/06]::
+[2023-12-06]::
 +
 For various reasons, the LLVM backend has to resolve relocation symbols
 as part of the process of generating the final object code to the heap.
@@ -640,7 +851,7 @@ and #272 ({issue-base}/272[Unable to build LLVM when running `build.sh`]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2023/11/21]::
+[2023-11-21]::
 +
 Fix bug in `new-literals.sml`, where the integer value 2^31^ was being
 stored as a 32-bit signed integer in the literal table, instead of as
@@ -651,7 +862,7 @@ Issue #287 (The word literal `0wx80000000` is incorrectly converted to
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2023/10/13]::
+[2023-10-13]::
 +
 Add contraction rule for when two calls to `SETHDLR` appear in
 sequence.  This situation arises when the body of a handler is
@@ -660,7 +871,7 @@ optimized away.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2023/06/14]::
+[2023-06-14]::
 +
 Port fix for legacy bug
 https://github.com/smlnj/legacy/issues/278[#278 (`CharBuffer.addSlice`
@@ -669,7 +880,7 @@ does not properly handle starting offsets)].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/12/19]::
+[2022-12-19]::
 +
 Port fixes for Slice `all` combinators from legacy branch (see
 https://github.com/smlnj/legacy/pull/264[pull request 264]).
@@ -677,7 +888,7 @@ https://github.com/smlnj/legacy/pull/264[pull request 264]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/12/13]::
+[2022-12-13]::
 +
 Fixing some issues with building a macOS package.  The
 `postinstall`/`postupgrade` scripts needed to be updated to use
@@ -691,7 +902,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 2022.1; 2022/08/25
 
 //--------------------------------------------------------------------
-[2022/08/25]::
+[2022-08-25]::
 +
 Added `system/iter-make` script to iterate the compilation of the
 compiler.  This script replaces the old `fixpt` script and is necessary
@@ -700,7 +911,7 @@ when changing the version number of the system.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/08/15]::
+[2022-08-15]::
 +
 The change log file (`HISTORY.txt`) has been split into two files;
 one covering the period before 2015 and one covering changes since
@@ -709,7 +920,7 @@ then.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/08/15]::
+[2022-08-15]::
 +
 The source repository has been migrated to
 https://github.com/smlnj/smlnj[**GitHub**].  With this migration, we
@@ -731,7 +942,7 @@ various build scripts.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/27]::
+[2022-07-27]::
 +
 Fix for {issue-base}/235[MSI installer for SMLNJ 110.99.2 reports as
 version 0.0.0.0].
@@ -739,7 +950,7 @@ version 0.0.0.0].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/25]::
+[2022-07-25]::
 +
 Implemented Basis Library proposal
 https://github.com/SMLFamily/BasisLibrary/wiki/2021-001-Add-getWindowSz-function-to-Posix.TTY-structure[2021-001]
@@ -748,7 +959,7 @@ https://github.com/SMLFamily/BasisLibrary/wiki/2021-001-Add-getWindowSz-function
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/25]::
+[2022-07-25]::
 +
 Implemented Basis Library proposal
 https://github.com/SMLFamily/BasisLibrary/wiki/2022-001-Add-value-tau-to-MATH-signature[2022-001]
@@ -757,14 +968,14 @@ https://github.com/SMLFamily/BasisLibrary/wiki/2022-001-Add-value-tau-to-MATH-si
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/24]::
+[2022-07-24]::
 +
 Fix for {issue-base}/234[ml-build fails on Windows with error].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/24]::
+[2022-07-24]::
 +
 Fix for {issue-base}/51[makeml and installml scripts do not like
 locations with spaces].
@@ -772,14 +983,14 @@ locations with spaces].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/22]::
+[2022-07-22]::
 +
 Fix for {issue-base}/205[Last branch of case expression omitted by PPAst.ppAst].
 +
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2022/07/22]::
+[2022-07-22]::
 +
 Fix for {issue-base}141[Pretty printing of Absyn in error message does
 not respect fixity].
@@ -787,14 +998,14 @@ not respect fixity].
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2022/07/22]::
+[2022-07-22]::
 +
 Fix for {issue-base}/68[Unable to interrupt execution by using `SIGINT`].
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/06]::
+[2022-07-06]::
 +
 Fixed some interfaces that did not agree with the **SML Basis Library**
 specification.  Bugs bugref:318[] (`IEEEReal.decimal_approx` does not
@@ -804,7 +1015,7 @@ does not match the Basis Library).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/05]::
+[2022-07-05]::
 +
 Fixed bug bugref:316[] (`Real.fromManExp` does not return expected
 value if `man = 0.0`).
@@ -812,7 +1023,7 @@ value if `man = 0.0`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/07/05]::
+[2022-07-05]::
 +
 Fixed bug bugref:317[] (Conversion from string to real does not
 accept non-finite values).
@@ -820,7 +1031,7 @@ accept non-finite values).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/29]::
+[2022-06-29]::
 +
 Fixed bug bugref:314[] (`IEEEReal.float_class` does not match the
 Basis Library).  For some reason, the `NAN` constructor took an argument
@@ -831,7 +1042,7 @@ code.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/29]::
+[2022-06-29]::
 +
 Fixed a pretty printing issue that arises when printing nested
 structure definitions.  For example, opening the `OS` structure
@@ -842,7 +1053,7 @@ This behavior is not present in the legacy version.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/27]::
+[2022-06-27]::
 +
 Adding support for generating a SIG_GC signal when there is a garbage
 collection.  I have also added a function
@@ -868,7 +1079,7 @@ events).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/17]::
+[2022-06-17]::
 +
 Fixed bug bugref:290[] (Incorrect pattern matching for exceptons).
 The fix involves changes to `FLINT/opt/lcontract.sml` (function `swiInfo`)
@@ -881,14 +1092,14 @@ by an exception identity declaration (e.g., `exception B = A`).
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2022/06/05]::
+[2022-06-05]::
 +
 Fixed bug bugref:314[] (`IEEEReal.setRoundingMode` is a no-op on Linux).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/05]::
+[2022-06-05]::
 +
 Fixed bug bugref:312[] (`CM.make` is unable to handle filenames that
 contain a backslash).  We have changed the semantics of paths given
@@ -898,7 +1109,7 @@ native pathname syntax (instead of *CM*'s generic syntax).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/06/01]::
+[2022-06-01]::
 +
 Fixed bug bugref:284[] (Compiler bug: Contract: UsageMap on 132).
 The problem was the the `CPSTrans.cpstrans` function was generating
@@ -908,7 +1119,7 @@ to fixing the bug, added some detailed documentation of the code.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/05/20]::
+[2022-05-20]::
 +
 Fixed bug bugref:310[] (Error when REPL tries to print value of type
 `Posix.FileSys.ST.stat`).
@@ -916,7 +1127,7 @@ Fixed bug bugref:310[] (Error when REPL tries to print value of type
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/05/10]::
+[2022-05-10]::
 +
 Fixed bug bugref:306[] (`Word8VectorSlice`: mapping a subslice produces
 wrong result or crashes SML/NJ).
@@ -924,7 +1135,7 @@ wrong result or crashes SML/NJ).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2022/04/03]::
+[2022-04-03]::
 +
 Fix a module compilation performance bug by removing `packStr` and
 `packFct` from `Elaborator/modules/sigmatch.sml` (reducing the size of
@@ -938,7 +1149,7 @@ owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 == Version 2021.1; 2021/12/31
 
 //--------------------------------------------------------------------
-[2021/12/31]::
+[2021-12-31]::
 +
 Switched over to the *LLVM* version of the compiler.  Doing so has
 two major consequences:
@@ -961,7 +1172,7 @@ In addition, we have changed the version numbering scheme to a
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/12/07]::
+[2021-12-07]::
 +
 Fixed a bug in the way that non-printable `char` values were being
 printed in the REPL.
@@ -969,14 +1180,14 @@ printed in the REPL.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/11/23]::
+[2021-11-23]::
 +
 Remove last traces of the lambda splitting support from CM.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/11/23]::
+[2021-11-23]::
 +
 Changed the `Binfile` structure (and `BINFILE` signature) to support both
 the old binfile format and a new format (both formats are documented in
@@ -991,7 +1202,7 @@ make migrating to new binfile formats easier.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/11/07]::
+[2021-11-07]::
 +
 Committed changes to fix bug bugref:281[] (Redundant error messages for when a constructor
 name is misspelled).  Revision r7357.
@@ -1008,7 +1219,7 @@ name is misspelled).  Revision r7357.
 owner:cs.uchicago.edu/~dbm[David MacQueen]
 
 //--------------------------------------------------------------------
-[2021/11/07]::
+[2021-11-07]::
 +
 Committed a massive set of changes from "merge/base" working directory
 that contained manually merged changes from "newmc" into a fresh
@@ -1054,7 +1265,7 @@ The changes include:
 owner:cs.uchicago.edu/~dbm[David MacQueen]
 
 //--------------------------------------------------------------------
-[2021/09/23]::
+[2021-09-23]::
 +
 Changed the *binfile* representation to remove the pickling of
 the *FLINT* intermediate representation.  The purpose of this
@@ -1065,7 +1276,7 @@ migrating the pickling infrastructure to use *ASDL*.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/09/23]::
+[2021-09-23]::
 +
 Changed the way that versions are identified to allow a version suffix
 (e.g., "-rc1" for "release candidate 1").  I removed the bump-release
@@ -1081,7 +1292,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.99.2; 2021/09/23
 
 //--------------------------------------------------------------------
-[2021/08/18]::
+[2021-08-18]::
 +
 Fix a benign bug where the size of a floating-point spill record was twice
 as large as necessary on 64-bit systems.
@@ -1089,7 +1300,7 @@ as large as necessary on 64-bit systems.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/08/10]::
+[2021-08-10]::
 +
 Split out the `Real.toLargeInt` implementation into target-word-size
 versions (the `Real64ToIntInf` module).  For 64-bit targets, the new
@@ -1101,7 +1312,7 @@ zero for anything in range `[-512,512]`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/04/29]::
+[2021-04-29]::
 +
 In the translation from Absyn to PLambda, there was a function (`inlops`)
 that was used to build the primop and type data structures for numeric
@@ -1117,7 +1328,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.99.1; 2021/04/12
 
 //--------------------------------------------------------------------
-[2021/04/10]::
+[2021-04-10]::
 +
 Changed the *AMD64* frame layout to include a word to hold the
 `Overflow` exception.  This value is used by the *LLVM* backend
@@ -1126,7 +1337,7 @@ to generate the exception for checked arithmetic operations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/04/10]::
+[2021-04-10]::
 +
 Added support for running *SML/NJ* on *M1* Macs via the *Rosetta2*
 emulator.  The change is to identify the *arm* processor as *amd64*
@@ -1137,14 +1348,14 @@ command after having compiled the complier caused a crash.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/04/10]::
+[2021-04-10]::
 +
 Some minor restructuring of the logic in the generic installer.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/03/25]::
+[2021-03-25]::
 +
 Fixed a bug with how *FLINT* numeric types were being translated to *CPS*
 types.  Specifically, types that were smaller than the default integer
@@ -1154,7 +1365,7 @@ representation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/02/12]::
+[2021-02-12]::
 +
 Fix for bug bugref:280[] (110.99 `config/install.sh -64` fails on macOS 10.15.7).
 I was unable to reproduce this problem, but after some investigation, it
@@ -1165,7 +1376,7 @@ the user's path.  To protect against this issue, I made the paths to the
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2021/01/12]::
+[2021-01-12]::
 +
 Fixed a serious performance bug in the implementation of the `CharBuffer`
 and `MonoBuffer` structures.  Essentially, if one did not reserve sufficient
@@ -1179,7 +1390,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.99; 2020/12/24
 
 //--------------------------------------------------------------------
-[2020/12/23]::
+[2020-12-23]::
 +
 Changed the layout of the *SML* stack frame on the *AMD64*
 architecture to make it compatible with the way that *LLVM*
@@ -1191,7 +1402,7 @@ the compiler.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/12/23]::
+[2020-12-23]::
 +
 Changed the format of the "magic string" in the header of binfiles.
 The new format is "__arch__``-``__version__", where the architecture
@@ -1202,7 +1413,7 @@ length of 16 bytes.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/12/22]::
+[2020-12-22]::
 +
 Various pretty-printer bug fixes:
 +
@@ -1217,7 +1428,7 @@ Various pretty-printer bug fixes:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/12/19]::
+[2020-12-19]::
 +
 Fixed bug bugref:254[] (`Real.fromLargeInt` produces negative results).
 The problem was because the digit size for `IntInf.int` is only one bit
@@ -1232,7 +1443,7 @@ and digits to real values.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/12/19]::
+[2020-12-19]::
 +
 Fixed bug bugref:267[] (Returns an incorrect result for a calculation
 on `Position.int` for 32-bit mode). The problem was that on 32-bit
@@ -1243,7 +1454,7 @@ not test for overflow in the result.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/10/13]::
+[2020-10-13]::
 +
 Changed the semantics of the spans returned by *ml-ulex* so that the
 second component of a span is the position of the rightmost character
@@ -1258,7 +1469,7 @@ multiple files).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/09/10]::
+[2020-09-10]::
 +
 Simplified the *binfile* representation by removing the option of
 having multiple code objects.  Many years ago, we would split the
@@ -1279,7 +1490,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.98.1; 2020/08/25
 
 //--------------------------------------------------------------------
-[2020/08/25]::
+[2020-08-25]::
 +
 Reverted some of the pretty printing changes that were made in 110.98
 to the 110.97 version (the renaming of `PrettyPrintNew` to `PrettyPrint`
@@ -1291,7 +1502,7 @@ bugref:271[] (pretty printer regression for structure binding).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/08/02]::
+[2020-08-02]::
 +
 Fixed bug bugref:269[] (`Word64.fromString` causes an `Overflow` for
 greater than 2^32^-1).  This bug was the result of constants from the
@@ -1302,7 +1513,7 @@ and words were affected.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/22]::
+[2020-07-22]::
 +
 Added an additional lowering pass for the `STREQL` primop.  This
 primop is generated to implement pattern matching against string
@@ -1324,7 +1535,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.98; 2020/07/16
 
 //--------------------------------------------------------------------
-[2020/07/10]::
+[2020-07-10]::
 +
 Implemented https://github.com/SMLFamily/BasisLibrary/wiki/2020-001-Addition-of-Universal-module[
 Basis Library proposal 2020-001 (Addition of Universal module)].
@@ -1332,7 +1543,7 @@ Basis Library proposal 2020-001 (Addition of Universal module)].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/10]::
+[2020-07-10]::
 +
 Changed the `config/install.sh` script so that the default size
 is 64 bits for any machine that reports its machine as "``x86_64``."
@@ -1340,7 +1551,7 @@ is 64 bits for any machine that reports its machine as "``x86_64``."
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/10]::
+[2020-07-10]::
 +
 Fixed bug bugref:260[] (Perform divide on `Position.int` crashes
 with FPE on Linux).  The fix required adding SIGFPE as a second
@@ -1349,7 +1560,7 @@ source of `Overflow` exceptions on Linux/amd64 machines.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/08]::
+[2020-07-08]::
 +
 Fixes for structure and signature pretty printing problems that were
 introduced in the extensive pretty printer/pretty printing
@@ -1367,7 +1578,7 @@ declarations haven't been tested.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/07/07]::
+[2020-07-07]::
 +
 Added a new _lowering_ pass following *CPS* optimization, but before
 closure conversion.  This pass includes the previous passes for
@@ -1381,7 +1592,7 @@ for migrating to a **LLVM**-based backend.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/06]::
+[2020-07-06]::
 +
 Fix for bug bugref:261[] (Weird "calc_strictness" message being printed).
 Rewrote the function `ElabUtil.calc_strictness` and moved it to
@@ -1390,7 +1601,7 @@ Rewrote the function `ElabUtil.calc_strictness` and moved it to
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/07/02]::
+[2020-07-02]::
 +
 The `HTMLDev` structure in the pretty-printing library has been
 moved into its own library (`pp-extras-lib.cm`) and renamed as
@@ -1401,7 +1612,7 @@ on `html-lib.cm`, which allowed us to remove all mention of
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/02]::
+[2020-07-02]::
 +
 Completed the removal of the trigonometry operators from the primops.
 This change also allowed the removal of extension support from the
@@ -1410,7 +1621,7 @@ This change also allowed the removal of extension support from the
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/07/01]::
+[2020-07-01]::
 +
 Disabled the use of the hardware instructions for the basic trig
 functions on the *x86*.  Doing so simplifies cross compilation
@@ -1420,7 +1631,7 @@ from the compiler's primitive operators.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/06/30]::
+[2020-06-30]::
 +
 Improved the *CPS* contraction phase by adding strength-reduction
 optimizations to `ContractPrim`.  These include recognizing when
@@ -1434,7 +1645,7 @@ optimizations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/05/16]::
+[2020-05-16]::
 +
 The *MLRISC* instruction selector for the *x86* and *amd64* targets
 erroneously assumed that the `idiv` instruction sets the `OF` (overflow)
@@ -1450,7 +1661,7 @@ actually trap on overflow, but this was true before this change.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/05/16]::
+[2020-05-16]::
 +
 Changed the semantics of the `--debug` command-line option for *ml-antlr*.
 Previously this option replaced the actions with a print expression, but that
@@ -1460,7 +1671,7 @@ behavior is to preserve the existing actions and just add the printing code.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/04/27]::
+[2020-04-27]::
 +
 Added a pass to the elaborator that check for variables that are
 bound, but never referenced.  This check can be controlled by
@@ -1511,7 +1722,7 @@ Buren's patch for Version 110.82]. +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/04/24]::
+[2020-04-24]::
 +
 The `LambdaVar.lvar` type is represented as an integer; since the earliest
 days of the compiler this representation has been concrete, which meant
@@ -1542,7 +1753,7 @@ Some comments about the changes: +
 --
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
-[2020/04/24]::
+[2020-04-24]::
 +
 Fixed bug bugref:256[] (`Ref.exchange` incorrect). The original
 source of the bug was the *Basis Library* sample code, which
@@ -1554,7 +1765,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.97; 2020/04/21
 
 //--------------------------------------------------------------------
-[2020/04/21]::
+[2020-04-21]::
 +
 Changed the printing of tyvars; _e.g._, an `OVLDV` tyvar introduced
 by an occurrence of the overloaded operator "++*++" that also
@@ -1563,7 +1774,7 @@ acquires the equality attribute will be printed as ++''Z[OL(*)]++.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/20]::
+[2020-04-20]::
 +
 Eliminated AbsDec and ABSdec constructors
 +
@@ -1581,7 +1792,7 @@ Eliminated AbsDec and ABSdec constructors
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/20]::
+[2020-04-20]::
 +
 File structure reoganization: the top-level `compiler/Semant`
 directory was eliminated. Remaining relevant subdirectories
@@ -1593,7 +1804,7 @@ and `ElabData/elabdata.cm` changed accordingly.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/20]::
+[2020-04-20]::
 +
 Fixed bug bugref:220[]
 +
@@ -1622,7 +1833,7 @@ Fixed bug bugref:220[]
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/09]::
+[2020-04-09]::
 +
 Fixed bug bugref:214[]
 +
@@ -1636,7 +1847,7 @@ Fixed bug bugref:214[]
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/08]::
+[2020-04-08]::
 +
 Fixed bug bugref:209[]
 +
@@ -1658,7 +1869,7 @@ Fixed bug bugref:209[]
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/07]::
+[2020-04-07]::
 +
 Some clean up in the `ml-lex/lexgen.sml` code.  Replaced the one-off
 implementation of finite maps with the `RedBlackMapFn` functor from
@@ -1668,7 +1879,7 @@ by changing token equality tests to pattern matching.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/04/05]::
+[2020-04-05]::
 +
 Turned several functors (`ElabModFn`, `ElabTopFn`, `SigMatchFn`, etc. into
 structures and removed the redundant functor application files (and
@@ -1677,7 +1888,7 @@ the directories) in `Semant/elaborate` and `Semant/modules`.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/05]::
+[2020-04-05]::
 +
 Fixed bugs bugref:195[] and bugref:196[]
 +
@@ -1691,7 +1902,7 @@ Fixed bugs bugref:195[] and bugref:196[]
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2020/04/02]::
+[2020-04-02]::
 +
 Various minor changes related to the *heap2exec* and *heap2asm*
 programs.
@@ -1707,7 +1918,7 @@ programs.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/04/02]::
+[2020-04-02]::
 +
 Addressed bug bugref:247[] (@SMLVersion should report 64/32 bit) by
 adding a new command-line option (`@SMLwordsize`) to the `.run-sml`
@@ -1717,7 +1928,7 @@ to be printed (either `32` or `64`) and then the program will exit.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/03/19]::
+[2020-03-19]::
 +
 Fix for bug bugref:252[] (Boyer Benchmark Compile Failure).  This crash
 was caused by a typo in the `CPS/main/build-literals.sml` code that
@@ -1727,7 +1938,7 @@ instructions when the offset was `>= 256`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/03/04]::
+[2020-03-04]::
 +
 Fixed the calculation of the maximum array/vector length for
 64-bit targets.  We had been using the calculation for 32-bit
@@ -1736,7 +1947,7 @@ targets.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2020/01/14]::
+[2020-01-14]::
 +
 Fix for bug bugref:245[] (Lazy data types result in Compiler Bug error).
 The problem was that a number of symbols (__e.g.__, `deref`) had been
@@ -1748,7 +1959,7 @@ are being included.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/23]::
+[2019-12-23]::
 +
 Fix for bug bugref:244[] (Compiler bug: PPObj: ppFields in ppval.sml).
 The code generator was using the wrong length tag for raw64 records
@@ -1757,7 +1968,7 @@ on 64-bit machines (twice the length).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/21]::
+[2019-12-21]::
 +
 Clean up various issues in the configuration/build machinery for **asdl**.
 This includes a fix for bug bugref:240[] (Non-default 64-bit installation
@@ -1766,7 +1977,7 @@ build failure)
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/18]::
+[2019-12-18]::
 +
 Fix bug bugref:239[] (`Date.toTime` is incorrect (by a factor of 10E9)).
 Thanks to Johannes 5 Joemann for both the report and fix.
@@ -1777,7 +1988,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.96; 2019/12/13
 
 //--------------------------------------------------------------------
-[2019/12/12]::
+[2019-12-12]::
 +
 Bug fix for a problem where ^C (and other signals might be ignored).
 The fix is to use word-sized fields in the VProc state vector so that
@@ -1787,7 +1998,7 @@ adjacent fields.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/12]::
+[2019-12-12]::
 +
 Fix for bug bugref:234[] (Converting NaN to a string causes an infinite
 loop on 64-bit machines).  The problem was in `MLRISC/amd64/mltree/amd64-gen.sml`,
@@ -1797,7 +2008,7 @@ arguments are unordered.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/12]::
+[2019-12-12]::
 +
 Removed assertion checking from the **amd64** runtime makefiles.  It
 has not turned up any errors since 110.94 was released, so we will
@@ -1806,7 +2017,7 @@ assume that things are working the way that they should.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/12/01]::
+[2019-12-01]::
 +
 Bugfix for bug bugref:237[] (**heap2exec** script fails on 110.95).
 The fix was provided by Kirill Boltaev.
@@ -1814,7 +2025,7 @@ The fix was provided by Kirill Boltaev.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/23]::
+[2019-11-23]::
 +
 Changed the default installation size to 64 bits on **macOS** 10.14
 Mojave and later.
@@ -1822,7 +2033,7 @@ Mojave and later.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/14]::
+[2019-11-14]::
 +
 Fixed some code rot in the *eXene* sources (bug bugref:233[]).  With
 the `LargeWord` module changing from `Word32` to `Word64`, there were
@@ -1831,7 +2042,7 @@ a few places were things broke.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/14]::
+[2019-11-14]::
 +
 Added support for 64-bit executables on **FreeBSD**.  As part of this
 effort, we fixed a couple of regressions (makefile issues) for the
@@ -1842,7 +2053,7 @@ file was rewritten.  We also switch from *BSD* signal handling to
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/12]::
+[2019-11-12]::
 +
 Fixed `config/install.sh` script, which was not passing the size
 option to the `.link-sml`, which caused confusion for the "**-64**"
@@ -1852,7 +2063,7 @@ bugref:236[].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/10]::
+[2019-11-10]::
 +
 Many years ago, *SML/NJ* had a bytecode interpreter, but it was mostly
 removed from the system a long time ago.  There were, however, some
@@ -1881,7 +2092,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.95; 2019/11/09
 
 //--------------------------------------------------------------------
-[2019/11/09]::
+[2019-11-09]::
 +
 Fix for bug bugref:230[] (New literals-lifting code does not handle
 pair of reals).
@@ -1889,14 +2100,14 @@ pair of reals).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/09]::
+[2019-11-09]::
 +
 Simplified the runtime-system build rules for Cygwin.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/08]::
+[2019-11-08]::
 +
 Created the script `config/prepare-win-install.sh`, which implements
 the fetching and unbundling of source and bin files in preparation
@@ -1905,7 +2116,7 @@ for a Windows installation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/07]::
+[2019-11-07]::
 +
 Fix for bug bugref:229[] (`Real.fromString` errors). This bug was
 actually two unrelated issues.  The problem that `Real.toString`
@@ -1920,7 +2131,7 @@ be the signal, but we need access to a test machine to verify.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/07]::
+[2019-11-07]::
 +
 Fix for bug bugref:230[] (segmentation fault when compiling MLton sources
 with SML/NJ 64-bit).  The problem was that when a large vector was
@@ -1930,7 +2141,7 @@ state before trying to call the runtime system to do the allocation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/11/04]::
+[2019-11-04]::
 +
 The runtime now uses `MAP_ANON` for allocating memory on 64-bit Linux.
 This change fixes a problem with versions of Linux that do not allow
@@ -1942,7 +2153,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.94; 2019/10/31
 
 //--------------------------------------------------------------------
-[2019/10/23]::
+[2019-10-23]::
 +
 Modified the generic installed (`base/system/smlnj/installer/generic-install.sml`)
 to support conditional targets.  You can now write tests like
@@ -1960,7 +2171,7 @@ The symbols that can currently be tested for are `SIZE_32`, `SIZE_64`,
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/23]::
+[2019-10-23]::
 +
 Fixed bug bugref:227[] (CPS contraction is taking an excessive amount
 of time on word8 basis test).
@@ -1968,7 +2179,7 @@ of time on word8 basis test).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/22]::
+[2019-10-22]::
 +
 Modified the CPS contraction phase to optimize the case where a
 numeric conversion is applied to a constant value.
@@ -1976,7 +2187,7 @@ numeric conversion is applied to a constant value.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/21]::
+[2019-10-21]::
 +
 Modified the Unix installer script (`base/system/smlnj/installer/nix-install.sml`)
 to pass a size argument to the configuration script.  This argument is used
@@ -1985,7 +2196,7 @@ by the **ASDL** configuration.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/21]::
+[2019-10-21]::
 +
 Overhauled the installation script (`config/install.sh`) and various
 script templates (__e.g.__, `config/_run-sml`) to allow setting the
@@ -2020,21 +2231,21 @@ the system.  Note that the default version must be installed second.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/21]::
+[2019-10-21]::
 +
 Added support for the **-64** flag to the `fixpt` script in `base/system`.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/17]::
+[2019-10-17]::
 +
 Added support for the **-64** flag to the `cmb-make` script in `base/system`.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/17]::
+[2019-10-17]::
 +
 Renamed the `REAL` representation constructor to `Raw64`, which matches
 what is going on in the runtime system.  Also renamed the `toReal` function
@@ -2043,7 +2254,7 @@ to `toReal64`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/15]::
+[2019-10-15]::
 +
 Updated the `SMLofNJ.SysInfo` structure by removing constructors from the
 `oskind` datatype that correspond to obsolete systems.  Also added a
@@ -2053,7 +2264,7 @@ size in bits (__e.g.__, 32 or 64).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/13]::
+[2019-10-13]::
 +
 Added the **-64** flag to the `testml` script in `base/system` and
 to the `.run-sml` script.  Thus, one will be able to specify the
@@ -2064,7 +2275,7 @@ is the default, since the 64-bit system is unstable.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/13]::
+[2019-10-13]::
 +
 Removed obsolete operating systems from the `SMLofNJ.SysInfo.os_kind`
 datatype.  This change reduces the type to two constructors: `UNIX`
@@ -2076,7 +2287,7 @@ banner message at startup.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/12]::
+[2019-10-12]::
 +
 Fixed bug bugref:130[] (failure to raise `Bind` exception). Added
 a function `refutable` to `ElabData/types/typesutil.{sig,sml}` and
@@ -2093,7 +2304,7 @@ bug in pretty printing of result).
 owner:cs.uchicago.edu/~dbm[David MacQueen]
 
 //--------------------------------------------------------------------
-[2019/10/04]::
+[2019-10-04]::
 +
 Modified the **cmb-make** script to support passing compiler control
 flags to the build command.  The flags should be specified after the
@@ -2102,7 +2313,7 @@ path to **sml** command (if it is given).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/04]::
+[2019-10-04]::
 +
 Finished the implementation of the new literal bytecode engine.
 There is a control flag (`Control.CG.newLiterals` that allows
@@ -2111,7 +2322,7 @@ switching between the old and new bytecodes).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/04]::
+[2019-10-04]::
 +
 Fix for bug bugref:225[] (`Math.ln` giving erroneous answers on Windows).
 The problem was an inconsistency in the way the Unix and Microsoft
@@ -2120,7 +2331,7 @@ assemblers interpreted the addressing mode for the `FLD` instruction.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/10/03]::
+[2019-10-03]::
 +
 Clean up in the Basis Posix library code (both SML and runtime) to
 be consistent about when the `SysWord.word` type is being used to
@@ -2132,7 +2343,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.93; 2019/09/05
 
 //--------------------------------------------------------------------
-[2019/09/04]::
+[2019-09-04]::
 +
 Add support for specifying a 32 or 64-bit target as command-line option
 to the `.arch-n-opsys` and `.link-sml` scripts.  The default size is
@@ -2141,7 +2352,7 @@ currently 32-bits, but that will change once 64-bit support is solid.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/09/03]::
+[2019-09-03]::
 +
 Generalize code generation for conversions involving tagged integers/words,
 where the size is _not_ the default integer size.  This situation only
@@ -2151,7 +2362,7 @@ occurred for `Word8.word` values on 32-bit targets, but also occurs for
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/09/02]::
+[2019-09-02]::
 +
 Rewrote the expansion of the `INLLSHIFT`, `INLRSHIFTL`, and `INLRSHIFT`
 primops (`compiler/FLINT/trans/transprim.sml`).  The expansion process
@@ -2162,7 +2373,7 @@ shift operations to be inlined.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/09/02]::
+[2019-09-02]::
 +
 Fixed a bug in the constant folding of arithmetic-right-shift operations.
 The sign was not getting extended for words when the most-significant-bit
@@ -2171,7 +2382,7 @@ was set.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/25]::
+[2019-08-25]::
 +
 Fixed a bug in the `Real.toManExp` function (the exponent was off
 by one, which meant that the mantissa was two times its expected
@@ -2188,7 +2399,7 @@ produces incorrect results in some cases).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/24]::
+[2019-08-24]::
 +
 Fixed bug bugref:173[] (`OS.Process.sleep` only works with whole numbers).
 For systems that have finer-grain sleep function, such as the
@@ -2198,7 +2409,7 @@ functions now support sub-second granularity.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/18]::
+[2019-08-18]::
 +
 Restructured the CPS contraction phase to make the fusion of
 integer/word conversions more uniform.  Also fixed a bug
@@ -2210,7 +2421,7 @@ when `m = p`, instead of `TRUNC(m,p)`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/14]::
+[2019-08-14]::
 +
 Int64 comparisons were not always correct, which lead to some positive
 values being printed as negative numbers (basically when the sign
@@ -2219,7 +2430,7 @@ bit of the lower word was set).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/13]::
+[2019-08-13]::
 +
 Added `Unsafe.IntInf` structure, which provides access to the
 internal representation of the `IntInf.int` type.  Note that
@@ -2228,7 +2439,7 @@ this representation may change in the future.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/08/12]::
+[2019-08-12]::
 +
 Fixed bug bugref:223[] (Incremental Build fails on Windows).  There was
 a missing `CloseHandle()` when getting a file's timestamp.
@@ -2239,7 +2450,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.92; 2019/08/10
 
 //--------------------------------------------------------------------
-[2019/08/08]::
+[2019-08-08]::
 +
 Changed `base/system/allcross` script to use `cmb-cross` script.
 Also modified the `cmb-cross` script to build compressed tar
@@ -2249,7 +2460,7 @@ files.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/16]::
+[2019-07-16]::
 +
 Restructured the **amd64** machine-code generation implementation and
 filled in many of the missing encodings.  It should be complete for
@@ -2259,7 +2470,7 @@ of operations described in the `amd64.mdl` file.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/16]::
+[2019-07-16]::
 +
 Some cleanup in the **x86** MLRISC backend.  Removed the `MULB`,
 `MULW`, and `MULL` unsigned-multiplication instructions, since they
@@ -2270,7 +2481,7 @@ was applied to the **amd64** backend.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/15]::
+[2019-07-15]::
 +
 Many changes to the **amd64** machine description:
 +
@@ -2287,7 +2498,7 @@ Many changes to the **amd64** machine description:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/13]::
+[2019-07-13]::
 +
 New script for cross compiling to other architectures; the script
 is still called `cmb-make`, but now supports target-specific
@@ -2298,7 +2509,7 @@ by Matthias Blume and then encoded in a script.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/11]::
+[2019-07-11]::
 +
 The runtime system now builds for the amd64 architecture.  Most of
 the changes relate to the difference between the flat BIBOP on 32-bit
@@ -2307,7 +2518,7 @@ platforms and the two-level BIBOP on 64-bit platforms.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/09]::
+[2019-07-09]::
 +
 Fix bug bugref:224[] (`Word64.fromLargeInt` fails).  The problem was
 an incorrect record kind in `CPS/opt/infcnv.sml` (it was `RK_RECORD`
@@ -2316,7 +2527,7 @@ instead of `RK_RAWBLOCK`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/07/08]::
+[2019-07-08]::
 +
 Changed the `rep` datatype constructor `Word32` to `Raw`  (which
 covers both 32 and 64-bit numbers on 32-bit platforms).  We now
@@ -2326,7 +2537,7 @@ concrete numeric type.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/28]::
+[2019-06-28]::
 +
 Removed the use of runtime-type passing for polymorphic arrays.
 The effect of this change is that code that uses the `Array.array`
@@ -2342,7 +2553,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.91; 2019/06/20
 
 //--------------------------------------------------------------------
-[2019/06/20]::
+[2019-06-20]::
 +
 We added a new primop, `REAL_TO_BITS` that casts a floating-point value to the
 same-size word value.  This primop allows the Assembly.logb function to be
@@ -2355,7 +2566,7 @@ hardware support.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/19]::
+[2019-06-19]::
 +
 Rewrote the assembly code for the x86 and AMD64 targets.  Previously, there
 were separate source files for Unix and Windows; these have been replaced
@@ -2371,7 +2582,7 @@ to the use of the 2-level BIBOP on 64-bit targets.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/18]::
+[2019-06-18]::
 +
 Some cleanup in the interval-timer code.  In keeping with the other
 time-specific functions, I have switched the runtime-system API to
@@ -2383,7 +2594,7 @@ from `runtime/kernel` to `runtime/mach-dep`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/16]::
+[2019-06-16]::
 +
 Added 64-bit implementations of the target-specific **Basis Library**
 modules in directory `Basis/Implementation/Target64Bit`.
@@ -2391,7 +2602,7 @@ modules in directory `Basis/Implementation/Target64Bit`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/16]::
+[2019-06-16]::
 +
 Added `PackWord64Big` and `PackWord64Little` structures to Basis Library.
 Note that the implementation of these is target-specific.
@@ -2399,7 +2610,7 @@ Note that the implementation of these is target-specific.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/16]::
+[2019-06-16]::
 +
 Added `bigEndian` flag to the `TARGET` signature.
 +
@@ -2409,7 +2620,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.90; 2019/06/12
 
 //--------------------------------------------------------------------
-[2019/06/12]::
+[2019-06-12]::
 +
 Fixed the Concurrent ML library to use 64-bit positions (both Unix
 and Windows) versions.
@@ -2417,7 +2628,7 @@ and Windows) versions.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/11]::
+[2019-06-11]::
 +
 Moved the year offset from SML to the runtime system.  This change is
 necessary because Windows uses 1601 as year 0, whereas UNIX uses 1900.
@@ -2429,7 +2640,7 @@ between the runtime and SML code.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/07]::
+[2019-06-07]::
 +
 Fixed a problem with CM's symbol filtering (see bug bugref:222[]).
 +
@@ -2451,7 +2662,7 @@ it was possible that instead of seeing the new `A` defined within
 owner:people.cs.uchicago.edu/~blume[Matthias Blume]
 
 //--------------------------------------------------------------------
-[2019/06/04]::
+[2019-06-04]::
 +
 Various 64-bit porting changes to the **Windows** implementation of
 the **Basis Library** and runtime system:
@@ -2466,7 +2677,7 @@ the **Basis Library** and runtime system:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/04]::
+[2019-06-04]::
 +
 Implemented https://github.com/SMLFamily/BasisLibrary/wiki/2019-001-Correction-to-PRIM_IO[
 Basis Library proposal 2019-001 (Correction to the PRIM_IO signature)].
@@ -2476,7 +2687,7 @@ be `Position.int option`, which is necessary to support large files.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/03]::
+[2019-06-03]::
 +
 Added primop support (`PTR_TO_WORD` and `WORD_TO_PTR`) for the
 `c_pointer` type that was added in 110.89.  These primops are
@@ -2490,7 +2701,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.89; 2019/06/01
 
 //--------------------------------------------------------------------
-[2019/06/01]::
+[2019-06-01]::
 +
 Switched the `Position` structure to be bound to `Int64` and updated
 the runtime system to use 64-bit integers for file offsets and
@@ -2501,7 +2712,7 @@ open very large file).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/06/01]::
+[2019-06-01]::
 +
 Added abstract `c_pointer` type to the primitive types.  This type
 will be used to represent runtime-system pointers (__e.g.__, the
@@ -2510,7 +2721,7 @@ will be used to represent runtime-system pointers (__e.g.__, the
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/31]::
+[2019-05-31]::
 +
 Removed makefiles and code for architectures and operating systems
 that are no longer supported (__e.g.__, the DEC Alpha and HPPA
@@ -2519,7 +2730,7 @@ architectures).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/31]::
+[2019-05-31]::
 +
 Switched the `FixedInt` and `LargeWord` structure aliases to be 64-bits
 (__i.e.__, `FixedInt` is now bound to `Int64` and `LargeWord` is bound
@@ -2528,7 +2739,7 @@ to `Word64`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/30]::
+[2019-05-30]::
 +
 We are now assuming that we have at least **C99** support (for
 practical purposes, this assumption is even true on Windows).
@@ -2541,7 +2752,7 @@ on 32-bit machines, but tagged on 64-bit machines.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/29]::
+[2019-05-29]::
 +
 Fixed various bugs in the implementation of the `Word64` operations.
 The addition and subtraction operators were using arithmetic right
@@ -2552,7 +2763,7 @@ the variable names.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/27]::
+[2019-05-27]::
 +
 Created a simplified version of the `MLRiscGen` functor.  This version
 of the functor, which is in the file `CodeGen/main/mlrisc-gen-fn.sml`
@@ -2567,7 +2778,7 @@ dependencies.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/25]::
+[2019-05-25]::
 +
 Added contraction for unsigned `REM` and `NEG` operations in
 `CPS/opt/contract-prim.sml`.
@@ -2578,7 +2789,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.88; 2019/05/15
 
 //--------------------------------------------------------------------
-[2019/05/15]::
+[2019-05-15]::
 +
 Moved the `compiler/DEVNOTES` directory to the `dev-notes` tree
 and renamed it `old-compiler-notes`.
@@ -2586,7 +2797,7 @@ and renamed it `old-compiler-notes`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/15]::
+[2019-05-15]::
 +
 Added 64-bit versions of `NumFormat` and `NumScan`.  We use the 32-bit
 version for numbers of 32-bits or less and the 64-bit versions for
@@ -2601,7 +2812,7 @@ structure).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/15]::
+[2019-05-15]::
 +
 Reimplemented the 64-bit `int` and `word` types to put them on a
 (mostly) equal footing with the other precisions.  In this new implementation,
@@ -2625,7 +2836,7 @@ implementation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/09]::
+[2019-05-09]::
 +
 Reorganized the Basis Library source files (`system/Basis`) to isolate
 dependences on target word size.
@@ -2643,7 +2854,7 @@ files (each with a single module renaming) with `bind-common.sml`
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/05]::
+[2019-05-05]::
 +
 Some of the CPS optimization modules (`Expand` and `EtaSplit` were
 written as functors over the machine spec, when, in fact, they never
@@ -2653,7 +2864,7 @@ to structures.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/04]::
+[2019-05-04]::
 +
 We now use the `InlineT.identity` primop for `Fn.id`, so the compiler
 can optimize it.
@@ -2661,7 +2872,7 @@ can optimize it.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/03]::
+[2019-05-03]::
 +
 Fixed pretty-printing regression in 110.87; value of `char` type
 were missing their enclosing quotes.
@@ -2672,7 +2883,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.87; 2019/05/03
 
 //--------------------------------------------------------------------
-[2019/05/03]::
+[2019-05-03]::
 +
 Made the `Char.chr` operator inline (a primop was added to support
 this change in 110.86).
@@ -2680,7 +2891,7 @@ this change in 110.86).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/03]::
+[2019-05-03]::
 +
 Major renaming of the primitive operators in the `Inline` structure
 (as described in `dev-notes/primop-list.md`).  Also cleaned up the
@@ -2690,7 +2901,7 @@ Major renaming of the primitive operators in the `Inline` structure
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/03]::
+[2019-05-03]::
 +
 Added cases to the top-level pretty printer to handle the new basic
 types that were added in 110.86 (*e.g.*, `word8vector` and `chararray`).
@@ -2703,7 +2914,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.86; 2019/05/02
 
 //--------------------------------------------------------------------
-[2019/05/01]::
+[2019-05-01]::
 +
 Added `word8vector` and `chararray` to the primitive types that
 the compiler knows about.  These will be used in the rewriting
@@ -2712,7 +2923,7 @@ of the `InlineT` structure.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/01]::
+[2019-05-01]::
 +
 Replaced the `Primop.primop` constructors `NUMSUBSCRIPT` and `NUMUPDATE`
 with
@@ -2732,7 +2943,7 @@ and updating.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/01]::
+[2019-05-01]::
 +
 Added `Primop.INLCHR` to implement `Char.chr` as an inline function.
 This change also required moving the definition of the `Chr`
@@ -2744,7 +2955,7 @@ use it).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/05/01]::
+[2019-05-01]::
 +
 Major overhaul of the representation of primitive operators (both in
 the `Primop` and `CPS.P` structures).  The primitive arithmetic and
@@ -2782,7 +2993,7 @@ Some details:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/28]::
+[2019-04-28]::
 +
 Removed unused record kind constructors (`RK_SPILL`, `RK_EXN`, and
 `RK_BLOCK`) from `CPS.record_kind` datatype.  Also renamed `RK_I32BLOCK`
@@ -2792,7 +3003,7 @@ renamings to remove 32-bit assumptions.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/28]::
+[2019-04-28]::
 +
 Renamed `DTAG_raw32` to `DTAG_raw`, since the semantics on 64-bit systems
 will be to require word-size aligned raw data.  Also renamed `ML_AllocRaw32`
@@ -2801,7 +3012,7 @@ to `ML_AllocRaw` and `ML_ShrinkRaw32` to `ML_ShrinkRaw` for similar reasons.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/28]::
+[2019-04-28]::
 +
 Removed unused flags from the `Control` structure; most of these came
 from `Control.CG`, where roughly 20 out of 60 flags were no longer used.
@@ -2809,7 +3020,7 @@ from `Control.CG`, where roughly 20 out of 60 flags were no longer used.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/27]::
+[2019-04-27]::
 +
 Split the contraction of primitive operators out of the `Contract`
 structure into its own `ContractPrim` structure.
@@ -2817,7 +3028,7 @@ structure into its own `ContractPrim` structure.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/27]::
+[2019-04-27]::
 +
 Split the translation of primops to PLambda out into its own file
 (`compiler/FLINT/trans/transprim.sml`).
@@ -2825,7 +3036,7 @@ Split the translation of primops to PLambda out into its own file
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/27]::
+[2019-04-27]::
 +
 Fixed regression: `Word32.toInt 0wx8002DE32;` would return `187954` instead
 of raising `Overflow`.  The problem was a mistake in the way that the overflow
@@ -2834,7 +3045,7 @@ trap was being generated in `MLRiscGen`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/26]::
+[2019-04-26]::
 +
 Some minor primop cleanup.
 +
@@ -2853,7 +3064,7 @@ Some minor primop cleanup.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/23]::
+[2019-04-23]::
 +
 Improvements to the core 64-bit int and word modules in `system/smlnj/init`.
 Replaced `Int64.+`, `Int64.-`, `Word64.+`, and `Word64.*` with versions
@@ -2864,7 +3075,7 @@ implementations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/21]::
+[2019-04-21]::
 +
 Fix for bug bugref:213[] (`Int32.div` raises `Div` instead of `Overflow`
 when dividing `minInt` by `~1`).  Since the compiler generates an
@@ -2879,7 +3090,7 @@ instructions, so the assembly code is not needed.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/21]::
+[2019-04-21]::
 +
 Yet another attempt to get the implementation of `use` in the REPL
 working in a sensible way.
@@ -2908,7 +3119,7 @@ was fixed in Version 110.82.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/21]::
+[2019-04-21]::
 +
 Change to the CPS primops: moved the `F_SGN` operator (which is unary)
 from the `fcmp` datatype to the `branch` datatype (and renamed it `FSGN`).
@@ -2916,7 +3127,7 @@ from the `fcmp` datatype to the `branch` datatype (and renamed it `FSGN`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/21]::
+[2019-04-21]::
 +
 Finished conversion of the CPS IR to a form that is compatible with
 ASDL.  Basically, this involved converting the datatype constructor
@@ -2928,7 +3139,7 @@ code generator that will be given pickled CPS code as its input.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/08]::
+[2019-04-08]::
 +
 Starting to migrate the CPS IR toward the ASDL version.  Changed the
 names of the `CPS.P.arith` and `CPS.P.cmpop` constructors to be upper-case
@@ -2943,7 +3154,7 @@ datatype
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2019/04/07]::
+[2019-04-07]::
 +
 Reorganized the backend of the compiler by moving the CPS-related
 code into its own directory tree (`Compiler/CPS`) and replacing the
@@ -2958,7 +3169,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.85; 2018/12/21
 
 //--------------------------------------------------------------------
-[2018/12/21]::
+[2018-12-21]::
 +
 Modified `config/install.sh` to look for a pre-Mojave SDK when trying
 to install on macOS 10.14 Mojave.
@@ -2966,7 +3177,7 @@ to install on macOS 10.14 Mojave.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/12/21]::
+[2018-12-21]::
 +
 Updated `runtime/objs/cygwin.def` so that the runtime system will build
 on 32-bit Cygwin.  Also updated installation script to suggest using
@@ -2975,7 +3186,7 @@ the 32-bit version of Cygwin when a user tries to install it on Cygwin64.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/11/10]::
+[2018-11-10]::
 +
 **Xcode** 10.1, which is Apple's development environment for **macOS 10.14
 Mojave**, does not include the libraries needed to build 32-bit executables,
@@ -3001,7 +3212,7 @@ current developer directory using the command
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/10/10]::
+[2018-10-10]::
 +
 Removed several unsupported primitive operators from the compiler.
 In the CPS IR, these were `free`, `acclink`, `setpseudo`, `setmark`, and
@@ -3022,7 +3233,7 @@ These changes were committed as revision 4886.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/10/08]::
+[2018-10-08]::
 +
 Fix for bug bugref:216[] (run-time system fatal error with large top-level
 value).  The problem was in the code for building literals.
@@ -3030,7 +3241,7 @@ value).  The problem was in the code for building literals.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/23]::
+[2018-09-23]::
 +
 Change CPS operators for wrapping/unwrapping integer and float values to
 be word-size flexible.  We now use a single `wrap` (and `unwrap`) operator
@@ -3062,7 +3273,7 @@ is as follows:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/13]::
+[2018-09-13]::
 +
 Further cleanup for 64BIT in function `atomeq` in `PEqual`.
 (`base/compiler/FLINT/trans/pequal.sml`).
@@ -3073,7 +3284,7 @@ types in the compiler.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2018/09/12]::
+[2018-09-12]::
 +
 Fixed 64BIT issue in module `MatchComp`
 (`base/compiler/FLINT/trans/matchcomp.sml`).
@@ -3082,7 +3293,7 @@ Added `int64Ty` and `word64Ty` cases to function `numCon`.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2018/09/12]::
+[2018-09-12]::
 +
 Fixed 64BIT issue in module `Equal`
 (`base/compiler/FLINT/reps/equal.sml`).
@@ -3092,7 +3303,7 @@ Exports just one function: `equal_branch`, which is called once in
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2018/09/12]::
+[2018-09-12]::
 +
 The CPS optimizer had a mechanism for checking the CPS against the FLINT
 types, which required maintaining a mapping from lvars to their FLINT
@@ -3104,7 +3315,7 @@ in the various CPS optimization passes.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/12]::
+[2018-09-12]::
 +
 Modified the `InfCnv` (now named `IntInfCnv`) structure to remove
 32-bit dependencies.
@@ -3112,7 +3323,7 @@ Modified the `InfCnv` (now named `IntInfCnv`) structure to remove
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/11]::
+[2018-09-11]::
 +
 Modified `Pequal` (in `base/compiler/FLINT/trans/pequal.sml`) and
 `Translate` (in `base/compiler/FLINT/trans/translate.sml`) to remove
@@ -3122,7 +3333,7 @@ properly handle `int64` and `word64` types when `defaultIntSz` = 64.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2018/09/11]::
+[2018-09-11]::
 +
 Reimplemented the `Switch` module (int `base/compiler/FLINT/cps`).  The
 new implementation follows the same basic design as before, but the code
@@ -3137,7 +3348,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.84; 2018/09/03
 
 //--------------------------------------------------------------------
-[2018/09/03]::
+[2018-09-03]::
 +
 Reimplemented the array/vector-slice modules to use a (base, start, length)
 representation (as does Substring in system/smlnj/init/substring.sml).  Also
@@ -3147,7 +3358,7 @@ predicate function was not adjusted to be slice-relative.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/02]::
+[2018-09-02]::
 +
 Implemented https://github.com/SMLFamily/BasisLibrary/wiki/2018-002-Additional-slice-operations[
 Basis Library proposal 2018-002 (Additional slice operations)].
@@ -3155,7 +3366,7 @@ Basis Library proposal 2018-002 (Additional slice operations)].
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/09/02]::
+[2018-09-02]::
 +
 Improved implementation of `CharVectorSlice.map` and `CharVectorSlice.mapi`
 to not build intermediate list of results.
@@ -3163,7 +3374,7 @@ to not build intermediate list of results.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/08/28]::
+[2018-08-28]::
 +
 A beta-release of ASDL library and *asdlgen* tool have been added to
 the system.  This version of the tool implements SML support, but the
@@ -3173,7 +3384,7 @@ recognizes the `.asdl` file suffix.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/08/28]::
+[2018-08-28]::
 +
 Two changes to the installer (`base/base/system/smlnj/installer`):
 +
@@ -3186,7 +3397,7 @@ Two changes to the installer (`base/base/system/smlnj/installer`):
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/08/27]::
+[2018-08-27]::
 +
 Added `RENAME` extension style to CM tool support.  This extension
 style allows arbitrary file names to be generated from the base name.
@@ -3194,7 +3405,7 @@ style allows arbitrary file names to be generated from the base name.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/08/19]::
+[2018-08-19]::
 +
 Fixed a bug in the implementation of monomorphic buffers: the functions
 `CharBuffer.add1` and `Word8Buffer.add1` had an incorrect length
@@ -3203,7 +3414,7 @@ test.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/06/15]::
+[2018-06-15]::
 +
 Fixed a compiler bug (`arg ty lists wrong length`) in `unifyTy` that
 could occur when one of the type constructors is the `ERRORtyc`.
@@ -3217,7 +3428,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.83; 2018/06/01
 
 //--------------------------------------------------------------------
-[2018/05/29]::
+[2018-05-29]::
 +
 Fixed bugref:206[] (Parsing of explicit type variables and val rec
 is broken).  This bug was also bug number 1261 in the old bugs list.
@@ -3225,7 +3436,7 @@ is broken).  This bug was also bug number 1261 in the old bugs list.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/29]::
+[2018-05-29]::
 +
 Fixed minor bug in Date.toString (missing leading "0" for day of month).
 This issue was bug number 1444 in the old bugs list.
@@ -3233,7 +3444,7 @@ This issue was bug number 1444 in the old bugs list.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/29]::
+[2018-05-29]::
 +
 Cleaned up match compiler code (`FLINT/trans/matchcomp.sml`) and added
 typing and function comments.  Added debugging and printing
@@ -3243,14 +3454,14 @@ infrastructure, including new `FLINT/trans/mcprint.sml` file, and new
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2018/05/29]::
+[2018-05-29]::
 +
 Fixed parser to allow parentheses around `val rec` patterns.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/28]::
+[2018-05-28]::
 +
 Fixed the scanner to produce the correct error message for bad escape
 sequences in string literals.
@@ -3258,7 +3469,7 @@ sequences in string literals.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/26]::
+[2018-05-26]::
 +
 Fixed old bug number 1383: `Char.toCString #"\000"` returned `"\\0"`,
 instead of `"\\000"`, which caused `String.toCString` to produce invalid
@@ -3267,14 +3478,14 @@ results.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/19]::
+[2018-05-19]::
 +
 Fix for bug bugref:201[] (The AMD64.cm library is missing).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/18]::
+[2018-05-18]::
 +
 Added `MONO_BUFFER` signature, with instances `CharBuffer` and `Word8Buffer`,
 to Basis implementation
@@ -3284,7 +3495,7 @@ Basis Library Proposal 2018-001]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/16]::
+[2018-05-16]::
 +
 Fix a bug where "`0w`" was being accepted as a prefix for a hexidecimal
 word value in `Word.fromString`/`scan` (ignoring case, only "`0x`"
@@ -3294,7 +3505,7 @@ from the old bugs list.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/13]::
+[2018-05-13]::
 +
 Fixed a bug in the parsing of bindings involving the `op` keyword.
 The parser was more restrictive than the definition.  This change
@@ -3303,7 +3514,7 @@ fixes bug number 1370 from the old bugs list.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/12]::
+[2018-05-12]::
 +
 The lexer gave an unmatched close comment error on "++*)++", when it
 should have scanned it as the tokens "++*++" "++)++".  This change
@@ -3320,7 +3531,7 @@ the 1997 Definition (and the behavior of other systems).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/07]::
+[2018-05-07]::
 +
 The `sameSign` function returned incorrect results in the `Int31`
 and `Int32` modules.
@@ -3328,7 +3539,7 @@ and `Int32` modules.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/07]::
+[2018-05-07]::
 +
 Fixed various minor parsing and scanning issues:
 +
@@ -3343,7 +3554,7 @@ Fixed various minor parsing and scanning issues:
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/05/05]::
+[2018-05-05]::
 +
 Completed overhaul of the way that int/word literals are handled in
 the compiler.  We now use `IntInf.int` to represent the values in
@@ -3356,7 +3567,7 @@ during code generation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/04/21]::
+[2018-04-21]::
 +
 Improved the reporting of errors involving literal values.  We now
 use the original source text when describing the value in the error
@@ -3365,7 +3576,7 @@ message.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/04/20]::
+[2018-04-20]::
 +
 Fix for bug bugref:191[] (Compiler crash when handling large reals).
 We now issue a warning for real literals that will round to zero and
@@ -3376,14 +3587,14 @@ still needs to be done some work to support sub-normal literal values
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/04/14]::
+[2018-04-14]::
 +
 Changed the representation of real literals from strings to `RealLit.t`.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/04/13]::
+[2018-04-13]::
 +
 Removed real patterns from Absyn and FLINT, since they are not allowed
 by SML'93 and were not present in the AST representation.
@@ -3391,7 +3602,7 @@ by SML'93 and were not present in the AST representation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2018/04/12]::
+[2018-04-12]::
 +
 Fix for bug bugref:194[] (`Real.fromString` overflows or hangs).  There
 were two issues here.  First, the `Overflow` exception was being raised
@@ -3403,7 +3614,7 @@ reached, so it could take a long time.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/10/22]::
+[2017-10-22]::
 +
 Moved the Version-1 literal building code into `gc/old-literals.c`.
 This file can be removed once the compiler generates the Version-2
@@ -3412,7 +3623,7 @@ literal bytecode.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/10/16]::
+[2017-10-16]::
 +
 Moved the check for whether a int or word literal is in range for
 its type from the absyn->plambda translation to the overload
@@ -3421,7 +3632,7 @@ resolver (`compiler/Elaborator/types/overload.sml`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/10/14]::
+[2017-10-14]::
 +
 Part 1 of an overhaul of the way that the compiler treats int/word
 literals.  The end goal is to use `IntInf.int` to represent literals
@@ -3435,7 +3646,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.82; 2017/10/16
 
 //--------------------------------------------------------------------
-[2017/10/01]::
+[2017-10-01]::
 +
 Fixed unnumbered bug in `IntInf.mod` and `IntInf.rem` functions,
 where the `Div` exception was *not* getting raised when both
@@ -3444,7 +3655,7 @@ arguments are `0`.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/09/20]::
+[2017-09-20]::
 +
 Various bits of cleanup in the handling of primitive operations, such
 as removing the `ptnum` mechanism for translating from Absyn to FLINT.
@@ -3452,7 +3663,7 @@ as removing the `ptnum` mechanism for translating from Absyn to FLINT.
 owner:cs.uchicago.edu/~dbm[David MacQueen]
 
 //--------------------------------------------------------------------
-[2017/09/20]::
+[2017-09-20]::
 +
 Added `Target` module, which specifies the properties of the target
 (__e.g.__, the size in bits of the default int type).  Reworked the
@@ -3461,7 +3672,7 @@ generation of the `InlineT` structure to be target specific.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/09/18]::
+[2017-09-18]::
 +
 Removed FLINT primops (and their CPS counterparts) that are not
 in the `InlineT` structure and, thus, are never used by the compiler.
@@ -3469,7 +3680,7 @@ in the `InlineT` structure and, thus, are never used by the compiler.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/09/18]::
+[2017-09-18]::
 +
 Fixed bug bugref:123[] (missing nonexhaustive bind warning). The `mkVBs`
 function in `FLINT/trans/translate.sml` was adding a redundant default
@@ -3479,7 +3690,7 @@ already been explicitly added to the match for let bindings.
 owner:cs.uchicago.edu/~dbm[David MacQueen]
 
 //--------------------------------------------------------------------
-[2017/09/18]::
+[2017-09-18]::
 +
 Fixed bug bugref:183[] (status code returned by sml REPL).  This fix
 restores the version 110.79 behavior of having `sml foo.sml` exit with
@@ -3490,7 +3701,7 @@ is a syntax error.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/08/28]::
+[2017-08-28]::
 +
 Fixed bug bugref:185[] (Bring command line help text into parity with man page).
 Added missing options (`@SMLversion` and `@SMLsuffix`) to the
@@ -3501,7 +3712,7 @@ page, so that the orders match.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/08/12]::
+[2017-08-12]::
 +
 Changed the way that we test for allocation-space addresses in minor GCs.
 Instead of using the BIBOP, we now do a pointer range test.  On 32-bit
@@ -3513,7 +3724,7 @@ the nursery bounds.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/08/12]::
+[2017-08-12]::
 +
 Fixed some issues in build-literals.c.  These were mostly false
 positives in the assertions, but there was also a bug in the way
@@ -3523,7 +3734,7 @@ result in a crash (but was very unlikely).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/06/07]::
+[2017-06-07]::
 +
 Updated _arch-n-os script to recognize macOS 10.13 (High Sierra)
 as a valid target.
@@ -3531,7 +3742,7 @@ as a valid target.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/05/17]::
+[2017-05-17]::
 +
 Fixed a bug in the way that JSON string values were being printed.
 The code previously assumed that C-style escaping will work, but
@@ -3546,14 +3757,14 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.81; 2017/05/01
 
 //--------------------------------------------------------------------
-[2017/04/28]::
+[2017-04-28]::
 +
 Fixed bug bugref:129[] (Symbolic identifiers are allowed as strids).
 +
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2017/04/07]::
+[2017-04-07]::
 +
 Fixed bug bugref:179[] (ml-ulex writing debug messages to stdOut).
 Both **ml-ulex** and **ml-antlr** now direct their debug and status messages
@@ -3562,7 +3773,7 @@ to `stdErr` (instead of `stdOut`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2017/02/09]::
+[2017-02-09]::
 +
 Linux distributions are starting to require that the stack be marked
 as non-executable in applications.  Because the runtime system includes
@@ -3575,7 +3786,7 @@ a pointer to the fix.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/10/15]::
+[2016-10-15]::
 +
 Added `--debug` command-line option to *ml-antlr*.
 This flag causes <b>ml-antlr</b> to generate debug actions that print
@@ -3584,7 +3795,7 @@ the left-hand-side non-terminal of the production.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/15]::
+[2016-09-15]::
 +
 Working on 64-bit support.  Changes include making code generation
 dependent on the target word size and abstracting over the BIBOP
@@ -3593,7 +3804,7 @@ representation in the runtime system.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/15]::
+[2016-09-15]::
 +
 Further cleanup of the separation of FLINT from the front-end.
 Eliminated all references to `ModulePropLists` (`module-plists.sml`) in
@@ -3620,7 +3831,7 @@ Files changed:
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2016/09/14]::
+[2016-09-14]::
 +
 Eliminated dependency of `PlambdaType` from the front end by adding a
 type `TKind.tkind` which is a simplified standin for `PlambdaType.tkind`
@@ -3654,7 +3865,7 @@ Files changed:
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2016/09/14]::
+[2016-09-14]::
 +
 Added support for Successor ML record-expression-punning syntax.  For
 example, one can now define a function `f` as
@@ -3674,7 +3885,7 @@ fun f x = {x = x}
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/14]::
+[2016-09-14]::
 +
 Fixed a bug in the parser.  Asterix (`*`) was not allowed as a record label
 when using the record-pattern-punning syntax.
@@ -3682,14 +3893,14 @@ when using the record-pattern-punning syntax.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/14]::
+[2016-09-14]::
 +
 Added support for `do exp` *Successor ML* syntax.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/12]::
+[2016-09-12]::
 +
 Fixed bug bugref:153[] (Enabling Successor ML features is delayed).
 We now use a function `Control.setSuccML` to switch to/from *Successor ML*
@@ -3700,7 +3911,7 @@ in the REPL.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/09/12]::
+[2016-09-12]::
 +
 Fixed bug bugref:149[] (Datatype replication exposes hidden constructors).
 Added boolean field `stripped` to DATATYPE variant of tyckind in
@@ -3737,7 +3948,7 @@ Files changed:
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2016/08/31]::
+[2016-08-31]::
 +
 Added `%tokentype` directive to *ml-antlr*; this directive allows users
 to specify the token datatype externally, which is necessary in order
@@ -3746,7 +3957,7 @@ to share a lexer with two different *ml-antlr* parsers.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/08/20]::
+[2016-08-20]::
 +
 Change the interface to `AMD64Gen` in *MLRISC*; the `signBit` and
 `negateSignBit` callbacks now return an `MLTree.rexp` (instead of a
@@ -3758,7 +3969,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.80; 2016/08/19
 
 //--------------------------------------------------------------------
-[2016/08/16]::
+[2016-08-16]::
 +
 Fixed bugref:151[] (Error installing from source on Mac OS X).  The fix
 involves both changes to the `config/install.sh` script and the
@@ -3769,7 +3980,7 @@ later.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/08/10]::
+[2016-08-10]::
 +
 Added the proposed `unzipMap`, `unzipMapi`, `find`, and `findi` functions
 to the `ListPair` module.
@@ -3777,7 +3988,7 @@ to the `ListPair` module.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/08/10]::
+[2016-08-10]::
 +
 Added the proposed `mapLeft`, `mapRight`, `appLeft`, and `appRight`
 functions to the `Either` module.
@@ -3785,7 +3996,7 @@ functions to the `Either` module.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/08/09]::
+[2016-08-09]::
 +
 Fixed bug bugref:145[] (Internal exception occurs on bogus annotation
 instead of typechecking diagnostic). Added missing `OVLD_UB` case in
@@ -3794,7 +4005,7 @@ function `failMessage` in `compiler/Elaborator/types/unify.sml`.
 owner:cs.uchicago.edu/~dbm[Dave MacQueen]
 
 //--------------------------------------------------------------------
-[2016/08/04]::
+[2016-08-04]::
 +
 Fixed bug bugref:166[] (Can't install SML/NJ in directories containing
 spaces).  Thanks to Eugene Sharygin for the patch.
@@ -3802,7 +4013,7 @@ spaces).  Thanks to Eugene Sharygin for the patch.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/06/21]::
+[2016-06-21]::
 +
 Fixed incorrect dividend sign extension before 32-bit divide in amd64
 code generator in MLRISC
@@ -3810,14 +4021,14 @@ code generator in MLRISC
 owner:gallium.inria.fr/~rainey/[Mike Rainey]
 
 //--------------------------------------------------------------------
-[2016/06/16]::
+[2016-06-16]::
 +
 Fixed bug bugref:150[] (Add title to batch script).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/05/11]::
+[2016-05-11]::
 +
 Implemented the changes for
 https://github.com/SMLFamily/BasisLibrary/wiki/2016-001-Add-popCount-to-WORD-signature[
@@ -3827,7 +4038,7 @@ function to the `WORD` signature.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/05/03]::
+[2016-05-03]::
 +
 Fixed bug bugref:156[] (sml resumes after SIGSTOP with bogus exception
 report).  The fix is a bit of a hack: I modified the `non_bt_hdl`
@@ -3837,14 +4048,14 @@ the appropriate shape for this situation.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/04/07]::
+[2016-04-07]::
 +
 Fixed bug bugref:154[] (Return code for ml-ulex when there is an error).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/04/07]::
+[2016-04-07]::
 +
 Fixed bug bugref:155[] (Misleading printing of word literals in
 error messages).
@@ -3852,7 +4063,7 @@ error messages).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2016/04/02]::
+[2016-04-02]::
 +
 Fixed a bug in the implementation of the `--ml-lex-mode` flag for
 *ml-ulex*.  The `\h` escape sequence is supposed to map to the
@@ -3861,7 +4072,7 @@ character range `[\128-\255]`, but did not.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/11/09]::
+[2015-11-09]::
 +
 Fixed bug bugref:147[] (Hexadecimal escapes in strings are not supported).
 We previously did not support Unicode escapes in string literals.  We now
@@ -3875,7 +4086,7 @@ _Revised August 4, 2016_
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/10/28]::
+[2015-10-28]::
 +
 Partial fix for the noisy exception-stack traces on the `Error` exception.
 The cases that are handled by this change are applying `use` to a non-existent
@@ -3889,7 +4100,7 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 == Version 110.79; 2015/10/04
 
 //--------------------------------------------------------------------
-[2015/10/04]::
+[2015-10-04]::
 +
 Patched `base/compiler/FLINT/clos/closure.sml` so that *Twelf* will
 build again.  Fixes bug bugref:140[] (Lookup failure in `closure.sml`
@@ -3898,7 +4109,7 @@ when compiling *Twelf*).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/28]::
+[2015-09-28]::
 +
 Added support for a *Successor ML* tool to CM.  This tool allows one
 to specify that a source file `fool.sml` is *Successor ML* source code in the
@@ -3913,7 +4124,7 @@ foo.sml (succ-ml)
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/28]::
+[2015-09-28]::
 +
 Added the directory `base/old-basis` to support backward-compatible
 views of the *Basis Library*.  You can use these by replacing the
@@ -3932,7 +4143,7 @@ $/basis-2004.cm
 in your CM files.
 
 //--------------------------------------------------------------------
-[2015/09/28]::
+[2015-09-28]::
 +
 New implementation of `Date` structure in the Basis, which fixes bugs
 bugref:138[] (Incorrect behavior for `Date.fromTimeLocal`) and
@@ -3945,7 +4156,7 @@ different results (by a day) for these two situations.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/25]::
+[2015-09-25]::
 +
 Implemented the changes for
 https://github.com/SMLFamily/BasisLibrary/wiki/2015-003-Additional-operations-on-sequences[
@@ -3993,7 +4204,7 @@ in the *ml-yacc* sources and the latter in the *MLRISC* sources.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/25]::
+[2015-09-25]::
 +
 Added the optional implementations of `PackReal64Big` and `PackReal64Little`.
 This addition addresses feature request bugref:82[feature]
@@ -4004,7 +4215,7 @@ https://github.com/msullivan/sml-util/blob/master/libs/pack-real.sml[Michael Sul
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/24]::
+[2015-09-24]::
 +
 Fixed bug bugref:45[] (Compiler bug in specialize phase).  This bug
 was in `compiler/FLINT/opt/fcontract.sml` and was the result of a bad
@@ -4014,13 +4225,13 @@ I cleaned up the code in this part of FLINT a bit.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/21]::
+[2015-09-21]::
 Improvements to the error messages produced by the *ml-ulex* lexer generator.
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/21]::
+[2015-09-21]::
 Added `Ref` structure and `REF` signature to Basis implementation
 (https://github.com/SMLFamily/BasisLibrary/wiki/2015-007-Addition-of-Ref-module[
 Basis Library Proposal 2015-007]).
@@ -4028,7 +4239,7 @@ Basis Library Proposal 2015-007]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/09/21]::
+[2015-09-21]::
 Added `Fn` structure and `FN` signature to Basis implementation
 (https://github.com/SMLFamily/BasisLibrary/wiki/2015-005-Addition-of-Fn-module[
 Basis Library Proposal 2015-005]).
@@ -4036,7 +4247,7 @@ Basis Library Proposal 2015-005]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/08/22]::
+[2015-08-22]::
 +
 Fixed bug bugref:136[] (Incorrect raising of exceptions in `Real.fmt`
 and `Time.fmt`).
@@ -4044,7 +4255,7 @@ and `Time.fmt`).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/08/14]::
+[2015-08-14]::
 +
 Added `Either` structure and `EITHER` signature to Basis implementation
 (https://github.com/SMLFamily/BasisLibrary/wiki/2015-002-Addition-of-Either-module[
@@ -4053,14 +4264,14 @@ Basis Library Proposal 2015-002]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/07/23]::
+[2015-07-23]::
 +
 Fixed bug bugref:135[] (Fails to build on Linux PowerPC).
 +
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/07/08]::
+[2015-07-08]::
 +
 Added Linux 4.* kernels to the list of operating systems recognized
 by the `.arch-n-opsys` script (fixes bug bugref:134[]).
@@ -4068,7 +4279,7 @@ by the `.arch-n-opsys` script (fixes bug bugref:134[]).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/06/11]::
+[2015-06-11]::
 +
 Added Mac OS X 10.11 (El Capitan) to the list of operating systems
 recognized by the `.arch-n-opsys` script.
@@ -4076,7 +4287,7 @@ recognized by the `.arch-n-opsys` script.
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
-[2015/05/27]::
+[2015-05-27]::
 +
 Added support for *Successor ML* lexical extensions.  These can be enabled
 using the command-line option `-Cparser.succ-ml=true` or by the assignment

@@ -644,15 +644,20 @@ fun constrStr(transp, sign, str, strDec, strExp, evOp, tdepth, entEnv, rpath,
                       region=region, compInfo=compInfo}
    in if transp
       then (A.SEQdec[strDec, matchedDec], matchedStr, matchedExp)
-      else (* instantiate the signature (opaque match) *)
-	   let val STR {rlzn=matchedRlzn, access, prim, ...} = matchedStr
-	       val {rlzn=abstractRlzn, ...} =
-		   INS.instAbstr {sign=sign, entEnv=entEnv, rlzn=matchedRlzn,
-				  rpath=rpath, region=region, compInfo=compInfo}
-	       val abstractStr = STR {sign=sign, rlzn=abstractRlzn, access=access, prim=prim}
-	       val _ = debugmsg "<<< constrStr[transp=false]"
-            in (A.SEQdec[strDec, matchedDec], abstractStr, matchedExp)
-	   end
+      (* instantiate the signature (opaque match) *)
+      else (case matchedStr
+         of STR{rlzn=matchedRlzn, access, prim, ...} => let
+            val {rlzn=abstractRlzn, ...} = INS.instAbstr {
+                    sign=sign, entEnv=entEnv, rlzn=matchedRlzn,
+                    rpath=rpath, region=region, compInfo=compInfo
+                  }
+            val abstractStr = STR {sign=sign, rlzn=abstractRlzn, access=access, prim=prim}
+            val _ = debugmsg "<<< constrStr[transp=false]"
+            in
+              (A.SEQdec[strDec, matchedDec], abstractStr, matchedExp)
+	    end
+          | ERRORstr => (A.SEQdec[strDec, matchedDec], ERRORstr, matchedExp)
+        (* end case *))
   end (* fun constrStr *)
 
 
@@ -693,7 +698,7 @@ val depth : int =
 
 val _ = dbsaynl (">>> elabStr: " ^ sname)
 val _ = showStrExpAst ("### elabStr: strexp = ", strexp, env)
-		   
+
 (* elab: Ast.strexp * staticEnv * entityEnv * region
  *        -> A.dec * M.Structure * M.strExp * EE.entityEnv
  *  subsidiary function for elaborating strexps *)

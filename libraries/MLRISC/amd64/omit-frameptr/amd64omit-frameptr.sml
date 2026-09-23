@@ -1,6 +1,6 @@
 (* amd64omit-frameptr.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * replaces uses and definitions of a virtual frame pointer (vfp) with the appropriate

@@ -1,6 +1,6 @@
 (* match-tree.sml
  *
- * COPYRIGHT (c) 2008 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2008 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Match trees are used to represent the results of matching regular

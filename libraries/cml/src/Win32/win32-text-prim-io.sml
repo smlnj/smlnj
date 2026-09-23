@@ -1,6 +1,6 @@
 (* win32-text-prim-io.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This implements the Win32 version of the OS specific text primitive

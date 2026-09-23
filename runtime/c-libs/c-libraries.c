@@ -2,7 +2,7 @@
  *
  * \author John Reppy
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the home of the CLibrary table, C library initialization code,

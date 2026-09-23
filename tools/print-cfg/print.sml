@@ -1,6 +1,6 @@
 (* print.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://www.smlnj.org)
  * All rights reserved.
  *)
 
@@ -44,76 +44,76 @@ structure Print : sig
       | fcmpopToString P.F_UN = "?"
 
     fun arithopToString oper = (case oper
-	   of P.IADD => "IADD"
-	    | P.ISUB => "ISUB"
-	    | P.IMUL => "IMUL"
-	    | P.IDIV => "IDIV"
-	    | P.IREM => "IREM"
-	  (* end case *))
+           of P.IADD => "IADD"
+            | P.ISUB => "ISUB"
+            | P.IMUL => "IMUL"
+            | P.IDIV => "IDIV"
+            | P.IREM => "IREM"
+          (* end case *))
 
     fun branchToString oper = (case oper
-	   of P.CMP{oper, signed, sz} => concat[
-		  cmpopToString oper, if signed then "_i" else "_u",
-		  Int.toString sz
-		]
-	    | P.FCMP{oper, sz} => concat[fcmpopToString oper, "_f", Int.toString sz]
-	    | P.FSGN sz => concat["f", Int.toString sz, "sgn"]
-	    | P.PEQL => "peql"
-	    | P.PNEQ => "pneq"
-	    | P.LIMIT n => concat["needGC(", Word.fmt StringCvt.DEC n, ")"]
-	  (* end case *))
+           of P.CMP{oper, signed, sz} => concat[
+                  cmpopToString oper, if signed then "_i" else "_u",
+                  Int.toString sz
+                ]
+            | P.FCMP{oper, sz} => concat[fcmpopToString oper, "_f", Int.toString sz]
+            | P.FSGN sz => concat["f", Int.toString sz, "sgn"]
+            | P.PEQL => "peql"
+            | P.PNEQ => "pneq"
+            | P.LIMIT n => concat["needGC(", Word.fmt StringCvt.DEC n, ")"]
+          (* end case *))
 
     fun rawTyToString {kind, sz} = numkindToString(kind, sz)
 
     fun allocToString P.SPECIAL = "special"
       | allocToString (P.RECORD{desc, mut=false}) =
-	  concat["record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
+          concat["record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
       | allocToString (P.RECORD{desc, mut=true}) =
-	  concat["mut_record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
+          concat["mut_record[0x", IntInf.fmt StringCvt.HEX desc, "]"]
       | allocToString (P.RAW_RECORD{desc, ...}) = concat[
-	    "raw_record[0x", IntInf.fmt StringCvt.HEX desc, "]"
-	  ]
+            "raw_record[0x", IntInf.fmt StringCvt.HEX desc, "]"
+          ]
       | allocToString (P.RAW_ALLOC{desc, align, len}) = concat(
-	  "raw_" :: i2s align :: "_alloc[" ::
-	  (case desc
-	   of SOME d => ["0x", IntInf.fmt StringCvt.HEX d, ";"]
-	    | _ => []
-	  (* end case *)) @ [i2s len, "]"])
+          "raw_" :: i2s align :: "_alloc[" ::
+          (case desc
+           of SOME d => ["0x", IntInf.fmt StringCvt.HEX d, ";"]
+            | _ => []
+          (* end case *)) @ [i2s len, "]"])
 
     fun setterToString P.UNBOXED_UPDATE = "unboxedupdate"
       | setterToString P.UPDATE = "update"
       | setterToString P.UNBOXED_ASSIGN = "unboxedassign"
       | setterToString P.ASSIGN = "assign"
       | setterToString (P.RAW_UPDATE{kind, sz}) =
-	  concat("update_" :: numkind2s(kind, sz))
+          concat("update_" :: numkind2s(kind, sz))
       | setterToString (P.RAW_STORE{kind, sz}) =
-	  concat("store_" :: numkind2s(kind, sz))
+          concat("store_" :: numkind2s(kind, sz))
       | setterToString P.SET_HDLR = "sethdlr"
       | setterToString P.SET_VAR = "setvar"
 
     fun lookerToString P.DEREF = "!"
       | lookerToString P.SUBSCRIPT = "array_sub"
       | lookerToString (P.RAW_SUBSCRIPT{kind, sz}) =
-	  concat("array_sub_" :: numkind2s(kind, sz))
+          concat("array_sub_" :: numkind2s(kind, sz))
       | lookerToString (P.RAW_LOAD{kind, sz}) =
-	  concat("load_" :: numkind2s(kind, sz))
+          concat("load_" :: numkind2s(kind, sz))
       | lookerToString P.GET_HDLR = "gethdlr"
       | lookerToString P.GET_VAR = "getvar"
 
     fun cvtParams (prefix, from, to) =
-	  concat[prefix, "_", i2s from, "_to_", i2s to]
+          concat[prefix, "_", i2s from, "_to_", i2s to]
 
     fun arithToString (P.ARITH{oper, sz}) = arithopToString oper ^ i2s sz
       | arithToString (P.FLOAT_TO_INT{mode, from, to}) = let
-	  fun toS prefix = concat[prefix, i2s from, "_i", i2s to]
-	  in
-	    case mode
-	     of P.TO_NEAREST => toS "round_f"
-	      | P.TO_NEGINF => toS "floor_f"
-	      | P.TO_POSINF => toS "ceil_f"
-	      | P.TO_ZERO => toS "trunc_f"
-	    (* end case *)
-	  end
+          fun toS prefix = concat[prefix, i2s from, "_i", i2s to]
+          in
+            case mode
+             of P.TO_NEAREST => toS "round_f"
+              | P.TO_NEGINF => toS "floor_f"
+              | P.TO_POSINF => toS "ceil_f"
+              | P.TO_ZERO => toS "trunc_f"
+            (* end case *)
+          end
 
     fun pureopToString rator = (case rator
            of P.ADD => "add"
@@ -148,32 +148,34 @@ structure Print : sig
 
     fun pureToString (P.PURE_ARITH{oper, sz}) = pureopToString oper ^ i2s sz
       | pureToString (P.EXTEND{signed=true, from, to}) =
-	  cvtParams ("sign_extend_", from, to)
+          cvtParams ("sign_extend_", from, to)
       | pureToString (P.EXTEND{signed=false, from, to}) =
-	  cvtParams ("zero_extend_", from, to)
-      | pureToString (P.TRUNC{from, to}) = cvtParams ("trunc_", from, to)
-      | pureToString (P.INT_TO_FLOAT{from, to}) = cvtParams ("float", from, to)
-      | pureToString (P.FLOAT_TO_BITS{sz}) = concat["float_", i2s sz, "_to_bits"]
-      | pureToString (P.BITS_TO_FLOAT{sz}) = concat["float_", i2s sz, "_from_bits"]
+          cvtParams ("zero_extend_", from, to)
+      | pureToString (P.TRUNC{from, to}) = cvtParams ("trunc", from, to)
+      | pureToString (P.INT_TO_FLOAT{from, to}) = concat [
+            "i", Int.toString from, "_to_f", i2s to
+          ]
+      | pureToString (P.FLOAT_TO_BITS{sz}) = concat ["f", i2s sz, "_to_bits"]
+      | pureToString (P.BITS_TO_FLOAT{sz}) = concat ["f", i2s sz, "_from_bits"]
       | pureToString P.PURE_SUBSCRIPT = "vector_sub"
       | pureToString (P.PURE_RAW_SUBSCRIPT{kind, sz}) =
-	  concat("vector_sub_" :: numkind2s(kind, sz))
+          concat("vector_sub_" :: numkind2s(kind, sz))
       | pureToString (P.RAW_SELECT{kind, sz, offset}) =
-	  concat("select_" :: numkind2s(kind, sz) @ ["@", i2s offset])
+          concat("select_" :: numkind2s(kind, sz) @ ["@", i2s offset])
 
     fun expToString e = (case e
-	   of C.VAR{name} => LV.toString name
-	    | C.LABEL{name} => "L_" ^ LV.toString name
-	    | C.NUM{iv, sz} =>
-		concat["(i", i2s sz, ")", IntInf.toString iv]
-	    | C.LOOKER{oper, args} => appToS(lookerToString oper, args)
-	    | C.PURE{oper, args} => appToS(pureToString oper, args)
-	    | C.SELECT{idx, arg} => appToS("#" ^ i2s idx, [arg])
-	  (* end case *))
+           of C.VAR{name} => LV.toString name
+            | C.LABEL{name} => "L_" ^ LV.toString name
+            | C.NUM{iv, sz} =>
+                concat["(i", i2s sz, ")", IntInf.toString iv]
+            | C.LOOKER{oper, args} => appToS(lookerToString oper, args)
+            | C.PURE{oper, args} => appToS(pureToString oper, args)
+            | C.SELECT{idx, arg} => appToS("#" ^ i2s idx, [arg])
+          (* end case *))
 
     and appToS (prefix, es) = String.concat[
-	    prefix, "(", String.concatWithMap "," expToString es, ")"
-	  ]
+            prefix, "(", String.concatWithMap "," expToString es, ")"
+          ]
 
     fun tyToString (C.NUMt{sz}) = "i" ^ Int.toString sz
       | tyToString (C.FLTt{sz}) = "f" ^ Int.toString sz

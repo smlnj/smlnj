@@ -1,6 +1,6 @@
 (* substring.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -130,16 +130,17 @@ structure Substring :> SUBSTRING
     fun isPrefix s1 (SS(s2, i2, n2)) = PreString.isPrefix (s1, s2, i2, n2)
     fun isSuffix s1 (SS(s2, i2, n2)) =
 	PreString.isPrefix (s1, s2, i2 + n2 - stringSize s1, n2)
-    fun isSubstring s = let
+    fun isSubstring "" = (fn _ => true)
+      | isSubstring s = let
 	val stringsearch = PreString.kmp s
 	fun search (SS (s', i, n)) = let
 	    val epos = i + n
-	in
-	    stringsearch (s', i, epos) < epos
-	end
-    in
-	search
-    end
+            in
+              stringsearch (s', i, epos) < epos
+            end
+        in
+          search
+        end
     fun compare (SS(s1, i1, n1), SS(s2, i2, n2)) =
 	  PreString.cmp (s1, i1, n1, s2, i2, n2)
     fun collate cmpFn (SS(s1, i1, n1), SS(s2, i2, n2)) =

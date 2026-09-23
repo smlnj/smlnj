@@ -21,17 +21,15 @@ die () {
 
 if [ x${SMLNJ_HOME} = x ] ; then
   BIN_DIR="@BINDIR@"
-  RUNBIN_DIR="@INSTALLDIR@/runtime/bin"
 else
   BIN_DIR="${SMLNJ_HOME}/bin"
-  RUNBIN_DIR="${SMLNJ_HOME}/runtime/bin"
 fi
 
 SUFFIX=`"$BIN_DIR/sml" @SMLsuffix`
 
 RTLIB="${BIN_DIR}/.run/runx.${SUFFIX}"
-H2O="${RUNBIN_DIR}/heap2obj"
-LLVM_CONFIG="${RUNBIN_DIR}/llvm-config"
+H2O="${BIN_DIR}/heap2obj"
+LLVM_CONFIG="${BIN_DIR}/llvm-config"
 
 # determine the command to link the executable
 # TODO: create a script in the LLVM project, since we know the c++ command there

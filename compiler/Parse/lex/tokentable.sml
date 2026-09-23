@@ -1,6 +1,6 @@
 (* tokentable.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -121,7 +121,7 @@ functor TokenTable (Tokens : SMLNJ_TOKENS) : sig
 	    ("fn"	, fn yypos => Tokens.FN(yypos,yypos+2)),
 	    ("fun"	, fn yypos => Tokens.FUN(yypos,yypos+3)),
 	    ("functor"	, fn yypos => Tokens.FUNCTOR(yypos,yypos+7)),
-	    ("funsig"	, fn yypos => Tokens.FUNSIG(yypos,yypos+7)),
+	    ("funsig"	, fn yypos => Tokens.FUNSIG(yypos,yypos+6)),
 	    ("handle"	, fn yypos => Tokens.HANDLE(yypos,yypos+6)),
 	    ("if"	, fn yypos => Tokens.IF(yypos,yypos+2)),
 	    ("in"	, fn yypos => Tokens.IN(yypos,yypos+2)),

@@ -1,6 +1,6 @@
 # Common makerules for cleaning directory trees.
 #
-# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # This file defines standard rules for the clean, distclean, and devclean

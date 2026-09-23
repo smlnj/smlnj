@@ -1,13 +1,16 @@
 (* control.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * TODO: split the Control.CG structure into two
  *)
 
-(* general code-generation controls *)
-signature CGCONTROL =
+(* CPS Optimization Controls *)
+signature CPS_CONTROL =
   sig
     val closureStrategy : int ref
+    val mixedClosures : bool ref
     val cpsopt : string list ref		(* list of cpsopt phases *)
     val rounds : int ref
     val betacontract : bool ref
@@ -33,7 +36,7 @@ signature CGCONTROL =
     val checkCPS : bool ref
     val bodysize : int ref
     val reducemore : int ref
-    val comment : bool ref	(* used in CPS/clos/closure.sml to control debug messages *)
+    val comment : bool ref     (* used in CPS/clos/closure.sml to control debug messages *)
     val knownGen : int ref
     val knownClGen : int ref
     val escapeGen : int ref
@@ -46,22 +49,36 @@ signature CGCONTROL =
     val vnRecordElim : bool ref
     val vnSelectElim : bool ref
     val vnPrimElim : bool ref
-
     val ifidiom : bool ref
     val comparefold : bool ref
     val debugLits : bool ref
-    val newLiterals : bool ref
     val debugRep : bool ref
     val deadup : bool ref
     val printit : bool ref
     val printClusters : bool ref
     val dumpClusters : bool ref
+    val debugSpill : bool ref
+    val debugSpillInfo : bool ref
+  end
+
+(* CFG/LLVM Controls *)
+signature CG_CONTROL =
+  sig
+
     val normalizeCFG : bool ref
     val printCFG : bool ref
     val dumpCFG : bool ref
     val verifyLLVM : bool ref
-    val debugSpill : bool ref
-    val debugSpillInfo : bool ref
+
+  end
+
+(* general code-generation controls (CPS, CFG, and LLVM) *)
+signature CGCONTROL =
+  sig
+
+    include CPS_CONTROL
+    include CG_CONTROL
+
   end (* signature CGCONTROL *)
 
 (* main Control structure *)

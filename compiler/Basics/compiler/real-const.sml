@@ -3,7 +3,7 @@
  * A common representation of typed real literals to use throughout the
  * different intermediate representations (from Absyn to CPS).
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

@@ -1,6 +1,6 @@
 (* ppflint.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Pretty printer for Flint IL.
@@ -19,7 +19,7 @@ struct
     structure LD = LtyDef
     structure LB = LtyBasic
     structure LE = LtyExtern
-    structure PO = Primop
+    structure PO = FPrimOps
     structure PU = PrintUtil
     structure PP = PrettyPrint
     structure CTRL = Control.FLINT
@@ -62,6 +62,8 @@ struct
 	  concat["(I", Int.toString ty, ")", IntInf.toString ival]
       | valueToString (F.WORD{ival, ty}) =
 	  concat["(W", Int.toString ty, ")", IntInf.toString ival]
+      | valueToString (F.ENUM i) =
+	  concat["(ENUM)", Int.toString i]
       | valueToString (F.REAL{rval, ty}) =
 	  concat["(R", Int.toString ty, ")", RealLit.toString rval]
       | valueToString (F.STRING s) = PrintUtil.formatString s
@@ -73,7 +75,7 @@ struct
     fun printVar v = say (!lvarToStringRef v)
 
     val with_pp = PP.with_default_pp_sans (!Control.Print.lineWidth)
-    
+
     fun printTyc tyc = (* say o LB.tc_print *)
 	with_pp
 	  (fn ppstrm => PPLty.ppTyc 1000 ppstrm tyc)
@@ -104,7 +106,7 @@ struct
 	end
 
     fun printFKind ({isrec,cconv,inline,known}: FR.fkind) =
-	let val inlineStr = 
+	let val inlineStr =
 		(case inline
 		   of FR.IH_ALWAYS => "ALW"
 		    | FR.IH_UNROLL => "UNR"
@@ -118,7 +120,7 @@ struct
 		    | SOME(ltys, FR.LK_LOOP) => ("LR", ltys)
 		    | SOME(ltys, FR.LK_TAIL) => ("TR", ltys)
 		    | NONE => ("NR", nil))
-	    val cconvStr = 
+	    val cconvStr =
 		(case cconv
 		   of FR.CC_FCT => "FCT"
 		    | FR.CC_FUN fflag => ("FUN(" ^ fflagToString fflag ^ ")"))
@@ -301,7 +303,7 @@ struct
 	  *)
 	 ((case d of NONE => say "IF PRIMOP("
                    | _ => say "IF GENOP(");
-	  say (PrimopUtil.toString primop);  say ", ";
+	  say (PO.toString primop);  say ", ";
 	  printLty lty;  say ", ";
 	  printTycList tycs;  say ") ";
 	  printValList values; newline();
@@ -344,7 +346,7 @@ struct
 	 (printVar lvar;
           (case d of NONE => say " = PRIMOP("
                    | _ => say " = GENOP(");
-	  say (PrimopUtil.toString primop);  say ", ";
+	  say (PO.toString primop);  say ", ";
 	  printLty lty;  say ", ";
 	  printTycList tycs;  say ") ";
 	  printValList values;

@@ -1,6 +1,6 @@
 /// \file run-ml.c
 ///
-/// \copyright 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+/// \copyright 2021 The Fellowship of SML/NJ (https://smlnj.org)
 /// All rights reserved.
 ///
 /// \brief The main dispatch function for running SML code and for

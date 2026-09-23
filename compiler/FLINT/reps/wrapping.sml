@@ -1,6 +1,6 @@
 (* wrapping.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -15,8 +15,9 @@ struct
 local
   structure CO = Coerce
   structure DI = DebIndex
-  structure PO = Primop
-  structure LV = LambdaVar 
+  structure PO = FPrimOps
+  structure CP = CommonOps
+  structure LV = LambdaVar
   structure DA = Access
   structure LT = Lty
   structure FR = FunRecMeta
@@ -40,7 +41,7 @@ val ident = fn x => x
 
 (* mkLvars : int -> LV.lvar list) *)
 fun mkLvars n = List.tabulate (n, fn i => LV.mkLvar ())
-			      
+
 (****************************************************************************
  *                   MISC UTILITY FUNCTIONS                                 *
  ****************************************************************************)
@@ -62,8 +63,8 @@ in
 fun isArraySub lty = LK.lt_eqv(lty, lt_sub)
 fun isArrayUpd lty = LK.lt_eqv(lty, lt_upd)
 
-val f64sub = PO.NUMSUBSCRIPT(PO.FLOAT 64)
-val f64upd = PO.NUMUPDATE(PO.FLOAT 64)
+val f64sub = CP.NUMSUBSCRIPT(NumKind.FLOAT 64)
+val f64upd = CP.NUMUPDATE(NumKind.FLOAT 64)
 
 (* classPrim : primop -> primop * bool
  * takes a primop and classifies its kind. It returns a new primop,
@@ -71,16 +72,18 @@ val f64upd = PO.NUMUPDATE(PO.FLOAT 64)
  * flag will be true only for NUMSUBSCRIPT and NUMUPDATE primops.
  * [2019-06-25] removed run-time type specialization
  *)
-fun classPrim (px as (d, p, lt, ts)) =
-    (case (p, ts)
-       of ((PO.NUMSUBSCRIPT _ | PO.NUMUPDATE _), _) =>   (* overloaded primops, instantiate types *)
+fun classPrim (px as (d, p as PO.PRIM cp, lt, ts)) = (case (cp, ts)
+       of ((CP.NUMSUBSCRIPT _ | CP.NUMUPDATE _), _) =>   (* overloaded primops, instantiate types *)
 	    ((d, p, LE.lt_pinst(lt, ts), []), true)
-	| (PO.ASSIGN, [tc]) =>			         (* special *)
-	   if (LE.tc_upd_prim tc = PO.UNBOXEDUPDATE)
-	     then ((d, PO.UNBOXEDASSIGN, lt, ts), false) (* avoid store-list allocation *)
-	     else ((d, p, lt, ts), false)
-	| (PO.UPDATE, [tc]) => ((d, LE.tc_upd_prim tc, lt, ts), false)
-	| _ => (px, false))
+	| (CP.ASSIGN, [tc]) => if LE.tc_unboxed_upd tc
+            then ((d, PO.PRIM CP.UNBOXEDASSIGN, lt, ts), false) (* avoid store-list allocation *)
+            else ((d, p, lt, ts), false)
+	| (CP.UPDATE, [tc]) => if LE.tc_unboxed_upd tc
+            then ((d, PO.PRIM CP.UNBOXEDUPDATE, lt, ts), false)
+            else ((d, p, lt, ts), false)
+	| _ => (px, false)
+      (* end case *))
+  | classPrim px = (px, false)
 
 val argbase = fn vs => (vs, ident)
 val resbase = fn v => (v, ident)
@@ -319,12 +322,10 @@ let (* In pass1, we calculate the "old"(?) type of each variable in the FLINT
                | HANDLE (e, v) => HANDLE (loop e, v)
 
                (* resolving the polymorphic equality in a special way *)
-               | BRANCH (p as (_, PO.POLYEQL, _, _), vs, e1, e2) =>
+               | BRANCH (p as (_, PO.PRIM CP.POLYEQL, _, _), vs, e1, e2) =>
                    loop(Equal.equal_branch (p, vs, e1, e2))
-               | PRIMOP (p as (_, PO.POLYEQL, _, _), vs, v, e) =>
+               | PRIMOP (p as (_, PO.PRIM CP.POLYEQL, _, _), vs, v, e) =>
                    bug "unexpected POLYEQL in wrapping"
-               | PRIMOP ((_, PO.INLMKARRAY, _, _), vs, v, e) =>
-                   bug "unexpected INLMKARRAY in wrapping"
 
                (* resolving the usual primops *)
                | BRANCH (p, vs, e1, e2) =>

@@ -1,6 +1,6 @@
 (* char-vector-slice.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -164,7 +164,7 @@ structure CharVectorSlice :> MONO_VECTOR_SLICE
 		  end
 	    in
 	      if (n <= len)
-		then SOME(mkVec(), SS.extract(base, start', NONE))
+		then SOME(mkVec(), SS.extract(base, start', SOME(len -- n)))
 		else NONE
 	    end
 

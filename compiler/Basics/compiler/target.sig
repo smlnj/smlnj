@@ -1,6 +1,6 @@
 (* target.sig
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -16,13 +16,13 @@ signature TARGET =
    *)
     val mlValueSz : int
 
-  (* the size of the default "int" type (== mlValueSz-1) *)
+  (* the size of the default "int" type *)
     val defaultIntSz : int
 
   (* the size of the FixedInt.int type *)
     val fixedIntSz : int
 
-  (* the default size of the "real" type (usually 64-bits) *)
+  (* the size of the default "real" type (usually 64-bits) *)
     val defaultRealSz : int
 
   (* true for 64-bit targets *)

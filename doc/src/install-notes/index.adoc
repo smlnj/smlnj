@@ -4,7 +4,7 @@
 :source-highlighter: pygments
 :dist-url: https://smlnj.org/dist/working/{version}
 :history: {dist-url}/HISTORY.html
-:release-notes: {dist-url}/{version}-README.html
+:release-notes: {dist-url}/README.html
 :stem: latexmath
 :source-highlighter: pygments
 
@@ -14,9 +14,9 @@
 
 * {dist-url}/install.html[Installation Instructions]
 
-* {dist-url}/smlnj-amd64-{version}.pkg[Installer for **macOS**/Intel x86-64]
+* {dist-url}/smlnj-amd64-{version}.pkg[Notarized installer for **macOS**/Intel x86-64]
 
-* {dist-url}/smlnj-arm64-{version}.pkg[Installer for **macOS**/Arm64]
+* {dist-url}/smlnj-arm64-{version}.pkg[Notarized installer for **macOS**/Arm64]
 
 * {dist-url}/smlnj-amd64-unix-{version}.tgz[Compressed tarball for **Unix**/Intel x86-64]
 

@@ -1,0 +1,175 @@
+:version: 2026.2
+:date: August 14, 2026
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
+:issue-base: https://github.com/smlnj/smlnj/issues
+:legacy-issue-base: https://github.com/smlnj/legacy/issues
+:pull-base: https://github.com/smlnj/smlnj/pull
+:legacy-pull-base: https://github.com/smlnj/legacy/pull
+:wiki-base: https://github.com/smlnj/.github/wiki
+:stem: latexmath
+:source-highlighter: pygments
+:stylesheet: release-notes.css
+:notitle:
+
+= Standard ML of New Jersey Release Notes
+
+[subs=attributes]
+++++
+<div class="smlnj-banner">
+  <span class="title"> Standard ML of New Jersey <br/> Release Notes </span>
+  <br/> <br/>
+  <span class="subtitle"> Version {version} <br/> {date} </span>
+</div>
+++++
+
+''''''''
+--
+SML/NJ HOME::
+  https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
+FILES::
+  {dist-url}index.html[[.tt]#{dist-url}#]
+--
+''''''''
+
+== Summary
+
+This release fixes a number of bugs; adds support for additional bit-level
+operations on words, and includes various improvements in the system's
+internals.
+
+The distinction between "raw" and "raw64" values has been eliminated,
+since they have the same representation on 64-bit hardware.  This change
+affects the compiler, runtime system, and Basis library.
+
+== Details
+
+=== Compiler
+
+* The printing of real results in the REPL has been improved.
+
+* The distinction between "raw" and "raw64" records has been eliminated
+  inside the compiler.
+
+* The naming of default integer and word primitive operators in the `InLine`
+  structure has been made consistent with the operators for the other types.
+
+=== LLVM
+
+* Disabled the "convert switch to lookup table" optimization in LLVM because it can
+  result in non-position-independent code being generated.  See
+  {pull-base}/342[Pull Request #342 (Fix relocation issues causing MLton crash)] for
+  the details.  This change fixes {issue-base}/318[Issue #318 (Segmentation fault
+  with SML/NJ compiled MLton)].
+
+=== Runtime System
+
+* Removed the redundant `raw64` object descriptor tag.
+
+=== Basis Library
+
+* Implemented inline bit operations for words as described in the Basis Library proposal
+  https://github.com/SMLFamily/BasisLibrary/wiki/2026-001-Additional-Bitops-for-WORD-signature[2026-001
+  (Additional Bitops for WORD signature)].
+
+* Removed the `Raw64` constructor from the `Unsafe.Object.representation` datatype.
+
+* Added functions `Unsafe.==` and `Unsafe.!=` that implement "pointer equality"
+  (as requested in {legacy-issue-base}/327[Legacy Issue #327]).
+
+=== SML/NJ Library
+
+* Added the `Trilean` structure, which implements a three-valued logic
+  that is useful for some program analyses
+
+=== ML-LPT
+
+* Fixed {issue-base}/341[Issue 341].
+
+=== Installation
+
+* The **macOS** installers are now notarized.
+
+* The `build.sh` script now supports the `-install` option for specifying a target
+  installation directory.
+
+== Bugs
+
+Here is a list of the issues and pull requests that are closed with this release.
+
+[.buglist,cols="^3,<12",strips="none",options="header"]
+|=======
+| Issue
+| Description
+| [.bugid]#318#
+| {issue-base}/318[Segmentation fault with SML/NJ compiled MLton]
+| [.bugid]#340#
+| {issue-base}/340[Stop building *LLVM* with `gold`]
+| [.bugid]#341#
+| {issue-base}/341[The value of `yypos` is incorrect when `skip` is used in **ml-ulex**]
+| [.bugid]#342#
+| {pull-base}/342[Fix relocation issues causing MLton crash]
+| [.bugid]#343#
+| {issue-base}/343[Comparison of `Word8Vector.vector`s results in polymorphic equality]
+| [.bugid]#344#
+| {issue-base}/344[Spurious "calling polyEqual" warnings]
+| [.bugid]#345#
+| {pull-base}/345[Fix missing case in `FLINT/reify`]
+| [.bugid]#346#
+| {pull-base}/346[Successor ML: type annotations on record puns]
+| [.bugid]#352#
+| {issue-base}/352[Pattern-matching for `IntInf` literals generates ill-formed FLINT]
+| [.bugid]#354#
+| {issue-base}/354[Unexpected `Overflow` exception]
+| [.bugid]#357#
+| {issue-base}/357[`build.sh` script does not work correctly when `INSTALLDIR` is defined]
+| [.bugid]#359#
+| {issue-base}/359[Build script is confused on where LLVM is built]
+| [.bugid]#360#
+| {issue-base}/360[`./build.sh -install <dir>` can't find `-lCFGCodeGen`]
+|=======
+
+We also fixed the following bugs that did not have issues
+associated with them (or were bug fixes ported from the legacy
+repository):
+
+* Addressed {legacy-issue-base}/327[Legacy Issue #327 (`Unsafe.ptrEq`)]
+
+* Fixed {legacy-issue-base}/353[Legacy Issue #353
+  (Inconsistent datatype representation causes segfault)]
+
+* Fixed {legacy-issue-base}/368[Legacy Issue #368
+  ("bogus overflow fault" in code using functors)]
+
+* Fixed {legacy-issue-base}/378[Legacy Issue #378
+  (SML/NJ crashes when `environ` is too big)]
+
+== Supported systems
+
+We believe that SML/NJ will build and run on the following systems, but have only
+tested some of them:
+
+[.support-table,cols="^3s,^4v,^2v",options="header",strips="none"]
+|=======
+| Architecture | Operating System | Status
+| AMD64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) | Tested
+| | macOS 26 (Tahoe) |
+| | Ubuntu 20.04.6 LTS | Tested
+| | Ubuntu 22.04.2 LTS | Tested
+| {nbsp} | |
+| ARM64 | |
+| | macOS 11 (Big Sur) |
+| | macOS 12 (Monterey) |
+| | macOS 13 (Ventura) |
+| | macOS 14 (Sonoma) |
+| | macOS 15 (Sequoia) |
+| | macOS 26 (Tahoe) | Tested
+| | macOS 27 (Golden Gate) |
+| | Linux |
+| {nbsp} | |
+|=======

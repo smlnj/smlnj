@@ -50,9 +50,13 @@ structure LexSpec =
  	       }
           end
 
+(* FIXME: this function (and `updStructName` are called in parser actions, so they
+ * should not be raising an exception.  Also, the "%structure" directive is only
+ * used in ml-lex compatibility mode, so we should not be mentioning it in the
+ * error message for ml-ulex.
+ *)
     fun updHeader (conf, new) = let
           val Conf {structName, header, startStates, arg, clamp} = conf
-(* FIXME: we should be reporting an error instead of raising an exception here! *)
 	  val _ = if String.size structName > 0
 		  then raise Fail "Cannot have both %structure and %header"
 		  else ()
@@ -67,7 +71,6 @@ structure LexSpec =
 
     fun updStructName (conf, new) = let
           val Conf {structName, header, startStates, arg, clamp} = conf
-(* FIXME: we should be reporting an error instead of raising an exception here! *)
 	  val _ = if String.size header > 0
 		  then raise Fail "Cannot have both %structure and %header"
 		  else ()

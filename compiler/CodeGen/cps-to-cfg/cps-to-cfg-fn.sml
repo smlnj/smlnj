@@ -47,11 +47,12 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
     val valueSzb = IntInf.fromInt MS.valueSize
     val realSzb = IntInf.fromInt MS.realSize
     val addrTy = MS.addressBitWidth	(* naturalsize of address arithmetic *)
-    val wordsPerDbl = 8 div ws
-    val wordsPerDbl' = IntInf.fromInt wordsPerDbl
 
   (* return true if integers of `sz` bits are represented as tagged values *)
-    fun isTaggedInt sz = (sz <= defaultIntSz)
+    fun isTaggedInt sz = (sz < Target.mlValueSz)
+
+  (* return true if integers of `sz` bits are represented as native values *)
+    fun isNativeInt sz = (sz = Target.mlValueSz)
 
   (* normalize an integer size to a native machine-size *)
     fun normSz sz = if isTaggedInt sz then ity else sz
@@ -70,6 +71,7 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
   (* some useful constants *)
     fun zero sz = szNum sz 0
     val one = num 1
+    val two = num 2
     fun allOnes sz = num(ConstArith.bNot(sz, 0)) (* sz-wide 1's *)
     val signBit = num(IntInf.<<(1, Word.fromInt ity - 0w1))
 
@@ -80,6 +82,7 @@ functor CPStoCFGFn (MS : MACH_SPEC) : sig
   (* convert CPS types to CFG types *)
     fun cvtTy cpsTy = (case cpsTy
 	   of CPS.NUMt{sz, tag=true} => C.TAGt
+	    | CPS.ENUMt => C.TAGt
 	    | CPS.NUMt{sz, ...} =>
 (*DEBUG*)if isTaggedInt sz then raise Fail "bogus CPS numeric type" else
 C.NUMt{sz=sz}
@@ -98,11 +101,10 @@ C.NUMt{sz=sz}
     fun looker (oper, args) = C.LOOKER{oper = oper, args = args}
 
   (* raw record with uniform fields *)
-    fun rawRecord (desc, kind, sz, n) = let
-	  val ty = {kind = kind, sz = sz}
-	  val align = sz div 8
+    fun rawRecord (desc, kind, n) = let
+	  val ty = {kind = kind, sz = 64}
 	  in
-	    TP.RAW_RECORD{desc = desc, align = align, fields = List.tabulate(n, fn _ => ty)}
+	    TP.RAW_RECORD{desc = desc, align = 8, fields = List.tabulate(n, fn _ => ty)}
 	  end
 
     fun zExt (from, to, arg) = pure (TP.EXTEND{signed=false, from=from, to=to}, [arg])
@@ -173,6 +175,7 @@ C.NUMt{sz=sz}
 	  fun typeOfVal (VAR x) = typeOf x
 	    | typeOfVal (LABEL lab) = typeOf lab
 	    | typeOfVal (NUM{ty, ...}) = CPS.NUMt ty
+	    | typeOfVal (ENUM _) = CPS.ENUMt
 	    | typeOfVal v = error ["gen.typeOfVal: unexpected ", PPCps.value2str v]
 	  val exps = LTbl.mkTable (CPSInfo.numVars info, Fail "exps")
 (*
@@ -188,6 +191,7 @@ C.NUMt{sz=sz}
 	    | genV (LABEL lab) = label lab
 	    | genV (NUM{ty={tag=true, ...}, ival}) = mlInt' ival
 	    | genV (NUM{ty={sz, ...}, ival}) = szNum sz ival
+	    | genV (ENUM i) = mlInt'(IntInf.fromInt i)
 	    | genV v = error ["gen.genV: unexepected ", PPCps.value2str v]
 	  val genPureTagged = TaggedArith.pure genV
 	  val genTagged = TaggedArith.trapping genV
@@ -200,7 +204,7 @@ C.NUMt{sz=sz}
 		 of RECORD(CPS.RK_VECTOR, flds, x, k) => let
 		    (* A vector has a data record and a header record *)
 		      val len = length flds
-		      val dataDesc = D.makeDesc'(len, D.tag_vec_data)
+		      val dataDesc = D.makeDesc(len, D.tag_vec_data)
 		      val dataP = LV.mkLvar()
 		      in
 			allocRecord (dataDesc, flds, dataP,
@@ -208,12 +212,15 @@ C.NUMt{sz=sz}
 			    bindVarIn(x, k)))
 		      end
 (* REAL32: FIXME *)
-		  | RECORD(CPS.RK_FCONT, flds, x, k) => allocFltRecord (flds, x, k)
+		  | RECORD(CPS.RK_FCONT, flds, x, k) =>
+                      allocRawRecord (TP.FLT, flds, x, k)
 (* REAL32: FIXME *)
-		  | RECORD(CPS.RK_RAW64BLOCK, flds, x, k) => allocFltRecord (flds, x, k)
-		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) => allocIntRecord (flds, x, k)
+		  | RECORD(CPS.RK_RAWBLOCK, flds, x, k) =>
+                      allocRawRecord (TP.INT, flds, x, k)
+                  | RECORD(CPS.RK_MIXED rep, flds, x, k) =>
+                      allocRecord (D.makeMixedDesc rep, flds, x, bindVarIn(x, k))
 		  | RECORD(_, flds, x, k) => allocRecord (
-		      D.makeDesc' (length flds, D.tag_record),
+		      D.makeDesc (length flds, D.tag_record),
 		      flds, x, bindVarIn(x, k))
 (*
 		  | SELECT(i, v, x, ty as CPS.NUMt{sz, ...}, k) =>
@@ -318,7 +325,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.MKSPECIAL, [i, v], x, _, k) => let
 		      val desc = (case i
 			     of NUM{ty={tag=true, ...}, ival} =>
-				  num (D.makeDesc(ival, D.tag_special))
+				  num (D.makeDesc'(ival, D.tag_special))
 			      | _ => (* desc = (i << tagWidth) | desc_special *)
 				pureOp (TP.ORB, ity, [
 				    pureOp (TP.SHL, ity, [untagSigned i, w2Num D.tagWidth]),
@@ -339,7 +346,7 @@ C.NUMt{sz=sz}
 		  | PURE(P.WRAP(P.INT sz), [v], x, _, k) => if (sz = ity)
 			then let
 			  val desc = D.makeDesc'(1, D.tag_raw)
-			  val oper = rawRecord (desc, TP.INT, ity, 1)
+			  val oper = rawRecord (desc, TP.INT, 1)
 			  in
 			    C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
 			  end
@@ -349,21 +356,19 @@ C.NUMt{sz=sz}
 		  | PURE(P.WRAP(P.FLOAT 32), [v], x, _, k) => (* REAL32: FIXME *)
 		      error ["wrap for 32-bit floats is not implemented"]
 		  | PURE(P.WRAP(P.FLOAT 64), [v], x, _, k) => let
-		      val desc = D.makeDesc'(wordsPerDbl, D.tag_raw64)
-		      val oper = rawRecord (desc, TP.FLT, 64, 1)
+		      val desc = D.makeDesc'(1, D.tag_raw)
+		      val oper = rawRecord (desc, TP.FLT, 1)
 		      in
 			C.ALLOC(oper, [genV v], x, bindVarIn(x, k))
 		      end
 		  | PURE(P.RAWRECORD rk, [NUM{ty={tag=true, ...}, ival}], x, _, k) =>
 		      let
 		      val n = Int.fromLarge ival (* number of elements *)
-		      fun mkDesc (n, tag) = SOME(D.makeDesc' (n, tag))
+		      fun mkDesc (n, tag) = SOME(D.makeDesc (n, tag))
 		      val (desc, scale) = (case rk
 			     of NONE => (NONE, MS.valueSize)
 			      | SOME CPS.RK_FCONT =>
-				  (mkDesc(wordsPerDbl * n, D.tag_raw64), MS.realSize)
-			      | SOME CPS.RK_RAW64BLOCK =>
-				  (mkDesc(wordsPerDbl * n, D.tag_raw64), MS.realSize)
+				  (mkDesc(n, D.tag_raw), MS.realSize)
 			      | SOME CPS.RK_RAWBLOCK =>
 				  (mkDesc(n, D.tag_raw), MS.valueSize)
 			      | SOME CPS.RK_VECTOR => error [
@@ -399,19 +404,11 @@ C.NUMt{sz=sz}
 	  and allocRecord (desc, fields, x, k) =
 		C.ALLOC(record desc, List.map getField fields, x, k)
 (* REAL32: FIXME *)
-	(* Allocate a record with 64-bit real components *)
-	  and allocFltRecord (fields, x, k) = let
+	(* Allocate a record with raw machine-int-sized components *)
+	  and allocRawRecord (kind, fields, x, k) = let
 		val len = length fields
-		val desc = D.makeDesc'(wordsPerDbl * len, D.tag_raw64)
-		val oper = rawRecord (desc, TP.FLT, 64, len)
-		in
-		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))
-		end
-	(* Allocate a record with machine-int-sized components *)
-	  and allocIntRecord (fields, x, k) = let
-		val len = length fields
-		val desc = D.makeDesc'(len, D.tag_raw)
-		val oper = rawRecord (desc, TP.INT, ity, len)
+		val desc = D.makeDesc(len, D.tag_raw)
+		val oper = rawRecord (desc, kind, len)
 		in
 		  C.ALLOC(oper, List.map getField fields, x, bindVarIn(x, k))
 		end
@@ -473,7 +470,7 @@ C.NUMt{sz=sz}
 		      in
 			case i
 			 of NUM{ty={tag=true, ...}, ival} =>
-			      set (num (D.makeDesc(ival, D.tag_special)))
+			      set (num (D.makeDesc'(ival, D.tag_special)))
 			  | _ => set (pureOp(TP.ORB, ity, [
 				pureOp(TP.SHL, ity, [untagSigned v, w2Num D.tagWidth]),
 				num D.desc_special
@@ -695,6 +692,20 @@ C.NUMt{sz=sz}
 		    | (P.FCMP{oper, size}, _) =>
 			mkBr (TP.FCMP{oper=oper, sz=size})
 		    | (P.FSGN sz, _) => mkBr (TP.FSGN sz)
+                    | (P.IS_POW2 sz, [v]) => let
+                        fun branch (arg, cnt) = C.BRANCH(
+                              TP.CMP{oper=P.EQL, signed=false, sz=ity},
+                              [pureOp(TP.CNTPOP, ity, [arg]), cnt],
+                              unkProb, k1, k2)
+                        in
+                          if isNativeInt sz
+                            (* for native numbers, one bit set ==> power of two *)
+                            then branch (genV v, one)
+                          (* for tagged numbers, two bits set ==> power of two *)
+                          else if (sz = defaultIntSz)
+                            then branch (genV v, two)
+                            else branch (zeroExtend(sz, genV v), two)
+                        end
 		    | (P.BOXED, [v]) => boxedTest (genV v, k1, k2)
 		    | (P.UNBOXED, [v]) => boxedTest (genV v, k2, k1)
 		    | (P.PEQL, _) => mkBr TP.PEQL
