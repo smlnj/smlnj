@@ -1,6 +1,9 @@
 This is a record of changes made to CML and the CML Library.
 ------------------------------------------------------------
 
+[2026-09-23]
+	Fixed some issues identified by Claude in the barrier implementation.
+
 [2020-04-08]
 	Switch to using the "module subtraction" mechanism of CM so that
 	the CML version of the SML/NJ Library tracks the sequential
