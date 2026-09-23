@@ -32,4 +32,3 @@ signature BARRIER =
     val value : 'a enrollment -> 'a
 
   end
-
