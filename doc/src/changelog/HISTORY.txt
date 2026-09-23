@@ -105,6 +105,17 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-09-22]::
++
+The literal-lifting pass over CPS has been rewritten to use a Version 3
+of the literal bytecode.  This new version is described in the Wiki
+page https://github.com/smlnj/.github/wiki/Literals-v3[**Literals v3**].
+It includes support for mixed records and handles raw numbers (both
+integers and reals) more robustly than before.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2026-09-02]::
 +
 The `ConvertFn` module has been rewritten to use mixed records in closure

@@ -270,7 +270,8 @@ CPS/main/cps-comp.sml
 CPS/main/dump-cluster-graph.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
-CPS/main/literals.sml
+CPS/main/literal-bytecode.sml
+CPS/main/literals-v3.sml
 CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
