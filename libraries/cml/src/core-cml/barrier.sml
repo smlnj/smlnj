@@ -90,12 +90,16 @@ structure Barrier :> BARRIER =
 	  (* end case *))
 
   (* resign from an enrolled barrier *)
-    fun resign (ENROLL{bar, sts}) = (
+    fun resign (ENROLL{bar=BAR{nEnrolled, ...}, sts}) = (
 	  S.atomicBegin();
 	  case !sts
-	   of RESIGNED => () (* ignore multiple resignations *)
+	   of RESIGNED => S.atomicEnd() (* ignore multiple resignations *)
 	    | WAITING => (S.atomicEnd(); raise Fail "resign while waiting")
-	    | ENROLLED => (sts := RESIGNED; S.atomicEnd()))
+	    | ENROLLED => (
+                sts := RESIGNED;
+                nEnrolled := !nEnrolled - 1;
+                S.atomicEnd())
+          (* end case *))
 
   (* get the current state of the barrier *)
     fun value (ENROLL{bar=BAR{state, ...}, ...}) = !state
