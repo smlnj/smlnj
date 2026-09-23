@@ -97,7 +97,7 @@ structure LowerCPS : sig
                            *    m = ((1 << k) - 1)
                            *)
                           fun rot (n, k, m) =
-                                letPure (P.RSHIFT, sz, [v1, k], fn lo =>
+                                letPure (P.RSHIFTL, sz, [v1, k], fn lo =>
                                 letPure (P.ANDB, sz, [v1, m], fn tmp =>
                                 letPure (P.LSHIFT, sz, [tmp, n], fn hi =>
                                   C.PURE(pureOp(P.ORB, sz), [lo, hi], x, t, cexp e))))
@@ -132,7 +132,7 @@ structure LowerCPS : sig
                            *    m = ((1 << n) - 1)
                            *)
                           fun rot (n, k, m) =
-                                letPure (P.RSHIFT, sz, [v1, n], fn lo =>
+                                letPure (P.RSHIFTL, sz, [v1, n], fn lo =>
                                 letPure (P.ANDB, sz, [v1, m], fn tmp =>
                                 letPure (P.LSHIFT, sz, [tmp, k], fn hi =>
                                   C.PURE(pureOp(P.ORB, sz), [lo, hi], x, t, cexp e))))
