@@ -47,7 +47,7 @@ structure Coverage : sig
 	    Array.update (a, idx, Array.sub (a, idx) + 1)
 	    handle General.Subscript =>
 		   let val olen = Array.length a
-		       val nlen = Int.min (idx + 1, olen + olen)
+		       val nlen = Int.max (idx + 1, olen + olen)
 		       fun cp i = if i < olen then Array.sub (a, i)
 				  else if i = idx then 1
 				  else 0
