@@ -76,14 +76,14 @@ structure TestCnv : sig
 (*
 	      val trap = C.TRAP(C.APP(jk', [v]))
 *)
-	      val trap = mkTrap (C.APP(jk', [v]))
+	      val trapK = C.APP(jk', [v])
 	      val x' = LV.mkLvar()
 	      in
 		C.FIX([(C.CONT, jk, [x], [ty], k)],
 		  branch(sLT, [v, num minToInt],
-		    trap,
+		    mkTrap trapK,
 		    branch(sLT, [num maxToInt, v],
-		      trap,
+		      mkTrap trapK,
 		      if fromIsTagged
 		      (* both are tagged, so nothing to do *)
 			then C.APP(jk', [v])
