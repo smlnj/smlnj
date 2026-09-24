@@ -4,20 +4,31 @@
 signature UNIFY =
 sig
 
+  (* The reason of unificiation failure. *)
   datatype unifyFail
     = CIRC of Types.tyvar * Types.ty * SourceMap.region * SourceMap.region
         (* circularity *)
     | TYC of Types.tycon * Types.tycon * SourceMap.region * SourceMap.region
         (* tycon mismatch *)
-    | TYP of Types.ty * Types.ty * SourceMap.region * SourceMap.region
+    | TYP of SourceMap.region * SourceMap.region
         (* type mismatch *)
     | UBV of Types.tvKind * Types.ty * SourceMap.region * SourceMap.region
         (* UBOUND match *)
     | OVLD_F of string                  (* overload mismatch *)
     | OVLD_UB of string                 (* overload and user-bound ty var mismatch *)
     | EQ                                (* equality type required *)
-    | REC                               (* record labels *)
     | UBVE of Types.tvKind              (* UBOUND, equality mismatch -- never used *)
+    | CTX of { tycon : Types.tycon, args : cmp list }
+        (* The context of a unification failure. *)
+
+  (* Comparison of two types:
+   *   - OK ty: the two types can be unified as ty
+   *   - ERR (ty1, ty2, fail): the ty1 and ty2 cannot be unified due to `fail`
+   *   - UNK (ty1, ty2): ty1 and ty2 have not been compared. *)
+  and cmp
+    = OK of Types.ty
+    | ERR of Types.ty * Types.ty * unifyFail
+    | UNK of Types.ty * Types.ty
 
   exception Unify of unifyFail
 
@@ -66,12 +77,17 @@ datatype unifyFail
   | EQ                               (* equality type required *)
   | TYC of tycon * tycon * SourceMap.region * SourceMap.region
                                      (* tycon mismatch *)
-  | TYP of ty * ty * SourceMap.region * SourceMap.region     (* type mismatch *)
+  | TYP of SourceMap.region * SourceMap.region     (* type mismatch *)
   | OVLD_F of string                 (* overload mismatch -- not a simple type *)
   | OVLD_UB of string                (* mismatch of OVLD and UBOUND tyvars *)
   | UBV of tvKind * ty * SourceMap.region * SourceMap.region  (* UBOUND match *)
   | UBVE of tvKind                   (* UBOUND, equality mismatch -- never used *)
-  | REC                              (* record labels *)
+  | CTX of { tycon : tycon, args : cmp list }
+                                     (* The context of a unification failure. *)
+and cmp
+  = OK of Types.ty
+  | ERR of Types.ty * Types.ty * unifyFail
+  | UNK of Types.ty * Types.ty
 
 (* failMessage : unifyFail -> string *)
 fun failMessage (failure: unifyFail) =
@@ -84,7 +100,12 @@ fun failMessage (failure: unifyFail) =
        | OVLD_UB _ => "overload - user bound tyvar" (* DBM: fixes bug 145 *)
        | UBVE _ =>    "UBOUND, equality mismatch"
        | UBV _ =>     "UBOUND match"
-       | REC =>       "record labels"
+       | CTX {args, ...} =>
+           let fun search nil = "type mismatch"
+                 | search (ERR (_, _, failure) :: _) = failMessage failure
+                 | search (_ :: rest) = search rest
+           in  search args
+           end
 
 exception Unify of unifyFail
 
@@ -92,6 +113,17 @@ exception Unify of unifyFail
 (*************** misc functions *****************************************)
 
 val eqLabel = Symbol.eq
+
+fun uncheckedArgs (nil, nil) = nil
+  | uncheckedArgs (ty1::tys1, ty2::tys2) =
+      UNK (ty1, ty2) :: uncheckedArgs (tys1, tys2)
+  | uncheckedArgs _ = bug "uncheckedArgs: arg ty lists wrong length"
+
+fun raiseWithCtx (tycon, checked, ty1, ty2, failure, rest1, rest2) =
+  let val args =
+        rev checked @ ERR (ty1, ty2, failure) :: uncheckedArgs (rest1, rest2)
+  in  raise Unify (CTX {tycon=tycon, args=args})
+  end
 
 (*
  * tyconEqprop tycon:
@@ -343,16 +375,27 @@ fun unifyTy(type1, type2, reg1, reg2) =
 			  [GK 4/28/07; DBM 2021.10.28] *)
 		       (case tycon1
 			 of DEFtyc{strict, ...} =>  (* unify common relevant args *)
-			    let fun unifyRelArgs ([],[],[]) = ()
-				  | unifyRelArgs (true::ss, ty1::tys1, ty2::tys2) =
-				      (unifyTy(ty1,ty2,reg1,reg2); unifyRelArgs(ss,tys1,tys2))
-				  | unifyRelArgs (false::ss, _::tys1, _::tys2) =
-				      unifyRelArgs (ss,tys1,tys2)
+			    let fun unifyRelArgs ([],[],[],_) = ()
+				  | unifyRelArgs (true::ss, ty1::tys1, ty2::tys2,checked) =
+				      (unifyTy(ty1,ty2,reg1,reg2)
+                                       handle Unify failure =>
+                                         raiseWithCtx(tycon1,checked,ty1,ty2,failure,tys1,tys2);
+                                       unifyRelArgs(ss,tys1,tys2,OK ty1::checked))
+				  | unifyRelArgs (false::ss, ty1::tys1, ty2::tys2,checked) =
+				      unifyRelArgs (ss,tys1,tys2,UNK(ty1, ty2)::checked)
 				  | unifyRelArgs _ = bug "unifyTy: arg ty lists wrong length"
-			    in unifyRelArgs (strict, args1, args2)
+			    in unifyRelArgs (strict, args1, args2, [])
 			    end
-			  | _ => ListPair.appEq (fn (t1,t2) => unifyTy(t1,t2,reg1,reg2))
-					      (args1,args2))
+			  | _ =>
+                            let fun unifyArgs ([],[],_) = ()
+                                  | unifyArgs (ty1::tys1,ty2::tys2,checked) =
+                                      (unifyTy(ty1,ty2,reg1,reg2)
+                                       handle Unify failure =>
+                                         raiseWithCtx(tycon1,checked,ty1,ty2,failure,tys1,tys2);
+                                       unifyArgs(tys1,tys2, OK ty1 :: checked))
+                                  | unifyArgs _ = bug "unifyTy: arg ty lists wrong length"
+                            in  unifyArgs(args1,args2,[])
+                            end)
 		   else (* tycon1, tycon2 not "equal", so try reducing one or the other *)
 		     let val (tycon1', tycon2') =
 			      (case (tycon1, tycon2)
@@ -376,7 +419,7 @@ fun unifyTy(type1, type2, reg1, reg2) =
 		    app (fn x => unifyTy(x, WILDCARDty, reg1, reg2)) args1
 	       | (WILDCARDty,_) => ()
 	       | (_,WILDCARDty) => ()
-	       | (ty1,ty2) => raise Unify (TYP(ty1,ty2,reg1,reg2)));
+	       | (ty1,ty2) => raise Unify (TYP(reg1,reg2)));
 	    dbsaynl "<<< unifyRaw")
 
      in unifyRaw(type1, type2, reg1, reg2)
@@ -530,7 +573,7 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
 	  | MARKty(ty1, reg2') => instTyvar (tyvar, ty1, reg1, reg2')
           | WILDCARDty => (* propagate WILDCARDty to the fields *)
 	      (app (fn (lab,ty) => unifyTy(WILDCARDty,ty,reg1,reg2)) fields)
-          | _ => raise Unify (TYP (VARty tyvar, ty, reg1, reg2)))
+          | _ => raise Unify (TYP (reg1, reg2)))
 
   | instTyvar (tyvar as ref(OVLDV{eq,...}), ty, reg1, reg2) = (* operator overloading tyvar *)
       (debugPPType(">>instTyvar[OVLDV]",ty);
@@ -617,9 +660,14 @@ and instTyvar (tyvar as ref(OPEN{kind=META,depth,eq}), ty, reg1, reg2) =
  *  one list, say fields{i} then if extra{i} is true, an Unify error
  *  is raised. *)
 and merge_fields(extra1, extra2, fields1, fields2, reg1, reg2) =
-    let fun extra allowed t =
+    let fun raiseTycon () =
+          let val tycon1 = RECORDtyc (map #1 fields1)
+              val tycon2 = RECORDtyc (map #1 fields2)
+          in  raise Unify (TYC (tycon1, tycon2, reg1, reg2))
+          end
+        fun extra allowed t =
 	  if not allowed
-	  then raise Unify REC
+	  then raiseTycon ()
 	  else t
      in fieldwise(extra extra1, extra extra2,
                   (fn (t1,t2) => (unifyTy(t1, t2, reg1, reg2); t1)),

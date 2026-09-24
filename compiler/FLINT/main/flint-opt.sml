@@ -95,7 +95,8 @@ end = struct
 	let val outS = TextIO.openAppend fileName  (* appends to file if called repeatedly *)
 	    val savedOut = !Control.Print.out
             val tempOut = {say = fn s => TextIO.output(outS,s),
-			   flush = fn () => TextIO.flushOut outS}
+			   flush = fn () => TextIO.flushOut outS,
+                           color = fn () => false}
 	    fun finish () = (TextIO.closeOut outS; Control.Print.out := savedOut)
          in Control.Print.out := tempOut;
 	    PrintFlint.printFundec prog  (* PPF.ppProg prog *)

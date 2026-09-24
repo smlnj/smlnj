@@ -11,9 +11,10 @@ signature PRINTCONTROL = sig
     val printLoop   : bool ref
     val signatures  : int ref
     val printOpens  : bool ref
-    val out : {say : string -> unit, flush : unit -> unit} ref
+    val out : {say : string -> unit, flush : unit -> unit, color : unit -> bool} ref
     val say : string -> unit
     val flush : unit -> unit
+    val color : unit -> bool
 end
 
 structure Control_Print : PRINTCONTROL = struct
@@ -48,6 +49,14 @@ structure Control_Print : PRINTCONTROL = struct
 	r
     end
 
+    fun isTTY outS =
+      let val (TextPrimIO.WR {ioDesc, ...}, _) =
+            TextIO.StreamIO.getWriter (TextIO.getOutstream outS)
+      in  case ioDesc
+            of SOME iod => OS.IO.kind iod = OS.IO.Kind.tty
+             | NONE => false
+      end
+
     val printDepth = new (int_cvt, "depth", "max print depth", 10)
     val printLength = new (int_cvt, "length", "max print length", 16)
     val stringDepth =
@@ -63,8 +72,10 @@ structure Control_Print : PRINTCONTROL = struct
     val printOpens = new (bool_cvt, "opens", "print `open'", true)
     val out = ref{
 		  say = fn s => TextIO.output(TextIO.stdOut,s),
-		  flush = fn () => TextIO.flushOut TextIO.stdOut
+		  flush = fn () => TextIO.flushOut TextIO.stdOut,
+                  color = fn () => isTTY TextIO.stdOut
 		  }
     fun say s = #say (!out) s
     fun flush() = #flush (!out) ()
+    fun color() = #color (!out) ()
 end
