@@ -7,6 +7,41 @@
  * revised by DBM, 10/2021
  *)
 
+(* [BZ, 2026/9/23]
+ *
+ * To fix issue #466, the `bindings` environment is extended to record precise
+ * type information for all variables. The cause of issue #466 is very subtle.
+ * The `cassoc` rewrite in this pass re-associates a BRANCH followed by a
+ * SWITCH. For example,
+ *     val b = if p then true else false
+ *     val v = case b of true => 1 | false => 2
+ * is transformed to
+ *     fun br1 () = 1
+ *     fun br2 () = 2
+ *     val v = if p
+ *       then case true of true => br1 () | false => br2 ()
+ *       else case false of true => br1 () | false => br2 ().
+ * This transformation is intended to expose optimization opportunities.
+ *
+ * In the example in #466, the original branch returns a STRUCT:
+ *     val v = case b of ... => STRUCT {v1, v2, v3} | ...
+ * which requires `br1` to return a structure, thereby making `br1` a *functor*
+ * instead of an ordinary function. Previously, `br1` is always declared as a
+ * function, and the downstream passes complain the appearence of STRUCT. Now,
+ * as far as I know, we should always be able to declare `br1` as a functor,
+ * because a functor is strictly more general than a function and the key
+ * optimizations (e.g., inlining and specialization) do apply to functors. But
+ * that approach may produce an IR that is confusing to read, and I'm afraid
+ * that having spurious functors, which are really join-points, is going to
+ * break something.
+ *
+ * Instead, I extended the existing `bindings` map, originally intended to carry
+ * constant information, to also keep track of the types of variables. The map
+ * is then used to check whether the return type of the generated function
+ * (e.g., br1) may be a structure, a functor, or a polymorphic value. If so, the
+ * function is declared as a functor.
+ *)
+
 (* [DBM, 2021.10.7] 2021 bug fix and revisions
  * Bug 294 was the first true FLINT bug reported in many years, requiring a new
  * examination of the fcontract phase. The bug was caused by code in
@@ -221,6 +256,7 @@ struct
     structure LV = LambdaVar
     structure M  = LV.Map
     structure S  = LV.Set
+    structure LB = LtyBasic
     structure LT = Lty
     structure FR = FunRecMeta
     structure LD = LtyDef
@@ -256,38 +292,45 @@ struct
 
     datatype sval
       = Val    of F.value  (* INVARIANT: the F.value arg should be a constant, i.e. never F.VAR *)
-      | Fun    of F.fundec
-      | TFun   of F.tfundec
-      | Record of LV.lvar * sval list
+      | Fun    of F.fundec * LT.lty list  (* return types *)
+      | TFun   of F.tfundec * LT.lty list (* return types *)
+      | Record of LV.lvar * FR.rkind * sval list
       | Con    of LV.lvar * sval * PL.dataconstr * LT.tyc list  (* sval is Var? *)
       | Decon  of LV.lvar * sval * PL.dataconstr * LT.tyc list  (* sval is Var? *)
       | Select of LV.lvar * sval * int                          (* sval is Var? *)
-      | Var    of LV.lvar * LT.lty option		        (* cop out case *)
+      | Var    of LV.lvar * LT.lty		        (* cop out case *)
 
     (* bindings: a finite map from lvars to svals,
      *  tracking the "bindings" of lvars to svals *)
     type bindings = sval M.map
 
     (* sval2lvarOp : sval -> LV.lvar option *)
-    fun sval2lvarOp (Fun (_,lvar,_,_)) = SOME lvar
-      | sval2lvarOp (TFun (_,lvar,_,_)) = SOME lvar
-      | sval2lvarOp (Record(lvar,_)) = SOME lvar
+    fun sval2lvarOp (Fun ((_,lvar,_,_),_)) = SOME lvar
+      | sval2lvarOp (TFun ((_,lvar,_,_),_)) = SOME lvar
+      | sval2lvarOp (Record(lvar,_,_)) = SOME lvar
       | sval2lvarOp (Con(lvar,_,_,_)) = SOME lvar
       | sval2lvarOp (Decon(lvar,_,_,_)) = SOME lvar
       | sval2lvarOp (Select(lvar,_,_)) = SOME lvar
       | sval2lvarOp (Var(lvar,_)) = SOME lvar
       | sval2lvarOp (Val _) = NONE
 
-    (* svar2ltyOp : sval -> lty option
-     *  we only try to recover the lty of an sval for Var, Decon, and Select svals *)
-    fun sval2ltyOp (Var(_,ltyOp)) = ltyOp
-      | sval2ltyOp (Decon(_,_,(_,_,lty),tycs)) =
-	  SOME(hd(#2 (LD.ltd_arrow (hd(LE.lt_inst(lty, tycs))))))
-      | sval2ltyOp (Select(_,sv,i)) =
-	  (case sval2ltyOp sv
-	     of SOME lty => SOME(LE.lt_select(lty, i, "fcontract#238"))
-	      | _ => NONE)
-      | sval2ltyOp _ = NONE
+    (* sval2lty : sval -> lty *)
+    fun sval2lty (Var(_,lty)) = lty
+      | sval2lty (Val (F.INT{ty,...})) = LB.ltc_num ty
+      | sval2lty (Val (F.WORD{ty,...})) = LB.ltc_num ty
+      | sval2lty (Val (F.ENUM _)) = LB.ltc_enum
+      | sval2lty (Val (F.REAL _)) = LB.ltc_real
+      | sval2lty (Val (F.STRING _)) = LB.ltc_string
+      | sval2lty (Val (F.VAR _)) = bug ["sval2lty: variable constant"]
+      | sval2lty (Fun ((fk,_,args,_),rtys)) = LE.ltc_fkfun(fk, map #2 args, rtys)
+      | sval2lty (TFun ((_,_,args,_),rtys)) = LE.lt_nvpoly(args, rtys)
+      | sval2lty (Record(_,rk,svs)) = LE.ltc_rkind(rk, map sval2lty svs)
+      | sval2lty (Con(_,_,(_,_,lty),tycs)) =
+          hd (#2 (LE.ltd_fkfun (hd (LE.lt_inst(lty, tycs)))))
+      | sval2lty (Decon(_,_,(_,_,lty),tycs)) =
+          hd (#1 (LE.ltd_fkfun (hd (LE.lt_inst(lty, tycs)))))
+      | sval2lty (Select(_,sv,i)) = LE.ltd_rkind(sval2lty sv, i)
+
 
     (* tycs_eq : tyc list * tyc list -> bool
      *  equivalence of lists of tycs, based on tyc equivalence (LK.tc_eqv) *)
@@ -327,14 +370,14 @@ struct
 	in apd lexp
 	end
 
-    (* extract: PL.con * F.lexp -> (PL.con * F.lexp) * F.fundec
+    (* extract: FR.cconv -> PL.con * F.lexp -> (PL.con * F.lexp) * F.fundec
      *  abstracts the rhs lexp of a switch arm/case into a function
      *  and replaces the rhs with a call to that function *)
-    fun extract (con: PL.con, arm_body: F.lexp) =
+    fun extract cconv (con: PL.con, arm_body: F.lexp) =
 	let val f = mklv()  (* new "name" for new arm body function *)
 	    val _ = C.new f (* register it *)
 	    val fk = {isrec=NONE,known=true,inline=FR.IH_SAFE,
-		      cconv=FR.CC_FUN(LT.FF_FIXED)}
+		      cconv=cconv}
 	in case con
 	    of PL.DATAcon(dc as (_,_,lty),tycs,lvar) => (* lvar represents decon value *)
 		let val newlvar = cplv lvar
@@ -380,7 +423,6 @@ struct
       let val _ = startContract ()
 	  val _ = C.collect fdec
 	  val counter = ref 0
-	  val c_miss = ref 0
 	  val c_inline = ref 0  (* this counter is actually *used* by fcontract, not just for stats *)
 
 	  fun click_deadval  () = click ("deadval", counter)
@@ -393,8 +435,6 @@ struct
 	  fun click_etasplit () = click ("etasplit", counter)
 	  fun click_branch   () = click ("branch", counter)
 	  fun click_dropargs () = click ("dropargs", counter)
-
-	  fun click_lacktype () = click ("lacktype", c_miss)
 
 	  fun click_simpleinline () = click ("simpleinline", c_inline)
 	  fun click_copyinline   () = click ("copyinline", c_inline)
@@ -431,6 +471,53 @@ struct
 	      lookup (m, lvar)
 	    | val2sval m v = Val v  (* v a constant F.value *)
 
+          fun primopType (_,PO.WCAST,lt,[]) = hd (#2 (LE.ltd_fkfun lt))
+            | primopType (_,_,lt,ts) = hd (#2 (LE.ltd_fkfun (hd (LE.lt_inst(lt,ts)))))
+          val _ = primopType : F.primop -> LT.lty
+
+          fun bindTypes (m, vts) =
+              foldl (fn ((v,ty),m) => M.insert(m, v, Var(v,ty))) m vts
+          val _ = bindTypes : bindings * (LV.lvar * LT.lty) list -> bindings
+
+          (* typeOf : bindings -> F.lexp -> LT.lty list
+           * recover the (multiple-return) types of an expression using the
+           * current bindings. *)
+          fun typeOf m le =
+              let val valueType = sval2lty o val2sval m
+                  fun bind (v,ty,e) = typeOf (M.insert(m,v,Var(v,ty))) e
+              in case le
+                  of F.RET vs => map valueType vs
+                   | F.LET(vs,e1,e2) =>
+                       typeOf (bindTypes(m,ListPair.zip(vs,typeOf m e1))) e2
+                   | F.FIX(fds,e) =>
+                       typeOf (foldl (fn (fd as (_,v,_,_),m) =>
+                           M.insert(m,v,Fun(fd,returnTypes m fd))) m fds) e
+                   | F.APP(v,_) => #2 (LE.ltd_fkfun (valueType v))
+                   | F.TFN(fd as (_,v,_,body),e) =>
+                       typeOf (M.insert(m,v,TFun(fd,typeOf m body))) e
+                   | F.TAPP(v,ts) => LE.lt_inst(valueType v,ts)
+                   | F.RECORD(rk,vs,v,e) => bind(v,LE.ltc_rkind(rk,map valueType vs),e)
+                   | F.SELECT(u,i,v,e) => bind(v,LE.ltd_rkind(valueType u,i),e)
+                   | F.CON((_,_,lt),ts,_,v,e) =>
+                       bind(v,hd (#2 (LE.ltd_fkfun (hd (LE.lt_inst(lt,ts))))),e)
+                   | F.SWITCH(_,_,(PL.DATAcon((_,_,lt),ts,v),e)::_,_) =>
+                       (* Assuming the expression is well-typed, visiting one
+                        * branch is enough. *)
+                       bind(v,hd (#1 (LE.ltd_fkfun (hd (LE.lt_inst(lt,ts))))),e)
+                   | F.SWITCH(_,_,(_,e)::_,_) => typeOf m e
+                   | F.SWITCH(_,_,[],SOME e) => typeOf m e
+                   | F.SWITCH(_,_,[],NONE) => bug ["typeOf: empty SWITCH"]
+                   | F.RAISE(_,tys) => tys
+                   | F.HANDLE(e,_) => typeOf m e
+                   | F.BRANCH(_,_,e,_) => typeOf m e
+                   | F.PRIMOP(po,_,v,e) => bind(v,primopType po,e)
+              end
+          and returnTypes m ({isrec=SOME (rtys,_),...}: FR.fkind, _, _, _) = rtys
+            | returnTypes m (_, _, args, body) = typeOf (bindTypes(m,args)) body
+
+          val _ = typeOf : bindings -> F.lexp -> LT.lty list
+          val _ = returnTypes : bindings -> F.fundec -> LT.lty list
+
           (* bugsv : string * sval -> unit *)
 	  fun bugsv (msg, sval) = bugval(msg, sval2val sval)
 
@@ -462,14 +549,14 @@ struct
 	       in case lookup (m, lvar)
 		    of Var _ => ()
 		     | Val _ => ()
-		     | Fun (_,lv,args,body) =>
+		     | Fun ((_,lv,args,body),_) =>
 		       C.unuselexp utm
 				   (F.LET(map #1 args,
 					  F.RET (map (fn _ => tagInt 0) args),
 					  body))
-		     | TFun (_,_,_,body) => C.unuselexp utm body
+		     | TFun ((_,_,_,body),_) => C.unuselexp utm body
 		     | (Select (_,sval,_) | Con (_,sval,_,_)) => unusesval m sval
-		     | Record (_,svals) => app (unusesval m) svals
+		     | Record (_,_,svals) => app (unusesval m) svals
 		     (* decon's are implicit so we can't get rid of them *)
 		     | Decon _ => ()
 	      end
@@ -543,10 +630,11 @@ struct
 
 		  (* fcexp/fcLet : LV.lvar list * F.lexp * F.lexp -> F.lexp *)
 		  fun fcLet (lvs, le, body) =
-		      let (* fcexp/fcexp/fcbody : cont *)
+		      let val rtys = typeOf m le
+                          (* fcexp/fcexp/fcbody : cont *)
 			  fun fcbody (nm: bindings, nle: F.lexp): F.lexp =
 			      let fun cbody (():unit): F.lexp =
-				      let val nm = (foldl (fn (lv,m) => addbind(m, lv, Var(lv, NONE))) nm lvs)
+				      let val nm = bindTypes(nm, ListPair.zip(lvs,rtys))
 				       in case loop (nm, body, cont)
 					    of F.RET vs =>
 						 if ListPair.allEq
@@ -581,7 +669,17 @@ struct
 			  fun cassoc (lv, F.SWITCH(F.VAR v,ac,arms,NONE), wrap) =
 			      if lv <> v orelse C.uses(C.getInfo lv) > 1
 			      then loop (m, le, fcbody)
-			      else let val (narms,fdecs) = ListPair.unzip (map extract arms)
+			      else let val tys = typeOf (bindTypes(m, ListPair.zip(lvs,rtys))) switch
+                                       val cconv = if List.all LD.ltp_tyc tys
+                                                   then FR.CC_FUN LT.FF_FIXED else FR.CC_FCT
+                                       (* 2026/9/23 BZ:
+                                        * SWITCH may return structure, functor, or
+                                        * polymorphic values (issue #466). The join point
+                                        * function needs to be a FCT (functor) if it
+                                        * returns any of the above; otherwise, it can be a
+                                        * regular function. See discussion at the top. *)
+
+                                       val (narms,fdecs) = ListPair.unzip (map (extract cconv) arms)
 				       fun addswitch [v] =
 					   C.copylexp M.empty (F.SWITCH(v,ac,narms,NONE))
 					 | addswitch _ = bug ["fcexp/fcLet/cassoc/addswitch"]
@@ -611,7 +709,7 @@ struct
 		      let
 			  (* bind_arg (LV.lvar * LT.lty) * bindings -> bindings
                            *  replaces "merge_actuals", which ingnored its sval list argument ("actuals") *)
- 			  fun bind_arg ((lvar,lty), m) = addbind (m, lvar, Var(lvar, SOME lty))
+			  fun bind_arg ((lvar,lty), m) = addbind (m, lvar, Var(lvar, lty))
 
 			  (* fcexp/fcFix/fcFun : F.fundec * (bindings * F.fundec list) -> bindings * F.fundec list
 			   *  The actual function contraction *)
@@ -624,14 +722,20 @@ struct
 				   let val saved_ic = inline_count()
 				       (* make up the bindings for args inside the body *)
 
-				       val m1 = foldl bind_arg m args
+                                       val rtys = #2 (LE.ltd_fkfun (sval2lty (lookup(m,fvar))))
+                                       val m1 = foldl bind_arg m args
 
 				       (* contract the body and create the resulting fundec.
 					* Temporarily remove f's definition from the
 					* environment while we're rebuilding it to avoid
 					* nasty problems. *)
-				       val nbody = fcexp (S.add(ifs, fvar))
-							 (addbind (m1, fvar, Var(fvar, NONE)), body, #2)
+				       val nbody =
+                                         let val ty =
+                                               LE.ltc_fkfun(fk, map #2 args, rtys)
+                                          in fcexp
+                                               (S.add(ifs, fvar))
+                                               (addbind (m1, fvar, Var(fvar, ty)), body, #2)
+                                         end
 
 				       (* if inlining took place, the body might be completely
 					* changed (read: bigger), so we have to reset the
@@ -649,7 +753,7 @@ struct
 					* new contracted code while we'll be working on the
 					* the old uncontracted code *)
 				       val newFundec : F.fundec = (nfk, fvar, args, nbody)
-				       val newSval : sval = Fun newFundec
+				       val newSval : sval = Fun (newFundec,rtys)
 				       val m2 = addbind(m1, fvar, newSval)
 				   in (m2, newFundec::fds)
 				   end
@@ -705,10 +809,9 @@ struct
 			  | fcEta (fundec, (m, fundecs, fvars)) = (m, fundec::fundecs, fvars)
 			  (* end fcEta *)
 
-			(* fcexp/fcFix/wrap : F.fundec * F.fundec list -> F.fundec list
-			 *  add wrapper for various purposes *)
-			  fun wrap (fd as (fk as {isrec,inline,...},fd_lvar,args,body): F.fundec,
-				    fds: F.fundec list) =
+			(* Add wrappers, preserving the cached result types. *)
+			  fun wrap ((fd as (fk as {isrec,inline,...},fd_lvar,args,body), rtys),
+                                    fds) =
 			      let val fd_info = C.getInfo fd_lvar
 				  fun dropargs filter =
 				      let val (nfk,nfk') = OU.fk_wrap(fk, O.map #1 isrec)
@@ -723,7 +826,7 @@ struct
 				       in app (ignore o C.new o #1) new_args;
 					  C.callsInc new_info;
 					  app useLvar new_args';
-					  newfd' :: newfd :: fds
+					  (newfd',rtys) :: (newfd,rtys) :: fds
 				      end
 			      in
 				  (* Don't introduce wrappers for escaping-only functions.
@@ -733,7 +836,7 @@ struct
 				   * by not introducing wrappers here, we avoid useless work
 				   * but we also postpone useful work to later invocations. *)
 				  if C.dead fd_info then fds
-				  else if inline=FR.IH_ALWAYS then fd::fds else
+				  else if inline=FR.IH_ALWAYS then (fd,rtys)::fds else
 				      let val usedArgs : bool list = map (C.usedLvar o #1) args
 				      in if C.called fd_info then
 					   (* if some args are not used, let's drop them *)
@@ -747,21 +850,23 @@ struct
 					       (click_etasplit();
 						dropargs (fn x => x))
 
-					   else fd::fds
-					 else fd::fds
+					   else (fd,rtys)::fds
+					 else (fd,rtys)::fds
 				      end
 			      end (* wrap *)
 
-			 (* add various wrappers *)
-			 val wrap_fds: F.fundec list = foldl wrap [] fundecs
+                         val wrap_fds: (F.fundec * LT.lty list) list =
+                           let val live = List.filter (C.usedLvar o #2) fundecs
+                               fun acc (fd, lst) =
+                                 wrap ((fd, returnTypes m fd), lst)
+                            in foldl acc [] live
+                           end
 
-			 (* register the new bindings (uncontracted for now) *)
-			 val (m1: bindings, fundecs0: F.fundec list) =
-			     foldl (fn ((fk, lvar, args, body), (m, fundecs)) =>
-					  let val f_fundec = (fk, lvar, args, body)
-					   in (addbind(m, lvar, Fun f_fundec), f_fundec::fundecs)
-					  end)
-				   (m,[]) wrap_fds
+                         (* register the new bindings (uncontracted for now) *)
+                         val (m1: bindings, fundecs0: F.fundec list) =
+                             foldl (fn ((fd as (_,lvar,_,_),rtys), (m,fundecs)) =>
+                                       (addbind(m,lvar,Fun(fd,rtys)), fd::fundecs))
+                                   (m,[]) wrap_fds
 
 			 (* check for eta redexes *)
 			 val (m2, fundecs1: F.fundec list, _) = foldl fcEta (m1,[],[]) fundecs0
@@ -807,7 +912,7 @@ struct
 		          val f_sval = val2sval m f  (* sval for f in m *)
 		          (* F.APP inlining (if any) *)
 		       in case f_sval
-			    of Fun ({inline,...}, g, args, body) =>
+			    of Fun (({inline,...}, g, args, body),_) =>
 			     (* eta contraction could cause fvar to map to a different function g,
 			      * which, in turn, might have already been contracted, so we need
 			      * to make sure that we get the latest version of the function.
@@ -907,11 +1012,12 @@ struct
 		       in if C.dead fi
 			  then (click_deadlexp(); loop (m, le, cont))
 			  else let val saved_ic = inline_count()
-				   val nbody = fcexp ifs (m, body, #2)
+				   val rtys = typeOf m body
+                                   val nbody = fcexp ifs (m, body, #2)
 				   val ntfk =
 					if inline_count() = saved_ic then tfk else {inline=FR.IH_SAFE}
 				   val tfd : F.tfundec = (tfk, f, args, nbody)
-				   val nm = addbind(m, f, TFun tfd)
+				   val nm = addbind(m, f, TFun (tfd,rtys))
 				   val nle = loop (nm, le, cont)
 			        in if C.dead fi then nle else F.TFN(tfd, nle)
 			       end
@@ -933,18 +1039,19 @@ struct
 			       constructors. [bug 290]
 			     * ASSERT: subject_rep is not EXN _ (checked before calling fcsCon) *)
 			    let fun killLexp lexp = C.unuselexp (undertake m) lexp
-				fun kill (lvar, lexp) =
-				    C.unuselexp (undertake (addbind (m, lvar, Var(lvar,NONE)))) lexp
-				fun killarm (PL.DATAcon (_, _, lvar), lexp) = kill (lvar, lexp)
+                                fun kill (dc, ts, lvar, lexp) =
+                                    C.unuselexp (undertake (addbind (m, lvar,
+                                        Var(lvar, sval2lty (Decon(lvar,svc,dc,ts)))))) lexp
+                                fun killarm (PL.DATAcon (dc, ts, lvar), lexp) = kill (dc, ts, lvar, lexp)
 				  | killarm _ = buglexp("bad arm in switch(con)", le)
-				fun carm ((PL.DATAcon (dc2, _, lvar), lexp) :: rest) =
+				fun carm ((PL.DATAcon (dc2, ts, lvar), lexp) :: rest) =
 				    if subject_rep = #2 (cdcon dc2)
 				    then (* subject DATAcon == arm DATAcon, so this arm is chosen *)
 				      (map killarm rest; (* kill the rest of the arms *)
 				       O.map killLexp defaultOp; (* and the default case *)
 				       loop ((substitute(m, lvar, svc, F.VAR lvc)), lexp, cont))
 				    else (* kill this arm and try the rest *)
-				      (kill (lvar, lexp); carm rest)
+				      (kill (dc2, ts, lvar, lexp); carm rest)
 				  | carm [] = loop (m, O.valOf defaultOp, cont)
 				  | carm _ = buglexp("unexpected arm in switch(con,...)", le)
 			     in click_switch(); carm arms
@@ -1056,19 +1163,17 @@ struct
 						  then g'(n+1,ss)
 						  else NONE
 					      | g' (n,[]) =
-						(case sval2ltyOp sv
-						  of SOME lty =>
-						     let val ltd =
-							     case (rk, LD.ltp_tyc lty)
-							      of (FR.RK_STRUCT, false) => LD.ltd_str
-							       | (FR.RK_TUPLE, true) => LD.ltd_tuple
-							       (* we might select out of a struct
-								* into a tuple or vice-versa *)
-							       | _ => (fn _ => [])
+                                                let val lty = sval2lty sv
+                                                    val ltd =
+                                                      case (rk, LD.ltp_tyc lty)
+                                                       of (FR.RK_STRUCT, false) => LD.ltd_str
+                                                        | (FR.RK_TUPLE, true) => LD.ltd_tuple
+                                                        (* we might select out of a struct
+                                                         * into a tuple or vice-versa *)
+                                                        | _ => (fn _ => [])
 						     in if length(ltd lty) = n
 							then SOME sv else NONE
 						     end
-						   | _ => (click_lacktype(); NONE)) (* sad *)
 					      | g' _ = NONE
 					in g'(1,ss)
 					end
@@ -1079,7 +1184,7 @@ struct
 						   loop (substitute(m, lv, sv, tagInt 0), le, cont)
 							 before app (unuseValue m) vs)
 				     | _ =>
-				       let val nm = addbind(m, lv, Record(lv, svs))
+				       let val nm = addbind(m, lv, Record(lv, rk, svs))
 					   val nle = loop (nm, le, cont)
 				       in if C.dead lvinfo then nle
 					  else F.RECORD(rk, map sval2val svs, lv, nle)
@@ -1093,7 +1198,7 @@ struct
 		       in if C.dead lvinfo
 			  then (click_deadval(); loop (m, le, cont))
 			  else (case val2sval m v
-				  of Record (lvr,svs) =>
+				  of Record (lvr,_,svs) =>
 				     let val sv = List.nth(svs, i)
 				     in click_select();
 					 loop (substitute(m, lv, sv, F.VAR lvr), le, cont)
@@ -1122,7 +1227,7 @@ struct
 		       in if pure andalso C.dead lvinfo then (click_deadval(); loop (m, le, cont)) else
 			  let val nvs = map substval vs
 			      val npo = cpo po
-			      val nm = addbind(m, lv, Var(lv,NONE))
+			      val nm = addbind(m, lv, Var(lv, primopType po))
 			      val nle = loop (nm, le, cont)
 			  in
 			      if pure andalso C.dead lvinfo then nle
