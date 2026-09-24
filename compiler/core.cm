@@ -243,7 +243,10 @@ CPS/clos/freeclose.sml
 CPS/clos/staticprof.sml
 CPS/clos/unrebind.sml
 CPS/convert/convert.sml
-CPS/convert/cpstrans.sml
+CPS/convert/cpstrans-fn.sml
+(*
+CPS/convert/cpstrans.sml (* original version *)
+*)
 CPS/convert/switch.sml
 CPS/cps/cps.sig
 CPS/cps/cps.sml

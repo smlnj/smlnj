@@ -665,35 +665,41 @@ struct
 			   * mess introduced in flintnm (where each branch returns
 			   * just true or false which is generally only used as
 			   * input to a SWITCH).
-			   * The present code does more than clean up this case. *)
-			  fun cassoc (lv, F.SWITCH(F.VAR v,ac,arms,NONE), wrap) =
+			   * The present code does more than clean up this case.
+                           *)
+			  fun cassoc (lv, switch as F.SWITCH(F.VAR v,ac,arms,NONE), wrap) =
 			      if lv <> v orelse C.uses(C.getInfo lv) > 1
-			      then loop (m, le, fcbody)
-			      else let val tys = typeOf (bindTypes(m, ListPair.zip(lvs,rtys))) switch
-                                       val cconv = if List.all LD.ltp_tyc tys
-                                                   then FR.CC_FUN LT.FF_FIXED else FR.CC_FCT
-                                       (* 2026/9/23 BZ:
-                                        * SWITCH may return structure, functor, or
-                                        * polymorphic values (issue #466). The join point
-                                        * function needs to be a FCT (functor) if it
-                                        * returns any of the above; otherwise, it can be a
-                                        * regular function. See discussion at the top. *)
-
-                                       val (narms,fdecs) = ListPair.unzip (map (extract cconv) arms)
-				       fun addswitch [v] =
-					   C.copylexp M.empty (F.SWITCH(v,ac,narms,NONE))
-					 | addswitch _ = bug ["fcexp/fcLet/cassoc/addswitch"]
-				       (* replace each leaf `ret' with a copy
-					* of the switch *)
-				       val nle = append [lv] addswitch le
-				       (* decorate with the functions extracted
-					* from the switch arms *)
-				       val nle =
-					   foldl (fn (f,le) => F.FIX([f],le))
-						 (wrap nle) fdecs
-				    in click_branch();
-				       loop (m, nle, cont)
-				   end
+			        then loop (m, le, fcbody)
+			        else let
+                                  val tys = typeOf (bindTypes(m, ListPair.zip(lvs,rtys))) switch
+                                  val cconv = if List.all LD.ltp_tyc tys
+                                              then FR.CC_FUN LT.FF_FIXED else FR.CC_FCT
+                                  (* 2026/9/23 BZ:
+                                   * SWITCH may return structure, functor, or
+                                   * polymorphic values (issue #466). The join point
+                                   * function needs to be a FCT (functor) if it
+                                   * returns any of the above; otherwise, it can be a
+                                   * regular function. See discussion at the top.
+                                   *)
+                                  val (narms,fdecs) =
+                                      ListPair.unzip (map (extract cconv) arms)
+                                  fun addswitch [v] =
+                                      C.copylexp M.empty (F.SWITCH(v,ac,narms,NONE))
+                                    | addswitch _ = bug ["fcexp/fcLet/cassoc/addswitch"]
+                                  (* replace each leaf `ret' with a copy
+                                   * of the switch
+                                   *)
+                                  val nle = append [lv] addswitch le
+                                  (* decorate with the functions extracted
+                                   * from the switch arms
+                                   *)
+                                  val nle =
+                                      foldl (fn (f,le) => F.FIX([f],le))
+                                        (wrap nle) fdecs
+                                  in
+                                    click_branch();
+                                    loop (m, nle, cont)
+                                  end
 			    | cassoc _ = loop (m, le, fcbody)  (* end cassoc *)
 
 		       in case (lvs, le, body)

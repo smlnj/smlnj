@@ -126,7 +126,7 @@ page https://github.com/smlnj/.github/wiki/Literals-v3[**Literals v3**].
 It includes support for mixed records and handles raw numbers (both
 integers and reals) more robustly than before.
 +
-owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-09-02]::
