@@ -72,6 +72,8 @@ A number of *Basis Library bugs were fixed (see the list below for details).
 
 * Fixes to the `Barrier` module.
 
+* Fixed a scheduling issue in `recv`.
+
 == Bugs
 
 Here is a list of the issues and pull requests that are closed with this release.
