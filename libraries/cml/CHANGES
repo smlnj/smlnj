@@ -2,6 +2,10 @@ This is a record of changes made to CML and the CML Library.
 ------------------------------------------------------------
 
 [2026-09-24]
+        Fixed the shutdown code so that `OS.Process.terminate` does not run
+        cleanup actions (as specified in the Basis Library specification).
+
+[2026-09-24]
         Fixed several issues in the `TraceCML` module.
 
 [2026-09-24]

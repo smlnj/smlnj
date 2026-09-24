@@ -1,7 +1,7 @@
 (* run-cml-fn.sml
  *
- * COPYRIGHT (c) 1996 AT&T Research.
- * COPYRIGHT (c) 1989-1991 John H. Reppy
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *)
 
 functor RunCMLFn (G : OS_GLUE) : sig
@@ -67,7 +67,7 @@ functor RunCMLFn (G : OS_GLUE) : sig
 		CML.spawn initialProc;
 		S.dispatch()))
 	  in
-	    CU.clean CU.AtShutdown;
+	    if cleanUp then CU.clean CU.AtShutdown else ();
 	    G.shutdown();
 	    S.stopTimer();
 	    Thread.reset false;
