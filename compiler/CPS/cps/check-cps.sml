@@ -6,8 +6,7 @@
  * All rights reserved.
  *
  * TODO:
- *      check types
- *      check arity for primops
+ *      check types and arity of primops
  *)
 
 structure CheckCPS : sig
@@ -16,24 +15,26 @@ structure CheckCPS : sig
 
   end = struct
 
-    structure P = CPS.P
+    structure C = CPS
+    structure P = C.P
     structure LV = LambdaVar
     structure PP = PPCps
 
-    datatype cty = datatype CPS.cty
-    datatype value = datatype CPS.value
+    datatype cty = datatype C.cty
+    datatype pkind = datatype C.pkind
+    datatype value = datatype C.value
 
     datatype binding
-      = Fix of CPS.function
+      = Fix of C.function
       | Param
       | Other
       | Label                           (* SWITCH/BRANCH identitier *)
       | Unbound
 
     datatype context = C of {
-        env : binding LV.Map.map,       (* lexically-scoped environment *)
-        outer : LV.lvar,                (* the current function *)
-        info : info                     (* additional information *)
+        env : (binding * cty) LV.Map.map,       (* lexically-scoped environment *)
+        outer : LV.lvar,                        (* the current function *)
+        info : info                             (* additional information *)
       }
 
     and info = I of {
@@ -73,15 +74,17 @@ structure CheckCPS : sig
             say (concat("## [" :: lv2s outer :: "] " :: msg @ ["\n"]))
           end
 
-    fun bind (cxt as C{env, outer, info as I{vars, ...}}, x, b) = (
+    fun bind (cxt as C{env, outer, info as I{vars, ...}}, x, b, cty) = (
           if LV.HSet.member(vars, x)
             then error (cxt, ["duplicate binding of '", lv2s x, "'"])
             else ();
           LV.HSet.add(vars, x);
-          C{ env = LV.Map.insert (env, x, b), outer = outer, info = info })
+          C{ env = LV.Map.insert (env, x, (b, cty)), outer = outer, info = info })
 
-    fun bindParams (cxt, xs) =
-          List.foldl (fn (x, cxt) => bind(cxt, x, Param)) cxt xs
+    fun bindParams (cxt, xs, ctys) =
+          ListPair.foldlEq
+            (fn (x, cty, cxt) => bind(cxt, x, Param, cty))
+            cxt (xs, ctys)
 
     fun getArity (C{info=I{arity, ...}, ...}, f) = LV.Tbl.find arity f
 
@@ -90,8 +93,8 @@ structure CheckCPS : sig
     fun enterScope (C{env, info, ...}, f) = C{env=env, outer=f, info=info}
 
     fun lookup (C{env, ...}, x) = (case LV.Map.find(env, x)
-           of SOME b => b
-            | NONE => Unbound
+           of SOME info => info
+            | NONE => (Unbound, C.ptrTy)
           (* end case *))
 
     fun isBound (C{env, ...}, x) = LV.Map.inDomain(env, x)
@@ -99,10 +102,51 @@ structure CheckCPS : sig
     fun anyErrors (C{info=I{nErrors, ...}, ...}) = (!nErrors > 0)
 
     fun nameOf (cxt, VAR x) = x
-      | nameOf (cxt, LABEL x) = x
+      | nameOf (cxt, LABEL x) = raise Fail "unexpected LABEL"
       | nameOf (cxt, v) = (
           error (cxt, ["expected VAR or LABEL, but found ", PP.value2str v]);
           LV.mkLvar())
+
+    (* the type of a record *)
+    fun recordTy (C.RK_RECORD, elems) = C.rPtrTy(List.length elems)
+      | recordTy (C.RK_MIXED rep, _) = PTRt(RPT rep)
+      | recordTy (C.RK_RAWBLOCK, elems) = C.fPtrTy(List.length elems)
+      | recordTy _ = C.ptrTy
+
+    fun typeOfValue (cxt, C.VAR x) = #2 (lookup(cxt, x))
+      | typeOfValue (cxt, LABEL _) = raise Fail "unexpected LABEL"
+      | typeOfValue (cxt, NUM{ty, ...}) = NUMt ty
+      | typeOfValue (cxt, ENUM _) = ENUMt
+      | typeOfValue (cxt, REAL{ty, ...}) = FLTt ty
+      | typeOfValue (cxt, STRING _) = C.ptrTy
+      | typeOfValue (cxt, VOID) = raise Fail "unexpected VOID"
+
+    (* compare types for compatability *)
+    fun compatTy (NUMt nty1, NUMt nty2) = (#sz nty1 = #sz nty2)
+      | compatTy (ENUMt, ENUMt) = true
+        (* tagged ints and enums are compatable *)
+      | compatTy (ENUMt, NUMt{tag=true, ...}) = true
+      | compatTy (NUMt{tag=true, ...}, ENUMt) = true
+        (* unknown pointers are compatable with other pointers and enums *)
+      | compatTy (PTRt VPT, ENUMt) = true
+      | compatTy (ENUMt, PTRt VPT) = true
+      | compatTy (PTRt VPT, PTRt _) = true
+      | compatTy (PTRt _, PTRt VPT) = true
+        (* record pointers must match *)
+      | compatTy (PTRt(RPT rep1), PTRt(RPT rep2)) =
+          (#ptrLen rep1 = #ptrLen rep2)
+          andalso (#rawLen rep1 = #rawLen rep2)
+      | compatTy (FLTt sz1, FLTt sz2) = (sz1 = sz2)
+        (* functions are compatible with unknown pointers *)
+      | compatTy (FUNt, FUNt) = true
+      | compatTy (PTRt VPT, FUNt) = true
+      | compatTy (FUNt, PTRt VPT) = true
+        (* continuations are compatible with unknown pointers *)
+      | compatTy (CNTt tys1, CNTt tys2) =
+          ListPair.allEq compatTy (tys2, tys2)
+      | compatTy (CNTt _, PTRt VPT) = true
+      | compatTy (PTRt VPT, CNTt _) = true
+      | compatTy _ = false
 
     fun check (prefix, func as (_, f, _, _, _)) = let
           val cxt = new (prefix, f)
@@ -124,7 +168,7 @@ structure CheckCPS : sig
      * been entered into the environment.
      *)
     and checkFun cxt (func as (fk, f, params, tys, body)) = let
-          val cxt = bindParams (enterScope (cxt, f), params)
+          val cxt = bindParams (enterScope (cxt, f), params, tys)
           in
             if (List.length params <> List.length tys)
               then error (cxt, ["parameter/type list mismatch"])
@@ -133,51 +177,51 @@ structure CheckCPS : sig
           end
 
     and checkExp (cxt, cexp) = (case cexp
-           of CPS.RECORD(rk, elems, x, ce) => (
+           of C.RECORD(rk, elems, x, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[
-                      lv2s x, " = ", (case rk of CPS.RK_VECTOR => "#{" | _ => "{"),
+                      lv2s x, " = ", (case rk of C.RK_VECTOR => "#{" | _ => "{"),
                       String.concatWithMap "," PP.vpathToString elems, "}"
                     ],
                   List.map #1 elems);
-                checkExp (bind(cxt, x, Other), ce))
-            | CPS.SELECT(i, v, x, cty, ce) => (
+                checkExp (bind(cxt, x, Other, recordTy(rk, elems)), ce))
+            | C.SELECT(i, v, x, cty, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[lv2s x, " = #", Int.toString i, " ", v2s v],
                   [v]);
-                checkExp (bind(cxt, x, Other), ce))
-            | CPS.OFFSET(i, v, x, ce) => raise Fail "unexpected OFFSET"
-            | CPS.APP(f, args) => (
+                checkExp (bind(cxt, x, Other, cty), ce))
+            | C.OFFSET(i, v, x, ce) => raise Fail "unexpected OFFSET"
+            | C.APP(f, args) => (
                 checkArgs (
                   cxt,
                   fn () => app2str (v2s f, args),
                   args);
-                case lookup (cxt, nameOf(cxt, f))
-                 of Fix(_, _, params, _, _) =>
-                      checkArity (cxt, f, List.length params, List.length args)
+                case #1 (lookup (cxt, nameOf(cxt, f)))
+                 of Fix(_, _, params, tys, _) => checkApp (cxt, f, tys, args)
                   | Unbound => error (cxt, ["'", v2s f, "' is unbound"])
                   | _ => (case getArity (cxt, nameOf(cxt, f))
                        of SOME n => checkArity (cxt, f, n, List.length args)
                         | NONE => setArity (cxt, nameOf(cxt, f), List.length args)
                       (* end case *))
                 (* end case *))
-            | CPS.FIX(fns, ce) => let
-                fun bindFn (func as (_, f, _, _, _), cxt) = bind(cxt, f, Fix func)
+            | C.FIX(fns, ce) => let
+                fun bindFn (func as (_, f, _, _, _), cxt) =
+                      bind(cxt, f, Fix func, C.ptrTy)
                 val cxt = List.foldl bindFn cxt fns
                 in
                   List.app (checkFun cxt) fns;
                   checkExp (cxt, ce)
                 end
-            | CPS.SWITCH(v, id, cases) => let
-                val cxt' = bind(cxt, id, Label)
+            | C.SWITCH(v, id, cases) => let
+                val cxt' = bind(cxt, id, Label, C.ptrTy)
                 in
-                  checkArg (cxt, fn () => "switch " ^ v2s v, v);
+                  ignore (checkArg (cxt, fn () => "switch " ^ v2s v, v));
                   List.app (fn ce => checkExp (cxt', ce)) cases
                 end
-            | CPS.BRANCH(tst, args, id, ce1, ce2) => let
-                val cxt' = bind(cxt, id, Label)
+            | C.BRANCH(tst, args, id, ce1, ce2) => let
+                val cxt' = bind(cxt, id, Label, C.ptrTy)
                 in
                   checkArgs (
                     cxt,
@@ -186,58 +230,88 @@ structure CheckCPS : sig
                   checkExp (cxt', ce1);
                   checkExp (cxt', ce2)
                 end
-            | CPS.SETTER(p, args, ce) => (
+            | C.SETTER(p, args, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[app2str (PP.setterToString p, args)],
                   args);
                 checkExp (cxt, ce))
-            | CPS.LOOKER(p, args, x, cty, ce) => (
+            | C.LOOKER(p, args, x, cty, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[lv2s x, " = ", app2str (PP.lookerToString p, args)],
                   args);
-                checkExp (bind(cxt, x, Other), ce))
-            | CPS.ARITH(p, args, x, cty, ce) => (
+                checkExp (bind(cxt, x, Other, cty), ce))
+            | C.ARITH(p, args, x, cty, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[lv2s x, " = ", app2str (PP.arithToString p, args)],
                   args);
-                checkExp (bind(cxt, x, Other), ce))
-            | CPS.PURE(p, args, x, cty, ce) => (
+                checkExp (bind(cxt, x, Other, cty), ce))
+            | C.PURE(p, args, x, cty, ce) => (
                 checkArgs (
                   cxt,
                   fn () => concat[lv2s x, " = ", app2str (PP.pureToString p, args)],
                   args);
-                checkExp (bind(cxt, x, Other), ce))
-            | CPS.RCC(reentrant, cc, proto, args, results, ce) => let
+                checkExp (bind(cxt, x, Other, cty), ce))
+            | C.RCC(reentrant, cc, proto, args, results, ce) => let
 (* TODO: check C function args before binding results *)
                 val cxt = List.foldl
-                      (fn ((x, cty), cxt) => bind(cxt, x, Other))
+                      (fn ((x, cty), cxt) => bind(cxt, x, Other, cty))
                         cxt results
                 in
                   checkExp (cxt, ce)
                 end
           (* end case *))
 
+    (* check a value; returns true if it is an unbound variable *)
     and checkArg (cxt, exp, v) = let
           fun chk x = if isBound (cxt, x)
-                then ()
-                else error (cxt, ["'", lv2s x, "' is unbound in `", exp(), "`"])
+                then false
+                else (
+                  error (cxt, ["'", lv2s x, "' is unbound in `", exp(), "`"]);
+                  true)
           in
             case v
              of VAR x => chk x
               | LABEL x => chk x
-              | _ => ()
+              | _ => false
             (* end case *)
           end
 
     and checkArgs (cxt, exp, args) =
-          List.app (fn arg => checkArg (cxt, exp, arg)) args
+          List.app (fn arg => ignore (checkArg (cxt, exp, arg))) args
 
     and checkArity (cxt, f, nParams, nArgs) =
           if (nParams <> nArgs)
             then error(cxt, ["parameter/argument arity mismatch for '", v2s f, "'"])
             else ()
+
+    (* check the arity and types of a known function application *)
+    and checkApp (cxt, f, paramTys, args) = let
+          fun chk ([], []) = ()
+            | chk ([], _) = error(cxt, [
+                  "too many arguments in application of '", v2s f, "'"
+                ])
+            | chk (_, []) = error(cxt, [
+                  "too few arguments in application of '", v2s f, "'"
+                ])
+            | chk (cty::ctyr, arg::argr) = let
+                val argTy = typeOfValue (cxt, arg)
+                in
+                  if checkArg (cxt, fn () => concat["application of '", v2s f, "'"], arg)
+                    then () (* unbound argument, so don't check the types *)
+                  else if compatTy(cty, argTy)
+                    then ()
+                    else error(cxt, [
+                        "type mismatch in call to '", v2s f, "'; expected type ",
+                        CPSUtil.ctyToString cty, " for argument ",
+                        PPCps.value2str arg, " : ", CPSUtil.ctyToString argTy
+                      ]);
+                  chk (ctyr, argr)
+                end
+          in
+            chk (paramTys, args)
+          end
 
   end

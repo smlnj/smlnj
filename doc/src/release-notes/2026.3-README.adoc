@@ -186,6 +186,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/463[`ml-ulex --ml-lex-mode` generates duplicate `yystart_state` datatype declaration]
 | [.bugid]#465#
 | {issue-base}/465[Unbound exception identifier causes compiler bug]
+| [.bugid]#466#
+| {issue-base}/466[Add type info in `FLINT/fcontract` to generate well-formed FLINT]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======

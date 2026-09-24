@@ -21,6 +21,9 @@ structure CPSUtil : sig
 
     val BOGt : CPS.cty
 
+(* TODO: these functions should move to the conversion code so that the rest of
+ * the CPS code can be independent of FLINT.
+ *)
     val ctyc  : Lty.tyc -> CPS.cty
     val ctype : Lty.lty -> CPS.cty
 

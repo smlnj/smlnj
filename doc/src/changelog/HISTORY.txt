@@ -105,6 +105,19 @@ Here is an update to the entry
 == Recent updates
 
 //--------------------------------------------------------------------
+[2026-09-23]::
++
+The `fcontract` phase in FLINT may generate malformed FLINT when a
+SWITCH expression returns a structure. This is the source of
+{issue-base}/466[Issue #466 (Compiler bug "LtyDef: unexpected LT_STR"
+in FLINT wrap phase)]. The current code lacks crucial type information
+to declare the right function kind when creating a join-point. This
+update tracks types more precisely and emits the well-formed FLINT.
+See {pull-base}/467[Pull Request #467] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2026-09-22]::
 +
 The literal-lifting pass over CPS has been rewritten to use a Version 3
@@ -113,7 +126,7 @@ page https://github.com/smlnj/.github/wiki/Literals-v3[**Literals v3**].
 It includes support for mixed records and handles raw numbers (both
 integers and reals) more robustly than before.
 +
-owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-09-02]::
