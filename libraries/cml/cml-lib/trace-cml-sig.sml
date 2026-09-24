@@ -1,6 +1,7 @@
 (* trace-cml-sig.sml
  *
- * COPYRIGHT (c) 1992 AT&T Bell Laboratories
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *
  * This module provides rudimentary debugging support in the form of mechanisms
  * to control debugging output, and to monitor thread termination.  This
@@ -66,7 +67,7 @@ signature TRACE_CML =
 
 
   (** Thread watching **)
-  
+
     val watcher : trace_module
 	(* controls printing of thread watching messages; the module's name
 	 * is "/ThreadWatcher/"

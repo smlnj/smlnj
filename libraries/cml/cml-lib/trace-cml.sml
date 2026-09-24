@@ -1,6 +1,7 @@
 (* trace-cml.sml
  *
- * COPYRIGHT (c) 1992 AT&T Bell Laboratories
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *
  * This module provides rudimentary debugging support in the form of mechanisms
  * to control debugging output, and to monitor thread termination.  This
@@ -69,8 +70,9 @@ structure TraceCML : TRACE_CML =
 
     fun traceModule' (TM parent, name) = let
 	  fun checkChildren [] = let
+                (* we assume that the parent's name ends in "/" *)
 		val tm = TM{
-		        full_name = (#full_name parent ^ name),
+		        full_name = concat[#full_name parent, name, "/"],
 		        label = name,
 			tracing = ref(!(#tracing parent)),
 		        children = ref []
@@ -125,7 +127,7 @@ structure TraceCML : TRACE_CML =
     fun setTraceFile'  t = traceDst := t
 
 (** NOTE: there are bookkeeping bugs, when changing the trace destination
- ** from TraceToStream to something else (where the original destination 
+ ** from TraceToStream to something else (where the original destination
  ** was TraceToFile).
  **)
     fun tracePrint s = let
@@ -181,12 +183,14 @@ structure TraceCML : TRACE_CML =
       fun carefully f = if RunCML.isRunning()
 	    then CML.send(traceUpdateCh, f)
 	    else f()
+      datatype 'a result = RES of 'a | EXN of exn
       fun carefully' f = if RunCML.isRunning()
 	      then let
 	        val reply = SV.iVar()
+                fun f' () = (RES(f()) handle ex => EXN ex)
 	        in
-	          CML.send (traceUpdateCh, fn () => (SV.iPut(reply, f())));
-		  SV.iGet reply
+	          CML.send (traceUpdateCh, fn () => (SV.iPut(reply, f'())));
+		  case SV.iGet reply of RES x => x | EXN ex => raise ex
 	        end
 	      else f()
     in
@@ -212,7 +216,7 @@ structure TraceCML : TRACE_CML =
     val _ = traceOn watcher
 
     datatype watcher_msg
-      = WATCH of (CML.thread_id * unit CML.chan)
+      = WATCH of (CML.thread_id * unit SV.ivar)
       | UNWATCH of (CML.thread_id * unit SV.ivar)
 
     val watcherMb : watcher_msg Mailbox.mbox = Mailbox.mailbox ()
@@ -227,7 +231,7 @@ structure TraceCML : TRACE_CML =
 
   (* watch the given thread for unexpected termination *)
     fun watch (name, tid) = let
-	  val unwatchCh = CML.channel()
+	  val unwatchV = SV.iVar()
 	  fun handleTermination () = (
 		trace (watcher, fn () => [
 		    "WARNING!  Watched thread ", name, CML.tidToString tid,
@@ -235,9 +239,9 @@ structure TraceCML : TRACE_CML =
 		  ]);
 		unwatch tid)
 	  fun watcherThread () = (
-		Mailbox.send (watcherMb, WATCH(tid, unwatchCh));
+		Mailbox.send (watcherMb, WATCH(tid, unwatchV));
 		CML.select [
-		    CML.recvEvt unwatchCh,
+		    SV.iGetEvt unwatchV,
 		    CML.wrap (CML.joinEvt tid, handleTermination)
 		  ])
 	  in
@@ -260,7 +264,7 @@ structure TraceCML : TRACE_CML =
 		    (* notify the watcher that the thread is no longer being
 		     * watched, and then acknowledge the unwatch command.
 		     *)
-		      CML.send(TidTbl.remove tbl tid, ())
+		      SV.iPut(TidTbl.remove tbl tid, ())
 			handle _ => ();
 		    (* acknowledge that the thread has been removed *)
 		      SV.iPut(ack, ()))
