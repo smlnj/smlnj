@@ -24,6 +24,8 @@ struct
                  errorMatch: region->string,
                  anyErrors: bool ref}
 
+  type inputSource = Source.inputSource
+
   fun defaultConsumer () = PP.defaultDevice
 
   val nullErrorBody = (fn (ppstrm: PP.stream) => ())
@@ -77,30 +79,31 @@ struct
  *)
 (* [DBM] hasn't been supported for along while. get rid of the complication *)
 
-  fun location_string ({sourceMap,fileOpened,...}:Source.inputSource)
-                      ((p1,p2): SourceMap.region) : string =
-      let fun shortpoint ({line, column,...}:sourceloc, l) =
-             Int.toString line :: "." :: Int.toString column :: l
-          fun showpoint (p as {fileName,...}:sourceloc, l) =
-             Pathnames.trim fileName :: ":" :: shortpoint (p, l)
-          fun allfiles(f, (src:sourceloc, _)::l) =
-                f = #fileName src andalso allfiles(f, l)
-            | allfiles(f, []) = true
-          fun lastpos [(_, hi)] = hi
-            | lastpos (h::t) = lastpos t
-            | lastpos [] = impossible "lastpos botch in ErrorMsg.location_string"
-      in  concat (
-            case fileregion sourceMap (p1, p2)
-              of [(lo, hi)] =>
-                    if p1+1 >= p2 then showpoint (lo, [])
-                    else showpoint(lo, "-" :: shortpoint(hi, []))
-               | (lo, _) :: rest =>
-                    if allfiles(#fileName lo, rest) then
-                      showpoint(lo, "..." :: shortpoint(lastpos rest, []))
-                    else
-                      showpoint(lo, "..." :: showpoint (lastpos rest, []))
-               | [] => [Pathnames.trim fileOpened, ":<nullRegion>"]
-          )
+  fun location_string
+        ({sourceMap, fileOpened,...} : inputSource)
+        ((p1, p2) : region) =
+      let
+      fun shortpoint ({line, column, ...} : sourceloc, l) =
+          Int.toString line :: "." :: Int.toString column :: l
+      fun showpoint (p as {fileName, ...} : sourceloc, l) =
+          Pathnames.trim fileName :: ":" :: shortpoint (p, l)
+      fun allfiles (f, (src:sourceloc, _)::l) =
+          (f = #fileName src) andalso allfiles(f, l)
+        | allfiles (f, []) = true
+      fun lastpos [(_, hi)] = hi
+        | lastpos (h::t) = lastpos t
+        | lastpos [] = impossible "lastpos botch in ErrorMsg.location_string"
+      val msg = (case fileregion sourceMap (p1, p2)
+            of [(lo, hi)] => if p1+1 >= p2
+                 then showpoint (lo, [])
+                 else showpoint (lo, "-" :: shortpoint(hi, []))
+             | (lo, _) :: rest => if allfiles (#fileName lo, rest)
+                 then showpoint (lo, "..." :: shortpoint(lastpos rest, []))
+                 else showpoint (lo, "..." :: showpoint (lastpos rest, []))
+             | [] => [Pathnames.trim fileOpened, ":<nullRegion>"]
+          (* end case *))
+      in
+        String.concat msg
       end
 
   fun error (source as {anyErrors, errConsumer,...}: Source.inputSource)
