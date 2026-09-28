@@ -46,12 +46,12 @@ structure TestCnv : sig
   (* bit width of default tagged integer size (31 or 63) *)
     val tty = Target.defaultIntSz
 
-    val sLT = P.CMP{oper=P.LT, kind=P.INT ity}
-    val uLE = P.CMP{oper=P.LTE, kind=P.UINT ity}
+    fun sLT sz = P.CMP{oper=P.LT, kind=P.INT sz}
+    fun uLE sz = P.CMP{oper=P.LTE, kind=P.UINT sz}
     fun branch (cmp, args, k1, k2) = C.BRANCH(cmp, args, LV.mkLvar(), k1, k2)
+    fun zero ty = C.NUM{ival=0, ty=ty}
 
-    val mlUnit = C.NUM{ival=0, ty={sz=tty, tag=true}}
-
+    (* force an overflow trap by adding the 2^63+2^63 *)
     fun mkTrap k = let
 	  val tmp = LV.mkLvar()
 	  val ty = {tag=false, sz=ity}
@@ -62,42 +62,48 @@ structure TestCnv : sig
 
     fun test (from, to, [v], x, ty, k) =
 	  if (from = ity) andalso (to = tty)
+            (* conversion from native int (e.g., Int64) to default int (e.g., Int63) *)
 	    then C.ARITH(P.TEST{from=from, to=to}, [v], x, ty, k)
 	  else if (from = to)
 	    then C.PURE(P.COPY{from=from, to=to}, [v], x, ty, k)
 	  else if (from <= ity) andalso (to < tty)
 	    then let
+              val toTy = {sz=to, tag=true}
 	      val fromIsTagged = (from < ity)
 	      fun num iv = C.NUM{ival=iv, ty={sz=from, tag=fromIsTagged}}
 	      val maxToInt = IntInf.<<(1, Word.fromInt(to - 1)) - 1
 	      val minToInt = ~(maxToInt + 1)
+              (* the name of the trap join continuation *)
+              val trapK = LV.mkLvar()
+              val trapK' = C.VAR trapK
+              (* the "fake" join *)
 	      val jk = LV.mkLvar()
 	      val jk' = C.VAR jk
 (*
 	      val trap = C.TRAP(C.APP(jk', [v]))
 *)
-	      val trapK = C.APP(jk', [v])
 	      val x' = LV.mkLvar()
 	      in
-		C.FIX([(C.CONT, jk, [x], [ty], k)],
-		  branch(sLT, [v, num minToInt],
-		    mkTrap trapK,
-		    branch(sLT, [num maxToInt, v],
-		      mkTrap trapK,
-		      if fromIsTagged
-		      (* both are tagged, so nothing to do *)
-			then C.APP(jk', [v])
-		      (* convert from untagged to tagged representation *)
-			else C.ARITH(P.TEST{from=ity, to=tty}, [v], x', ty,
-			  C.APP(jk', [C.VAR x'])))))
+		C.FIX([(C.CONT, jk, [x], [C.NUMt toTy], k)],
+                C.FIX([(C.CONT, trapK, [LV.mkLvar()], [C.ENUMt], mkTrap(C.APP(jk', [zero toTy])))],
+		  branch(sLT from, [v, num minToInt],
+		    C.APP(trapK', [C.ENUM 0]),
+		    branch(sLT from, [num maxToInt, v],
+		      C.APP(trapK', [C.ENUM 0]),
+		      C.PURE(P.TRUNC{from=from, to=to}, [v], x', C.NUMt toTy,
+                        C.APP(jk', [C.VAR x']))))))
 	      end
 	    else bug "TEST with unexpected precisions"
       | test _ = bug "TEST with bogus arguments"
 
     fun testu (from, to, [v], x, ty, k) =
 	  if (from = to) andalso ((from = ity) orelse (from = tty))
+            (* conversion from native or default word type (e.g., Word64 or Word63)
+             * to native int type (e.g., Int64 or Int63)
+             *)
 	    then C.ARITH(P.TESTU{from=from, to=to}, [v], x, ty, k)
 	    else let
+              val toTy = {sz=to, tag=true}
 	      val fromIsTagged = (from < ity)
 	      fun num iv = C.NUM{ival=iv, ty={sz=from, tag=fromIsTagged}}
 	      val maxToInt = IntInf.<<(1, Word.fromInt(to - 1)) - 1
@@ -105,14 +111,14 @@ structure TestCnv : sig
 	      val jk' = C.VAR jk
 	      val x' = LV.mkLvar()
 	      in
-		C.FIX([(C.CONT, jk, [x], [ty], k)],
-		  branch(uLE, [v, num maxToInt],
+		C.FIX([(C.CONT, jk, [x], [C.NUMt toTy], k)],
+		  branch(uLE from, [v, num maxToInt],
 		    C.PURE(P.TRUNC{from=from, to=to}, [v], x', ty,
 		      C.APP(jk', [C.VAR x'])),
 (*
 		    C.TRAP(C.APP(jk', [v]))))
 *)
-		    mkTrap (C.APP(jk', [v]))))
+		    mkTrap (C.APP(jk', [zero toTy]))))
 	      end
       | testu _ = bug "TESTU with bogus arguments"
 
