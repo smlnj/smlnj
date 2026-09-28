@@ -712,8 +712,13 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
 
     (* the main function *)
     fun split (
-          func as (fk, f, vl as [_,x], [kontTy, t as C.PTRt(C.RPT{ptrLen=n, rawLen=0})], body)
+          func as (fk, f, vl as [_,x], [kontTy, t], body)
         ) = let
+          val n = (case t
+                 of C.ENUMt => 0
+                  | C.PTRt(C.RPT{ptrLen=n, rawLen=0}) => n
+                  | _ => bug "unexpected type"
+                (* end case *))
           (* new argument type has an additional argument for the literals *)
           val nt = C.rPtrTy(n+1)
           val _ = if !debugFlg
@@ -755,6 +760,6 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
               else ();
             (nfunc, bytes)
           end
-      | split _ = bug "unexpected CPS header in split"
+      | split func = bug "unexpected CPS header in split"
 
   end (* Literals *)
