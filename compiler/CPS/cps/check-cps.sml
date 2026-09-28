@@ -64,6 +64,9 @@ structure CheckCPS : sig
               }
           }
 
+    fun warning (C{outer, info=I{prefix, ...}, ...}, msg) =
+          say (concat("## [" :: lv2s outer :: "] Warning: " :: msg @ ["\n"]))
+
     fun error (C{outer, info=I{prefix, nErrors, ...}, ...}, msg) = let
           val n = !nErrors
           in
@@ -121,8 +124,12 @@ structure CheckCPS : sig
       | typeOfValue (cxt, STRING _) = C.ptrTy
       | typeOfValue (cxt, VOID) = raise Fail "unexpected VOID"
 
-    (* compare types for compatability *)
-    fun compatTy (NUMt nty1, NUMt nty2) = (#sz nty1 = #sz nty2)
+    (* compare types for compatability; the first type is the "expected" type
+     * (i.e., the formal parameter type) and the second is the "actual" type
+     * (i.e., the argument.
+     *)
+    fun compatTy (NUMt{tag=true, ...}, NUMt{tag=true, ...}) = true
+      | compatTy (NUMt nty1, NUMt nty2) = (#sz nty1 = #sz nty2)
       | compatTy (ENUMt, ENUMt) = true
         (* tagged ints and enums are compatable *)
       | compatTy (ENUMt, NUMt{tag=true, ...}) = true
@@ -296,6 +303,13 @@ structure CheckCPS : sig
             | chk (_, []) = error(cxt, [
                   "too few arguments in application of '", v2s f, "'"
                 ])
+            | chk (PTRt VPTR::ctyr, NUM{ival=0, ty={tag=true, ...}}::argr) = (
+                (* probably "unit" being passed; but it should have been `ENUM 0` *)
+                warning (cxt, [
+                    "type mismatch in call to '", v2s f,
+                    "'; expected type [P] for argument (I63t)0 : [I]"
+                  ]);
+                  chk (ctyr, argr))
             | chk (cty::ctyr, arg::argr) = let
                 val argTy = typeOfValue (cxt, arg)
                 in
