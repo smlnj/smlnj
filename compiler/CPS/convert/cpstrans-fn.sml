@@ -83,7 +83,7 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
           val {nUniform, nTagged, nRawInt, nFloat} = classifyArgs tys
 (*DEBUG*)val nArgs = nUniform + nTagged + nRawInt + nFloat
           (* the number of float args that exceed the available regs *)
-          val nHeapFP = Int.min(0, MS.numFloatArgRegs - nFloat)
+          val nHeapFP = Int.max(0, nFloat - MS.numFloatArgRegs)
           in
             if (nUniform + nTagged + nRawInt <= MS.numArgRegs) andalso (nHeapFP = 0)
               then CC_FLAT
