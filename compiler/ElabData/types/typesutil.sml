@@ -55,15 +55,18 @@ structure TypesUtil : TYPESUTIL =
 
     (* extract_tyvar_name_eq : string -> string * bool *)
     (* name: string arg is assumed to start with one or two apostrophies
-     * ''abc ==> (abc, true);  'abc ==> (abc, false) *)
-    fun extract_tyvar_name_eq name =
-	let val name = SS.triml 1 (SS.full name)  (* remove leading "'" *)
-	    val (name, eq) =
-		if SS.sub(name, 0) = #"'"
-		then (SS.triml 1 name, true) (* initial "'" signifies equality; removed *)
-		else (name, false)
-	 in (SS.string name, eq)
-	end
+     * `''abc` ==> (abc, true);  `'abc` ==> (abc, false), but note that
+     * `'` and `''` are both legal type-variable identifiers.
+     *)
+    fun extract_tyvar_name_eq name = let
+        (* first remove the leading `'` *)
+        val name = SS.triml 1 (SS.full name)
+        in
+          case SS.getc name
+           of SOME(#"'", rest) => (SS.string rest, true)
+            | _ => (SS.string name, false)
+          (* end case *)
+        end
 
     (* mkUBOUND : symbol -> tvkind *)
     (* sym argument is assumed to start with one or two apostrophies *)

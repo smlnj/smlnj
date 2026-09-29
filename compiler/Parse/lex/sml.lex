@@ -145,7 +145,7 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
                     Tokens.RPAREN(yypos,yypos+1));
 <INITIAL>"."		=> (Tokens.DOT(yypos,yypos+1));
 <INITIAL>"..."		=> (Tokens.DOTDOTDOT(yypos,yypos+3));
-<INITIAL>"'"{idchars}+
+<INITIAL>"'"{idchars}*
 			=> (TokTable.makeTyvar(yytext,yypos));
 <INITIAL>{id}	        => (TokTable.checkId(yytext, yypos));
 <INITIAL>{full_sym}+    => (if !ParserControl.quotation
