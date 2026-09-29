@@ -18,10 +18,8 @@ signature ERRORMSG =
     val nullErrorBody : PrettyPrint.stream -> unit
     val error : Source.inputSource -> SourceMap.region -> complainer
     (* with a known location string but without access to the actual source: *)
-    val errorNoSource :
-	PrettyPrint.device * bool ref -> string -> complainer
-    val errorNoFile : PrettyPrint.device * bool ref -> SourceMap.region
-                      -> complainer
+    val errorNoSource : PrettyPrint.device * bool ref -> string -> complainer
+    val errorNoFile : PrettyPrint.device * bool ref -> SourceMap.region -> complainer
 
     val matchErrorString : Source.inputSource -> SourceMap.region -> string
     val errors : Source.inputSource -> errors

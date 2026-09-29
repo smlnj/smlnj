@@ -97,16 +97,18 @@ structure CPSUtil : sig
       | isTagged (CPS.NUMt{tag, ...}) = tag
       | isTagged _ = true
 
-    fun ctyToString (CPS.NUMt{sz, tag=true}) =  "[I]"
+    fun ctyToString (CPS.NUMt{sz, tag=true}) = if (sz = Target.defaultIntSz)
+          then "[I]"
+          else concat["[I", Int.toString sz, "]"]
       | ctyToString (CPS.NUMt{sz, ...}) = concat["[I", Int.toString sz, "]"]
       | ctyToString CPS.ENUMt = "[E]"
-      | ctyToString (CPS.FLTt sz) = concat["[R", Int.toString sz, "]"]
+      | ctyToString (CPS.FLTt sz) = concat["[F", Int.toString sz, "]"]
       | ctyToString (CPS.PTRt(CPS.RPT{ptrLen, rawLen})) = (case (ptrLen, rawLen)
-           of (0, m) => concat["[PF", Int.toString m, "]"]
-            | (n, 0) => concat["[PR", Int.toString n, "]"]
-            | (n, m) => concat["[PM", Int.toString n, ":", Int.toString m, "]"]
+           of (n, 0) => concat["[REC", Int.toString n, "]"]
+            | (0, m) => concat["[RAW", Int.toString m, "]"]
+            | (n, m) => concat["[MIX", Int.toString n, ":", Int.toString m, "]"]
           (* end case *))
-      | ctyToString (CPS.PTRt CPS.VPT) =  "[PV]"
+      | ctyToString (CPS.PTRt CPS.VPT) =  "[P]"
       | ctyToString (CPS.FUNt) = "[FN]"
       | ctyToString (CPS.CNTt tys) = concat [
             "[C<", String.concatWithMap "," ctyToString tys, ">]"
@@ -143,7 +145,7 @@ structure CPSUtil : sig
     fun tcflt tc = LK.tc_eqv(tc, tc_real)
     fun ltflt lt = LK.lt_eqv(lt, lt_real)
 
-    fun rtyc (f, []) = CPS.rPtrTy 0
+    fun rtyc (f, []) = CPS.ENUMt        (* "()" *)
       | rtyc (f, ts) = let
 	  fun loop (a::r, b, len) =
 		if f a then loop(r, b, len+1) else loop(r, false, len+1)

@@ -16,10 +16,24 @@ body:
         To request a feature, please use the
         [feature-request form](https://github.com/smlnj/smlnj/issues/new?template=feature_request.yaml).
 
-        Also, before creating a new bug report, please search the
+        ## Guidelines
+
+        Before creating a new issue, please search the
         [open issues](https://github.com/smlnj/smlnj/issues) to see if your
-        problem has already been reported (if so, please add your information to the existing
-        issue).
+        problem has already been reported (if so, please add your information
+        to the existing issue).
+
+        Please use individual issues for independent problems, but if a common problem
+        affects multiple modules (e.g., every monomorphic vector structure), it should
+        be a single issue.
+
+        Please follow the structure of the form.  In particular, an example of the problem
+        with a transcript of the behavior is very useful to us.  Including a description
+        or example of the expected result is also useful.
+
+        If you have a simple fix, please include that in the "Additional Information"
+        section.  Larger, more complicated fixes should be submitted as pull requests.
+
   - type: markdown
     attributes:
       value: >
@@ -91,7 +105,7 @@ body:
         distribution.
       options:
         - Installation
-        - Core system
+        - Core system (e.g., compiler, runtime, REPL, ...)
         - Compilation manager (CM)
         - Basis Library
         - SML/NJ Library

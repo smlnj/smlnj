@@ -279,7 +279,10 @@ C.NUMt{sz=sz}
 			      | v' => letVar (v', C.TAGt, tag)
 			    (* end case *)
 			  end
-			else error ["unsupported sizes for TEST"]
+			else error [
+                            "test_", Int.toString from, "_", Int.toString to,
+                            " is unsupported"
+                          ]
 		  | ARITH(P.TESTU{from, to}, [v], x, ty, k) =>
 		      if (from = to) andalso ((from = ity) orelse (from = defaultIntSz))
 			then let
@@ -295,7 +298,10 @@ C.NUMt{sz=sz}
 			      C.ARITH(TP.ARITH{oper=TP.IADD, sz=ity}, [x', signBit],
 				param(dummy, C.TAGt), genE k))
 			  end
-			else error ["unsupported sizes for TESTU"]
+			else error  [
+                            "testu_", Int.toString from, "_", Int.toString to,
+                            " is unsupported"
+                          ]
 		  | ARITH(P.IARITH{oper, sz}, vs, x, ty, k) => if isTaggedInt sz
 		      then let
 			fun continue (C.VAR _) = bindVarIn (x, k)
