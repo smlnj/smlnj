@@ -34,32 +34,24 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
      *
      *  COUNTER         DESCRIPTION           REG     RECORD   MIXED   RAW
      * --------------------------------------------------------------------
-     *  uArgs           pointers              GPR       Y       Y/N     N
-     *  tArgs           tagged integers       GPR       Y       Y/Y     Y
+     *  uArgs           uniform values        GPR       Y       Y/N     N
      *  rArgs           machine integers      GPR       N       N/Y     Y
      *  fArgs           floating-point        FPR       N       N/Y     Y
      *)
     fun classifyArgs tys = let
-          fun go ([], uArgs, tArgs, rArgs, fArgs) =
-                {nUniform = uArgs, nTagged = tArgs, nRawInt = rArgs, nFloat = fArgs}
-            | go (cty::ctys, uArgs, tArgs, rArgs, fArgs) = (case cty
-                 of C.NUMt{tag=true, ...} =>
-                      go (ctys, uArgs, tArgs+1, rArgs, fArgs)
-                  | C.NUMt _ =>
-                      go (ctys, uArgs, tArgs, rArgs+1, fArgs)
-                  | C.ENUMt =>
-                      go (ctys, uArgs, tArgs+1, rArgs, fArgs)
-                  | C.PTRt _ =>
-                      go (ctys, uArgs+1, tArgs, rArgs, fArgs)
-                  | C.FUNt =>
-                      go (ctys, uArgs+1, tArgs, rArgs, fArgs)
-                  | C.FLTt _ =>
-                      go (ctys, uArgs, tArgs, rArgs, fArgs+1)
-                  | C.CNTt _ =>
-                      go (ctys, uArgs+1, tArgs, rArgs, fArgs)
+          fun go ([], uArgs, rArgs, fArgs) =
+                {nUniform = uArgs, nRawInt = rArgs, nFloat = fArgs}
+            | go (cty::ctys, uArgs, rArgs, fArgs) = (case cty
+                 of C.NUMt{tag=true, ...} => go (ctys, uArgs+1, rArgs, fArgs)
+                  | C.NUMt _ => go (ctys, uArgs, rArgs+1, fArgs)
+                  | C.ENUMt => go (ctys, uArgs+1, rArgs, fArgs)
+                  | C.PTRt _ => go (ctys, uArgs+1, rArgs, fArgs)
+                  | C.FUNt => go (ctys, uArgs+1, rArgs, fArgs)
+                  | C.FLTt _ => go (ctys, uArgs, rArgs, fArgs+1)
+                  | C.CNTt _ => go (ctys, uArgs+1, rArgs, fArgs)
                 (* end case *))
           in
-            go (tys, 0, 0, 0, 0)
+            go (tys, 0, 0, 0)
           end
 
     (* specification of a calling convention *)
@@ -80,14 +72,14 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
      * or raw record, then we put enums into the raw part.
      *)
     fun callingConv tys = let
-          val {nUniform, nTagged, nRawInt, nFloat} = classifyArgs tys
-(*DEBUG*)val nArgs = nUniform + nTagged + nRawInt + nFloat
+          val {nUniform, nRawInt, nFloat} = classifyArgs tys
+(*DEBUG*)val nArgs = nUniform + nRawInt + nFloat
           (* the number of float args that exceed the available regs and thus must
            * be passed in the heap.
            *)
           val nHeapFP = Int.max(0, nFloat - MS.numFloatArgRegs)
           in
-            if (nUniform + nTagged + nRawInt <= MS.numArgRegs) andalso (nHeapFP = 0)
+            if (nUniform + nRawInt <= MS.numArgRegs) andalso (nHeapFP = 0)
               then CC_FLAT
               else let
                 (* some args are heap allocated, so we need an additional uniform
@@ -98,64 +90,57 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
                  * flag `anyRaw` is true when we are going to use heap storage for
                  * raw values (ints or floats).
                  *)
-                val (bU, bT, bR, anyRaw) = if (nUniform >= nGPR)
-                      then (nGPR, 0, 0, nHeapFP + nRawInt > 0)
+                val (bU, bR, anyRaw) = if (nUniform >= nGPR)
+                      then (nGPR, 0, nHeapFP + nRawInt > 0)
                       else let
                         val nGPR = nGPR - nUniform
                         in
                           if (nRawInt > nGPR)
-                            then (nUniform, 0, nGPR, true)
-                            else (nUniform, Int.min(nTagged, nGPR - nRawInt), nRawInt, nHeapFP > 0)
+                            then (nUniform, nGPR, true)
+                            else (nUniform, nRawInt, nHeapFP > 0)
                         end
-val () = if (bU + bT + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget" else ()
+val () = if (bU + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget" else ()
                 val bF = Int.min (MS.numFloatArgRegs, nFloat)
                 (* assign arguments to slots given budgets for each kind of variable
                  * the parameters are:
                  *   i          -- the argument index
                  *   ty::tys    -- the argument type list
                  *   bU         -- the remaining budget for uniform args
-                 *   bT         -- the remaining budget for tagged-integer args
                  *   bR         -- the remaining budget for raw-integer args
                  *   bF         -- the remaining budget for floating-point args
                  *   args       -- argument indices of direct arguments
                  *   uFlds      -- argument indices of uniform record arguments
                  *   rFlds      -- argument indices of raw record arguments
                  *)
-                fun assign (i, ty::tys, bU, bT, bR, bF, args, uFlds, rFlds) = (case ty
+                fun assign (i, ty::tys, bU, bR, bF, args, uFlds, rFlds) = (case ty
                        of C.NUMt{tag=true, ...} =>
-                            assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
+                            assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds)
                         | C.NUMt _ => if (bR > 0)
-                            then assign (i+1, tys, bU, bT, bR-1, bF, i::args, uFlds, rFlds)
-                            else assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
+                            then assign (i+1, tys, bU, bR-1, bF, i::args, uFlds, rFlds)
+                            else assign (i+1, tys, bU, bR, bF, args, uFlds, i::rFlds)
                         | C.ENUMt =>
-                            assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
-                        | C.PTRt _ => assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
-                        | C.FUNt => assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
+                            assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds)
+                        | C.PTRt _ =>
+                            assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds)
+                        | C.FUNt =>
+                            assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds)
                         | C.FLTt _ => if (bF > 0)
-                            then assign (i+1, tys, bU, bT, bR, bF-1, i::args, uFlds, rFlds)
-                            else assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
-                        | C.CNTt _ => assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds)
+                            then assign (i+1, tys, bU, bR, bF-1, i::args, uFlds, rFlds)
+                            else assign (i+1, tys, bU, bR, bF, args, uFlds, i::rFlds)
+                        | C.CNTt _ =>
+                            assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds)
                       (* end case *))
-                  | assign (_, [], _, _, _, _, args, uFlds, rFlds) = CC_RECORD{
+                  | assign (_, [], _, _, _, args, uFlds, rFlds) = CC_RECORD{
                         rep = {ptrLen = length uFlds, rawLen = length rFlds},
                         args = List.rev args,
                         flds = List.revAppend(uFlds, List.rev rFlds)
                       }
-                (* assign a tagged int/enum argument.  If the budget (`bT`) has been
-                 * exceeded, we assign the argument to raw storage (if present).
-                 *)
-                and assignTagged (i, tys, bU, bT, bR, bF, args, uFlds, rFlds) =
-                      if (bT > 0)
-                        then assign (i+1, tys, bU, bT-1, bR, bF, i::args, uFlds, rFlds)
-                      else if anyRaw
-                        then assign (i+1, tys, bU, bT, bR, bF, args, uFlds, i::rFlds)
-                        else assign (i+1, tys, bU, bT, bR, bF, args, i::uFlds, rFlds)
                 (* assign a pointer argument *)
-                and assignPtr (i, tys, bU, bT, bR, bF, args, uFlds, rFlds) = if (bU > 0)
-                      then assign (i+1, tys, bU-1, bT, bR, bF, i::args, uFlds, rFlds)
-                      else assign (i+1, tys, bU, bT, bR, bF, args, i::uFlds, rFlds)
+                and assignUniform (i, tys, bU, bR, bF, args, uFlds, rFlds) = if (bU > 0)
+                      then assign (i+1, tys, bU-1, bR, bF, i::args, uFlds, rFlds)
+                      else assign (i+1, tys, bU, bR, bF, args, i::uFlds, rFlds)
                 in
-                  assign (0, tys, bU, bT, bR, bF, [], [], [])
+                  assign (0, tys, bU, bR, bF, [], [], [])
                 end
           end (* callingConv *)
 
@@ -186,14 +171,14 @@ val () = (
 fun sub (argMap, i) = Vector.sub(argMap, i)
 handle Subscript => let
 val i2s = Int.toString
-val {nUniform, nTagged, nRawInt, nFloat} = classifyArgs tys
+val {nUniform, nRawInt, nFloat} = classifyArgs tys
 in
 print(concat["## argMap[", i2s i, "] out of bounds\n"]);
 print(concat["## vs = [",
 String.concatWithMap ","
   (fn (v, ty) => concat[PPCps.value2str v, ":", CPSUtil.ctyToString ty])
   (ListPair.zip (vs, tys)), "]\n"]);
-print(concat["## nUniform = ", i2s nUniform, ", nTagged = ", i2s nTagged, ", nRawInt = ",
+print(concat["## nUniform = ", i2s nUniform, ", nRawInt = ",
 i2s nRawInt, ", nFloat = ", i2s nFloat, ", #regs = ", i2s MS.numArgRegs, "\n"]);
 print(concat["## cc = RECORD{args = [", String.concatWithMap "," i2s args,
 "], flds = [", String.concatWithMap "," i2s flds, "]}\n"]);

@@ -124,36 +124,45 @@ structure CheckCPS : sig
       | typeOfValue (cxt, STRING _) = C.ptrTy
       | typeOfValue (cxt, VOID) = raise Fail "unexpected VOID"
 
-    (* compare types for compatability; the first type is the "expected" type
-     * (i.e., the formal parameter type) and the second is the "actual" type
-     * (i.e., the argument.
+    (* compare types for compatability.  Note that the general pointer type
+     * (i.e., `PTRt VVPT`) is really a stand-in for the "uniform-representation"
+     * type.  Thus, it is compatible with tagged integers, enums, and other kinds
+     * of pointers.
      *)
-    fun compatTy (NUMt{tag=true, ...}, NUMt{tag=true, ...}) = true
-      | compatTy (NUMt nty1, NUMt nty2) = (#sz nty1 = #sz nty2)
-      | compatTy (ENUMt, ENUMt) = true
-        (* tagged ints and enums are compatable *)
-      | compatTy (ENUMt, NUMt{tag=true, ...}) = true
-      | compatTy (NUMt{tag=true, ...}, ENUMt) = true
-        (* unknown pointers are compatable with other pointers and enums *)
-      | compatTy (PTRt VPT, ENUMt) = true
-      | compatTy (ENUMt, PTRt VPT) = true
-      | compatTy (PTRt VPT, PTRt _) = true
-      | compatTy (PTRt _, PTRt VPT) = true
-        (* record pointers must match *)
-      | compatTy (PTRt(RPT rep1), PTRt(RPT rep2)) =
-          (#ptrLen rep1 = #ptrLen rep2)
-          andalso (#rawLen rep1 = #rawLen rep2)
-      | compatTy (FLTt sz1, FLTt sz2) = (sz1 = sz2)
-        (* functions are compatible with unknown pointers *)
-      | compatTy (FUNt, FUNt) = true
-      | compatTy (PTRt VPT, FUNt) = true
-      | compatTy (FUNt, PTRt VPT) = true
-        (* continuations are compatible with unknown pointers *)
-      | compatTy (CNTt tys1, CNTt tys2) =
-          ListPair.allEq compatTy (tys2, tys2)
-      | compatTy (CNTt _, PTRt VPT) = true
-      | compatTy (PTRt VPT, CNTt _) = true
-      | compatTy _ = false
+    fun compatTy {paramTy, argTy} = (case (paramTy, argTy)
+              (* tagged ints and enums are compatable *)
+           of (NUMt{tag=true, ...}, NUMt{tag=true, ...}) => true
+            | (NUMt nty1, NUMt nty2) => (#sz nty1 = #sz nty2)
+            | (ENUMt, ENUMt) => true
+            | (ENUMt, NUMt{tag=true, ...}) => true
+            | (NUMt{tag=true, ...}, ENUMt) => true
+              (* unknown pointers are compatable with uniform values, but not with
+               * continuations
+               *)
+            | (PTRt VPT, ENUMt) => true
+            | (ENUMt, PTRt VPTR) => true
+            | (PTRt VPT, NUMt{tag=true, ...}) => true
+            | (NUMt{tag=true, ...}, PTRt VPT) => true
+            | (PTRt VPT, PTRt _) => true
+            | (PTRt _, PTRt VPT) => true
+              (* record pointers must match *)
+            | (PTRt(RPT rep1), PTRt(RPT rep2)) =>
+                (#ptrLen rep1 = #ptrLen rep2)
+                andalso (#rawLen rep1 = #rawLen rep2)
+            | (FLTt sz1, FLTt sz2) => (sz1 = sz2)
+              (* functions are compatible with unknown pointers *)
+            | (FUNt, FUNt) => true
+            | (PTRt VPT, FUNt) => true
+            | (FUNt, PTRt VPT) => true
+              (* continuations are compatible with unknown pointers *)
+            | (CNTt tys1, CNTt tys2) => true
+(* TODO: we probably should use a symmetric test here (or contrvariant?)
+                ListPair.allEq (compatTy (tys2, tys2)
+*)
+            | (CNTt _, PTRt VPT) => true
+            | (PTRt VPT, CNTt _) => true
+            | _ => false
+          (* end case *))
 
     fun check (prefix, func as (_, f, _, _, _)) = let
           val cxt = new (prefix, f)
@@ -315,7 +324,7 @@ structure CheckCPS : sig
                 in
                   if checkArg (cxt, fn () => concat["application of '", v2s f, "'"], arg)
                     then () (* unbound argument, so don't check the types *)
-                  else if compatTy(cty, argTy)
+                  else if compatTy{paramTy=cty, argTy=argTy}
                     then ()
                     else error(cxt, [
                         "type mismatch in call to '", v2s f, "'; expected type ",
