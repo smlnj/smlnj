@@ -51,7 +51,6 @@ val debugPrint = (fn x => ED.debugPrint debugging x)
 
 fun bug msg = ErrorMsg.impossible("TypeCheck: "^msg)
 
-infix 9 sub
 val --> = BT.-->
 infix -->
 
