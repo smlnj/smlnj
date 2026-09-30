@@ -73,7 +73,6 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
      *)
     fun callingConv tys = let
           val {nUniform, nRawInt, nFloat} = classifyArgs tys
-(*DEBUG*)val nArgs = nUniform + nRawInt + nFloat
           (* the number of float args that exceed the available regs and thus must
            * be passed in the heap.
            *)
@@ -99,7 +98,6 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
                             then (nUniform, nGPR, true)
                             else (nUniform, nRawInt, nHeapFP > 0)
                         end
-val () = if (bU + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget" else ()
                 val bF = Int.min (MS.numFloatArgRegs, nFloat)
                 (* assign arguments to slots given budgets for each kind of variable
                  * the parameters are:
