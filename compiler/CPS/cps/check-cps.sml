@@ -155,7 +155,7 @@ structure CheckCPS : sig
             | (PTRt VPT, FUNt) => true
             | (FUNt, PTRt VPT) => true
               (* continuations are compatible with unknown pointers *)
-            | (CNTt tys1, CNTt tys2) => ListPair.allEq (compatTy (tys1, tys2)
+            | (CNTt tys1, CNTt tys2) => ListPair.allEq compatTy (tys1, tys2)
             | (CNTt _, PTRt VPT) => true
             | (PTRt VPT, CNTt _) => true
             | _ => false
@@ -321,7 +321,7 @@ structure CheckCPS : sig
                 in
                   if checkArg (cxt, fn () => concat["application of '", v2s f, "'"], arg)
                     then () (* unbound argument, so don't check the types *)
-                  else if compatTy{paramTy=cty, argTy=argTy}
+                  else if compatTy(cty, argTy)
                     then ()
                     else error(cxt, [
                         "type mismatch in call to '", v2s f, "'; expected type ",
