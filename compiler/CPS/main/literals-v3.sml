@@ -510,29 +510,6 @@ structure Literals : LITERALS =
                 in
                   fn (id, ty) => insert (id, (WordTbl.numItems slotTbl, ty))
                 end
-          (* a function for mapping CPS values to slots in the top-level literal
-           * vector
-           *)
-          val slotForValue : C.value -> (int * C.cty) option = let
-                val findVar = LitEnv.findVar env
-                val lookupReal = LitEnv.lookupReal env
-                val lookupString = LitEnv.lookupString env
-                val findSlot = WordTbl.find slotTbl
-                fun getSlot (OBJ{id, ty, ...}) = (case findSlot id
-                       of NONE => bug ("no slot for " ^ Word.fmt StringCvt.DEC id)
-                        | someSlot => someSlot
-                      (* end case *))
-                  | getSlot _ = bug "getSlot for non-object"
-                in
-                  fn (C.VAR x) => (case findVar x
-                       of SOME(true, lit) => getSlot lit
-                        | SOME _ => bug "impossible: bad variable"
-                        | NONE => NONE
-                      (* end case *))
-                   | (C.REAL rc) => SOME(lookupReal rc, C.FLTt(#ty rc))
-                   | (C.STRING s) => getSlot (lookupString s)
-                   | _ => NONE
-                end
           (* generate code to create a record *)
           fun genRecord (rk, lits, code) = let
                 val code = List.foldl genLiteral code lits
@@ -607,6 +584,29 @@ structure Literals : LITERALS =
                     )
                 (* end case *))
           val code = List.rev (BC.RETURN :: code)
+          (* a function for mapping CPS values to slots in the top-level literal
+           * vector
+           *)
+          val slotForValue : C.value -> (int * C.cty) option = let
+                val findVar = LitEnv.findVar env
+                val lookupReal = LitEnv.lookupReal env
+                val lookupString = LitEnv.lookupString env
+                val findSlot = WordTbl.find slotTbl
+                fun getSlot (OBJ{id, ty, ...}) = (case findSlot id
+                       of NONE => bug ("no slot for " ^ Word.fmt StringCvt.DEC id)
+                        | someSlot => someSlot
+                      (* end case *))
+                  | getSlot _ = bug "getSlot for non-object"
+                in
+                  fn (C.VAR x) => (case findVar x
+                       of SOME(true, lit) => getSlot lit
+                        | SOME _ => bug "impossible: bad variable"
+                        | NONE => NONE
+                      (* end case *))
+                   | (C.REAL rc) => SOME(numLits + lookupReal rc, C.FLTt(#ty rc))
+                   | (C.STRING s) => getSlot (lookupString s)
+                   | _ => NONE
+                end
           in
             if !debugFlg
               then let
@@ -753,7 +753,7 @@ handle ex => (say(concat["rewriteVar (", LV.lvarName x, ", -, -): error\n"]); ra
               then (
                 say "==== Bytes\n";
                 Word8Vector.appi prByte bytes;
-                if (Word8Vector.length bytes mod 16 <> 15) then say "\n" else ();
+                if (Word8Vector.length bytes mod 16 <> 0) then say "\n" else ();
                 say (concat["==== CPS after Literals.liftLiterals\n"]);
                 PPCps.printcps0 nfunc;
                 say "==========\n")

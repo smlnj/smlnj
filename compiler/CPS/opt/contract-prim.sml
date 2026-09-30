@@ -104,6 +104,7 @@ structure ContractPrim : sig
     fun sizeOfKind (P.INT sz) = sz
       | sizeOfKind (P.UINT sz) = sz
       | sizeOfKind (P.FLOAT _) = bug "sizeOfKind(FLOAT _)"
+      | sizeOfKind P.ENUM = bug "sizeOfKind(ENUM)"
 
     fun mkNum (sz, ival) = let
         (* NOTE: currently all tagged integer constants have the default size *)
@@ -128,8 +129,8 @@ structure ContractPrim : sig
     datatype result
       = None                                    (* no contraction *)
       | Val of CPS.value                        (* contract to value *)
-      | Arith of CPS.P.arith * CPS.value list   (* strength reduction *)
-      | Pure of CPS.P.pure * CPS.value list     (* strength reduction *)
+      | Arith of P.arith * CPS.value list       (* strength reduction *)
+      | Pure of P.pure * CPS.value list         (* strength reduction *)
 
     fun lshift sz = P.PURE_ARITH{oper=P.LSHIFT, kind=P.UINT sz}
     fun rshift sz = P.PURE_ARITH{oper=P.RSHIFT, kind=P.INT sz}
@@ -148,6 +149,16 @@ structure ContractPrim : sig
     fun mkCOPY (from, to, arg) = if (from = to)
           then Val arg
           else Pure(P.COPY{from=from, to=to}, [arg])
+
+  (* an arithmetic expression that is guaranteed to produce an `Overflow` *)
+    val raiseOvflw = let
+          val maxInt = NUM{
+                  ival = IntInf.<<(1, Word.fromInt(Target.mlValueSz-1)) - 1,
+                  ty = {sz=Target.mlValueSz, tag=false}
+                }
+          in
+            Arith(P.IARITH{oper=P.IADD, sz=Target.mlValueSz}, [maxInt, maxInt])
+          end
 
   (* contraction for impure arithmetic operations; note that 64-bit IMUL, IDIV,
    * IMOD, IQUOT, and IREM have three arguments on 32-bit targets, so we need
@@ -181,8 +192,12 @@ structure ContractPrim : sig
             (***** IDIV *****)
             | (P.IARITH{oper=P.IDIV, ...}, v :: NUM{ival=1, ...} :: _) => Val v
             | (P.IARITH{oper=P.IDIV, ...}, _ :: NUM{ival=0, ...} :: _) => None
-            | (P.IARITH{oper=P.IDIV, sz=sz}, NUM i :: NUM j :: _) =>
+            | (P.IARITH{oper=P.IDIV, sz=sz}, NUM i :: NUM j :: _) => (
                 Val(NUM{ival = CA.sDiv(sz, #ival i, #ival j), ty = #ty i})
+                  (* Return an expression that will cause the `Overflow` exception,
+                   * since hardware division does not.
+                   *)
+                  handle Overflow => raiseOvflw)
             | (P.IARITH{oper=P.IDIV, sz}, v :: NUM{ival= ~1, ...} :: _) =>
                 Arith(P.IARITH{oper=P.INEG, sz=sz}, [v])
             | (P.IARITH{oper=P.IDIV, sz}, v :: NUM{ival, ...} :: _) => (case log2 ival
@@ -199,8 +214,12 @@ structure ContractPrim : sig
             (***** IQUOT *****)
             | (P.IARITH{oper=P.IQUOT, ...}, v :: NUM{ival=1, ...} :: _) => Val v
             | (P.IARITH{oper=P.IQUOT, ...}, _ :: NUM{ival=0, ...} :: _) => None
-            | (P.IARITH{oper=P.IQUOT, sz=sz}, NUM i :: NUM j :: _) =>
+            | (P.IARITH{oper=P.IQUOT, sz=sz}, NUM i :: NUM j :: _) => (
                 Val(NUM{ival = CA.sQuot(sz, #ival i, #ival j), ty = #ty i})
+                  (* Return an expression that will cause the `Overflow` exception,
+                   * since hardware division does not.
+                   *)
+                  handle Overflow => raiseOvflw)
             | (P.IARITH{oper=P.IQUOT, sz}, v :: NUM{ival= ~1, ...} :: _) =>
                 Arith(P.IARITH{oper=P.INEG, sz=sz}, [v])
             (***** IREM *****)
@@ -617,7 +636,7 @@ structure ContractPrim : sig
                 SOME(CA.toSigned(sz, #ival i) < CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLess(sz, #ival i, #ival j))
-            | cond (P.CMP{oper=P.LT, ...}, [ENUM i, ENUM j]) = SOME(i < j)
+            | cond (P.CMP{oper=P.LT, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i < j)
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [_, NUM{ival=0, ...}]) =
                 SOME false (* no unsigned value is < 0 *)
             | cond (P.CMP{oper=P.LT, kind=P.UINT _}, [VAR v, NUM{ival=256, ...}]) = (
@@ -635,7 +654,7 @@ structure ContractPrim : sig
                 SOME(CA.toSigned(sz, #ival i) <= CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLessEq(sz, #ival i, #ival j))
-            | cond (P.CMP{oper=P.LTE, ...}, [ENUM i, ENUM j]) = SOME(i <= j)
+            | cond (P.CMP{oper=P.LTE, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i <= j)
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM{ival=0, ...}, _]) =
                 SOME true (* 0 is <= all unsigned values *)
             | cond (P.CMP{oper=P.GT, kind}, [w,v]) =
@@ -661,7 +680,7 @@ structure ContractPrim : sig
                  * their unsigned value.
                  *)
                 SOME(CA.uEq(k, #ival i, #ival j))
-            | cond (P.CMP{oper=P.EQL, ...}, [ENUM i, ENUM j]) = SOME(i = j)
+            | cond (P.CMP{oper=P.EQL, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i = j)
             | cond (P.CMP{oper=P.NEQ, kind}, vl) = notCond (P.CMP{oper=P.EQL, kind=kind}, vl)
             | cond (P.PEQL, [NUM i, NUM j]) =
                 SOME(CA.uEq(Target.pointerSz, #ival i, #ival j))

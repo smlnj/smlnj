@@ -169,6 +169,7 @@ structure TransPrim : sig
 			  PL.REAL{rval = RealLit.zero false, ty = sz},
 			  PL.REAL{rval = RealLit.m_one, ty = sz} (* unused *)
 			) end
+		    | PO.ENUM => bug "mkInlineOps(ENUM)"
 		  (* end case *))
 	    val lt_cmp = lt_arw (lt_argpair, lt_bool)
 	    val less = pCMP(CmpP.LT, nk, lt_cmp, [])
@@ -185,12 +186,14 @@ structure TransPrim : sig
       fun sameNK (PO.INT sz1, PO.INT sz2) = (sz1 = sz2)
 	| sameNK (PO.UINT sz1, PO.UINT sz2) = (sz1 = sz2)
 	| sameNK (PO.FLOAT sz1, PO.FLOAT sz2) = (sz1 = sz2)
+	| sameNK (PO.ENUM, PO.ENUM) = true
 	| sameNK _ = false
 
     (* hash number kinds *)
       fun hashNK (PO.INT sz) = Word.fromInt sz
 	| hashNK (PO.UINT sz) = Word.fromInt sz + 0w1
 	| hashNK (PO.FLOAT sz) = Word.fromInt sz + 0w3
+	| hashNK PO.ENUM = 0w7
 
     (* hash tables keyed by number kinds *)
       structure NKTbl = HashTableFn (
@@ -404,17 +407,37 @@ structure TransPrim : sig
 		val oper = PL.PRIM (po, lt, ts)
 		in
 		  case coreExn ["Assembly", "Div"]
-		   of SOME divexn => let
+		   of SOME divExn => let
 			val { lt_arg, lt_argpair, lt_cmp, zero, equal, ... } = inlops nk
 			in
 			  mkFn lt_argpair (fn z =>
 			    mkLet (PL.SELECT(1, z)) (fn y =>
 			      mkCOND (
 				mkApp2 (equal, y, zero),
-				mkRaise (divexn, lt_arg),
+				mkRaise (divExn, lt_arg),
 				PL.APP(oper, z))))
 			end
 		   | NONE => (warn "no access to Div exception"; oper)
+		end
+	(* modulo operators with explicit tests for zero and ~1 divisors *)
+	  fun inlmod (nk, po, lt, ts) = let
+		val oper = PL.PRIM (po, lt, ts)
+		in
+		  case coreExn ["Assembly", "Div"]
+		   of SOME divExn => let
+			val { lt_arg, lt_argpair, lt_cmp, zero, equal, negOne, ... } = inlops nk
+			in
+			  mkFn lt_argpair (fn z =>
+			    mkLet (PL.SELECT(1, z)) (fn y =>
+			      mkCOND (
+				mkApp2 (equal, y, zero),
+				mkRaise (divExn, lt_arg),
+                                mkCOND (
+                                  mkApp2 (equal, y, negOne),
+                                  zero,
+				  PL.APP(oper, z)))))
+			end
+		   | _ => (warn "no access to Div exception"; oper)
 		end
 	(* inline min/max *)
 	  fun inlminmax (nk, ismax) = let
@@ -500,14 +523,15 @@ structure TransPrim : sig
                    of InlP.DIV(k as (PO.INT sz)) =>
                         inldiv (k, FP.ARITH{oper=ArithP.IDIV, sz=sz}, lt, ts)
                     | InlP.MOD(k as (PO.INT sz)) =>
-                        inldiv (k, FP.ARITH{oper=ArithP.IMOD, sz=sz}, lt, ts)
+                        inlmod (k, FP.ARITH{oper=ArithP.IMOD, sz=sz}, lt, ts)
                     | InlP.QUOT(k as (PO.INT sz)) =>
                         inldiv (k, FP.ARITH{oper=ArithP.IQUOT, sz=sz}, lt, ts)
                     | InlP.QUOT k =>
                         inldiv (k, FP.PURE{oper=PureP.QUOT, kind=k}, lt, ts)
                     | InlP.REM(k as (PO.INT sz)) =>
-                        inldiv (k, FP.ARITH{oper=ArithP.IREM, sz=sz}, lt, ts)
-                    | InlP.REM k => inldiv (k, FP.PURE{oper=PureP.REM, kind=k}, lt, ts)
+                        inlmod (k, FP.ARITH{oper=ArithP.IREM, sz=sz}, lt, ts)
+                    | InlP.REM k =>
+                        inlmod (k, FP.PURE{oper=PureP.REM, kind=k}, lt, ts)
                     | InlP.LSHIFT sz => inlineLogicalShift (lshiftOp, sz)
                     | InlP.RSHIFT sz => inlArithmeticShiftRight sz
                     | InlP.RSHIFTL sz => inlineLogicalShift (rshiftlOp, sz)

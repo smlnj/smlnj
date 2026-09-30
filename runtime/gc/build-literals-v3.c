@@ -22,8 +22,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#define DEBUG_LITERALS
-
 #ifdef DEBUG_LITERALS
 #include <stdio.h>
 

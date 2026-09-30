@@ -137,6 +137,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/392[ANSI background color styles are not properly popped]
 | [.bugid]#393#
 | {issue-base}/393[`Posix.ProcEnv.uname` crashes on syscall failure]
+| [.bugid]#394#
+| {issue-base}/394[`Int64.int` value is sometimes corrupted]
 | [.bugid]#398#
 | {issue-base}/398[`IntListMap.findAndRemove` raises exception on failure]
 | [.bugid]#399#
@@ -165,6 +167,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/440[`ParserComb.skipBefore` returns `NONE` when it reaches EOF]
 | [.bugid]#440#
 | {issue-base}/441[`Time.scan` doesn't backtrack after seeing `.`]
+| [.bugid]#442#
+| {issue-base}/442[`Int64.div` constant folding suppresses `Overflow` exception]
 | [.bugid]#443#
 | {issue-base}/443[`NetHostDB.scan` raises `Overflow` on parse error instead of returning `NONE`]
 | [.bugid]#444#
@@ -185,6 +189,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/451[`Date.fromString` does not skip leading whitespace]
 | [.bugid]#452#
 | {issue-base}/452[`Date.fromTimeUniv o Date.toTime` adds 12 hours to the date]
+| [.bugid]#453#
+| {issue-base}/453[`Math.pow` is unusually inaccurate]
 | [.bugid]#454#
 | {issue-base}/454[`IntInf.pow` does not handle negative exponents correctly]
 | [.bugid]#456#

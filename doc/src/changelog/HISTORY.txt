@@ -113,6 +113,18 @@ name (as specified by the *Definition of Standard ML*).
 owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
+[2026-09-29]::
++
+Added `ENUM` as a num kind (corresponding to the `ENUMt` CPS type and
+the `ENUM` CPS value).  The `ENUM` numkind only supports comparison, but
+it may be cast into a tagged, unsigned number, which is sometimes
+required to implement `SWITCH`.
++
+See {pull-base}/462[pull request #462] for details.
++
+owner:cs.uchicago.edu/~byronzhong[Byron Zhong]
+
+//--------------------------------------------------------------------
 [2026-09-23]::
 +
 The `fcontract` phase in FLINT may generate malformed FLINT when a

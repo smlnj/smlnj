@@ -73,7 +73,6 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
      *)
     fun callingConv tys = let
           val {nUniform, nRawInt, nFloat} = classifyArgs tys
-(*DEBUG*)val nArgs = nUniform + nRawInt + nFloat
           (* the number of float args that exceed the available regs and thus must
            * be passed in the heap.
            *)
@@ -99,7 +98,6 @@ functor CPSTransFn (MS : MACH_SPEC) : sig
                             then (nUniform, nGPR, true)
                             else (nUniform, nRawInt, nHeapFP > 0)
                         end
-val () = if (bU + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget" else ()
                 val bF = Int.min (MS.numFloatArgRegs, nFloat)
                 (* assign arguments to slots given budgets for each kind of variable
                  * the parameters are:
@@ -151,40 +149,7 @@ val () = if (bU + bR > nGPR) then ErrorMsg.impossible "CPSTrans: invalid budget"
            of CC_FLAT => (vs, Fn.id)
             | CC_RECORD{rep, args, flds} => let
                 val argMap = Vector.fromList vs
-(*DEBUG*)
-val () = (
-    print(concat[
-        "# mkArgs: (",
-        String.concatWithMap ","
-          (fn (v, ty) => concat[PPCps.value2str v, ":", CPSUtil.ctyToString ty])
-          (ListPair.zip (vs, tys)),
-        ")\n"
-      ]);
-    print(concat[
-        "## cc = RECORD<", Int.toString(#ptrLen rep), ":", Int.toString(#rawLen rep),
-        ">{args = [", String.concatWithMap "," Int.toString args,
-        "], flds = [", String.concatWithMap "," Int.toString flds, "]}\n"
-      ]))
-(*DEBUG*)
                 val rp = LV.mkLvar()
-(*
-fun sub (argMap, i) = Vector.sub(argMap, i)
-handle Subscript => let
-val i2s = Int.toString
-val {nUniform, nRawInt, nFloat} = classifyArgs tys
-in
-print(concat["## argMap[", i2s i, "] out of bounds\n"]);
-print(concat["## vs = [",
-String.concatWithMap ","
-  (fn (v, ty) => concat[PPCps.value2str v, ":", CPSUtil.ctyToString ty])
-  (ListPair.zip (vs, tys)), "]\n"]);
-print(concat["## nUniform = ", i2s nUniform, ", nRawInt = ",
-i2s nRawInt, ", nFloat = ", i2s nFloat, ", #regs = ", i2s MS.numArgRegs, "\n"]);
-print(concat["## cc = RECORD{args = [", String.concatWithMap "," i2s args,
-"], flds = [", String.concatWithMap "," i2s flds, "]}\n"]);
-raise Subscript
-end
-*)
                 (* actual argument list; the record pointer `rp` is the last arg *)
                 val args' = List.foldr
                       (fn (i, vs) => Vector.sub(argMap, i) :: vs)
@@ -204,7 +169,6 @@ end
                   (args', fn e => C.RECORD(rk, flds', rp, e))
                 end
           (* end case *))
-handle ex => (print "## exception in mkArgs\n"; raise ex)
 
     (* given a list of parameters and a list of their types, return the rewritten
      * parameter list, the corresponding list of types, and a wrapper for the
@@ -214,21 +178,6 @@ handle ex => (print "## exception in mkArgs\n"; raise ex)
            of CC_FLAT => (xs, tys, Fn.id)
             | CC_RECORD{rep, args, flds} => let
                 val paramMap = Vector.fromList(ListPair.zipEq(xs, tys))
-(*DEBUG*)
-val () = (
-    print(concat[
-        "# mkParams: (",
-        String.concatWithMap ","
-          (fn (x, ty) => concat[LV.lvarName x, ":", CPSUtil.ctyToString ty])
-          (ListPair.zip (xs, tys)),
-        ")\n"
-      ]);
-    print(concat[
-        "## cc = RECORD<", Int.toString(#ptrLen rep), ":", Int.toString(#rawLen rep),
-        ">{args = [", String.concatWithMap "," Int.toString args,
-        "], flds = [", String.concatWithMap "," Int.toString flds, "]}\n"
-      ]))
-(*DEBUG*)
                 val rp = LV.mkLvar()
                 (* actual paramter list; the record pointer `rp` is the last param *)
                 val (xs', tys') = List.foldr
@@ -252,7 +201,6 @@ val () = (
                   (xs', tys', hdr)
                 end
           (* end case *))
-handle ex => (print "## exception in mkParams\n"; raise ex)
 
     (* the main function: rewrite a CPS function *)
     fun translate func = let
@@ -334,6 +282,13 @@ handle ex => (print "## exception in mkParams\n"; raise ex)
 		  | C.PURE(P.UNBOX, [u], w, t, ce) => (
 		      case u of C.VAR z => addty(z, t) | _ => ();
 		      addvl(w, vtrans u); rewrite ce)
+		  | C.PURE(P.WRAP P.ENUM, [u], w, t, ce) => (
+		      addvl(w, vtrans u);
+		      rewrite ce)
+		  | C.PURE(P.UNWRAP P.ENUM, [u], w, t, ce) => (
+		      case u of C.VAR z => addty(z, t) | _ => ();
+		      addvl(w, vtrans u);
+		      rewrite ce)
 		  | C.PURE(p as P.WRAP(P.INT sz), [u], w, t, ce) =>
 		      if (sz <= Target.defaultIntSz)
 			then (  (* remove wrapping of tagged ints *)

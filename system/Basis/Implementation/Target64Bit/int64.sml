@@ -39,7 +39,7 @@ structure Int64Imp : sig
     val op < : int * int -> bool = I64.<
     val op <= : int * int -> bool = I64.<=
 
-    val ~   : int -> int = ~
+    val ~   : int -> int = I64.~
     val min : int * int -> int = I64.min
     val max : int * int -> int = I64.max
     val abs : int -> int = I64.abs
