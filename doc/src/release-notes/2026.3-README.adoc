@@ -53,6 +53,10 @@ system.
 
 * Changed the heap layout to include an arena for "mixed" records.
 
+* The codegen library now zeros the padding in the object-file, which
+  should make builds more deterministic (and fixes the problem of not
+  being able to compile to a fixed point).
+
 === Basis Library
 
 A number of *Basis Library bugs were fixed (see the list below for details).
@@ -87,6 +91,10 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
+| [.bugid]#142#
+| {pull-base}/142[Vector pattern causes integer variables to be printed as abstract types]
+| [.bugid]#232#
+| {pull-base}/232[Spurious use of polyEqual]
 | [.bugid]#361#
 | {pull-base}/361[Make `build.sh` script more portable]
 | [.bugid]#364#
@@ -209,8 +217,10 @@ We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-* updated the unused-variable checker for changes to the `Absyn.exp`
-  datatype
+* updated the unused-variable checker for changes to the `Absyn.exp` datatype
+
+* avoid `Overflow` exceptions when `#line` comments are very large (there is
+  now an upper bound on the allowed line/column numbers)
 
 // ***** include a list of unnumbered/legacy bugs here *****
 
