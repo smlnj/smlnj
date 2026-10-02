@@ -20,6 +20,8 @@ structure CheckCPS : sig
     structure LV = LambdaVar
     structure PP = PPCps
 
+    val checkTypes = false
+
     datatype cty = datatype C.cty
     datatype pkind = datatype C.pkind
     datatype value = datatype C.value
@@ -129,37 +131,39 @@ structure CheckCPS : sig
      * type.  Thus, it is compatible with tagged integers, enums, and other kinds
      * of pointers.
      *)
-    fun compatTy (ty1, ty2) = (case (ty1, ty2)
-              (* tagged ints and enums are compatable *)
-           of (NUMt{tag=true, ...}, NUMt{tag=true, ...}) => true
-            | (NUMt nty1, NUMt nty2) => (#sz nty1 = #sz nty2)
-            | (ENUMt, ENUMt) => true
-            | (ENUMt, NUMt{tag=true, ...}) => true
-            | (NUMt{tag=true, ...}, ENUMt) => true
-              (* unknown pointers are compatable with uniform values, but not with
-               * continuations
-               *)
-            | (PTRt VPT, ENUMt) => true
-            | (ENUMt, PTRt VPTR) => true
-            | (PTRt VPT, NUMt{tag=true, ...}) => true
-            | (NUMt{tag=true, ...}, PTRt VPT) => true
-            | (PTRt VPT, PTRt _) => true
-            | (PTRt _, PTRt VPT) => true
-              (* record pointers must match *)
-            | (PTRt(RPT rep1), PTRt(RPT rep2)) =>
-                (#ptrLen rep1 = #ptrLen rep2)
-                andalso (#rawLen rep1 = #rawLen rep2)
-            | (FLTt sz1, FLTt sz2) => (sz1 = sz2)
-              (* functions are compatible with unknown pointers *)
-            | (FUNt, FUNt) => true
-            | (PTRt VPT, FUNt) => true
-            | (FUNt, PTRt VPT) => true
-              (* continuations are compatible with unknown pointers *)
-            | (CNTt tys1, CNTt tys2) => ListPair.allEq compatTy (tys1, tys2)
-            | (CNTt _, PTRt VPT) => true
-            | (PTRt VPT, CNTt _) => true
-            | _ => false
-          (* end case *))
+    fun compatTy (ty1, ty2) = if checkTypes
+          then (case (ty1, ty2)
+                (* tagged ints and enums are compatable *)
+             of (NUMt{tag=true, ...}, NUMt{tag=true, ...}) => true
+              | (NUMt nty1, NUMt nty2) => (#sz nty1 = #sz nty2)
+              | (ENUMt, ENUMt) => true
+              | (ENUMt, NUMt{tag=true, ...}) => true
+              | (NUMt{tag=true, ...}, ENUMt) => true
+                (* unknown pointers are compatable with uniform values, but not with
+                 * continuations
+                 *)
+              | (PTRt VPT, ENUMt) => true
+              | (ENUMt, PTRt VPTR) => true
+              | (PTRt VPT, NUMt{tag=true, ...}) => true
+              | (NUMt{tag=true, ...}, PTRt VPT) => true
+              | (PTRt VPT, PTRt _) => true
+              | (PTRt _, PTRt VPT) => true
+                (* record pointers must match *)
+              | (PTRt(RPT rep1), PTRt(RPT rep2)) =>
+                  (#ptrLen rep1 = #ptrLen rep2)
+                  andalso (#rawLen rep1 = #rawLen rep2)
+              | (FLTt sz1, FLTt sz2) => (sz1 = sz2)
+                (* functions are compatible with unknown pointers *)
+              | (FUNt, FUNt) => true
+              | (PTRt VPT, FUNt) => true
+              | (FUNt, PTRt VPT) => true
+                (* continuations are compatible with unknown pointers *)
+              | (CNTt tys1, CNTt tys2) => ListPair.allEq compatTy (tys1, tys2)
+              | (CNTt _, PTRt VPT) => true
+              | (PTRt VPT, CNTt _) => true
+              | _ => false
+            (* end case *))
+          else true
 
     fun check (prefix, func as (_, f, _, _, _)) = let
           val cxt = new (prefix, f)
@@ -311,11 +315,13 @@ structure CheckCPS : sig
                 ])
             | chk (PTRt VPTR::ctyr, NUM{ival=0, ty={tag=true, ...}}::argr) = (
                 (* probably "unit" being passed; but it should have been `ENUM 0` *)
-                warning (cxt, [
-                    "type mismatch in call to '", v2s f,
-                    "'; expected type [P] for argument (I63t)0 : [I]"
-                  ]);
-                  chk (ctyr, argr))
+                if checkTypes
+                  then warning (cxt, [
+                      "type mismatch in call to '", v2s f,
+                      "'; expected type [P] for argument (I63t)0 : [I]"
+                    ])
+                  else ();
+                chk (ctyr, argr))
             | chk (cty::ctyr, arg::argr) = let
                 val argTy = typeOfValue (cxt, arg)
                 in
