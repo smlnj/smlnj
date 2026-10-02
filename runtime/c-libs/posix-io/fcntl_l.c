@@ -45,7 +45,7 @@ ml_val_t _ml_P_IO_fcntl_l (ml_state_t *msp, ml_val_t arg)
     INT64_ALLOC(msp, start, flock.l_start)
     INT64_ALLOC(msp, length, flock.l_len)
 
-    ML_AllocWrite (msp, 0, MAKE_DESC (DTAG_record, 5));
+    ML_AllocWrite (msp, 0, MAKE_DESC(5, DTAG_record));
     ML_AllocWrite (msp, 1, INT_CtoML(flock.l_type));
     ML_AllocWrite (msp, 2, INT_CtoML(flock.l_whence));
     ML_AllocWrite (msp, 3, start);

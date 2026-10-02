@@ -12,7 +12,7 @@
 ml_val_t _ml_alloc_tm (ml_state_t *msp, const struct tm *tm)
 {
 
-    ML_AllocWrite(msp, 0, MAKE_DESC(DTAG_record, 9));
+    ML_AllocWrite(msp, 0, MAKE_DESC(9, DTAG_record));
     ML_AllocWrite(msp, 1, INT_CtoML(tm->tm_sec));
     ML_AllocWrite(msp, 2, INT_CtoML(tm->tm_min));
     ML_AllocWrite(msp, 3, INT_CtoML(tm->tm_hour));

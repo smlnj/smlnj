@@ -45,7 +45,7 @@ ml_val_t _ml_P_TTY_tcgetattr (ml_state_t *msp, ml_val_t arg)
     SYSWORD_ALLOC (msp, ispeed, cfgetispeed (&data));
     SYSWORD_ALLOC (msp, ospeed, cfgetospeed (&data));
 
-    ML_AllocWrite (msp, 0, MAKE_DESC(DTAG_record, 7));
+    ML_AllocWrite (msp, 0, MAKE_DESC(7, DTAG_record));
     ML_AllocWrite (msp, 1, iflag);
     ML_AllocWrite (msp, 2, oflag);
     ML_AllocWrite (msp, 3, cflag);
