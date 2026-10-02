@@ -80,7 +80,7 @@ structure Reactive : REACTIVE =
 	  val body' = trans (body, initialEnv)
 	  in
 	    M.M{
-		now = ref 0,
+		now = ref 2,
 		moveFlg = ref false,
 		endOfInstant = ref false,
 		prog = body',

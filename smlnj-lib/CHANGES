@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-02]
+	Fix for a problem with the initialization of the `now` ref in
+	`Reactive.machine`
+
 [2026-09-18]
 	Add `listKeys` function to the `HASH_TABLE` and `MONO_HASH_TABLE`
 	signatures
