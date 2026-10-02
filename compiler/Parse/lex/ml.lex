@@ -24,15 +24,20 @@ val atoi = cvt StringCvt.DEC
 val xtoi = cvt StringCvt.HEX
 end (* local *)
 
-fun mysynch (srcmap, initpos, pos, args) =
-    let fun cvt digits = getOpt(Int.fromString digits, 0)
-	val resynch = SourceMap.resynch srcmap
-     in case args
-          of [col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, NONE)
-           | [file, col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, SOME file)
-           | _ => impossible "ill-formed args in (*#line...*)"
+fun mysynch (srcmap, initpos, pos, args) = let
+    fun cvt digits = (case IntInf.fromString digits
+           of SOME n => if (n > SourceMap.limit)
+                then raise Overflow
+                else IntInf.toInt n
+            | _ => 0 (* should be impossible *)
+          (* end case *))
+    val resynch = SourceMap.resynch srcmap
+    in
+      case args
+       of [col, line] => resynch (initpos, pos, cvt line, cvt col, NONE)
+        | [file, col, line] => resynch (initpos, pos, cvt line, cvt col, SOME file)
+        | _ => impossible "ill-formed args in (*#line...*)"
+      (* end case *)
     end
 
 fun has_quote s = CharVector.exists (fn #"`" => true | _ => false) s
@@ -145,23 +150,37 @@ bad_escape="\\"[\000-\008\011\012\014-\031 !#$%&'()*+,\-./:;<=>?@A-Z\[\]_`c-eg-m
 		    continue());
 <INITIAL>.	=> (err (yypos,yypos) COMPLAIN "illegal token" nullErrorBody;
 		    continue());
-<L>[0-9]+                 => (YYBEGIN LL; charlist := [yytext]; continue());
-<LL>\.                    => ((* cheat: take n > 0 dots *) continue());
-<LL>[0-9]+                => (YYBEGIN LLC; addString(charlist, yytext); continue());
-<LL>0*               	  => (YYBEGIN LLC; addString(charlist, "1");    continue()
+<L>[0-9]+       => (YYBEGIN LL; charlist := [yytext]; continue());
+<LL>\.          => ((* cheat: take n > 0 dots *) continue());
+<LL>[0-9]+      => (YYBEGIN LLC; addString(charlist, yytext); continue());
+<LL>0*          => (YYBEGIN LLC; addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *));
-<LLC>"*)"                 => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+2, !charlist);
-		              comLevel := 0; charlist := []; continue());
-<LLC>{ws}\"		  => (YYBEGIN LLCQ; continue());
-<LLCQ>[^\"]*              => (addString(charlist, yytext); continue());
-<LLCQ>\""*)"              => (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+3, !charlist);
-		              comLevel := 0; charlist := []; continue());
+<LLC>"*)"       => (YYBEGIN INITIAL;
+                    mysynch (sourceMap, !stringstart, yypos+2, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+2)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+		    comLevel := 0; charlist := [];
+                    continue ());
+<LLC>{ws}\"	=> (YYBEGIN LLCQ; continue());
+<LLCQ>[^\"]*    => (addString(charlist, yytext); continue());
+<LLCQ>\""*)"    => (YYBEGIN INITIAL;
+                    mysynch(sourceMap, !stringstart, yypos+3, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+3)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+                    comLevel := 0; charlist := [];
+                    continue());
 <L,LLC,LLCQ>"*)" => (err (!stringstart, yypos+1) WARN
                        "ill-formed (*#line...*) taken as comment" nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue());
-<L,LLC,LLCQ>.    => (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
-                     YYBEGIN A; continue());
+<L,LLC,LLCQ>.   => (err (!stringstart, yypos+1) WARN
+                      "ill-formed (*#line...*) taken as comment" nullErrorBody;
+                    YYBEGIN A; continue());
 <A>"(*"		=> (inc comLevel; continue());
 <A>{eol}	=> (SourceMap.newline sourceMap yypos; continue());
 <A>"*)" => (dec comLevel; if !comLevel=0 then YYBEGIN INITIAL else (); continue());

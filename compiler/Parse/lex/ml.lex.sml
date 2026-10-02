@@ -129,15 +129,20 @@ val atoi = cvt StringCvt.DEC
 val xtoi = cvt StringCvt.HEX
 end (* local *)
 
-fun mysynch (srcmap, initpos, pos, args) =
-    let fun cvt digits = getOpt(Int.fromString digits, 0)
-	val resynch = SourceMap.resynch srcmap
-     in case args
-          of [col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, NONE)
-           | [file, col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, SOME file)
-           | _ => impossible "ill-formed args in (*#line...*)"
+fun mysynch (srcmap, initpos, pos, args) = let
+    fun cvt digits = (case IntInf.fromString digits
+           of SOME n => if (n > SourceMap.limit)
+                then raise Overflow
+                else IntInf.toInt n
+            | _ => 0 (* should be impossible *)
+          (* end case *))
+    val resynch = SourceMap.resynch srcmap
+    in
+      case args
+       of [col, line] => resynch (initpos, pos, cvt line, cvt col, NONE)
+        | [file, col, line] => resynch (initpos, pos, cvt line, cvt col, SOME file)
+        | _ => impossible "ill-formed args in (*#line...*)"
+      (* end case *)
     end
 
 fun has_quote s = CharVector.exists (fn #"`" => true | _ => false) s
@@ -742,8 +747,15 @@ fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN LLC; addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *)))
 fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+2, !charlist);
-		              comLevel := 0; charlist := []; continue()))
+      (YYBEGIN INITIAL;
+                    mysynch (sourceMap, !stringstart, yypos+2, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+2)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+		    comLevel := 0; charlist := [];
+                    continue ()))
 fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN LLCQ; continue()))
 fun yyAction40 (strm, lastMatch : yymatch) = let
@@ -752,16 +764,23 @@ fun yyAction40 (strm, lastMatch : yymatch) = let
         yystrm := strm; (addString(charlist, yytext); continue())
       end
 fun yyAction41 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+3, !charlist);
-		              comLevel := 0; charlist := []; continue()))
+      (YYBEGIN INITIAL;
+                    mysynch(sourceMap, !stringstart, yypos+3, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+3)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+                    comLevel := 0; charlist := [];
+                    continue()))
 fun yyAction42 (strm, lastMatch : yymatch) = (yystrm := strm;
       (err (!stringstart, yypos+1) WARN
                        "ill-formed (*#line...*) taken as comment" nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue()))
 fun yyAction43 (strm, lastMatch : yymatch) = (yystrm := strm;
       (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
-                     YYBEGIN A; continue()))
+                      "ill-formed (*#line...*) taken as comment" nullErrorBody;
+                    YYBEGIN A; continue()))
 fun yyAction44 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc comLevel; continue()))
 fun yyAction45 (strm, lastMatch : yymatch) = (yystrm := strm;

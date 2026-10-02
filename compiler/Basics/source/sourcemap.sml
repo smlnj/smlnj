@@ -85,6 +85,9 @@ struct
   type sourceloc = {fileName:string, line:int, column:int}
     (* lines and columns are 1-based (minimum value is 1) *)
 
+  (* limit line/column numbers to no more than 10^9 *)
+  val limit : IntInf.int = 1000000000
+
 (* The representation of a sourcemap is a pair of lists.
      lines: line numbers for newlines and resynchronizations,
             labeled by initial charpos of each lines.
@@ -108,8 +111,10 @@ struct
         * the current file name, but may be the same as the previous file name
         * if the #line directive does not specify a file name. *)
 
-  type sourcemap = {lines: (charpos * line) list ref,
-		    files: string list ref}
+  type sourcemap = {
+      lines : (charpos * line) list ref,
+      files : string list ref
+    }
   (* INVARIANTS for sourcemaps:
    * (1) length (!lines) > 0
    * (2) length (!files) > 0

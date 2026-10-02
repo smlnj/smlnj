@@ -95,4 +95,10 @@ sig
 
   val widenToLines : sourcemap -> region -> region
 
+
+  (* An upper bound on line and column numbers.  We impose this limit to
+   * avoid `Overflow` exceptions when processing `#line` directives.
+   *)
+  val limit : IntInf.int
+
 end (* signature SOURCE_MAP *)
