@@ -115,6 +115,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/373[JSONParser.parse does not ensure `0` is not followed by a digit]
 | [.bugid]#375#
 | {issue-base}/375[`UnixEnv.addToEnv` does not replace existing keys]
+| [.bugid]#376#
+| {issue-base}/376[RegExp: ThompsonEngine does not implement `^`]
 | [.bugid]#378#
 | {issue-base}/378[`UTF8.map` does not do anything]
 | [.bugid]#379#
