@@ -211,6 +211,7 @@ trap 'cd "$SMLNJ_ROOT"; rm -f $tmpfiles' 0 1 2 3 15
 # that will be queried by the bootstrap code)
 # Especially important is CM_PATHCONFIG.
 #
+unset SMLNJ_HOME
 export CM_PATHCONFIG
 CM_PATHCONFIG=$LIBDIR/pathconfig
 #
