@@ -6,7 +6,8 @@ SML/NJ 2026.3
 -------------------
 
 [2026-10-03]
-        Fix for Issue #376 (RegExp: ThompsonEngine does not implement `^`)
+        * Fix for Issue #376 (ThompsonEngine does not implement `^`)
+        * Fix for Issue #377 (ThompsonEngine can't match `Interval (r, m, SOME m)`)
 
 [2026-10-02]
 	Fix for a problem with the initialization of the `now` ref in

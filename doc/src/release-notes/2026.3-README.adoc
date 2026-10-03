@@ -116,7 +116,9 @@ Here is a list of the issues and pull requests that are closed with this release
 | [.bugid]#375#
 | {issue-base}/375[`UnixEnv.addToEnv` does not replace existing keys]
 | [.bugid]#376#
-| {issue-base}/376[RegExp: ThompsonEngine does not implement `^`]
+| {issue-base}/376[ThompsonEngine does not implement `^`]
+| [.bugid]#377#
+| {issue-base}/377[ThompsonEngine can't match `Interval (r, m, SOME m)`]
 | [.bugid]#378#
 | {issue-base}/378[`UTF8.map` does not do anything]
 | [.bugid]#379#
