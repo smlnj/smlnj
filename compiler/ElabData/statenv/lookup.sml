@@ -1,5 +1,8 @@
-(* COPYRIGHT (c) 1996 Bell Laboratories. *)
-(* lookup.sml *)
+(* lookup.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
 
 structure Lookup : LOOKUP =
 struct
@@ -157,15 +160,16 @@ fun lookArTyc (env, path, arity, err) =
 	     else tycon)
 
 (*** looking for an exception ***)
-fun lookExn (env, path, err) : T.datacon =
-      (case lookIdPath (env,path,err)
-        of AS.CON(dcon as T.DATACON{rep=(A.EXN _), ...}) => dcon
-         | AS.CON _ =>
-             (otherError("found data constructor instead of exception", err);
-              AU.bogusEXN)
-         | AS.VAR _ =>
-             (otherError("found variable instead of exception", err);
-              AU.bogusEXN))
+fun lookExn (env, path, err) : T.datacon = (case lookIdPath (env,path,err)
+       of AS.CON(dcon as T.DATACON{rep=(A.EXN _), ...}) => dcon
+        | AS.CON _ =>
+            (otherError("found data constructor instead of exception", err);
+             AU.bogusEXN)
+        | AS.VAR _ =>
+            (otherError("found variable instead of exception", err);
+             AU.bogusEXN)
+        | AS.ERRORid => AU.bogusEXN
+      (* end case *))
 
 end (* local *)
 end (* structure Lookup *)
