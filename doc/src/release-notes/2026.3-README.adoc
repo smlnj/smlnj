@@ -59,14 +59,18 @@ system.
 
 === Basis Library
 
-A number of *Basis Library bugs were fixed (see the list below for details).
+A large number of *Basis Library bugs were fixed (see the list below for details).
 
 === SML/NJ Library
 
-* A number of *SML/NJ Library* bugs were fixed (see the list below or the
+* A large number of *SML/NJ Library* bugs were fixed (see the list below or the
   `smlnj-lib/CHANGES` file for details).
 
-* Added `listKeys` function to `HASH_TABLE` and `MONO_HASH_TABLE` signatures
+* Added `listKeys` function to `HASH_TABLE` and `MONO_HASH_TABLE` signatures.
+
+* Added the `Timestamp` module to the Utility library.  This module supports
+  generating timestamps that respect the `SOURCE_DATE_EPOCH` environment
+  variable.
 
 === ML-LPT
 

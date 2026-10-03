@@ -240,10 +240,15 @@ xref:str-TimeLimit.adoc[`[.kw]#structure# TimeLimit`]::
   Provides a mechanism for limiting the execution
   time of a computation.
 
-xref:str-Trilean.adoc[`[.kw]#structure# Trilean`]::
-  Provides an implementation of three-valued logic.
+xref:str-Timestamp.adoc[`[.kw]#structure# Timestamp`]::
+  Provides a mechanism for generating timestamps that respect the
+  https://reproducible-builds.org/specs/source-date-epoch[`SOURCE_DATE_EPOCH`
+  environment variable].
 
 // 60
+
+xref:str-Trilean.adoc[`[.kw]#structure# Trilean`]::
+  Provides an implementation of three-valued logic.
 
 xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
   **To be written**
@@ -398,11 +403,13 @@ include::fun-SplaySetFn.adoc[]
 
 include::str-TimeLimit.adoc[]
 
+include::str-Timestamp.adoc[]
+
 include::str-Trilean.adoc[]
 
-include::str-UnivariateStats.adoc[]
-
 // 60
+
+include::str-UnivariateStats.adoc[]
 
 include::str-URef.adoc[]
 
