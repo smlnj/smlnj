@@ -15,11 +15,11 @@ trap 'exit 1' 1 2 3 15
 eval "$(sh "$SOURCE_ROOT/config/_arch-n-opsys")"
 failed=0
 
-for test_case in unset-home inherited-home separate-install existing-heap
+for test_case in unset-home empty-home inherited-home separate-install existing-heap doc-home separate-doc
 do
     source_dir=$TEST_DIR/$test_case
     install_dir=$source_dir
-    if [ "$test_case" = separate-install ]; then
+    if [ "$test_case" = separate-install ] || [ "$test_case" = separate-doc ]; then
         install_dir=$TEST_DIR/installed
     fi
     foreign_dir=$TEST_DIR/foreign
@@ -38,6 +38,10 @@ do
     # Stand in for the newly built runtime, recording which runtime was used.
     cat > "$install_dir/bin/.run/run.$ARCH-$OPSYS" <<'EOF'
 #!/bin/sh
+if [ "${SMLNJ_HOME:-}" != "$TEST_INSTALL_DIR" ]; then
+    echo 'SMLNJ_HOME does not point to the build installation' >&2
+    exit 1
+fi
 printf 'local\n' >> "$TEST_RUNTIME_LOG"
 boot=no
 redump=no
@@ -79,20 +83,76 @@ EOF
         ln -s .run-sml "$install_dir/bin/sml"
     fi
 
+    case "$test_case" in
+        doc-home | separate-doc)
+            mkdir -p "$source_dir/doc" "$source_dir/tools"
+            cat > "$source_dir/doc/configure" <<'EOF'
+#!/bin/sh
+set -eu
+[ "$SMLNJ_HOME" = "$TEST_INSTALL_DIR" ]
+[ "$SML_CMD" = "$TEST_INSTALL_DIR/bin/sml" ]
+"$SML_CMD" < /dev/null > /dev/null
+printf 'configure\n' >> "$TEST_DOC_LOG"
+EOF
+            cat > "$source_dir/tools/make" <<'EOF'
+#!/bin/sh
+set -eu
+[ "$SMLNJ_HOME" = "$TEST_INSTALL_DIR" ]
+[ "$SML_CMD" = "$TEST_INSTALL_DIR/bin/sml" ]
+printf '%s\n' "$1" >> "$TEST_DOC_LOG"
+EOF
+            printf '#!/bin/sh\nexit 0\n' > "$source_dir/tools/autoconf"
+            chmod +x "$source_dir/doc/configure" "$source_dir/tools/"*
+            ;;
+    esac
+
     if (
-        unset SMLNJ_HOME CM_PATHCONFIG CM_DIR_ARC
-        if [ "$test_case" != unset-home ]; then
-            SMLNJ_HOME=$foreign_dir
-            export SMLNJ_HOME
-        fi
+        unset CM_PATHCONFIG CM_DIR_ARC
+        case "$test_case" in
+            unset-home)
+                unset SMLNJ_HOME
+                ;;
+            empty-home)
+                SMLNJ_HOME=
+                export SMLNJ_HOME
+                ;;
+            *)
+                SMLNJ_HOME=$foreign_dir
+                export SMLNJ_HOME
+                ;;
+        esac
         TEST_RUNTIME_LOG=$source_dir/runtime.log
         TEST_HEAP_SUFFIX=$HEAP_SUFFIX
-        export TEST_RUNTIME_LOG TEST_HEAP_SUFFIX
+        TEST_INSTALL_DIR=$install_dir
+        TEST_DOC_LOG=$source_dir/doc.log
+        export TEST_RUNTIME_LOG TEST_HEAP_SUFFIX TEST_INSTALL_DIR TEST_DOC_LOG
+        set --
+        case "$test_case" in
+            separate-install | separate-doc) set -- -install "$install_dir" ;;
+        esac
+        case "$test_case" in
+            doc-home | separate-doc)
+                PATH=$source_dir/tools:$PATH
+                export PATH
+                set -- "$@" -doc
+                ;;
+        esac
         cd "$source_dir"
-        sh ./build.sh -install "$install_dir"
+        sh ./build.sh "$@"
     ) > "$source_dir/build.log" 2>&1
     then
-        if [ "$(grep -c '^local$' "$source_dir/runtime.log")" -eq 2 ] \
+        expected_calls=2
+        case "$test_case" in
+            doc-home | separate-doc)
+                expected_calls=3
+                if [ "$(cat "$source_dir/doc.log")" != "$(printf 'configure\ndoc\ndistclean')" ]; then
+                    echo "FAIL $test_case: unexpected documentation steps"
+                    failed=1
+                    continue
+                fi
+                ;;
+        esac
+        if [ "$(grep -c '^local$' "$source_dir/runtime.log")" -eq "$expected_calls" ] \
             && ! grep -q '^foreign$' "$source_dir/runtime.log" \
             && [ -r "$install_dir/bin/.heap/sml.$HEAP_SUFFIX" ]
         then
