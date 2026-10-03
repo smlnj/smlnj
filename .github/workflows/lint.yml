@@ -29,3 +29,6 @@ jobs:
             config/unpack \
             package/macos/components/scripts/{copy-doc,preinstall,postinstall,postupgrade} \
             tools/ml-lpt/{ml-ulex/ml-ulex,ml-antlr/ml-antlr}
+
+      - name: Test build driver selection
+        run: sh config/tests/build.sh
