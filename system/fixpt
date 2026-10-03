@@ -1,90 +1,129 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
-# fixpt [-32 | -64]
-#  - to be run in src/system to iterate compilation to a fixed point
-#  - assumes no sml.boot... directory in src/system (but uses it if it
-#    is there and the base is set to "sml" -- which is the default)
-#  - assumes that ../../../bin/sml and ../../../bin/.arch-n-opsys have
-#     been installed
+# Script for iterating the compilation of the compiler to a fixed point.
+# It assumes no sml.boot... directory in src/system (but uses it if it
+# is there and the base is set to "sml" -- which is the default)
+# assumes that ../bin/sml and ../bin/.arch-n-opsys have been installed
+#
+# usage: fixpt [ options ]
+#   options:
+#     -h
+#     -verbose
+#     -iter <n>
+#     -base <name>
+#     -light
+#     -save
+#     -C<ctl>=<value>
+#     -D<sym>
 
 this=$0
-here=`pwd`
+HERE=`pwd`
 cd ..
-twoup=`pwd`
-cd $here
+ROOT=`pwd`
+cd "$HERE" || exit 1
 
-SML=$twoup/bin/sml
+usage() {
+  if [ x"$1" = x ] ; then
+    sts=1
+  else
+    sts="$1"
+  fi
+  echo "usage: fixpt [ options ]"
+  echo "  options:"
+  echo "    -h            -- print this message"
+  echo "    -verbose      -- set CM's verbose mode to true"
+  echo "    -iter <n>     -- limit the number of iterations to no more than <n>"
+  echo "    -base <name>  -- specify base name for boot files (default \"sml\")"
+  echo "    -light        -- CM \"light rebuild\" mode"
+  echo "    -save         -- save intermediary boot files"
+  echo "    -C<ctl>=<v>   -- control argument passed to compile command"
+  echo "    -D<sym>=<v>   -- CM define argument passed to compile command"
+  exit "$sts"
+}
+
+export CM_VERBOSE
+CM_VERBOSE=false
+
+SML=$ROOT/bin/sml
 ARCH=amd64
 ARGS=""
+ITER=3
+BASE=sml
+REBUILD="-rebuild"
+SETLIGHT=""
+SAVE=no         # should we save intermediate boot and bin directories?
 
+# Process command-line arguments
 #
-# Parse command line
-#
-while [ "$#" != 0 ] ; do
-    arg=$1; shift
-    case $arg in
+while [ "$#" != "0" ] ; do
+  arg=$1; shift
+  case $arg in
+    -h) usage 0 ;;
     -iter)
-	if [ "$#" = 0 ] ; then
-	    echo "$this: missing argument for \"-iter\" option"
-	    exit 2
-	fi
-	ITER=$1; shift
-	;;
+      if [ "$#" = 0 ] ; then
+          echo "$this: missing argument for \"-iter\" option"
+          exit 2
+      fi
+      ITER=$1; shift
+      ;;
+    -verbose) CM_VERBOSE=true ;;
     -base)
-	if [ "$#" = 0 ] ; then
-	    echo "$this: missing argument for \"-base\" option"
-	    exit 2
-	fi
-	BASE=$1; shift
-	;;
+      if [ "$#" = 0 ] ; then
+        echo "$this: missing argument for \"-base\" option"
+        usage 2
+      fi
+      BASE=$1; shift
+      ;;
     -light)
-	REBUILD="-lightrebuild"
-	SETLIGHT='val _ = #set (CMB.symval "LIGHT") (SOME 1);'
-	;;
+      REBUILD="-lightrebuild"
+      SETLIGHT='val _ = #set (CMB.symval "LIGHT") (SOME 1);'
+      ;;
     -save)
-	SAVE=true;
-	;;
+      SAVE=yes;
+      ;;
     -C*) ARGS="$ARGS $arg" ;;
     -D*) ARGS="$ARGS $arg" ;;
     *)
-	echo "$this: unknown argument \"$arg\""
-	exit 2
-	;;
-    esac
+      echo "$this: unknown argument \"$arg\""
+      usage 2
+      ;;
+  esac
 done
 
 #
 # use the arch-n-opsys script to determine the ARCH/OS if possible
 #
-if [ -f $twoup/bin/.arch-n-opsys ]; then
-    ARCH_N_OPSYS=`$twoup/bin/.arch-n-opsys`
-    if [ "$?" = "0" ]; then
-	eval $ARCH_N_OPSYS
-	echo Architecture: $ARCH
-    fi
+if [ -f "$ROOT/bin/.arch-n-opsys" ]; then
+  ARCH_N_OPSYS=$("$ROOT/bin/.arch-n-opsys")
+  #shellcheck disable=SC2181
+  if [ "$?" = "0" ]; then
+    eval "$ARCH_N_OPSYS"
+    echo "Architecture: $ARCH"
+  fi
+else
+  echo "$this: $ROOT/bin/.arch-n-opsys is missing"
+  exit 1
 fi
 
 BIN=.bin.$ARCH-unix
 BOOT=.boot.$ARCH-unix
-ITER=3
-BASE=sml
-REBUILD="-rebuild"
-SETLIGHT=""
-SAVE=false		# should we save intermediate boot and bin directories?
 
 #
 # Function to do one round of compilation to get the initial set of binfiles.
 # (The funky ML comment is there to un-confuse emacs fontlock mode. :)
 #
 initcompile() {
-$SML $ARGS '$smlnj/cmb.cm' <<EOF
-local open OS.Process CMB in
-   $SETLIGHT
-   val _ = exit (if make' (SOME "$BASE") then success else failure) (* ' *)
-end
+# shellcheck disable=SC2016,SC2086 # Intended splitting of ARGS; "$smlnj" is CM anchor
+"$SML" $ARGS '$smlnj/cmb.cm' <<EOF
+local
+  structure P = OS.Process
+in
+  $SETLIGHT
+  val _ = P.exit (if CMB.make' (SOME "$BASE") then P.success else P.failure) (* ' *)
+end;
 EOF
 }
 
@@ -92,35 +131,36 @@ iter=0
 iterbase=$BASE
 
 if initcompile ; then
-    while [ $iter -lt $ITER ] ; do
-	prev=$iter
-	prevbase=$iterbase
-	iter=`expr $iter + 1`
-	iterbase=$BASE$iter
-	if ./makeml $ARGS -boot $prevbase$BOOT $REBUILD $iterbase ; then
-	    if diff -r $prevbase$BIN $iterbase$BIN >/dev/null 2>&1 ; then
-		echo "$this: fixpoint reached in round $iter"
-		if $SAVE ; then
-		  echo "$this: results in $iterbase$BOOT $iterbase$BIN"
-		else
-		# get rid of the intermediary results and move the boot/bin files
-		# where they belong
-		  rm -rf $BASE$BOOT $BASE$BIN
-		  mv $iterbase$BOOT $BASE$BOOT
-		  mv $iterbase$BIN $BASE$BIN
-		  rm -rf $BASE[1-9]$BOOT $BASE[1-9]$BIN
-		  echo "$this: results in $BASE$BOOT $BASE$BIN"
-		fi
-		exit 0
-	    fi
-	else
-	    echo "$this: compilation failed in round $iter"
-	    exit 3
-	fi
-    done
+  while [ "$iter" -lt "$ITER" ] ; do
+    prevbase="$iterbase"
+    iter=iter=$((iter+1))
+    iterbase="$BASE$iter"
+    # shellcheck disable=SC2086 # Intended splitting of ARGS
+    if ./makeml $ARGS -boot "$prevbase$BOOT" "$REBUILD" "$iterbase" ; then
+      if diff -r $prevbase$BIN $iterbase$BIN >/dev/null 2>&1 ; then
+        echo "$this: fixpoint reached in round $iter"
+        if [ x"$SAVE" = xyes ] ; then
+          echo "$this: results in $iterbase$BOOT $iterbase$BIN"
+        else
+          # get rid of the intermediary results and move the boot/bin files
+          # where they belong
+          rm -rf "$BASE$BOOT" "$BASE$BIN"
+          mv "$iterbase$BOOT" "$BASE$BOOT"
+          mv "$iterbase$BIN" "$BASE$BIN"
+          # shellcheck disable=SC1087 # globbing
+          rm -rf $BASE[1-9]$BOOT $BASE[1-9]$BIN
+          echo "$this: results in $BASE$BOOT $BASE$BIN"
+        fi
+        exit 0
+      fi
+    else
+      echo "$this: compilation failed in round $iter"
+      exit 3
+    fi
+  done
 else
-    echo "$this: initial compilation failed"
-    exit 3
+  echo "$this: initial compilation failed"
+  exit 3
 fi
 
 echo "$this: no fixpoint reached after $iter rounds"
