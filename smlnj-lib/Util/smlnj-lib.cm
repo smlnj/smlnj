@@ -105,6 +105,7 @@ structure Rand48
 structure Scan
 structure SimpleURef
 structure TimeLimit
+structure Timestamp
 structure Trilean
 structure URef
 structure WordHashTable
@@ -248,6 +249,7 @@ splay-set-fn.sml
 splaytree-sig.sml
 splaytree.sml
 time-limit.sml
+timestamp.sml
 trilean-sig.sml
 trilean.sml
 uref-sig.sml

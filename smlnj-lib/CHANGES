@@ -6,6 +6,11 @@ SML/NJ 2026.3
 -------------------
 
 [2026-10-03]
+        Added the `Timestamp` module to the Utility library.  This module supports
+        generating timestamps that respect the `SOURCE_DATE_EPOCH` environment
+        variable
+
+[2026-10-03]
         * Fix for Issue #376 (ThompsonEngine does not implement `^`)
         * Fix for Issue #377 (ThompsonEngine can't match `Interval (r, m, SOME m)`)
 
