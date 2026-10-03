@@ -211,8 +211,8 @@ trap 'cd "$SMLNJ_ROOT"; rm -f $tmpfiles' 0 1 2 3 15
 # that will be queried by the bootstrap code)
 # Especially important is CM_PATHCONFIG.
 #
-unset SMLNJ_HOME
-export CM_PATHCONFIG
+SMLNJ_HOME=$INSTALLDIR
+export SMLNJ_HOME CM_PATHCONFIG
 CM_PATHCONFIG=$LIBDIR/pathconfig
 #
 # the release version that we are installing
@@ -576,8 +576,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
   export SMLNJ_HOME SML_CMD
-  SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
-  SML_CMD=$here/bin/sml
+  SML_CMD=$BINDIR/sml
   cd doc || exit 1
   if autoconf -Iconfig ; then
     :
