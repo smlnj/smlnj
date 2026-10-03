@@ -175,6 +175,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/433[The hash table in the `Atom` module is never resized]
 | [.bugid]#434#
 | {issue-base}/434[`EditDistance.distance` treats transposition as free]
+| [.bugid]#437#
+| {issue-base}/437[Calling `OS.IO.poll` function with duplicate descriptors can result in a crash]
 | [.bugid]#440#
 | {issue-base}/440[`ParserComb.skipBefore` returns `NONE` when it reaches EOF]
 | [.bugid]#440#

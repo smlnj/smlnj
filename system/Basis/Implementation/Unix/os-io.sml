@@ -82,7 +82,8 @@ structure OS_IO : OS_IO =
 
   (* polling function *)
     local
-      val poll' : ((int * word) list * (Int32.int * int) option) -> (int * word) list =
+(* TODO: pass a `Time.time option` argument for the timeout argument *)
+      val poll' : ((int * word ref) list * (Int32.int * int) option) -> bool =
 	    CInterface.c_function "POSIX-OS" "poll"
       fun join (false, _, w) = w
         | join (true, b, w) = Word.orb(w, b)
@@ -95,8 +96,74 @@ structure OS_IO : OS_IO =
       fun toPollInfo (fd, w) = PollInfo(OS.IO.IODesc fd, {
 	      rd = test(w, rdBit), wr = test(w, wrBit), pri = test(w, priBit)
 	    })
+      (* given a list `pds` of poll descriptors that might contain duplicate
+       * file descriptors, we return a pair `(pds', npds)` of two lists:
+       *      pds'    -- is a list of triples `(fd, mask, ref flgs)` that corresponds
+       *                 the list `pds`.  The `mask` is the bit-flags for the
+       *                 corresponding entry in `pds`, and the reference is shared
+       *                 between all occurrences of `fd` in `pds'`.
+       *      npds    -- a list of pairs `(fd, ref flgs)`, where the `fd` are
+       *                 unique and the reference is shared with occurrences
+       *                 of `fd` in `pds'`.  The `flgs` value is the merge of
+       *                 the flags for `fd` in `pds`.
+       *)
+      fun normalize pds = let
+            fun lp ([], pds', npds) = (List.rev pds', npds)
+              | lp (pd :: pdr, pds', npds) = let
+                  val (fd, flgs) = fromPollDesc pd
+                  (* search the `npds` list for `fd`; if it is not found, then  *)
+                  fun find ([], prefix) = let
+                        val r = ref flgs
+                        in
+                          (* add fd to the end of the npds list *)
+                          lp (pdr,
+                            (fd, flgs, r)::pds',
+                            List.revAppend(prefix, [(fd, r)]))
+                        end
+                    | find (npds' as (fd', r')::npdr', prefix) = if (fd < fd')
+                          then let
+                            val r = ref flgs
+                            in
+                              lp (pdr,
+                                (fd, flgs, r)::pds',
+                                List.revAppend(prefix, (fd, r)::npds'))
+                            end
+                        else if (fd = fd')
+                          then (
+                            (* duplicate FD, so merge flags *)
+                            r' := Word.orb(!r', flgs);
+                            lp (pdr, (fd, flgs, r')::pds', npds))
+                          else find (npdr', (fd', r')::prefix)
+                  in
+                    find (npds, [])
+                  end
+            in
+              lp (pds, [], [])
+            end
+    (* after the `poll` operation, we need to construct the result list such that
+     *
+     *   1) the list of return items should be in the same order as the
+     *     corresponding list of arguments.
+     *      (int * word ref) list * time option -> bool
+     *
+     *   2) return items should contain no more information than was queried for
+     *     (this matters when the same descriptor is covered by multiple items).
+     *)
+    fun result pds = let
+          fun lp ((fd, mask, ref w)::pdr, res) = let
+                val flgs' = Word.andb(mask, w)
+                in
+                  if flgs' = 0w0
+                    then lp (pdr, res)
+                    else lp (pdr, toPollInfo(fd, flgs')::res)
+                end
+            | lp (_, res) = List.rev res
+          in
+            lp (pds, [])
+          end
     in
-    fun poll (pds, timeOut) = let
+    fun poll ([], _) = []
+      | poll (pds, timeOut) = let
 	  val timeOut = (case timeOut
 		 of SOME t =>
 		    let val usec = TimeImp.toMicroseconds t
@@ -106,9 +173,11 @@ structure OS_IO : OS_IO =
 		    end
 		  | NONE => NONE
 		(* end case *))
-	  val info = poll' (List.map fromPollDesc pds, timeOut)
+          val (pds', npds) = normalize pds
 	  in
-	    List.map toPollInfo info
+            if poll' (npds, timeOut)
+              then result pds'
+              else []
 	  end
     end (* local *)
 
