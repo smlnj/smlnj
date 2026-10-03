@@ -99,6 +99,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {pull-base}/142[Vector pattern causes integer variables to be printed as abstract types]
 | [.bugid]#232#
 | {pull-base}/232[Spurious use of polyEqual]
+| [.bugid]#339#
+| {pull-base}/339[Build failure - unable to find PerID]
 | [.bugid]#361#
 | {pull-base}/361[Make `build.sh` script more portable]
 | [.bugid]#364#
@@ -219,6 +221,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/465[Unbound exception identifier causes compiler bug]
 | [.bugid]#466#
 | {issue-base}/466[Add type info in `FLINT/fcontract` to generate well-formed FLINT]
+| [.bugid]#470#
+| {pull-base}/470[Ignore inherited `SMLNJ_HOME` during source builds]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
