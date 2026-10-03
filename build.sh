@@ -128,7 +128,7 @@ cd "$SMLNJ_ROOT" || exit 1
 if [ x${CLEAN_INSTALL} = xyes ] ; then
   vsay "$cmd: remove existing executables and libraries"
   rm -rf bin include lib runtime/$LLVM_DIRNAME/build
-  (cd runtime/objs; make clean)
+  (cd runtime/objs || exit; make clean)
 elif [ x${INSTALL_DEV} = xyes ]; then
   # since we are building the development version, we first remove the
   # existing runtime system
