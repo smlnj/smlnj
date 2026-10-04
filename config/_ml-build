@@ -96,6 +96,9 @@ else
 fi
 
 # we use a checksum of the CM file as a deterministic prefix
+# the "cksum" command is part of the IEEE 1003.2-1992 standard, so it should
+# be available.  It outputs "<checksum> <num-octets> <pathname>"; we use the
+# <checksum> for the prefix.
 #
 RES=($(cksum "$root" || error "error running cksum"))
 ID="${RES[0]}"
