@@ -8,7 +8,13 @@ structure InternalTimer : sig
 
     include TIMER
 
+    (* start the internal CPU and wall-clock timers *)
     val resetTimers : unit -> unit
+
+    (* set the internal CPU and wall-clock timers to zero.  We do this when exporting
+     * a heap image so that random time values do not get embedded in the image file.
+     *)
+    val clearTimers : unit -> unit
 
   end = struct
 
@@ -47,6 +53,13 @@ structure InternalTimer : sig
     fun resetTimers () = (
           initCPUTime := startCPUTimer ();
 	  initRealTime := startRealTimer ())
+    fun clearTimers () = let
+          val t0 = PB.TIME{usec = 0}
+          val us0 = {usr = t0, sys = t0}
+          in
+            initCPUTime := CPUT{nongc = us0, gc = us0};
+            initRealTime := RealT t0
+          end
     end (* local *)
 
     local

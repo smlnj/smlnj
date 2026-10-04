@@ -153,12 +153,13 @@ structure Stats :> STATS =
     structure CU = SMLofNJ.Internals.CleanUp
     val _ = CU.addCleaner (
 	  "CompilerStats",
-	  [CU.AtExportML, CU.AtExportFn, CU.AtInit],
+	  [CU.AtExportML, CU.AtInit],
 	  (* when exporting, clear the counters without reading the clock,
 	   * so that the exported image does not record how long the build
 	   * took (the counters are reset when the image is resumed)
 	   *)
-	  fn CU.AtInit => reset() | _ => (last := zeros; clear()))
+	  fn CU.AtInit => reset()
+           | _ => (last := zeros; clear()))
 
     fun since() = let
 (***

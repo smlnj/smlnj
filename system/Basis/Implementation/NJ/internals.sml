@@ -19,6 +19,7 @@ structure Internals : INTERNALS = struct
     val resetSigTbl = InternalSignals.resetSigTbl
 
     val resetTimers = InternalTimer.resetTimers
+    val clearTimers = InternalTimer.clearTimers
 
     structure TDP = struct
         type plugin = Core.tdp_plugin
