@@ -16,7 +16,7 @@ signature TRACE_CML =
 
   (** Trace modules **
    *
-   * The basic idea is that one defines a heirarchy of ``trace
+   * The basic idea is that one defines a hierarchy of ``trace
    * modules,'' which provide valves for debugging output.
    *)
 
