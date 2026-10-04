@@ -133,7 +133,7 @@ iterbase=$BASE
 if initcompile ; then
   while [ "$iter" -lt "$ITER" ] ; do
     prevbase="$iterbase"
-    iter=iter=$((iter+1))
+    iter=$((iter+1))
     iterbase="$BASE$iter"
     # shellcheck disable=SC2086 # Intended splitting of ARGS
     if ./makeml $ARGS -boot "$prevbase$BOOT" "$REBUILD" "$iterbase" ; then
