@@ -7,7 +7,7 @@
 
 set -eu
 
-SOURCE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
+SOURCE_ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/smlnj-build-test.XXXXXX")
 trap 'rm -rf "$TEST_DIR"' 0
 trap 'exit 1' 1 2 3 15
