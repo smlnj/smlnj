@@ -17,9 +17,7 @@ here=$(pwd)
 #
 # set the SML root directory
 #
-cmd_dir=$(dirname "$cmd")
-cd "$cmd_dir" || exit 1
-SMLNJ_ROOT="$(pwd)"
+SMLNJ_ROOT=$(CDPATH='' cd "$(dirname "$0")" && pwd)
 
 # default LLVM directory
 LLVM_DIRNAME=llvm21
