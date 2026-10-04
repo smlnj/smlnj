@@ -87,6 +87,10 @@ A large number of *Basis Library bugs were fixed (see the list below for details
 * Fixed the behavior of **CML**'s `OS.Process.terminate` to match the Basis Library
   specification.
 
+=== Installation
+
+* A number of changes have been made to improve reproducibility of builds.
+
 == Bugs
 
 Here is a list of the issues and pull requests that are closed with this release.
