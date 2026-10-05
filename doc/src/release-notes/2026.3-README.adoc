@@ -238,6 +238,8 @@ repository):
 * avoid `Overflow` exceptions when `#line` comments are very large (there is
   now an upper bound on the allowed line/column numbers)
 
+* fixed various boundary cases in the `Array2` structure.
+
 // ***** include a list of unnumbered/legacy bugs here *****
 
 == Supported systems

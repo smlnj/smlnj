@@ -44,7 +44,7 @@ structure Array2 :> ARRAY2 =
 	      end
 
     fun array (nrows, ncols, v) = (case chkSize (nrows, ncols)
-	   of 0 => {data = InlineT.PolyArray.newArray0(), nrows = 0, ncols = 0}
+	   of 0 => {data = InlineT.PolyArray.newArray0(), nrows = nrows, ncols = ncols}
 	    | n => {data = mkArray (n, v), nrows = nrows, ncols = ncols}
 	  (* end case *))
     fun fromList rows = (case List.rev rows
@@ -114,9 +114,9 @@ structure Array2 :> ARRAY2 =
 		  then Vector.fromList l
 		  else mkVec(j-1, A.sub(data, j)::l)
 	  in
-	    if ltu(nrows, i)
-	      then raise General.Subscript
-	      else mkVec (stop+ncols-1, [])
+	    if ltu(i, nrows) (* 0 <= i < nrows *)
+	      then mkVec (stop+ncols-1, [])
+	      else raise General.Subscript
 	  end
     fun column ({data, nrows, ncols}, j) = let
 	  fun mkVec (i, l) =
@@ -124,9 +124,9 @@ structure Array2 :> ARRAY2 =
 		  then Vector.fromList l
 		  else mkVec(i-ncols, A.sub(data, i)::l)
 	  in
-	    if ltu(ncols, j)
-	      then raise General.Subscript
-	      else mkVec ((A.length data - ncols) + j, [])
+	    if ltu(j, ncols) (* 0 <= j < ncols *)
+	      then mkVec ((A.length data - ncols) + j, [])
+	      else raise General.Subscript
 	  end
 
     datatype index = DONE | INDX of {i:int, r:int, c:int}
@@ -182,62 +182,68 @@ structure Array2 :> ARRAY2 =
   (* this function generates a stream of indeces for the given region in
    * row-major order.
    *)
-    fun iterateRM arg = let
-	  val {data, i, r, c=cStart, nr, nc} = chkRegion arg
-	  val ii = ref i and ri = ref r and ci = ref cStart
-	  val rEnd = r+nr and cEnd = cStart+nc
-	  val rowDelta = #ncols(#base arg) - nc
-	  fun mkIndx (r, c) = let val i = !ii
-		in
-		  ii := i+1;
-		  INDX{i=i, c=c, r=r}
-		end
-	  fun iter () = let
-		val r = !ri and c = !ci
-		in
-		  if (c < cEnd)
-		    then (ci := c+1; mkIndx(r, c))
-		  else if (r+1 < rEnd)
-		    then (
-		      ii := !ii + rowDelta;
-		      ci := cStart;
-		      ri := r+1;
-		      iter())
-		    else DONE
-		end
-	  in
-	    (data, iter)
-	  end
+    fun iterateRM arg = (case chkRegion arg
+           of {data, nc=0, ...} => (data, fn () => DONE)
+            | {data, nr=0, ...} => (data, fn () => DONE)
+            | {data, i, r, c=cStart, nr, nc} => let
+                val ii = ref i and ri = ref r and ci = ref cStart
+                val rEnd = r+nr and cEnd = cStart+nc
+                val rowDelta = #ncols(#base arg) - nc
+                fun mkIndx (r, c) = let val i = !ii
+                      in
+                        ii := i+1;
+                        INDX{i=i, c=c, r=r}
+                      end
+                fun iter () = let
+                      val r = !ri and c = !ci
+                      in
+                        if (c < cEnd)
+                          then (ci := c+1; mkIndx(r, c))
+                        else if (r+1 < rEnd)
+                          then (
+                            ii := !ii + rowDelta;
+                            ci := cStart;
+                            ri := r+1;
+                            iter())
+                          else DONE
+                      end
+                in
+                  (data, iter)
+                end
+          (* end case *))
 
   (* this function generates a stream of indeces for the given region in
    * col-major order.
    *)
-    fun iterateCM (arg as {base={ncols, nrows, ...}, ...}) = let
-	  val {data, i, r=rStart, c, nr, nc} = chkRegion arg
-	  val ii = ref i and ri = ref rStart and ci = ref c
-	  val rEnd = rStart+nr and cEnd = c+nc
-	  val delta = (nr * ncols) - 1
-	  fun mkIndx (r, c) = let val i = !ii
-		in
-		  ii := i+ncols;
-		  INDX{i=i, c=c, r=r}
-		end
-	  fun iter () = let
-		val r = !ri and c = !ci
-		in
-		  if (r < rEnd)
-		    then (ri := r+1; mkIndx(r, c))
-		  else if (c+1 < cEnd)
-		    then (
-		      ii := !ii - delta;
-		      ri := rStart;
-		      ci := c+1;
-		      iter())
-		    else DONE
-		end
-	  in
-	    (data, iter)
-	  end
+    fun iterateCM (arg as {base={ncols, nrows, ...}, ...}) = (case chkRegion arg
+           of {data, nc=0, ...} => (data, fn () => DONE)
+            | {data, nr=0, ...} => (data, fn () => DONE)
+            | {data, i, r=rStart, c, nr, nc} => let
+                val ii = ref i and ri = ref rStart and ci = ref c
+                val rEnd = rStart+nr and cEnd = c+nc
+                val delta = (nr * ncols) - 1
+                fun mkIndx (r, c) = let val i = !ii
+                      in
+                        ii := i+ncols;
+                        INDX{i=i, c=c, r=r}
+                      end
+                fun iter () = let
+                      val r = !ri and c = !ci
+                      in
+                        if (r < rEnd)
+                          then (ri := r+1; mkIndx(r, c))
+                        else if (c+1 < cEnd)
+                          then (
+                            ii := !ii - delta;
+                            ri := rStart;
+                            ci := c+1;
+                            iter())
+                          else DONE
+                      end
+                in
+                  (data, iter)
+                end
+          (* end case *))
 
     fun appi order f region = let
 	  val (data, iter) = (case order
@@ -253,7 +259,8 @@ structure Array2 :> ARRAY2 =
 	  end
 
     fun appRM f {data, ncols, nrows} = A.app f data
-    fun appCM f {data, ncols, nrows} = let
+    fun appCM f {ncols=0, ...} = ()
+      | appCM f {data, ncols, nrows} = let
 	  val delta = A.length data - 1
 	  fun appf (i, k) = if (i < nrows)
 		then (f(unsafeSub(data, k)); appf(i+1, k+ncols))
