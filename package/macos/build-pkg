@@ -316,7 +316,7 @@ def create_arg_parser():
   group.add_argument(
     '-s', '--sign',
     action='store_true',
-    help=f"sign, package, and notarize the distribution in '{dist_dir}'.")
+    help=f"sign, package, and notarize the existing distribution in '{dist_dir}'.")
   parser.add_argument(
     '--no-notarize',
     action='store_true',
