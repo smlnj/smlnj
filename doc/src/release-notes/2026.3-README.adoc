@@ -1,5 +1,5 @@
 :version: 2026.3
-:date: @DATE@
+:date: October 4, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -227,8 +227,6 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/466[Add type info in `FLINT/fcontract` to generate well-formed FLINT]
 | [.bugid]#470#
 | {pull-base}/470[Ignore inherited `SMLNJ_HOME` during source builds]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
 
 We also fixed the following bugs that did not have issues
