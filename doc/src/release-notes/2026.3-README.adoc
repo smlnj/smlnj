@@ -240,6 +240,8 @@ repository):
 
 * fixed various boundary cases in the `Array2` structure.
 
+* `Socket.Ctl.getRCVBUF` and `Socket.Ctl.setRCVBUF` controlled the `SNDBUF`
+
 // ***** include a list of unnumbered/legacy bugs here *****
 
 == Supported systems
