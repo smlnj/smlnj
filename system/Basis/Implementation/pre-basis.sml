@@ -1,12 +1,11 @@
 (* pre-basis.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This contains definitions of various Basis types that are
  * abstract but need to be concrete to the basis implementation.
  * It also has some ultility functions.
- *
  *)
 
 structure PreBasis =
@@ -18,13 +17,10 @@ structure PreBasis =
       val op < = InlineT.Int.<
     in
 
-
   (* the time type is abstract in the time structure, but other modules need
-   * access to it.  Here we open the type-only Time structure to expose the
-   * representation.
+   * access to it.
    *)
-    open Time
-
+    datatype time = datatype Time.time (* = TIME of { usec : LargeInt.int } *)
 
   (***************************************************************************
    * These definitions are part of the StringCvt structure, but are defined here

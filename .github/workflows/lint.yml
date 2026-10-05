@@ -31,4 +31,4 @@ jobs:
             tools/ml-lpt/{ml-ulex/ml-ulex,ml-antlr/ml-antlr}
 
       - name: Test build driver selection
-        run: sh config/tests/build.sh
+        run: sh github-scripts/test-build-driver.sh

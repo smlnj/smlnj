@@ -9,7 +9,7 @@ dnl as well as its version.  It will check the user's path, as well as the
 dnl standard locations of /usr/local/smlnj/bin and /usr/local/bin.
 dnl You can override the version of SML/NJ used by defining either the SML_CMD
 dnl or the SMLNJ_CMD variable in the environment (SMLNJ_CMD is for backwards
-dnl compatibility; SML_CMD is prefered).
+dnl compatibility; SML_CMD is preferred).
 dnl This macro sets the following shell variables when it executes successfully:
 dnl
 dnl	SML_CMD*		-- the absolute path to the "sml" command

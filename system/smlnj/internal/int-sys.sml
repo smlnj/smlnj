@@ -61,13 +61,17 @@ structure InteractiveSystem : sig end =
     val _ = UseHook.useHook := (fn f => ignore(Backend.Interact.use f))
 
     (* add cleanup code that resets the internal timers and stats
-     * when resuming from exportML... *)
+     * when resuming from exportML...
+     *)
     local
       structure I = SMLofNJ.Internals
       structure C = I.CleanUp
-      fun reset _ = (I.resetTimers (); Stats.reset ())
     in
-    val _ = C.addCleaner ("initialize-timers-and-stats", [C.AtInit], reset)
+    val _ = C.addCleaner (
+          "initialize-timers-and-stats",
+          [C.AtInit, C.AtExportML, C.AtExportFn],
+          fn C.AtInit => I.resetTimers ()
+           | _ => I.clearTimers ())
     end (* local *)
 
     (* initialize control *)

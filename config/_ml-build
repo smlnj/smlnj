@@ -25,9 +25,14 @@ usage() {
   exit $1
 }
 
-error() {
+usage_error() {
   echo ${thisscript}: $*
   usage 1
+}
+
+error() {
+  echo ${thisscript}: $*
+  exit 1
 }
 
 if [ x${SMLNJ_HOME} = x ] ; then
@@ -46,16 +51,7 @@ fi
 SML=$BIN_DIR/sml
 LINK=$BIN_DIR/.link-sml
 
-xx=$$
-smlfile=$xx-export.sml
-cmfile=$xx-export.cm
-listfile=$xx-BOOTLIST
-linkargsfile=$xx-LINKARGS
-
 dulist=''
-
-trap 'rm -rf $smlfile $cmfile $listfile $linkargsfile @CMDIRARC@/*/$smlfile' 0 1 2 3 15
-
 setup=
 build_exec=no
 
@@ -96,10 +92,38 @@ elif [ $# = 1 ] ; then
   main=Main.main
   heap=`basename "$root" .cm`
 else
-  usage no CM description file specified
+  usage_error "no CM description file specified"
 fi
 
-rare=XYZ_XXX_0123
+# we use a checksum of the CM file as a deterministic prefix
+# the "cksum" command is part of the IEEE 1003.2-1992 standard, so it should
+# be available.  It outputs "<checksum> <num-octets> <pathname>"; we use the
+# <checksum> for the prefix.
+#
+RES=($(cksum "$root" || error "error running cksum"))
+ID="${RES[0]}"
+xx="$ID"
+
+smlfile=$xx-export.sml
+cmfile=$xx-export.cm
+listfile=$xx-BOOTLIST
+linkargsfile=$xx-LINKARGS
+
+# be paranoid and verify that we don't have any file-name collisions
+#
+for f in "$smlfile" "$cmfile" "$listfile" "$linkargsfile" ; do
+  if [ -f "$f" ] ; then
+    error "$f already exists; please remove and try again"
+  fi
+done
+
+# remove temp files on error/termination
+#
+trap 'rm -rf $smlfile $cmfile $listfile $linkargsfile @CMDIRARC@/*/$smlfile' 0 1 2 3 15
+
+# a structure name that is unlikely to collide with any of the source
+# structure names
+rare="X_$ID"
 
 cat >$smlfile <<EOF
 structure ${rare} = struct val _ = SMLofNJ.exportFn ("${heap}", ${main}) end

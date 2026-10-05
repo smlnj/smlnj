@@ -133,8 +133,10 @@ def build_distribution(info):
     dist_name]
   run_command("git clone", git_args, cwd=root_dir)
   # remove unused files
-  remove_files(dist_dir, [".git", ".gitignore", ".gitmodules", ".github", "package"])
+  remove_files(dist_dir, ["github-scripts", "package"])
+  remove_files(dist_dir, [".git", ".gitignore", ".gitmodules", ".github"])
   remove_files(llvm_dir, [".git", ".gitignore", ".github"])
+  remove_files(os.path.join(dist_dir, "smlnj-lib"), ["Dev"])
   # build the distribution
   build_args = ["-doc", "-verbose"] if verbose else ["-doc"]
   run_command(os.path.join(dist_dir, "build.sh"), build_args, cwd=dist_dir)

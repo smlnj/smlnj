@@ -120,8 +120,13 @@ cd "$DISTROOT" || exit 1
 
 # remove stuff that we do not need
 #
-rm -rf .git .gitignore .gitmodules .github package
+# support directories
+rm -rf github-scripts package
+# Git/GitHub metadata
+rm -rf .git .gitignore .gitmodules .github
 rm -rf runtime/llvm*/.git runtime/llvm*/.gitignore runtime/llvm*/.github
+# the development subdirectory for the SML/NJ Library
+rm -rf smlnj-lib/Dev
 
 # get the version from the source code
 #

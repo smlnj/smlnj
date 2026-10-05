@@ -12,7 +12,7 @@
 #
 ############################################################################
 $BACKGROUND_COLOR="#ffffff";  #white
-$TEXT_COLOR="#000020";  
+$TEXT_COLOR="#000020";
 $TITLE_COLOR="#aa0000";       #dark red
 $ABSTRACT_TITLE_COLOR="#486591";  #black
 $SECTION_COLOR="#486591";       #dark red
@@ -28,7 +28,7 @@ $ALINK_COLOR="maroon";
 
 $SML_TYVAR_COLOR="#00aaaa";   #green
 $SML_KEYWORD_COLOR="#6060a0";   #blue
-$SML_IDENT_COLOR="#9c4040";   
+$SML_IDENT_COLOR="#9c4040";
 
 $EMPH_COLOR="#ff0000";   #red
 $DESC_COLOR="#000070";   #blue
@@ -56,12 +56,17 @@ $PAPER_WIDTH = "8.5in";
 @AUTHORS=("Lal George", "Allen Leung");
 @EMAILS=('george@research.bell-labs.com','leunga@cs.nyu.edu');
 $PWD=`pwd`;
-$DATE=`date`;
-$HOSTNAME=`hostname`;
-chop $HOSTNAME;
-chop $DATE;
 chop $PWD;
-$USER=$ENV{"USER"};
+if (defined $ENV{"SOURCE_DATE_EPOCH"}) {
+   $MODIFIED = gmtime($ENV{"SOURCE_DATE_EPOCH"}) . " UTC";
+} else {
+   $DATE=`date`;
+   $HOSTNAME=`hostname`;
+   chop $HOSTNAME;
+   chop $DATE;
+   $USER=$ENV{"USER"};
+   $MODIFIED = "$DATE by $USER\@$HOSTNAME";
+}
 $WWWHOST="www.cs.nyu.edu";
 $URLPREFIX="leunga/MLRISC/Doc/html/";
 
@@ -83,9 +88,9 @@ sub globalInit()
 %LINKLABEL={};   # name to link for referenceing
 %LINKNAME={};
 $PATHNAME="";    # current pathname
-$FILENAME="";    # current file   
+$FILENAME="";    # current file
 $HTML_FILENAME="";
-$LINE_NO=0;      # current line   
+$LINE_NO=0;      # current line
 $GENERATE_TOC=0; # generate table of contents?
 $PAGE_TITLE="";
 $DOCUMENT_TITLE="";
@@ -99,7 +104,7 @@ $DOCUMENT_AUTHOR="";
 sub IGNORE { return ""; }
 
 ############################################################################
-# 
+#
 # Error
 #
 ############################################################################
@@ -110,7 +115,7 @@ sub msg
 sub warning { msg("WARNING: " . $_[0]); }
 sub error   { msg($_[0]); die($_[0]); }
 ############################################################################
-# 
+#
 # Filename processing
 #
 ############################################################################
@@ -240,7 +245,7 @@ sub popTextStack
 {  my(@text) = @TEXT;
    my($old) = pop @TEXT_STACK;
    @TEXT = @{$old};
-   return "@text"; 
+   return "@text";
 }
 
 %DEFINEDNAMES = {};
@@ -259,13 +264,13 @@ sub popTextStack
 
 sub newenvironment
 {  my($name,$arity,$begin,$end) = @_;
-   if (defined $DEFINEDNAMES{$name}) 
-   {  die("$name has already been defined"); 
+   if (defined $DEFINEDNAMES{$name})
+   {  die("$name has already been defined");
    }
-   $DEFINEDNAMES{$name} = "env"; 
-   $BEGINENV{$name} = $begin; 
-   $ENDENV{$name} = $end; 
-   $ARITY{$name} = $arity; 
+   $DEFINEDNAMES{$name} = "env";
+   $BEGINENV{$name} = $begin;
+   $ENDENV{$name} = $end;
+   $ARITY{$name} = $arity;
    push @ENV0, $name if $arity == 0;
    push @ENV1, $name if $arity == 1;
    push @ENV2, $name if $arity == 2;
@@ -273,11 +278,11 @@ sub newenvironment
 
 sub newhtmlenvironment
 {  my($name,$tag) = @_;
-   if (defined $DEFINEDNAMES{$name}) 
-   {  die("$name has already been defined"); 
+   if (defined $DEFINEDNAMES{$name})
+   {  die("$name has already been defined");
    }
-   $DEFINEDNAMES{$name} = "htmltag"; 
-   $HTMLENV{$name} = $tag; 
+   $DEFINEDNAMES{$name} = "htmltag";
+   $HTMLENV{$name} = $tag;
    push @ENV0, $name;
 }
 
@@ -290,12 +295,12 @@ sub newhtmlparenvironment
 
 sub newcommand
 {  my($name,$arity,$command) = @_;
-   if (defined $DEFINEDNAMES{$name}) 
-   {  die("$name has already been defined"); 
+   if (defined $DEFINEDNAMES{$name})
+   {  die("$name has already been defined");
    }
-   $DEFINEDNAMES{$name} = "command"; 
-   $COMMAND{$name} = $command; 
-   $ARITY{$name} = $arity; 
+   $DEFINEDNAMES{$name} = "command";
+   $COMMAND{$name} = $command;
+   $ARITY{$name} = $arity;
    push @COMMAND0, $name if $arity == 0;
    push @COMMAND1, $name if $arity == 1;
    push @COMMAND2, $name if $arity == 2;
@@ -311,10 +316,10 @@ sub beginenv
    }
    if ($type eq "env")
    {  my($func) = $BEGINENV{$env};
-      return $func->(@args); # call function 
+      return $func->(@args); # call function
    }
    return "<$HTMLENV{$env}>" if $type eq "htmltag";
-   die("don't know how to handle \\begin{$env} at line $LINE_NO"); 
+   die("don't know how to handle \\begin{$env} at line $LINE_NO");
 }
 
 sub endenv
@@ -327,11 +332,11 @@ sub endenv
    return "</$HTMLENV{$env}>" if $type eq "htmltag";
    if ($type eq "env")
    {  my($func) = $ENDENV{$env};
-      my($text) = $func->(); # call function 
-      $parbreak = 1; 
+      my($text) = $func->(); # call function
+      $parbreak = 1;
       return $text;
    }
-   die("don't know how to handle \\end{$env} at line $LINE_NO"); 
+   die("don't know how to handle \\end{$env} at line $LINE_NO");
 }
 
 sub command
@@ -342,13 +347,13 @@ sub command
       return "\\$env";
    }
    #print "[$command]";
-   if ($type eq "command") 
+   if ($type eq "command")
    {  my($func) = $COMMAND{$command};
       if (! $func)
       { die("don't know how to handle \\$command at line $LINE_NO");  }
       return $func->(@args);
    }
-   die("don't know how to handle \\$command at line $LINE_NO"); 
+   die("don't know how to handle \\$command at line $LINE_NO");
 }
 ############################################################################
 #
@@ -367,7 +372,7 @@ $COLORS{"white"} = "#ffffff";
 
 sub colorOf
 {  my($c) = @_;
-   return $COLORS{$c} if (defined $COLORS{$c});  
+   return $COLORS{$c} if (defined $COLORS{$c});
    return "\"$c\"";
 }
 sub begincolor { my($c) = @_; return "<font color=" . colorOf($c) . ">"; }
@@ -430,28 +435,28 @@ $FOOTER= <<"END";
     </td>
     <td align=right>
       <a href="http://cm.bell-labs.com/cm/cs/what/smlnj/index.html">
-      <img src="graphics/smlnj.jpg" width=80 height=50 
+      <img src="graphics/smlnj.jpg" width=80 height=50
        alt="SML/NJ" border=0>
       </a>
       <a href="http://validator.w3.org/check?url=$URL">
-         <img src="graphics/vh401.gif" width=88 height=31 
+         <img src="graphics/vh401.gif" width=88 height=31
           alt="Validate this page" border=0>
        </a>
     </td>
   </tr>
-  <tr> <td align=left> 
+  <tr> <td align=left>
        <font size="-1">
-       <i> Generated by 
-          <a href="mltex.html"> 
+       <i> Generated by
+          <a href="mltex.html">
              <font color="#007777">mltex2html</font>
           </a>
-       </i> 
+       </i>
        </font>
       </td>
   </tr>
   <tr> <td>
     <font size="-2">
-    Last modified: $DATE by $USER\@$HOSTNAME
+    Last modified: $MODIFIED
     </font>
     </td>
   </tr>
@@ -466,7 +471,7 @@ END
 #
 ############################################################################
 @KEYWORDS=("structure", "datatype", "type", "of", "eqtype", "struct",
-           "end", "case", "if", "then", "else", "signature", 
+           "end", "case", "if", "then", "else", "signature",
            "functor", "withtype", "sharing", "include", "where",
            "val", "fun", "handle", "raise", "exception", "let", "in",
            "local", "abstype", "rec", "and", "andalso", "orelse", "open",
@@ -485,10 +490,10 @@ $SMLTYPEVAR = "('+$SMLIDENT)";
 
 sub highlightKeyword { return "<font color=\"$SML_KEYWORD_COLOR\"><b>$_[0]</b></font>"; }
 sub highlightTyvar { return "<font color=\"$SML_TYVAR_COLOR\">$_[0]</font>"; }
-sub highlightIdent 
+sub highlightIdent
 {  my($keyword, $typevar, $ident) = @_;
    if ($typevar ne "") { $typevar .= " "; }
-   return "$keyword $typevar<font color=\"$SML_IDENT_COLOR\"><b>$ident</b></font>"; 
+   return "$keyword $typevar<font color=\"$SML_IDENT_COLOR\"><b>$ident</b></font>";
 }
 
 sub escape
@@ -529,7 +534,7 @@ sub include
    if ($#LOCALTOC >= 0)
    { my(@toctitle) = ($title, 0);
      my(@LOCALTOC) = (\@toctitle, @LOCALTOC);
-     $localtoc = 
+     $localtoc =
       makeTOC("local",
               "border=0 align=right bgcolor=\"$SECTION_TOC_BACKGROUND_COLOR\"",
               $MAX_LOCAL_TOC_ENTRY_LENGTH,"",@LOCALTOC);
@@ -537,7 +542,7 @@ sub include
    my(@entry) =  ($title, $localtoc, @text);
    $SECTION_TEXT{$FILENAME} = \@entry;
    return "";
-} 
+}
 
 
 sub section
@@ -654,15 +659,15 @@ sub imageOf
 {  my($filename) = @_;
    $basename = $1 if ($filename =~ m|^\.\./pictures/eps/(.*)\.eps$|);
    my($png) = "../pictures/png/$basename.png";
-   return $png if -f $png; 
+   return $png if -f $png;
    my($jpg) = "../pictures/jpeg/$basename.jpg";
-   return $jpg if -f $jpg; 
+   return $jpg if -f $jpg;
 
    my($fig) = figOf($filename);
    if ($fig)
    {  runprog("fig2dev -L png $fig $png");
       return $png;
-   } 
+   }
    return "";
 }
 
@@ -677,8 +682,8 @@ sub lengthOf
    if (! ($l =~ /^\s*$/)) { die("lengthOf($l)"); }
    return 0;
 }
-sub heightOf { return lengthOf(@_) / lengthOf($PAPER_HEIGHT) * $Y_PIXELS * $IMAGE_SCALING; } 
-sub widthOf  { return lengthOf(@_) / lengthOf($PAPER_WIDTH) * $X_PIXELS * $IMAGE_SCALING; } 
+sub heightOf { return lengthOf(@_) / lengthOf($PAPER_HEIGHT) * $Y_PIXELS * $IMAGE_SCALING; }
+sub widthOf  { return lengthOf(@_) / lengthOf($PAPER_WIDTH) * $X_PIXELS * $IMAGE_SCALING; }
 
 #
 # Try to translate sizes into pixel sizes
@@ -708,7 +713,7 @@ sub psfig
 
    if ($img)
    {  return <<"END";
- <a href="$img" target=image> 
+ <a href="$img" target=image>
     <img src="$img" align=left alt="Click to enlarge" $size border=0>
  </a>
 END
@@ -720,19 +725,19 @@ END
 sub cpsfig {  return "<center>" . psfig(@_) . "</center>"; }
 
 
-sub beginfig 
+sub beginfig
 { my($border,$align) = @_;
   $CAPTION = "";
   $align = "align=left" if $align eq "l";
   $align = "align=right" if $align eq "r";
   $align = "align=center" if $align eq "c";
-  return "<table border=$border $align><tr><td align=center>"; 
-} 
+  return "<table border=$border $align><tr><td align=center>";
+}
 
-sub endfig 
+sub endfig
 {  my($caption) = @_;
    msg("new figure, caption=$caption");
-   if ($caption ne "") 
+   if ($caption ne "")
    { $caption = <<"END";
   <tr>
     <td align=center>
@@ -743,11 +748,11 @@ sub endfig
   </tr>
 END
    }
-   return "</td></tr>$caption</table>"; 
-} 
+   return "</td></tr>$caption</table>";
+}
 
-sub beginFigure { return beginfig(0,""); } 
-sub endFigure { return endfig($CAPTION); } 
+sub beginFigure { return beginfig(0,""); }
+sub endFigure { return endfig($CAPTION); }
 
 sub caption
 {  my($text) = @_;
@@ -757,7 +762,7 @@ sub caption
 
 sub beginwrapfigure
 {  my($align,$size) = @_;
-   return beginfig(0,$align); 
+   return beginfig(0,$align);
 }
 
 sub endwrapfigure { return endfig($CAPTION); }
@@ -793,7 +798,7 @@ sub endtab
 
 sub newtabitem
 {  my($t) = $current_taboptions[$#current_taboptions];
-   my($align) = "left"; 
+   my($align) = "left";
 
    $t = $1 if $t =~ /^\|+(.*)/;
    ($align = "center", $t = $1) if $t =~ /^c(.*)/;
@@ -839,17 +844,17 @@ sub math
    $math =~ s/>/>/g;
 
    # fonts changing
-   $math =~ s|{\\tt\s+($PARAM)}|<tt>\1</tt>|g; 
+   $math =~ s|{\\tt\s+($PARAM)}|<tt>\1</tt>|g;
 
    # subscript/superscripts
    $math =~ s|_([^{])|<sub>\1</sub>|g;
    $math =~ s|\^([^{])|<sup>\1</sup>|g;
-   $math =~ s|_{($PARAM)}|<sub>\1</sub>|g;
-   $math =~ s|^{($PARAM)}|<sup>\1</sup>|g;
-   $math =~ s|\\sb{($PARAM)}|<sub>\1</sub>|g;
-   $math =~ s|\\sp{($PARAM)}|<sup>\1</sup>|g;
+   $math =~ s|_\{($PARAM)}|<sub>\1</sub>|g;
+   $math =~ s|^\{($PARAM)}|<sup>\1</sup>|g;
+   $math =~ s|\\sb\{($PARAM)}|<sub>\1</sub>|g;
+   $math =~ s|\\sp\{($PARAM)}|<sup>\1</sup>|g;
 
-   # other stuff 
+   # other stuff
    $math =~ s|\\edge\{($PARAM)\}|&rarr<sub>\1</sub>|g;
    $math =~ s|\\defas\b|=|g;
    $math =~ s|\\lim\b|lim|g;
@@ -875,7 +880,7 @@ sub math
    $math =~ s/\{/{/g;
    $math =~ s/\}/}/g;
 
-   #unquote all < and > 
+   #unquote all < and >
    $math =~ s|<|&lt;|g;
    $math =~ s|>|&gt;|g;
 
@@ -889,7 +894,7 @@ sub math
 sub displaymath
 {  my($math) = @_;
    return "<dl><dt><dd>" . math($math) . "</dl>";
-}  
+}
 
 sub stupidBrowserMath
 {
@@ -897,7 +902,7 @@ sub stupidBrowserMath
     s#&larr(;|\b)#&lt-#g;
     s#&isin(;|\b)#in #g;
 }
- 
+
 
 ############################################################################
 #
@@ -1000,6 +1005,7 @@ newcommand("tableofcontents", 0, \&tableofcontents);
 # Import style file
 #
 ############################################################################
+use lib '.';
 require "mltex.thm";
 
 ############################################################################
@@ -1007,8 +1013,8 @@ require "mltex.thm";
 #  Setup the patterns for command and environment parsing
 #
 ############################################################################
-$COMMAND0 = "@COMMAND0";  $COMMAND0 =~ s/ /|/g; 
-$COMMAND1 = "@COMMAND1";  $COMMAND1 =~ s/ /|/g; 
+$COMMAND0 = "@COMMAND0";  $COMMAND0 =~ s/ /|/g;
+$COMMAND1 = "@COMMAND1";  $COMMAND1 =~ s/ /|/g;
 $COMMAND2 = "@COMMAND2";  $COMMAND2 =~ s/ /|/g;
 $COMMAND3 = "@COMMAND3";  $COMMAND3 =~ s/ /|/g;
 $COMMAND0 = 'XXXXXXXXXXXXXXXXX' if ($COMMAND0 eq "");
@@ -1037,7 +1043,7 @@ $ENV2 = 'XXXXXXXXXXXXXXXXX' if ($ENV2 eq "");
 ############################################################################
 sub truncentry
 {  my($entry,$max_len) = @_;
-   if ($max_len > 0 && length($entry) >= $max_len) 
+   if ($max_len > 0 && length($entry) >= $max_len)
    { $entry = substr($entry, 0, $max_len-1) . "...";
    }
    return $entry;
@@ -1045,7 +1051,7 @@ sub truncentry
 
 ############################################################################
 #
-# Make a table of contents 
+# Make a table of contents
 #
 ############################################################################
 sub makeTOC
@@ -1060,11 +1066,11 @@ sub makeTOC
 
    my($toc) = "";
    my($labelprefix) = "";
-   if ($type eq "global") { $labelprefix = "section:"; } 
+   if ($type eq "global") { $labelprefix = "section:"; }
 
    $toc = <<"END";
   <!-- table of contents -->
-  <table cellpadding=0 cellspacing=0 $html> 
+  <table cellpadding=0 cellspacing=0 $html>
   <tr><td>
 END
 
@@ -1079,7 +1085,7 @@ END
       {
          $toc .= <<"END";
     </td></tr><tr><td>
-    <table bgcolor="$MAJORSECTION_BACKGROUND_COLOR" width="100%" border=0 
+    <table bgcolor="$MAJORSECTION_BACKGROUND_COLOR" width="100%" border=0
       cellpadding=0 cellspacing=0>
     <tr><td align=center><font color="$MAJORSECTION_TEXT_COLOR">
     $text
@@ -1091,7 +1097,7 @@ END
       {
          my($indent) = "-" x ($level - 2);
 
-         if ($name eq $highlight) 
+         if ($name eq $highlight)
          { $text = "<font color=\"$SECTION_TOC_TEXT_COLOR\"><b>$text</b></font>"; }
 
          if ($type eq "local")
@@ -1115,7 +1121,7 @@ END
 }
 ############################################################################
 #
-# Generate the output 
+# Generate the output
 #
 ############################################################################
 
@@ -1128,9 +1134,9 @@ sub writeSection
 
   # Global table of contents
   if ($GENERATE_TOC)
-  { $toc = 
+  { $toc =
      makeTOC("global",
-       "border=0 width=$GLOBAL_TOC_WIDTH bgcolor=\"$TOC_BACKGROUND_COLOR\"", 
+       "border=0 width=$GLOBAL_TOC_WIDTH bgcolor=\"$TOC_BACKGROUND_COLOR\"",
         $MAX_GLOBAL_TOC_ENTRY_LENGTH, $TITLE, @GLOBALTOC);
     $toc = <<"END";
       <td valign=top align=left width="$GLOBAL_TOC_WIDTH">
@@ -1152,15 +1158,15 @@ $header
   <head>
      <title> $TITLE </title>
   </head>
-  <body bgcolor="$BACKGROUND_COLOR" text="$TEXT_COLOR" 
+  <body bgcolor="$BACKGROUND_COLOR" text="$TEXT_COLOR"
    link="$LINK_COLOR" vlink="$VLINK_COLOR" alink="$ALINK_COLOR">
-  <table border=0> 
+  <table border=0>
   <tr>
     $toc
     <td width=2> </td>
-    <td valign=top align=left> 
+    <td valign=top align=left>
     <center><h1><font color="$SECTION_COLOR"><b>$TITLE</b></font></h1></center>
-    <hr> 
+    <hr>
     $localtoc
     $maintext
     $footer
@@ -1184,7 +1190,7 @@ sub writeDocument
 
    print STDERR "[Generating $outfile]\n";
 
-   my($toc) = makeTOC("global","border=0 width=$GLOBAL_TOC_WIDTH", 
+   my($toc) = makeTOC("global","border=0 width=$GLOBAL_TOC_WIDTH",
                       $MAX_GLOBAL_TOC_ENTRY_LENGTH, "", @GLOBALTOC);
 
    open(OUTFILE,">$outfile") || die("$!: $outfile");
@@ -1203,14 +1209,14 @@ $header
    <td valign=top align=left> $toc </td>
    <td width=2> </td>
    <td valign=top align=left textwidth="$TEXT_WIDTH">
-     <center><h1><font color="$TITLE_COLOR">$DOCUMENT_TITLE</font></h1></center> 
+     <center><h1><font color="$TITLE_COLOR">$DOCUMENT_TITLE</font></h1></center>
       <hr>
       <center>
          $DOCUMENT_AUTHOR
       </center>
       <center>
         <font color="$ABSTRACT_TITLE_COLOR"><b>Abstract</b></font>
-      </center> 
+      </center>
       <blockquote>
         $DOCUMENT_ABSTRACT
       </blockquote>
@@ -1221,7 +1227,7 @@ $header
    </tr>
    </table>
    </body>
-</html>   
+</html>
 END
    close OUTFILE;
 }
@@ -1234,7 +1240,7 @@ END
 sub init()
 {
   $MODE = "latex";
-  @MODE_STACK=($MODE); 
+  @MODE_STACK=($MODE);
   @tabular_stack=();
 
   $LINE_NO=0;
@@ -1242,7 +1248,7 @@ sub init()
   @LOCALTOC=();
   $LABELCOUNTER="link0000";
 }
- 
+
 ############################################################################
 #
 # Main loop for processing a section
@@ -1254,7 +1260,7 @@ sub processSection
   if (! ($filename =~/\.tex$/))
   {  die("$filename must end in .tex");
   }
-  open(INFILE,$filename) || die("$!: $filename"); 
+  open(INFILE,$filename) || die("$!: $filename");
 
   init();
 
@@ -1266,8 +1272,8 @@ sub processSection
 
      # Verbatim mode handling
      if ($MODE eq "verbatim")
-     {  if (s|\\end{verbatim}|$ENDPRE|) { leaveMode("verbatim"); }
-        else 
+     {  if (s|\\end\{verbatim\}|$ENDPRE|) { leaveMode("verbatim"); }
+        else
         { s/</&lt;/g;
           s/>/&gt;/g;
         }
@@ -1276,65 +1282,65 @@ sub processSection
      }
 
      if ($MODE eq "alltt")
-     {  if (s|\\end{alltt}|$ENDALLTT|) { leaveMode("alltt"); };
+     {  if (s|\\end\{alltt\}|$ENDALLTT|) { leaveMode("alltt"); };
         push @TEXT, $_;
         next;
      }
 
      $_ = escape($_) if $MODE eq "sml";
 
-     # \verb 
-     # Must match the mimimum number of times 
+     # \verb
+     # Must match the mimimum number of times
      s|\\verb(.)(.*?)\1|<tt>\2</tt>|g if ($MODE ne "verbatim");
 
      # paragraph
      if ($MODE eq "latex")
-     {  if (/^\s+$/) 
+     {  if (/^\s+$/)
         {  if (! $parbreak) { $_ = "<p>\n"; $parbreak=1; }
-        } else 
+        } else
         { $parbreak = 0; }
      }
- 
-     # special formatting environments 
-     if (s|\\begin{SML}|$BEGINPRE|) { enterMode("sml"); };
-     if (s|\\end{SML}|$ENDPRE|) { leaveMode("sml"); };
-     if (s|\\begin{code}|$BEGINPRE|) { enterMode("code"); };
-     if (s|\\end{code}|$ENDPRE|) { leaveMode("code"); };
-     if (s|\\begin{verbatim}|$BEGINPRE|) { enterMode("verbatim"); };
-     if (s|\\begin{alltt}|$BEGINALLTT|) { enterMode("alltt"); };
+
+     # special formatting environments
+     if (s|\\begin\{SML\}|$BEGINPRE|) { enterMode("sml"); };
+     if (s|\\end\{SML\}|$ENDPRE|) { leaveMode("sml"); };
+     if (s|\\begin\{code\}|$BEGINPRE|) { enterMode("code"); };
+     if (s|\\end\{code\}|$ENDPRE|) { leaveMode("code"); };
+     if (s|\\begin\{verbatim\}|$BEGINPRE|) { enterMode("verbatim"); };
+     if (s|\\begin\{alltt\}|$BEGINALLTT|) { enterMode("alltt"); };
 
      # method
-     if (s|\\begin{methods}|<dl><dt><tt>|) { enterMode("methods"); };
-     if (s|\\end{methods}|</tt></dl>|) { leaveMode("methods"); };
+     if (s|\\begin\{methods\}|<dl><dt><tt>|) { enterMode("methods"); };
+     if (s|\\end\{methods\}|</tt></dl>|) { leaveMode("methods"); };
      s|\&|</tt><dd>|g if $MODE eq "methods";
      s|\\\\|<dt><tt>|g if $MODE eq "methods";
 
-     # Itemize 
+     # Itemize
      s|\\item\[([^\]]*)\]|<dt><font color="$DESC_COLOR">\1</font><dd>|;
      s|\\item|<li>|;
-  
+
      # Tables
-     s|\\begin{tabular}{($PARAM)}|&begintab($1,"")|oge;
-     s|\\end{tabular}|&endtab()|oge;
-     
-     s|\\begin{Table}{($PARAM)}{($PARAM)}|&begintab($1,$2)|oge;
-     s|\\end{Table}|&endtab()|oge;
+     s|\\begin\{tabular\}\{($PARAM)\}|&begintab($1,"")|oge;
+     s|\\end\{tabular\}|&endtab()|oge;
+
+     s|\\begin\{Table\}\{($PARAM)\}{($PARAM)}|&begintab($1,$2)|oge;
+     s|\\end\{Table\}|&endtab()|oge;
 
      s|\&|&addtab()|oge if $MODE eq "tabular";
      s|\\\\|&tabnewline()|oge if $MODE eq "tabular";
      s|\\\\|&newline()|oge if $MODE eq "latex";
-  
+
      # SML mode handling
-     s|\\sml{($PARAM)}|&sml($1)|oge;
-     s|\\code{($PARAM)}|<tt>\1</tt>|g;
+     s|\\sml\{($PARAM)\}|&sml($1)|oge;
+     s|\\code\{($PARAM)\}|<tt>\1</tt>|g;
      if ($MODE eq "sml") { $_ = smldisplay($_); }
-  
+
      # Math mode handling
      if ($MODE ne "sml") { s|\$($MATHPARAM)\$|&math($1)|eg; }
      s|\\\(($MATHPARAM2)\\\)|&math($1)|oeg;
-     if (/\\\[\s*\S|\S\s*\\\[/) 
+     if (/\\\[\s*\S|\S\s*\\\[/)
      { error("please put \\[ on a separate line by itself"); }
-     if (/^\s*\S+\s*\\\]\s*$/) 
+     if (/^\s*\S+\s*\\\]\s*$/)
      { error("please put \\] on a separate line by itself"); }
      if ($MODE eq "displaymath") { $_ = math($_); }
      if ($MODE eq "eqnarray*") { $_ = math($_); }
@@ -1342,27 +1348,27 @@ sub processSection
 
      if (s|\\\[\s*$|<dl><dt><dd>|) { enterMode("displaymath"); }
      if (s|\\\]|</dl>|) { leaveMode("displaymath"); }
-     if (s|\\begin{eqnarray\*}|<dl><dt><dd>|) { enterMode("eqnarray*"); }
-     if (s|\\end{eqnarray\*}|</dl>|) { leaveMode("eqnarray*"); }
-     if (s|\\begin{eqnarray}|<dl><dt><dd>|) { enterMode("eqnarray"); }
-     if (s|\\end{eqnarray}|</dl>|) { leaveMode("eqnarray"); }
+     if (s|\\begin\{eqnarray\*\}|<dl><dt><dd>|) { enterMode("eqnarray*"); }
+     if (s|\\end\{eqnarray\*\}|</dl>|) { leaveMode("eqnarray*"); }
+     if (s|\\begin\{eqnarray\}|<dl><dt><dd>|) { enterMode("eqnarray"); }
+     if (s|\\end\{eqnarray\}|</dl>|) { leaveMode("eqnarray"); }
 
      # How to handle environment
-     s|~?\\begin{($ENV0)}|&beginenv($1)|oge;
-     s|~?\\begin{($ENV1)}{($PARAM)}|&beginenv($1,$2)|oge;
-     s|~?\\begin{($ENV2)}{($PARAM)}{($PARAM)}|&beginenv($1,$2,$3)|oge;
-     s|~?\\end{($PARAM)}|&endenv($1)|oge;
+     s|~?\\begin\{($ENV0)\}|&beginenv($1)|oge;
+     s|~?\\begin\{($ENV1)\}\{($PARAM)\}|&beginenv($1,$2)|oge;
+     s|~?\\begin\{($ENV2)\}\{($PARAM)\}\{($PARAM)\}|&beginenv($1,$2,$3)|oge;
+     s|~?\\end\{($PARAM)\}|&endenv($1)|oge;
 
      # How to handle commands
      s/~?\\($COMMAND0)(\{\}|\b)/&command($1)/oge;
-     s|~?\\($COMMAND1){($PARAM)}|&command($1,$2)|oge;
-     s|~?\\($COMMAND2){($PARAM)}{($PARAM)}|&command($1,$2,$3)|oge;
-     s|~?\\($COMMAND3){($PARAM)}{($PARAM)}{($PARAM)}|&command($1,$2,$3,$4)|oge;
+     s|~?\\($COMMAND1)\{($PARAM)\}|&command($1,$2)|oge;
+     s|~?\\($COMMAND2)\{($PARAM)\}\{($PARAM)\}|&command($1,$2,$3)|oge;
+     s|~?\\($COMMAND3)\{($PARAM)\}\{($PARAM)\}\{($PARAM)\}|&command($1,$2,$3,$4)|oge;
 
      # Math mode stuff
      s|\\_|_|g;
-     s|\\{|{|g;
-     s|\\}|}|g;
+     s|\\\{|{|g;
+     s|\\\}|}|g;
 
      # Indentation
      s|\\noindent ||g;
@@ -1371,7 +1377,7 @@ sub processSection
      # Not all browers can handle the math stuff yet. Do this in the mean time.
      #
      stupidBrowserMath();
-  
+
      push @TEXT, $_;
   }
   close INFILE;
@@ -1391,7 +1397,7 @@ sub processDocument
    globalInit();
 
    $MODE = "latex";
-   @MODE_STACK=($MODE); 
+   @MODE_STACK=($MODE);
 
    $PATHNAME = "";
    if ($filename =~ /^(.*\/)[^\/]*$/) { $PATHNAME = $1; }
@@ -1402,21 +1408,21 @@ sub processDocument
    open (DOCUMENT, $filename) || die("$! $filename");
    while ($_ = <DOCUMENT>)
    {  $LINE_NO++;
-      s|%.*$||;   #skip comments 
-     
+      s|%.*$||;   #skip comments
+
       s|\\\\|&newline()|oge if $MODE eq "latex";
 
       # How to handle environment
-      s|~?\\begin{($ENV0)}|&beginenv($1)|oge;
-      s|~?\\begin{($ENV1)}{($PARAM)}|&beginenv($1,$2)|oge;
-      s|~?\\begin{($ENV2)}{($PARAM)}{($PARAM)}|&beginenv($1,$2,$3)|oge;
-      s|~?\\end{($PARAM)}|&endenv($1)|oge;
+      s|~?\\begin\{($ENV0)}|&beginenv($1)|oge;
+      s|~?\\begin\{($ENV1)}\{($PARAM)}|&beginenv($1,$2)|oge;
+      s|~?\\begin\{($ENV2)}\{($PARAM)}\{($PARAM)\}|&beginenv($1,$2,$3)|oge;
+      s|~?\\end\{($PARAM)}|&endenv($1)|oge;
 
       # How to handle commands
       s/~?\\($COMMAND0)(\{\}|\b)/&command($1)/oge;
-      s|~?\\($COMMAND1){($PARAM)}|&command($1,$2)|oge;
-      s|~?\\($COMMAND2){($PARAM)}{($PARAM)}|&command($1,$2,$3)|oge;
-      s|~?\\($COMMAND3){($PARAM)}{($PARAM)}{($PARAM)}|&command($1,$2,$3,$4)|oge;
+      s|~?\\($COMMAND1)\{($PARAM)}|&command($1,$2)|oge;
+      s|~?\\($COMMAND2)\{($PARAM)}\{($PARAM)}|&command($1,$2,$3)|oge;
+      s|~?\\($COMMAND3)\{($PARAM)}\{($PARAM)}\{($PARAM)}|&command($1,$2,$3,$4)|oge;
 
       push @TEXT, $_;
    }
@@ -1433,7 +1439,7 @@ sub processDocument
    writeDocument($filename);
 }
 
-#main 
+#main
 foreach $file (@ARGV)
 {  processDocument($file)
 }
