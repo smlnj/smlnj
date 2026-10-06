@@ -246,7 +246,7 @@ repository):
 
 * `Word.-(0wx7FFFFFFFFFFFFFFF, x)` produced incorrect results
 
-// ***** include a list of unnumbered/legacy bugs here *****
+* The `Real.scan` function was too permissive
 
 == Supported systems
 
