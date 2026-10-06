@@ -118,6 +118,16 @@ See {issue-base}/339[Issue #339] for details.
 owner:github.com/Arthur031221[Arthur031221]
 
 //--------------------------------------------------------------------
+[2026-10-04]::
++
+The build script sets `SMLNJ_HOME` to the installation being built so that
+an existing installation does not redirect bootstrapping to its runtime
+system. Documentation builds use the same installation.
+See {issue-base}/339[Issue #339] for details.
++
+owner:github.com/Arthur031221[Arthur031221]
+
+//--------------------------------------------------------------------
 [2026-09-29]::
 +
 The lexer has been changed to accept `'` as a valid type variable

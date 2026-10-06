@@ -27,7 +27,7 @@ structure Trilean : TRILEAN =
                 fun lp (inS : 'a, [] : char list) = SOME(tri, inS)
                   | lp (inS, c::cs) = (case getc inS
                        of NONE => SOME(tri, inS0)
-                        | SOME(c', inS') => if (Char.toLower c = c')
+                        | SOME(c', inS') => if (Char.toLower c' = c)
                             then lp (inS', cs)
                             else SOME(tri, inS0)
                       (* end case *))

@@ -88,7 +88,7 @@ structure SocketImp : SOCKET =
 	  val ctlSNDBUF    : (sockFD * int option) -> int =
 		sockFn "ctlSNDBUF"
 	  val ctlRCVBUF    : (sockFD * int option) -> int =
-		sockFn "ctlSNDBUF"
+		sockFn "ctlRCVBUF"
 	in
       (* get/set socket options *)
 	fun getDEBUG x = getOpt ctlDEBUG x

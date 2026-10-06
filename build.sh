@@ -213,6 +213,7 @@ trap 'cd "$SMLNJ_ROOT"; rm -f $tmpfiles' 0 1 2 3 15
 SMLNJ_HOME="$INSTALLDIR"
 export SMLNJ_HOME CM_PATHCONFIG
 CM_PATHCONFIG="$LIBDIR/pathconfig"
+
 #
 # the release version that we are installing
 #

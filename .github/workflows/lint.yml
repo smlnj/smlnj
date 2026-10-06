@@ -32,4 +32,3 @@ jobs:
 
       - name: Test build driver selection
         run: sh github-scripts/test-build-driver.sh
-

@@ -27,12 +27,6 @@ structure Timestamp : sig
     (* get the current time as a timestamp *)
     val now : unit -> Time.time
 
-    (* return the current timestamp as a UTC date *)
-    val getDateUniv : unit -> Date.date
-
-    (* return the current timestamp as a local timezone date *)
-    val getDateLocal : unit -> Date.date
-
   end = struct
 
     exception InvalidSourceDateEpoch of string
@@ -62,8 +56,5 @@ structure Timestamp : sig
           (* end case *))
 
     fun now () = makeTimestamp (Time.now())
-
-    fun getDateLocal () = Date.fromTimeLocal (now())
-    fun getDateUniv () = Date.fromTimeUniv (now())
 
   end

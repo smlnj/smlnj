@@ -238,6 +238,14 @@ repository):
 * avoid `Overflow` exceptions when `#line` comments are very large (there is
   now an upper bound on the allowed line/column numbers)
 
+* fixed various boundary cases in the `Array2` structure.
+
+* `Socket.Ctl.getRCVBUF` and `Socket.Ctl.setRCVBUF` controlled the `SNDBUF`
+
+* the `PackReal64` structures had the byte orders backwards
+
+* `Word.-(0wx7FFFFFFFFFFFFFFF, x)` produced incorrect results
+
 // ***** include a list of unnumbered/legacy bugs here *****
 
 == Supported systems

@@ -186,11 +186,7 @@ fun mysynch (srcmap, initpos, pos, args) = let
       (* end case *)
     end
 
-fun has_quote s = let
-    fun loop i = ((String.sub(s,i) = #"`") orelse loop (i+1)) handle _ => false
-    in
-      loop 0
-    end
+fun has_quote s = CharVector.exists (fn #"`" => true | _ => false) s
 
 fun inc (ri as ref i) = (ri := i+1)
 fun dec (ri as ref i) = (ri := i-1)
