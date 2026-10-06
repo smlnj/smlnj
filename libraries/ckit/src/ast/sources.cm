@@ -10,7 +10,7 @@ Group is
   $/basis.cm
 
   (* Compiler *)
-  $smlnj/compiler.cm
+  (*$smlnj/compiler.cm*)
 
   (* standard library *)
   $/smlnj-lib.cm
