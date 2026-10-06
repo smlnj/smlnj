@@ -23,6 +23,7 @@ structure TaggedArith : sig
 
     structure P = CFG_Prim
     structure C = CFG
+    structure CA = ConstArith
 
     datatype pureop = datatype CPS.P.pureop
     datatype arithop = datatype CPS.P.arithop
@@ -71,10 +72,7 @@ structure TaggedArith : sig
 	    | (ADD, [v1, v2]) =>
 		pureOp (P.ADD, ity, [comp v1, stripTag (comp v2)])
 	    | (SUB, [NUM{ival, ...}, v2]) =>
-(* QUESTION: if ival is the maximum tagged word value, then ival+ival+2 is 0w0 in
- * the native integer size.  Does this cause problems?
- *)
-                pureOp (P.SUB, ity, [num (ival+ival+2), comp v2])
+                pureOp (P.SUB, ity, [num (CA.uNarrow(ity, ival+ival+2)), comp v2])
 	    | (SUB, [v1, NUM{ival, ...}]) =>
 		pureOp (P.SUB, ity, [comp v1, num (ival+ival)])
 	    | (SUB, [v1, v2]) =>

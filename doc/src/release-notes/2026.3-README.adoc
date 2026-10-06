@@ -244,6 +244,8 @@ repository):
 
 * the `PackReal64` structures had the byte orders backwards
 
+* `Word.-(0wx7FFFFFFFFFFFFFFF, x)` produced incorrect results
+
 // ***** include a list of unnumbered/legacy bugs here *****
 
 == Supported systems
