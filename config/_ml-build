@@ -101,9 +101,8 @@ fi
 # <checksum> for the prefix.
 #
 RES=$(cksum "$root" || error "error running cksum")
-IFS=" " read -r ID REST <<EOF
-$RES
-EOF
+# strip the "<num-octets> <pathname>" suffix
+ID=${RES%% *}
 xx="$ID"
 
 smlfile=$xx-export.sml
