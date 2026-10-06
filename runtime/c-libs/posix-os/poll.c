@@ -160,7 +160,6 @@ PVT ml_val_t ML_Poll (ml_state_t *msp, ml_val_t pollList, struct timeval *timeou
         item = LIST_hd(l);
         fd = REC_SELINT(item, 0);
         flag = INT_MLtoC(DEREF(REC_SEL(item, 1)));
-SayDebug("# poll: fd = %d, flg = %#0x\n", fd, flag);
         if ((flag & RD_BIT) != 0) {
             if (rfds == NIL(fd_set *)) {
                 rfds = &rset;
