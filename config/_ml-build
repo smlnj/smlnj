@@ -100,8 +100,10 @@ fi
 # be available.  It outputs "<checksum> <num-octets> <pathname>"; we use the
 # <checksum> for the prefix.
 #
-RES=($(cksum "$root" || error "error running cksum"))
-ID="${RES[0]}"
+RES=$(cksum "$root" || error "error running cksum")
+IFS=" " read -r ID REST <<EOF
+$RES
+EOF
 xx="$ID"
 
 smlfile=$xx-export.sml
