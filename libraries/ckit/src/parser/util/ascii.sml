@@ -1,7 +1,8 @@
-(* Copyright (c) 1998 by Lucent Technologies *)
-
-(* Copyright 1989 by AT&T Bell Laboratories *)
-(* ascii.sml *)
+(* ascii.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
 
 structure Ascii = struct
     val caret		 = 94
