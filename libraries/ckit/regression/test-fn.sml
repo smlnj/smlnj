@@ -85,18 +85,24 @@ functor TestFn (val testDir : string;
 
          | _ => (TextIO.output (os,"\t[orig cc failed]"); false)
 
-  fun executeCommand dir file = dir^"/"^file^".exe > "^dir^"/"^file^".out"
-  fun execute os file =
-      case OS.Process.system (executeCommand testDir file)
-	of 0 => (case OS.Process.system (executeCommand outDir file)
-		   of 0 => (TextIO.output (os,"\t[execution succeeded]"); true)
-		    | _ => (TextIO.output (os,"\t[trans execution failed]"); false))
+  fun executeCommand dir file = concat [
+        dir, "/", file, ".exe > ", dir, "/", file, ".out"
+      ]
 
-         | _ => (TextIO.output (os,"\t[orig execution failed]"); false)
+  fun execute os file = (case OS.Process.system (executeCommand testDir file)
+       of 0 => (case OS.Process.system (executeCommand outDir file)
+           of 0 => (TextIO.output (os,"\t[execution succeeded]"); true)
+            | _ => (TextIO.output (os,"\t[trans execution failed]"); false)
+          (* end case *))
+        | _ => (TextIO.output (os,"\t[orig execution failed]"); false)
+      (* end case *))
 
-  fun compare os file =
-      let val diffCommaind = "diff "^testDir^"/"^file^".out "^outDir^"/"^file^".out"
-      in case OS.Process.system (executeCommand testDir file)
+  fun compare os file = let
+      val diffCommand = concat[
+            "diff ", testDir, "/", file, ".out ", outDir, "/", file, ".out"
+          ]
+      in
+        case OS.Process.system diffCommand
 	   of 0 => (TextIO.output (os,"\t[output the same]"); true)
             | _ => (TextIO.output (os,"\t[output different]"); false)
       end
@@ -125,4 +131,3 @@ functor TestFn (val testDir : string;
 	      )
       in loop (dirList (testDir^"/")) end
 end
-
