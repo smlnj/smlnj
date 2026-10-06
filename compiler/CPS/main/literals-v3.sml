@@ -179,7 +179,7 @@ structure Literals : LITERALS =
         (* return true if there are no literals defined in the environment *)
         val isEmpty : t -> bool
         (* get the literal objects and reals that are used outside of constructing
-         * literal records.
+         * literal records.  The real literals are in ID order.
          *)
         val getLiterals : t -> {
                 usedLits : literal list,
@@ -413,7 +413,10 @@ structure Literals : LITERALS =
 
         fun getLiterals (LE{lits, reals, ...}) = {
                 usedLits = List.filter litIsUsed (LTbl.listItems lits),
-                realLits = RTbl.listKeys reals
+                realLits = List.map #1
+                  (ListMergeSort.sort
+                    (fn ((_, i : int), (_, j : int)) => i > j)
+                    (RTbl.listItemsi reals))
               }
 
 	fun boundVars (LE{vMap, ...}) =
