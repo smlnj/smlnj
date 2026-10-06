@@ -242,6 +242,8 @@ repository):
 
 * `Socket.Ctl.getRCVBUF` and `Socket.Ctl.setRCVBUF` controlled the `SNDBUF`
 
+* the `PackReal64` structures had the byte orders backwards
+
 // ***** include a list of unnumbered/legacy bugs here *****
 
 == Supported systems
