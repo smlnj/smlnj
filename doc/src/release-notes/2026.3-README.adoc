@@ -248,6 +248,8 @@ repository):
 
 * The `Real.scan` function was too permissive
 
+* Fixed dangling pointer bug when `SetVMCache` frees memory objects
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only

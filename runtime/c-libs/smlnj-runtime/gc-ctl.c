@@ -103,6 +103,7 @@ PVT void SetVMCache (ml_state_t *msp, ml_val_t arg)
 	int i;
 	for (i = level;  i < heap->cacheGen;  i++) {
 	    MEM_FreeMemObj (heap->gen[i]->cacheObj);
+            heap->gen[i]->cacheObj = NIL(mem_obj_t *);
         }
     }
 
