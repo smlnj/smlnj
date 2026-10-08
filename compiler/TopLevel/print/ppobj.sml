@@ -354,206 +354,211 @@ structure PPObj : PPOBJ =
               depth:int, accu
             ) = ppVal' (obj, ty, membersOp, depth, noparen, noparen, accu)
 
-        and ppVal' (_,_,_,0,_,_,_) = PP.string ppstrm  "#"
-          | ppVal' (
-              obj: object, ty: T.ty, membersOp: (T.tycon list * T.tycon list) option,
+        and ppVal' (
+              obj: object, ty: T.ty,
+              membersOp: (T.tycon list * T.tycon list) option,
               depth: int, l: F.fixity, r: F.fixity, accu
-            ) = ((case ty
-               of T.VARty(ref(T.INSTANTIATED t)) =>
-                    ppVal'(obj,t,membersOp,depth,r,l,accu)
-                | T.POLYty{tyfun=T.TYFUN{body,arity},...} =>
-                    if arity=0
-                      then  ppVal'(obj, body,membersOp,depth,l,r,accu)
-                      else let
-                        val args = Obj.mkTuple (List.tabulate(arity, fn i => Obj.toObject 0))
-                        val tobj : object -> object = Unsafe.cast obj
-                        val res = tobj args
-                        in
-                          ppVal'(res, body, membersOp, depth, l, r, accu)
-                        end
-                | T.CONty(tyc as T.GENtyc { kind, stamp, eq, ... }, argtys) => (
-                    case (kind, !eq)
-                     of (T.PRIMITIVE, _) => (case primToString tyc
-                           of SOME(_, fmt) => PP.string ppstrm (fmt obj)
-                            | NONE => (* check for vector/array type constructors *)
-                                if TU.eqTycon(tyc,BT.vectorTycon)
-                                  then ppVector (
-                                    Obj.toVector obj, hd argtys,
-                                    membersOp, depth,
-                                    !Control.Print.printLength, accu)
-                                    handle Obj.Representation => PP.string ppstrm  "<primvec?>"
-                                else if TU.eqTycon(tyc,BT.arrayTycon)
-                                  then (printWithSharing ppstrm
-                                    (obj,accu,
-                                     fn (obj,accu) =>
-                                        (case Obj.rep obj
-                                          of Obj.PolyArray =>
-                                             ppArray(Obj.toArray obj, hd argtys,
-                                                     membersOp, depth,
-                                                     !Control.Print.printLength, accu)
-                                           | Obj.RealArray =>
-                                             ppRealArray(Obj.toRealArray obj,
-                                                         !Control.Print.printLength)
-                                           | _ => bug "array (neither Real nor Poly)"
-                                             ))
-                                    handle Obj.Representation => PP.string ppstrm  "<primarray?>")
-                                else PP.string ppstrm  "<prim?>"
-                          (* end case *))
-                      | (T.DATATYPE _, T.ABS) =>
-                        (PPTable.pp_object ppstrm stamp obj
-                         handle PP_NOT_INSTALLED => PP.string ppstrm  "-" )
-                      | (T.DATATYPE{index,stamps,
-                                    family as {members,...}, freetycs, root, stripped}, _) =>
-                        if TU.eqTycon(tyc,BT.ulistTycon) then
-                            ppUrList(obj,hd argtys,membersOp,depth,
+            ) = if (depth <= 0)
+              then PP.string ppstrm  "#"
+              else ((case ty
+                 of T.VARty(ref(T.INSTANTIATED t)) =>
+                      ppVal'(obj,t,membersOp,depth,r,l,accu)
+                  | T.POLYty{tyfun=T.TYFUN{body,arity},...} =>
+                      if arity=0
+                        then  ppVal'(obj, body,membersOp,depth,l,r,accu)
+                        else let
+                          val args = Obj.mkTuple (List.tabulate(arity, fn i => Obj.toObject 0))
+                          val tobj : object -> object = Unsafe.cast obj
+                          val res = tobj args
+                          in
+                            ppVal'(res, body, membersOp, depth, l, r, accu)
+                          end
+                  | T.CONty(tyc as T.GENtyc { kind, stamp, eq, ... }, argtys) => (
+                      case (kind, !eq)
+                       of (T.PRIMITIVE, _) => (case primToString tyc
+                             of SOME(_, fmt) => PP.string ppstrm (fmt obj)
+                              | NONE => (* check for vector/array type constructors *)
+                                  if TU.eqTycon(tyc,BT.vectorTycon)
+                                    then ppVector (
+                                      Obj.toVector obj, hd argtys,
+                                      membersOp, depth,
+                                      !Control.Print.printLength, accu)
+                                      handle Obj.Representation => PP.string ppstrm  "<primvec?>"
+                                  else if TU.eqTycon(tyc,BT.arrayTycon)
+                                    then (printWithSharing ppstrm
+                                      (obj,accu,
+                                       fn (obj,accu) =>
+                                          (case Obj.rep obj
+                                            of Obj.PolyArray =>
+                                               ppArray(Obj.toArray obj, hd argtys,
+                                                       membersOp, depth,
+                                                       !Control.Print.printLength, accu)
+                                             | Obj.RealArray =>
+                                               ppRealArray(Obj.toRealArray obj,
+                                                           !Control.Print.printLength)
+                                             | _ => bug "array (neither Real nor Poly)"
+                                               ))
+                                      handle Obj.Representation => PP.string ppstrm  "<primarray?>")
+                                  else PP.string ppstrm  "<prim?>"
+                            (* end case *))
+                        | (T.DATATYPE _, T.ABS) =>
+                          (PPTable.pp_object ppstrm stamp obj
+                           handle PP_NOT_INSTALLED => PP.string ppstrm  "-" )
+                        | (T.DATATYPE{index,stamps,
+                                      family as {members,...}, freetycs, root, stripped}, _) =>
+                          if TU.eqTycon(tyc,BT.ulistTycon) then
+                              ppUrList(obj,hd argtys,membersOp,depth,
+                                       !Control.Print.printLength,accu)
+                          else if TU.eqTycon(tyc,BT.suspTycon) then
+                              PP.string ppstrm  "$$"  (* LAZY *)
+                          else if TU.eqTycon(tyc,BT.listTycon) then
+                              ppList(obj,hd argtys,membersOp,depth,
                                      !Control.Print.printLength,accu)
-                        else if TU.eqTycon(tyc,BT.suspTycon) then
-                            PP.string ppstrm  "$$"  (* LAZY *)
-                        else if TU.eqTycon(tyc,BT.listTycon) then
-                            ppList(obj,hd argtys,membersOp,depth,
-                                   !Control.Print.printLength,accu)
-                        else if TU.eqTycon(tyc,BT.refTycon) then
-                            (printWithSharing ppstrm
-                             (obj,accu,
-                              let val argtys' = interpArgs(argtys,membersOp)
-                              in fn (obj,accu) =>
-                                    ppDcon(obj,
-                                           (Vector.sub(stamps,index),
-                                            Vector.sub(members,index)),
-                                           SOME([BT.refTycon],[]),argtys',
-                                           depth,l,r,accu)
-                              end))
-                        else let val argtys' = interpArgs(argtys,membersOp)
-                             in
-                                 ppDcon(obj,(Vector.sub(stamps,index),
-                                             Vector.sub(members,index)),
-                                        SOME(transMembers (stamps, freetycs,
-                                                           root, family)),
-                                        argtys',depth,l,r,accu)
+                          else if TU.eqTycon(tyc,BT.refTycon) then
+                              (printWithSharing ppstrm
+                               (obj,accu,
+                                let val argtys' = interpArgs(argtys,membersOp)
+                                in fn (obj,accu) =>
+                                      ppDcon(obj,
+                                             (Vector.sub(stamps,index),
+                                              Vector.sub(members,index)),
+                                             SOME([BT.refTycon],[]),argtys',
+                                             depth,l,r,accu)
+                                end))
+                          else let val argtys' = interpArgs(argtys,membersOp)
+                               in
+                                   ppDcon(obj,(Vector.sub(stamps,index),
+                                               Vector.sub(members,index)),
+                                          SOME(transMembers (stamps, freetycs,
+                                                             root, family)),
+                                          argtys',depth,l,r,accu)
+                               end
+                        | _ => PP.string ppstrm "-"
+                      (* end case *))
+                  | T.CONty(tyc as T.RECORDtyc [], _) => PP.string ppstrm  "()"
+                  | T.CONty(tyc as T.RECORDtyc labels, argtys) => if Tuples.isTUPLEtyc tyc
+                      then ppTuple(Obj.toTuple obj, argtys, membersOp, depth, accu)
+                      else ppRecord(Obj.toTuple obj, labels, argtys, membersOp, depth, accu)
+                  | T.CONty(tyc as T.DEFtyc _, _) =>
+                      ppVal'(obj, TU.reduceType ty, membersOp, depth, l, r,accu)
+                  | T.CONty(tyc as T.RECtyc i,argtys) => (case membersOp
+                        of SOME (memberTycs,_) =>
+                             let val tyc' =
+                                     List.nth(memberTycs,i)
+                                     handle Subscript =>
+                                      (PP.flushStream ppstrm;
+                                       print "#ppVal':  ";
+                                       print (Int.toString i);
+                                       print " "; print(Int.toString(length memberTycs));
+                                       print "\n";
+                                       bug "ppVal': bad index for RECtyc")
+                              in case tyc'
+                                   of T.GENtyc { kind =
+                                                 T.DATATYPE{index,stamps,
+                                                            family={members,...},...},
+                                                 ... } =>
+                                      ppDcon(obj,(Vector.sub(stamps,index),
+                                                  Vector.sub(members,index)),
+                                             membersOp, argtys,
+                                             depth,l,r,accu)
+                                    | _ => bug "ppVal': bad tycon in members"
                              end
-                      | _ => PP.string ppstrm "-"
-                    (* end case *))
-                | T.CONty(tyc as T.RECORDtyc [], _) => PP.string ppstrm  "()"
-                | T.CONty(tyc as T.RECORDtyc labels, argtys) => if Tuples.isTUPLEtyc tyc
-                    then ppTuple(Obj.toTuple obj, argtys, membersOp, depth, accu)
-                    else ppRecord(Obj.toTuple obj, labels, argtys, membersOp, depth, accu)
-                | T.CONty(tyc as T.DEFtyc _, _) =>
-                    ppVal'(obj, TU.reduceType ty, membersOp, depth, l, r,accu)
-                | T.CONty(tyc as T.RECtyc i,argtys) => (case membersOp
-                      of SOME (memberTycs,_) =>
-                           let val tyc' =
-                                   List.nth(memberTycs,i)
-                                   handle Subscript =>
-                                    (PP.flushStream ppstrm;
-                                     print "#ppVal':  ";
-                                     print (Int.toString i);
-                                     print " "; print(Int.toString(length memberTycs));
-                                     print "\n";
-                                     bug "ppVal': bad index for RECtyc")
-                            in case tyc'
-                                 of T.GENtyc { kind =
-                                               T.DATATYPE{index,stamps,
-                                                          family={members,...},...},
-                                               ... } =>
-                                    ppDcon(obj,(Vector.sub(stamps,index),
-                                                Vector.sub(members,index)),
-                                           membersOp, argtys,
-                                           depth,l,r,accu)
-                                  | _ => bug "ppVal': bad tycon in members"
-                           end
-                       | NONE => bug "ppVal': RECtyc with no members"
-                     (* end case *))
-                | T.CONty(tyc as T.FREEtyc i,argtys) => (case membersOp
-                      of SOME (_, freeTycs) =>
-                           let val tyc' =
-                                   List.nth(freeTycs,i)
-                                   handle Subscript =>
-                                    (PP.flushStream ppstrm;
-                                     print "#ppVal':  ";
-                                     print (Int.toString i);
-                                     print " ";
-                                     print(Int.toString(length freeTycs));
-                                     print "\n";
-                                     bug "ppVal': bad index for FREEtyc")
-                            in ppVal'(obj, T.CONty(tyc', argtys), membersOp,
-                                      depth, l, r, accu)
-                           end
-                       | NONE => bug "ppVal': RECtyc with no members"
-                     (* end case *))
+                         | NONE => bug "ppVal': RECtyc with no members"
+                       (* end case *))
+                  | T.CONty(tyc as T.FREEtyc i,argtys) => (case membersOp
+                        of SOME (_, freeTycs) =>
+                             let val tyc' =
+                                     List.nth(freeTycs,i)
+                                     handle Subscript =>
+                                      (PP.flushStream ppstrm;
+                                       print "#ppVal':  ";
+                                       print (Int.toString i);
+                                       print " ";
+                                       print(Int.toString(length freeTycs));
+                                       print "\n";
+                                       bug "ppVal': bad index for FREEtyc")
+                              in ppVal'(obj, T.CONty(tyc', argtys), membersOp,
+                                        depth, l, r, accu)
+                             end
+                         | NONE => bug "ppVal': RECtyc with no members"
+                       (* end case *))
 
-                | _ => PP.string ppstrm  "-"
-              (* end case *))
-                handle e => raise e)
+                  | _ => PP.string ppstrm  "-"
+                (* end case *))
+                  handle e => raise e)
 
-        and ppDcon(_,_,_,_,0,_,_,_) = PP.string ppstrm  "#"
-          | ppDcon(obj:object, (stamp, {tycname,dcons,...}), membersOp : (T.tycon list * T.tycon list) option,
-                   argtys, depth:int, l:F.fixity, r:F.fixity, accu) =
-             PPTable.pp_object ppstrm stamp obj
-                   (* attempt to find and apply user-defined pp on obj *)
-             handle PP_NOT_INSTALLED =>
-               if length dcons = 0 then PP.string ppstrm "-"
-               else
-                let val dcon as {name,domain,...} = switch(obj,dcons)
-                    val dname = Symbol.name name
-                 in case domain
-                      of NONE => PP.string ppstrm dname
-                       | SOME dom =>
-                          let val fixity =
-                                  Lookup.lookFix(env,Symbol.fixSymbol dname)
-                              (* (??) may be inaccurate *)
-                          val dom = TU.applyTyfun(T.TYFUN{arity=length argtys,body=dom},
-                                                  argtys)
-                          val dom = TU.headReduceType dom (* unnecessary *)
-                          fun prdcon() = (case (fixity,dom)
-                                 of (F.INfix _,T.CONty(domTyc as T.RECORDtyc _, [tyL,tyR])) =>
-                                    let val (a, b) =
-                                            case Obj.toTuple(decon(obj,dcon))
-                                             of [a, b] => (a, b)
-                                              | _ => bug "ppDcon [a, b]"
-                                     in if Tuples.isTUPLEtyc domTyc
-                                        then (PP.openHOVBox ppstrm (PP.Rel 0);
-                                              ppVal'(a,tyL,
-                                                     membersOp,
-                                                     depth-1,F.NONfix,fixity,accu);
-                                              PP.break ppstrm {nsp=1,offset=0};
-                                              PP.string ppstrm  dname;
-                                              PP.break ppstrm {nsp=1,offset=0};
-                                              ppVal'(b,tyR,
-                                                     membersOp,
-                                                     depth-1,fixity, F.NONfix,accu);
-                                              PP.closeBox ppstrm)
-                                        else (PP.openHOVBox ppstrm (PP.Rel 2);
-                                              PP.string ppstrm  dname;
-                                              PP.break ppstrm {nsp=1,offset=0};
-                                              ppVal'(decon(obj,dcon),dom,
-                                                     membersOp, depth-1,
-                                                     F.NONfix,F.NONfix,accu);
-                                              PP.closeBox ppstrm)
-                                    end
-                                  | _ => (PP.openHOVBox ppstrm (PP.Rel 2);
-                                          PP.string ppstrm  dname;
-                                          PP.break ppstrm {nsp=1,offset=0};
-                                          ppVal'(decon(obj,dcon),dom,membersOp,depth-1,
-                                                 F.NONfix,F.NONfix,accu);
-                                          PP.closeBox ppstrm)
-                                (* end case *))
-                          fun prpardcon() =
-                              (PP.openHOVBox ppstrm (PP.Rel 0);
-                               PP.string ppstrm  "("; prdcon(); PP.string ppstrm  ")";
-                               PP.closeBox ppstrm)
-                       in case(l,r,fixity)
-                            of (F.NONfix,F.NONfix,_) => prpardcon()
-                             | (F.INfix _,F.INfix _,_) => prdcon()
-                               (* special case: only on first iteration, for no parens *)
-                             | (_,_,F.NONfix) => prdcon()
-                             | (F.INfix(_,p1),_,F.INfix(p2,_)) =>
-                                 if p1 >= p2 then prpardcon()
-                                 else prdcon()
-                             | (_,F.INfix(p1,_),F.INfix(_,p2)) =>
-                                 if p1 > p2 then prpardcon()
-                                 else prdcon()
-                      end
-              end
+        and ppDcon (
+              obj:object, (stamp, {tycname,dcons,...}),
+              membersOp : (T.tycon list * T.tycon list) option,
+              argtys, depth:int, l:F.fixity, r:F.fixity, accu
+            ) = if (depth <= 0)
+              then PP.string ppstrm  "#"
+              else PPTable.pp_object ppstrm stamp obj
+                (* attempt to find and apply user-defined pp on obj *)
+                handle PP_NOT_INSTALLED =>
+                  if length dcons = 0 then PP.string ppstrm "-"
+                  else
+                   let val dcon as {name,domain,...} = switch(obj,dcons)
+                       val dname = Symbol.name name
+                    in case domain
+                         of NONE => PP.string ppstrm dname
+                          | SOME dom =>
+                             let val fixity =
+                                     Lookup.lookFix(env,Symbol.fixSymbol dname)
+                                 (* (??) may be inaccurate *)
+                             val dom = TU.applyTyfun(T.TYFUN{arity=length argtys,body=dom},
+                                                     argtys)
+                             val dom = TU.headReduceType dom (* unnecessary *)
+                             fun prdcon() = (case (fixity,dom)
+                                    of (F.INfix _,T.CONty(domTyc as T.RECORDtyc _, [tyL,tyR])) =>
+                                       let val (a, b) =
+                                               case Obj.toTuple(decon(obj,dcon))
+                                                of [a, b] => (a, b)
+                                                 | _ => bug "ppDcon [a, b]"
+                                        in if Tuples.isTUPLEtyc domTyc
+                                           then (PP.openHOVBox ppstrm (PP.Rel 0);
+                                                 ppVal'(a,tyL,
+                                                        membersOp,
+                                                        depth-1,F.NONfix,fixity,accu);
+                                                 PP.break ppstrm {nsp=1,offset=0};
+                                                 PP.string ppstrm  dname;
+                                                 PP.break ppstrm {nsp=1,offset=0};
+                                                 ppVal'(b,tyR,
+                                                        membersOp,
+                                                        depth-1,fixity, F.NONfix,accu);
+                                                 PP.closeBox ppstrm)
+                                           else (PP.openHOVBox ppstrm (PP.Rel 2);
+                                                 PP.string ppstrm  dname;
+                                                 PP.break ppstrm {nsp=1,offset=0};
+                                                 ppVal'(decon(obj,dcon),dom,
+                                                        membersOp, depth-1,
+                                                        F.NONfix,F.NONfix,accu);
+                                                 PP.closeBox ppstrm)
+                                       end
+                                     | _ => (PP.openHOVBox ppstrm (PP.Rel 2);
+                                             PP.string ppstrm  dname;
+                                             PP.break ppstrm {nsp=1,offset=0};
+                                             ppVal'(decon(obj,dcon),dom,membersOp,depth-1,
+                                                    F.NONfix,F.NONfix,accu);
+                                             PP.closeBox ppstrm)
+                                   (* end case *))
+                             fun prpardcon() =
+                                 (PP.openHOVBox ppstrm (PP.Rel 0);
+                                  PP.string ppstrm  "("; prdcon(); PP.string ppstrm  ")";
+                                  PP.closeBox ppstrm)
+                          in case(l,r,fixity)
+                               of (F.NONfix,F.NONfix,_) => prpardcon()
+                                | (F.INfix _,F.INfix _,_) => prdcon()
+                                  (* special case: only on first iteration, for no parens *)
+                                | (_,_,F.NONfix) => prdcon()
+                                | (F.INfix(_,p1),_,F.INfix(p2,_)) =>
+                                    if p1 >= p2 then prpardcon()
+                                    else prdcon()
+                                | (_,F.INfix(p1,_),F.INfix(_,p2)) =>
+                                    if p1 > p2 then prpardcon()
+                                    else prdcon()
+                          end
+                    end
 
         and ppList(obj:object, ty:T.ty, membersOp, depth:int, maxLen: int,accu) = let
             fun list_case p = (case switch(p, listDcons)

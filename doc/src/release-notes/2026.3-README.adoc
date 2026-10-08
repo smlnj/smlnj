@@ -49,6 +49,9 @@ system.
 
 * Switch to using mixed records for live variables in `InvokeGC`.
 
+* The REPL will now always print the top-most part of a value, even when the
+  `Control.Print.printDepth` flag is less than `1`.
+
 === Runtime System
 
 * Changed the heap layout to include an arena for "mixed" records.
@@ -251,6 +254,8 @@ repository):
 * The `Real.scan` function was too permissive
 
 * Fixed dangling pointer bug when `SetVMCache` frees memory objects
+
+* Fixed "unbounded" traversal of cyclic values when the `printDepth < 0`
 
 == Supported systems
 
