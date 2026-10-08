@@ -57,13 +57,13 @@ structure Controls : CONTROLS =
 	  { priority = priority, obscurity = obscurity, help = help }
 
   (* package a boolean control as a GetOpt option descriptor (NoArg).  If the control
-   * is initialized to false command-line option will set it to true, whereas if the control
-   * is initialized to true, the the command-line option will set it to false.
+   * is initialized to false, the command-line option will set it to true, whereas if the
+   * control is initialized to true, the the command-line option will set it to false.
    *)
     fun mkOptionFlag {ctl=Ctl{get, set, help, ...}, short, long} = {
 	    short = short,
 	    long = (case long of NONE => [] | SOME opt => [opt]),
-	    desc = GetOpt.NoArg(set (SOME(not (get ())))),
+	    desc = GetOpt.NoArg(fn () => set (SOME(not (get ()))) ()),
 	    help = help
 	  }
 

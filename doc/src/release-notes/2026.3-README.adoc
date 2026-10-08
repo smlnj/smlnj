@@ -156,6 +156,8 @@ Here is a list of the issues and pull requests that are closed with this release
 | {issue-base}/385[`Hash2TableFn.insert` can corrupt the table]
 | [.bugid]#386#
 | {issue-base}/386[`EditDistance.distance` uses the wrong stride]
+| [.bugid]#387#
+| {issue-base}/387[`Controls.mkOptionFlag` evaluates toggled value eagerly]
 | [.bugid]#388#
 | {issue-base}/388[`Format.LEFT` justifies text to the right]
 | [.bugid]#389#
