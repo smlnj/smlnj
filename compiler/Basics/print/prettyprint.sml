@@ -23,6 +23,7 @@ sig
   val with_default_pp_sans: int -> (stream -> unit) -> unit  (* 1st arg is linewidth *)
   val pp_to_string : int -> (stream -> 'a -> unit) -> 'a -> string
   val pp_to_string_sans : int -> (stream -> 'a -> unit) -> 'a -> string
+  val color : stream -> bool
 end
 
 structure PrettyPrint : PRETTYPRINT =
@@ -31,7 +32,8 @@ structure PrettyPrint : PRETTYPRINT =
     type ppconsumer = {
 	consumer : string -> unit,
 	linewidth : unit -> int,
-	flush : unit -> unit
+	flush : unit -> unit,
+        color : unit -> bool (* support color output? *)
       }
 
     structure Dev =
@@ -47,19 +49,19 @@ structure PrettyPrint : PRETTYPRINT =
 	fun ellipses _ = ("", 0)
 	fun setEllipses _ = ()
 	fun setEllipsesWithSz _ = ()
-	fun lineWidth ({consumer, linewidth, flush} : device) = SOME(linewidth())
+	fun lineWidth ({color,consumer, linewidth, flush} : device) = SOME(linewidth())
 	fun setLineWidth _ = ()
 	fun maxIndent _ = NONE
 	fun setMaxIndent _ = ()
 	fun textWidth _ = NONE
 	fun setTextWidth _ = ()
-	fun space ({consumer, linewidth, flush}, n) =
+	fun space ({color,consumer, linewidth, flush}, n) =
 	      consumer (StringCvt.padLeft #" " n "")
 	val indent = space
-	fun newline {consumer, linewidth, flush} = consumer "\n"
-	fun string ({consumer, linewidth, flush}, s) = consumer s
-	fun char ({consumer, linewidth, flush}, c) = consumer(str c)
-	fun flush {consumer, linewidth, flush} = flush()
+	fun newline {color,consumer, linewidth, flush} = consumer "\n"
+	fun string ({color,consumer, linewidth, flush}, s) = consumer s
+	fun char ({color,consumer, linewidth, flush}, c) = consumer(str c)
+	fun flush {color,consumer, linewidth, flush} = flush()
       end
 
     (* create an instance of the pretty printer library *)
@@ -79,12 +81,14 @@ structure PrettyPrint : PRETTYPRINT =
     val defaultDevice : device =
 	{consumer = Control_Print.say,
 	 linewidth = (fn () => !Control_Print.lineWidth),
-	 flush = Control_Print.flush}
+	 flush = Control_Print.flush,
+         color = Control_Print.color}
 
     fun mkDevice (lineWidth : int) : device =
 	{consumer = Control_Print.say,
 	 linewidth = (fn () => lineWidth),
-	 flush = Control_Print.flush}
+	 flush = Control_Print.flush,
+         color = Control_Print.color}
 
     fun with_pp device (f: PP.stream -> unit) =
 	let val ppstrm = PP.openStream device
@@ -114,7 +118,7 @@ structure PrettyPrint : PRETTYPRINT =
     fun pp_to_string wid ppFn obj =
 	let val l = ref ([] : string list)
 	    fun attach s = l := s :: !l
-	    val device = {consumer = attach, linewidth = (fn _ => wid),
+	    val device = {color=fn _ => false,consumer = attach, linewidth = (fn _ => wid),
 			  flush = fn()=>()}
 	 in with_pp device
 	      (fn ppStrm => ppFn ppStrm obj);
@@ -124,11 +128,14 @@ structure PrettyPrint : PRETTYPRINT =
     fun pp_to_string_sans wid ppFn obj =
 	let val buffer = ref ([] : string list)
 	    fun attach s = buffer := s :: !buffer
-	    val device = {consumer = attach,
+	    val device = {color=fn _ => false,
+                          consumer = attach,
 			  linewidth = (fn _ => wid),
 			  flush = fn()=>()}
 	 in with_pp_sans device (fn ppStrm => ppFn ppStrm obj);
 	    String.concat(List.rev(!buffer))
 	end
+
+    fun color strm = #color (getDevice strm) ()
 
 end (* structure PrettyPrint *)
