@@ -5,6 +5,10 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-08]
+        Some fixes to the XML library (case sensitivity and the handling of
+        escape sequences).
+
 [2026-10-03]
         Added the `Timestamp` module to the Utility library.  This module supports
         generating timestamps that respect the `SOURCE_DATE_EPOCH` environment

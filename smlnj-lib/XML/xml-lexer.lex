@@ -20,8 +20,8 @@
 (* list of strings to build attribute values *)
   val text : string list ref = ref []
   fun addText s = (text := s :: !text)
-  fun addDecimalEscape s = addText(UTF8.encode(Word.fromInt(Option.valOf(Int.fromString s))))
-  fun addHexEscape s = addText(UTF8.encode(Option.valOf(Word.fromString s)))
+  fun decimalEscape s = UTF8.encode(Word.fromInt(Option.valOf(Int.fromString s)))
+  fun hexEscape s = UTF8.encode(Option.valOf(Word.fromString s))
   fun textToString () = let
 	val s = String.concat(List.rev(!text))
 	in
@@ -84,8 +84,8 @@
 <LIT1,LIT2>"&gt;"		=> (addText (">"); continue());
 <LIT1,LIT2>"&amp;"		=> (addText ("&"); continue());
 <LIT1,LIT2>"&apos;"		=> (addText ("'"); continue());
-<LIT1,LIT2>"&#"[0-9]+";"	=> (addDecimalEscape(trim(2, yysubstr, 1)); continue());
-<LIT1,LIT2>"&#x"[a-fA-F0-9]+";"	=> (addHexEscape(trim(3, yysubstr, 1)); continue());
+<LIT1,LIT2>"&#"[0-9]+";"	=> (addText (decimalEscape(trim(2, yysubstr, 1))); continue());
+<LIT1,LIT2>"&#x"[a-fA-F0-9]+";"	=> (addText (hexEscape(trim(3, yysubstr, 1))); continue());
 <LIT1>[^"<>&]+			=> (addText yytext; continue());
 <LIT2>[^'<>&]+			=> (addText yytext; continue());
 
@@ -99,6 +99,8 @@
 <INITIAL>"&gt;"			=> (T.TEXT ">");
 <INITIAL>"&amp;"		=> (T.TEXT "&");
 <INITIAL>"&apos;"		=> (T.TEXT "'");
+<INITIAL>"&#"[0-9]+";"	        => (T.TEXT(decimalEscape(trim(2, yysubstr, 1))));
+<INITIAL>"&#x"[a-fA-F0-9]+";"	=> (T.TEXT(hexEscape(trim(3, yysubstr, 1))));
 <INITIAL>"<![CDATA[".*"]]>"	=> (T.CDATA(trim (9, yysubstr, 3)));
 
 <INITIAL>.		        => (lexErr(yypos, [
