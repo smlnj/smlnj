@@ -6,6 +6,11 @@ SML/NJ 2026.3
 -------------------
 
 [2026-10-09]
+        Changed the `exists`, `all` and `find` functions in the splay-tree
+        implementation of sets to use an in-order traversal (instead of
+        pre-order).
+
+[2026-10-09]
 	Changed the name of the OG HTML library to HTML3.  The CM file is now
 	called `html3-lib.cm`, but the modules names in the library have not
 	changed.
