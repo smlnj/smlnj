@@ -1,7 +1,0 @@
-signature HTML_ERROR
-signature HTML
-structure HTML
-structure MakeHTML
-structure PrHTML
-structure HTMLDefaults
-functor HTMLParserFn

@@ -1,6 +1,7 @@
-(* html-lib.cm
+(* html3-lib.cm
  *
- * COPYRIGHT (c) 1996 AT&T Research.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *
  * Sources file for HTML parsing/pretty-printing library; part of the SML/NJ
  * Library suite.

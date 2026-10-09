@@ -5,6 +5,11 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-09]
+	Changed the name of the OG HTML library to HTML3.  The CM file is now
+	called `html3-lib.cm`, but the modules names in the library have not
+	changed.
+
 [2026-10-08]
         Some fixes to the XML library (case sensitivity and the handling of
         escape sequences).

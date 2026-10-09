@@ -28,7 +28,7 @@ provide.  These are listed in alphabetical order:
 === xref:Controls/controls-lib.adoc[Controls Library]
 Support for managing application controls.
 
-=== xref:HTML/html-lib.adoc[HTML Library]
+=== xref:HTML3/html3-lib.adoc[HTML Library]
 __not yet written__
 
 === xref:HTML4/html4-lib.adoc[HTML4 Library]
@@ -79,7 +79,7 @@ ifdef::backend-pdf[]
 
 include::Controls/controls-lib.adoc[]
 
-//include::HTML/html-lib.adoc[]
+//include::HTML3/html3-lib.adoc[]
 
 //include::HTML4/html4-lib.adoc[]
 

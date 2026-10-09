@@ -72,6 +72,9 @@ A large number of *Basis Library bugs were fixed (see the list below for details
 
 === SML/NJ Library
 
+* The original `HTML` library has been renamed to `HTML3` (the CM tilf is now
+  `html3-lib.cm`).  The modules in the library have not been renamed.
+
 * A large number of *SML/NJ Library* bugs were fixed (see the list below or the
   `smlnj-lib/CHANGES` file for details).
 

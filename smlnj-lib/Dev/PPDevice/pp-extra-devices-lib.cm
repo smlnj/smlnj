@@ -24,7 +24,7 @@ Library
 is
 
   $/basis.cm
-  $/html-lib.cm
+  $/html3-lib.cm
   $/pp-device-lib.cm
 
   extras/html3-dev.sml

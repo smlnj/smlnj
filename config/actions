@@ -82,7 +82,7 @@ old-basis lib basis-2004.cm basis-2004.cm libraries/old-basis/2004
 #    (unix-lib.cm is installed only on Unix-like systems)
 smlnj-lib ulib unix-lib.cm      unix-lib.cm      smlnj-lib/Unix
 smlnj-lib  lib hash-cons-lib.cm hash-cons-lib.cm smlnj-lib/HashCons
-smlnj-lib  lib html-lib.cm	html-lib.cm	 smlnj-lib/HTML
+smlnj-lib  lib html3-lib.cm	html3-lib.cm	 smlnj-lib/HTML3
 smlnj-lib  lib html4-lib.cm	html4-lib.cm	 smlnj-lib/HTML4
 smlnj-lib  lib inet-lib.cm      inet-lib.cm      smlnj-lib/INet
 smlnj-lib  lib json-lib.cm      json-lib.cm      smlnj-lib/JSON
