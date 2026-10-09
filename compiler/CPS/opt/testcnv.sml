@@ -90,7 +90,12 @@ structure TestCnv : sig
 		    C.APP(trapK', [C.ENUM 0]),
 		    branch(sLT from, [num maxToInt, v],
 		      C.APP(trapK', [C.ENUM 0]),
-		      C.PURE(P.TRUNC{from=from, to=to}, [v], x', C.NUMt toTy,
+(* FIXME: the following `C.ARITH(C.TEST{from=from, to=tty}` really should be
+ * `C.PURE(C.TRUNC{from=from, to=to}", since we have already done the range test,
+ * but the `TRUNC` causes the sign extension to be masked out for negative numbers.
+ * (see Issue #476)
+ *)
+		      C.ARITH(P.TEST{from=from, to=tty}, [v], x', C.NUMt toTy,
                         C.APP(jk', [C.VAR x']))))))
 	      end
 	    else bug "TEST with unexpected precisions"
