@@ -99,6 +99,9 @@ A large number of *Basis Library bugs were fixed (see the list below for details
 * Fixed the behavior of **CML**'s `OS.Process.terminate` to match the Basis Library
   specification.
 
+* Fixed `TextIO.input1`, `TextIO.inputLine`, and `BinIO.input1` to restore the
+  `mVar` on end of file.
+
 === Installation
 
 * A number of changes have been made to improve reproducibility of builds.

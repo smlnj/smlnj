@@ -853,22 +853,29 @@ functor TextIOFn (
     type outstream = StreamIO.outstream SV.mvar
 
   (** Input operations **)
-    fun input strm = let val (v, strm') = StreamIO.input(SV.mTake strm)
+    fun input inS = let
+          val (v, strm') = StreamIO.input(SV.mTake inS)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
-    fun input1 strm = (case StreamIO.input1(SV.mTake strm)
-	   of NONE => NONE
-	    | (SOME(elem, strm')) => (SV.mPut (strm, strm'); SOME elem)
-	  (* end case *))
-    fun inputN (strm, n) = let val (v, strm') = StreamIO.inputN (SV.mTake strm, n)
+    fun input1 inS = let
+          val strm = SV.mTake inS
+          in
+            case StreamIO.input1 strm
+             of NONE => (SV.mPut (inS, strm); NONE)
+              | (SOME(elem, strm')) => (SV.mPut (inS, strm'); SOME elem)
+            (* end case *)
+          end
+    fun inputN (inS, n) = let
+          val  strm = SV.mTake inS
+          val (v, strm') = StreamIO.inputN (strm, n)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
-    fun inputAll (strm : instream) = let
-	  val (v, strm') = StreamIO.inputAll(SV.mTake strm)
+    fun inputAll (inS : instream) = let
+	  val (v, strm') = StreamIO.inputAll(SV.mTake inS)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
 
   (* event-value constructors *)
@@ -971,9 +978,14 @@ functor TextIOFn (
 	    handle ex => raise IO.Io{function="openAppend", name=fname, cause=ex}
 
   (** Text stream specific operations **)
-    fun inputLine strm =
-	Option.map (fn (s, strm') => (SV.mPut (strm, strm'); s))
-	           (StreamIO.inputLine (SV.mTake strm))
+    fun inputLine inS = let
+          val strm = SV.mTake inS
+          in
+            case StreamIO.inputLine strm
+             of NONE => (SV.mPut (inS, strm); NONE)
+              | SOME(s, strm') => (SV.mPut (inS, strm'); SOME s)
+            (* end case *)
+          end
     fun outputSubstr (strm, ss) = StreamIO.outputSubstr (SV.mGet strm, ss)
     fun openString src =
 	  mkInstream(StreamIO.mkInstream(OSPrimIO.strReader src, empty))
