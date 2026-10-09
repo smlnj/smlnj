@@ -2,7 +2,7 @@ This is a record of changes made to CML and the CML Library.
 ------------------------------------------------------------
 
 [2026-10-09]
-        Fixed an issue where the Imperative I/O input1 and inputLine operations
+        Fixed an issue where the CML's Imperative I/O input1 and inputLine operations
         did not restore the `mVar` on end of file.
 
 [2026-09-24]
