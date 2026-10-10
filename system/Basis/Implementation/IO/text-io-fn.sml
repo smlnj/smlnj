@@ -273,11 +273,11 @@ functor TextIOFn (
 		    val remain = len - i
 		    in
 		      if (remain >= n)
-			then SOME n
+			then SOME amount
 			else nextBuf (buf, n - remain)
 		    end
-	      and nextBuf (IBUF{more, ...}, n) = (case !more
-		     of (MORE buf) => tryInput (buf, 0, n)
+	      and nextBuf (buf as IBUF{more, ...}, n) = (case !more
+		     of (MORE b) => tryInput (b, 0, n)
 		      | (EOS _) => SOME(amount - n)
 		      | TERMINATED => SOME(amount - n)
 		      | NOMORE => ((
