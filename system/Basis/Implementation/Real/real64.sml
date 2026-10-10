@@ -39,7 +39,7 @@ structure Real64Imp : REAL =
   (* negative infinity *)
     val negInf = Real64Values.negInf
   (* a NaN value *)
-    val nan = 0.0 / 0.0
+    val nan = Real64Values.posNaN
 
     (* some useful constants *)
     val nExpBits = 0w11                 (* # of exponent bits in double-precision real *)
@@ -244,17 +244,7 @@ structure Real64Imp : REAL =
 
     fun realMod x = #frac (split x)
 
-    (* return `x - n*y` where `n = trunc(x / y)`.  Return `nan` when either `x` or
-     * `y` is `nan`, or when `x` is ±∞, or `y` is 0.  Return `x` when `y` is ±∞.
-     *)
-    fun rem (x, y) = let
-          (* note that `d` will be {+,-}0 when either `x` is `0` or `y` is {+,-}∞ *)
-          val d = x / y
-          in
-            if (d == 0.0) then x
-            else if isFinite d then y * #frac(split d)
-            else nan
-          end
+    val rem = Real64Rem.rem
 
     fun checkFloat x = if x>negInf andalso x<posInf then x
                        else if isNan x then raise General.Div

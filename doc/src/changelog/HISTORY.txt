@@ -105,7 +105,17 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.3; 2026-10-04
+== Version 2026.3; 2026-10-??
+
+//--------------------------------------------------------------------
+[2026-10-10]::
++
+New implementation of `Real64.rem` that produces exact results (_i.e._,
+no rounding errors).  The implementation works on the bit representation
+of the numbers and has been put into its own source file
+(`Basis/Implementation/Real/real64-rem.sml`).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-10-04]::

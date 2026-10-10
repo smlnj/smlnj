@@ -271,6 +271,8 @@ repository):
 
 * Fixed "unbounded" traversal of cyclic values when the `printDepth < 0`
 
+* Rewrote `Real64.rem` to produce **exact** results.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
