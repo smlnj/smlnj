@@ -308,7 +308,7 @@ functor PrimIO (
     fun nullWr () = let
 	  val closed = ref false
 	  fun checkClosed () = if !closed then raise IO.ClosedStream else ()
-	  fun checked k () = k
+	  fun checked k _ = (checkClosed (); k)
 	  fun writeVec vsl = (checkClosed (); VS.length vsl)
 	  fun writeArr asl = (checkClosed (); AS.length asl)
 	  in
