@@ -243,7 +243,7 @@ structure InlineT =
 
     structure Int = Int63
 
-    structure Word =
+    structure Word63 =
       struct
 	val toLarge : word -> word64	  = InLine.unsigned_word63_to_word64
 	val toLargeX : word -> word64	  = InLine.signed_word63_to_word64
@@ -296,6 +296,8 @@ structure InlineT =
         val min     : word * word -> word  = InLine.word63_min
         val max     : word * word -> word  = InLine.word63_max
       end
+
+    structure Word = Word63
 
     structure Word8 =
       struct
