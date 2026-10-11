@@ -6,6 +6,9 @@ SML/NJ 2026.3
 -------------------
 
 [2026-10-10]
+        Fixed various parsing issues in the `HTML4` library.
+
+[2026-10-10]
         Fixed `UUID.fromString` to properly reject certain ill-formed strings.
 
 [2026-10-09]

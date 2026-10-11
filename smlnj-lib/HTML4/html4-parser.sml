@@ -264,26 +264,28 @@ fun htmlFromParseStream pstrm0 =
                             | _ => NONE)
         val (pstrm3, starthtmlTokOpt) =
             optVisitTok "STARTHTML" (skipWhitespaceOrComment pstrm2)
-        val (pstrm4, headDataListOpt) = headFromParseStream
-                                            (skipWhitespaceOrComment pstrm3)
-    in if not (isSome headDataListOpt)
-      then (pstrm4, NONE)
-      else (case bodyOrFramesetFromParseStream pstrm4
-	of (pstrm5, SOME content) => let
-	     val (pstrm6, _) = optVisitTok "ENDHTML" pstrm5
-	     val pstrm7 = (skipWhitespaceOrComment o
-			  (expectExitNT "DOCUMENT") o
-			  skipWhitespaceOrComment) pstrm6
-	     in (
-	       pstrm7,
-	       SOME (H4.HTML{
-		   version = theVersion,
-		   head = [],
-		   content = content
-		 })
-	     ) end
-	 | (pstrm5, NONE) => (pstrm5, NONE)
-       (* end case *))
+        val (pstrm4, headDataListOpt) =
+            headFromParseStream (skipWhitespaceOrComment pstrm3)
+    in
+      case headDataListOpt
+       of NONE => (pstrm4, NONE)
+        | SOME headDataList => (case bodyOrFramesetFromParseStream pstrm4
+           of (pstrm5, SOME content) => let
+                val (pstrm6, _) = optVisitTok "ENDHTML" pstrm5
+                val pstrm7 = (skipWhitespaceOrComment o
+                             (expectExitNT "DOCUMENT") o
+                             skipWhitespaceOrComment) pstrm6
+                in (
+                  pstrm7,
+                  SOME (H4.HTML{
+                      version = theVersion,
+                      head = headDataList,
+                      content = content
+                    })
+                ) end
+            | (pstrm5, NONE) => (pstrm5, NONE)
+          (* end case *))
+      (* end case *)
     end
 and headFromParseStream pstrm0 =
     let val pstrm1 = (skipWhitespaceOrComment o (expectEnterNT "HEAD")) pstrm0
@@ -326,7 +328,7 @@ and bodyFromParseStream pstrm0 =
                                (skipWhitespaceOrComment pstrm2)
         val (pstrm4, _) = optVisitTok "ENDBODY" pstrm3
         val pstrm5 = expectExitNT "BODY" (skipWhitespaceOrComment pstrm4)
-    in (pstrm5, SOME (H4.BODY (attrs, listOfOptsToList children))) end 
+    in (pstrm5, SOME (H4.BODY (attrs, listOfOptsToList children))) end
 and framesetFromParseStream pstrm0 =
     let val pstrm1 = expectEnterNT "FRAMESET" pstrm0
         val pstrm2 = expectVisitT "STARTFRAMESET" pstrm1
@@ -696,7 +698,7 @@ fun fromParseTree pt =
 fun fromString str = let
     val pt_opt = parseStream (TextIO.openString str)
 in case pt_opt
-    of NONE => NONE 
+    of NONE => NONE
      | SOME pt => fromParseTree pt
 end
 

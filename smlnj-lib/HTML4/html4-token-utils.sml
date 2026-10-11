@@ -135,10 +135,16 @@ val frameset_tuple_list = [
     ("NOFRAMES", STARTNOFRAMES, SOME ENDNOFRAMES)
 ]
 
-val endTagNameTest = Char.notContains " \t\r\n>"
+val beginTagNameTest = Char.contains "</"
+val endTagNameTest = Char.notContains " \t\r\n/>"
 
+(* split an open/close element into its tagname and the rest of the
+ * contents.  We first skip the "<" or "</" prefix and the split at
+ * the end of the tag.
+ *)
 fun splitTagStart inStr =
-      Substring.splitl endTagNameTest (Substring.full inStr)
+      Substring.splitl endTagNameTest
+        (Substring.dropl beginTagNameTest (Substring.full inStr))
 
 fun extractTag str = let
       val (tagNameChs, _) = splitTagStart str
@@ -154,7 +160,7 @@ fun extractTag str = let
       end
 
 fun extractAttrs str =
-    let 
+    let
         val (_, tagRest) = splitTagStart str
         val (tagRest', _) = Substring.splitr (fn c => c = #">") tagRest
     in
@@ -192,18 +198,20 @@ val open_map_ref = ref strict_open_map
 
 val close_map_ref = ref strict_close_map
 
-fun mkOpenTag payloadStr =
-    let val tag_atom = extractTag payloadStr
-    in case AtomMap.find(!open_map_ref, tag_atom) of
-           NONE => OPENTAG (tag_atom, (payloadStr, extractAttrs payloadStr))
-         | SOME ctor => ctor (payloadStr, extractAttrs payloadStr)
+fun mkOpenTag payloadStr = let
+    val tag_atom = extractTag payloadStr
+    in
+      case AtomMap.find(!open_map_ref, tag_atom)
+       of NONE => OPENTAG (tag_atom, (payloadStr, extractAttrs payloadStr))
+        | SOME ctor => ctor (payloadStr, extractAttrs payloadStr)
     end
 
-fun mkCloseTag payloadStr =
-    let val tag_atom = extractTag payloadStr
-    in case AtomMap.find(!close_map_ref, tag_atom) of
-           NONE => CLOSETAG tag_atom
-         | SOME tok => tok
+fun mkCloseTag payloadStr = let
+    val tag_atom = extractTag payloadStr
+    in
+      case AtomMap.find(!close_map_ref, tag_atom)
+       of NONE => CLOSETAG tag_atom
+        | SOME tok => tok
     end
 
 (* ____________________________________________________________ *)
