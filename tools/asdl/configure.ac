@@ -248,7 +248,7 @@ AC_SUBST(DSLEXT)
 
 AH_TOP([
 /*
- * This code is part of the SML/NJ System (http://smlnj.org)
+ * This code is part of the SML/NJ System (https://smlnj.org)
  *
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ.
  */
