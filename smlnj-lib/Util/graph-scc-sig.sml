@@ -20,18 +20,18 @@ signature GRAPH_SCC =
       = SIMPLE of node			(* singleton, no self-loop *)
       | RECURSIVE of node list
 
+    (* given a list of root nodes and a follow function, return the
+     * topologically sorted list of strongly-connected components.
+     * Assuming that the roots list does not contain duplicates, then
+     * the first component in the result will contain the first root.
+     *)
     val topOrder': { roots: node list, follow: node -> node list }
 		   -> component list
-	(* take root node(s) and follow function and return
-	 * list of topologically sorted strongly-connected components;
-	 * the component that contains the first of the given "roots"
-	 * goes first
-	 *)
 
+    (* for backward compatibility;
+     * AXIOM: topOrder{root,follow}==topOrder'{roots=[root],follow=follow}
+     *)
     val topOrder : { root: node, follow: node -> node list }
 		   -> component list
-        (* for backward compatibility;
-	 * AXIOM: topOrder{root,follow}==topOrder'{roots=[root],follow=follow}
-	 *)
 
   end
