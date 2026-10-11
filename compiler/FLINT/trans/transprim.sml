@@ -402,20 +402,26 @@ structure TransPrim : sig
 			oper)
 		  (* end case *)
 		end
-	(* division operators with an explicit test for a zero divisor *)
+	(* division operators with an explicit test for a zero divisor and ~1 divisors *)
 	  fun inldiv (nk, po, lt, ts) = let
 		val oper = PL.PRIM (po, lt, ts)
 		in
 		  case coreExn ["Assembly", "Div"]
 		   of SOME divExn => let
-			val { lt_arg, lt_argpair, lt_cmp, zero, equal, ... } = inlops nk
+			val { lt_arg, lt_argpair, lt_cmp, zero, equal, negOne, negate, ... } = inlops nk
 			in
 			  mkFn lt_argpair (fn z =>
 			    mkLet (PL.SELECT(1, z)) (fn y =>
 			      mkCOND (
 				mkApp2 (equal, y, zero),
 				mkRaise (divExn, lt_arg),
-				PL.APP(oper, z))))
+                                mkCOND (
+                                  mkApp2 (equal, y, negOne),
+                                  (* we implement `x / ~1` as `~ x` to get Overflow
+                                   * when `x` in `minInt`
+                                   *)
+                                  PL.APP(negate, PL.SELECT(0, z)),
+				  PL.APP(oper, z)))))
 			end
 		   | NONE => (warn "no access to Div exception"; oper)
 		end
