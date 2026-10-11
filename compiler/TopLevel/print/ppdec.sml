@@ -44,7 +44,7 @@ type object = Unsafe.Object.object
 
 val signatures = Control.Print.signatures
 val printOpens = Control.Print.printOpens
-val printDepth = Control.Print.printDepth
+val printDepth = PrintUtil.printDepth
 val anonSym = S.strSymbol "<anonymousSig>"
 val anonFsym = S.fctSymbol "<anonymousFsig>"
 
@@ -129,7 +129,7 @@ fun ppDec ({static,dynamic}: Environment.environment)
                                            (* we put a floor of `1` on print depth so
                                             * that we at least always print something.
                                             *)
-                                           PO.ppObj static ppstrm (obj, ty, Int.max(1, !printDepth));
+                                           PO.ppObj static ppstrm (obj, ty, printDepth());
                                            sp (); pps ":"; nbSp();
                                            PT.ppType static ppstrm (trueValType (path,ty))
                                          end

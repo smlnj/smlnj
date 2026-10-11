@@ -54,7 +54,7 @@ fun bug msg = ErrorMsg.impossible("TypeCheck: "^msg)
 val --> = BT.-->
 infix -->
 
-val printDepth = Control_Print.printDepth
+val printDepth = PrintUtil.printDepth
 val showCulprits = ElabControl.showTypeErrorCulprits
 
 fun refNewDcon(DATACON{name, const, rep, typ, sign, lazyp}) =
@@ -87,7 +87,7 @@ fun ppType' ty = (dbsaynl ">>> ppType'";
 		  dbsaynl "<<< ppType'")
 
 val ppDec' =
-  (fn ppstrm => fn d => PPAbsyn.ppDec (env,NONE) ppstrm (d,!printDepth))
+  (fn ppstrm => fn d => PPAbsyn.ppDec (env,NONE) ppstrm (d,printDepth()))
 
 fun ppDecDebug (msg,dec) =
   ED.withInternals(fn () => ED.debugPrint debugging (msg, ppDec', dec))
@@ -196,7 +196,7 @@ fun unifyErr{ty1,name1,ty2,name2,message=m,region,kind,kindname,phrase} =
 		PP.newline ppstrm;
 		PP.string ppstrm(concat["in ", kindname, ":"]);
 		PP.break ppstrm {nsp=1,offset=2};
-		kind ppstrm (phrase,!printDepth));
+		kind ppstrm (phrase,printDepth()));
              ppModeErrorMsg ppstrm mode
 	 end));
        false)  (* false will never be returned, because of the call of err *)
@@ -505,7 +505,7 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		    PP.string ppstrm "argument:    ";
 		    ppType ppstrm argTy; PP.newline ppstrm;
 		    PP.string ppstrm "in pattern:"; PP.break ppstrm {nsp=1,offset=2};
-		    ppPat ppstrm (pat,!printDepth)));
+		    ppPat ppstrm (pat,printDepth())));
 		 (pat,WILDCARDty))
 	   end
        | CONSTRAINTpat (pat', constraintTy) =>
@@ -605,7 +605,7 @@ in
                     ppType ppstrm nty; PP.newline ppstrm;
                     PP.string ppstrm "in expression:";
                     PP.break ppstrm {nsp=1,offset=2};
-                    ppExp ppstrm (exp,!printDepth)));
+                    ppExp ppstrm (exp,printDepth())));
                     (exp, WILDCARDty))
            end
        | VSELECTexp (exp, elemTy, index) => bug "expType:VSELECTexp"
@@ -657,7 +657,7 @@ in
 			    ppType ppstrm randTy; PP.newline ppstrm;
 			    PP.string ppstrm "in expression:";
 			    PP.break ppstrm {nsp=1,offset=2};
-			    ppExp ppstrm (exp,!printDepth);
+			    ppExp ppstrm (exp,printDepth());
 			    ppModeErrorMsg ppstrm mode));
 			 (exp,WILDCARDty))
 		   else (err region COMPLAIN
@@ -668,7 +668,7 @@ in
 			     ppType ppstrm (ratorTy); PP.newline ppstrm;
 			     PP.string ppstrm "in expression:";
 			     PP.break ppstrm {nsp=1,offset=2};
-			     ppExp ppstrm (exp,!printDepth);
+			     ppExp ppstrm (exp,printDepth());
 			     ppModeErrorMsg ppstrm mode));
 			 (exp,WILDCARDty))
 	       end

@@ -3,9 +3,9 @@
  * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Type reconstruction for adding instrumentation.  We assume that this
- * analysis is run prior to match compilation and so it does not accept
- * the special forms added by the match compiler.
+ * Type reconstruction for adding instrumentation.  This code is run
+ * **after** match compilation, so it needs to handle the special forms
+ * introduced by that pass.
  *)
 
 structure Reconstruct : sig
@@ -41,13 +41,13 @@ structure Reconstruct : sig
       | expType (STRINGexp _) = stringTy
       | expType (CHARexp _) = charTy
       | expType (RECORDexp fields) = let
-        fun extract(LABEL{name,...},exp) = (name,expType exp)
+        fun extract (LABEL{name,...},exp) = (name, expType exp)
         in
           recordTy(map extract (sortFields fields))
         end
-      | expType (RSELECTexp (var, index)) = bug "expType: SELECTexp"
-      | expType (VSELECTexp (var, _, index)) = bug "expType: VSELECTexp"
-          (* only produced in match compilation post type checking *)
+      | expType (RSELECTexp(e, index)) =
+        List.nth(TU.destructRecordTy(expType e), index)
+      | expType (VSELECTexp(_, ty, _)) = ty
       | expType (VECTORexp(nil,vty)) = CONty(vectorTycon,[vty])
       | expType (VECTORexp((a::_),vty)) = CONty(vectorTycon,[vty])
       | expType (APPexp(rator,rand)) = (case reduceType(expType rator)
@@ -65,14 +65,16 @@ structure Reconstruct : sig
       | expType (CASEexp(_,(nil,_,_))) = bug "expType(CASEexp(_,nil))"
       | expType (HANDLEexp(e,h)) = expType e
       | expType (RAISEexp(e,t)) = t
-      | expType (SWITCHexp _) = bug "expType: SWITCHexp"
-      | expType (VSWITCHexp _) = bug "expType: VSWITCHexp"
+      | expType (SWITCHexp(_, SRULE(_, _, e)::_, _)) = expType e
+      | expType (SWITCHexp _) = bug "expType(SWITCHexp(_,nil,_))"
+      | expType (VSWITCHexp(_, _, SRULE(_, _, e)::_, _)) = expType e
+      | expType (VSWITCHexp _) = bug "expType(VSWITCHexp(_,_,nil,_))"
       | expType (IFexp {thenCase,...}) = expType thenCase
       | expType (ANDALSOexp _) = boolTy
       | expType (ORELSEexp _) = boolTy
       | expType (WHILEexp _) = unitTy
       | expType (LETexp(_,e)) = expType e
-      | expType (LETVexp(_,_,e)) = bug "expType: LETVexp"
+      | expType (LETVexp(_,_,e)) = expType e
       | expType (SEQexp[a]) = expType a
       | expType (SEQexp(_::rest)) = expType(SEQexp rest)
       | expType (SEQexp nil) = bug "expType(SEQexp nil)"

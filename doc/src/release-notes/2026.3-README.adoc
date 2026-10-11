@@ -34,8 +34,8 @@ FILES::
 
 == Summary
 
-This release contains over 80 (mostly minor) bug fixes for issues identified by
-Claude and reported by Skye Soss.  There are also a number of other bug fixes
+This release contains roughly 90 (mostly minor) bug fixes for issues identified
+by Claude and reported by Skye Soss.  There are also a number of other bug fixes
 and improvements.
 
 == Details
@@ -52,8 +52,9 @@ and improvements.
 * Switch to using mixed records when spilling excess function arguments
   to the heap.
 
-* The REPL will now always print the top-most part of a value, even when the
-  `Control.Print.printDepth` flag is less than `1`.
+* Add sanity checking for the various integer controls in the `Control.Print`
+  structure.  For example, the REPL will now always print the top-most part
+  of a value, even when the `Control.Print.printDepth` flag is less than `1`.
 
 === Runtime System
 
@@ -269,6 +270,9 @@ repository):
 * Fixed "unbounded" traversal of cyclic values when the `printDepth < 0`
 
 * Rewrote `Real64.rem` to produce **exact** results.
+
+* The compiler no longer raises overflow when checking real literals with
+  excessively large exponents
 
 == Supported systems
 

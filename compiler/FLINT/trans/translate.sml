@@ -80,21 +80,19 @@ fun dbsaynl (msg : string) =
 fun dbsaysnl (msgs : string list) =
     if !debugging then saysnl msgs else ()
 
-val ppDepth = Control.Print.printDepth
-
 val with_pp = PP.with_default_pp
 
 fun ppPat pat =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (PrintUtil.printDepth())))
 
 fun ppExp exp =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (PrintUtil.printDepth())))
 
 fun ppDec dec =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (PrintUtil.printDepth())))
 
 fun ppType msg ty =
     PP.with_default_pp
@@ -102,7 +100,7 @@ fun ppType msg ty =
 
 fun ppLexp lexp =
     PP.with_default_pp
-      (fn ppstrm => PPLexp.ppLexp (!ppDepth) ppstrm lexp)
+      (fn ppstrm => PPLexp.ppLexp (PrintUtil.printDepth()) ppstrm lexp)
 
 fun ppTycArgs tycs =
     PP.with_default_pp
@@ -1543,7 +1541,7 @@ and mkExp (exp, d) =
 
         | mkExp0 e =
             EM.impossibleWithBody "untranslateable expression:\n  "
-              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, !ppDepth)))
+              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, PrintUtil.printDepth())))
 
    in mkExp0 exp
   end

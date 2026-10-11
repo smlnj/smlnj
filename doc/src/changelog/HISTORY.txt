@@ -108,6 +108,18 @@ Here is an update to the entry
 == Version 2026.3; 2026-10-??
 
 //--------------------------------------------------------------------
+[2026-10-11]::
++
+Added functions to the `PrintUtil` module for getting the various
+control values that limit how much gets printed.  These functions
+have sensible minimums (e.g., the line length must be at least `40`).
+This helps rationalize printing and ensures that negative values
+do not cause essentially infinite recursions.  Also increased the
+`printDepth` to 15, `printLength` to 20, and `lineWidth` to 90.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-10-10]::
 +
 New implementation of `Real64.rem` that produces exact results (_i.e._,

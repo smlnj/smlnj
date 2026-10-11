@@ -39,7 +39,7 @@ type object = Unsafe.Object.object
 
 val signatures = Control.Print.signatures
 val printOpens = Control.Print.printOpens
-val printDepth = Control.Print.printDepth
+val printDepth = PrintUtil.printDepth
 val anonSym = S.strSymbol "<anonymousSig>"
 val anonFsym = S.fctSymbol "<anonymousFsig>"
 
@@ -113,7 +113,7 @@ then let
 val SOME objv = DynamicEnv.look dynamic pid
 val obj = xtract (objv, pos)
 in
-ppObj static ppstrm (obj, ty, !printDepth);
+ppObj static ppstrm (obj, ty, printDepth());
 sp (); pps ":"; nbSp();
 ppType static ppstrm (
 trueValType path handle OVERLOAD => ty)

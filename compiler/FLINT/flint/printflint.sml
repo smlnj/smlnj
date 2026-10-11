@@ -74,7 +74,7 @@ struct
     val printValue = say o valueToString
     fun printVar v = say (!lvarToStringRef v)
 
-    val with_pp = PP.with_default_pp_sans (!Control.Print.lineWidth)
+    val with_pp = PP.with_default_pp_sans (PrintUtil.lineWidth())
 
     fun printTyc tyc = (* say o LB.tc_print *)
 	with_pp
