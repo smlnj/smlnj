@@ -57,6 +57,7 @@ signature ABSYN =
       | WHILEexp of { test: exp, expr: exp }
       | LETexp of dec * exp
       | LETVexp of Variable.var * exp * exp
+          (* LETVexp: let-binding vector variable; only created by match compiler *)
       | SEQexp of exp list
       | CONSTRAINTexp of exp * Types.ty
       | MARKexp of exp * region
