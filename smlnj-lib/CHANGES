@@ -5,6 +5,9 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-10]
+        Fixed `UUID.fromString` to properly reject certain ill-formed strings.
+
 [2026-10-09]
         Changed the `exists`, `all` and `find` functions in the splay-tree
         implementation of sets to use an in-order traversal (instead of

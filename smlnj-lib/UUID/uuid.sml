@@ -92,9 +92,11 @@ structure UUID :> sig
      *)
       fun fields2bytes flds = let
 	    fun toBytes ([], [], bytes) = SOME(List.rev bytes)
-	      | toBytes (fld::flds, len::lens, bytes) = if SS.size fld <> len
-		  then NONE
-		  else let
+	      | toBytes (fld::flds, len::lens, bytes) =
+                if (SS.size fld = len)
+                andalso CharVectorSlice.all Char.isHexDigit fld
+		  then let
+                    (* scan the bytes of `fld` *)
 		    fun lp (ss, bytes) = if SS.isEmpty ss
 			  then toBytes (flds, lens, bytes)
 			  else let
@@ -107,6 +109,7 @@ structure UUID :> sig
 		    in
 		      lp (fld, bytes)
 		    end
+                  else NONE
 	      | toBytes _ = NONE
 	    in
 	      toBytes (flds, fieldLens, [])
