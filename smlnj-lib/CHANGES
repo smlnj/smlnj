@@ -5,13 +5,16 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
-[2026-10-10]
+[2026-10-12]
+        Fixed `BitArray.bits` to raise `Subscript` in certain edge cases.
+
+[2026-10-11]
         Fixed various edge cases in the `Base64.decode` function.
 
-[2026-10-10]
+[2026-10-11]
         Fixed various parsing issues in the `HTML4` library.
 
-[2026-10-10]
+[2026-10-11]
         Fixed `UUID.fromString` to properly reject certain ill-formed strings.
 
 [2026-10-09]
