@@ -201,7 +201,7 @@ module CFG (
 
     param = (LambdaVar.lvar name, ty ty)
 
-  -- branch probabilities are measured in percent (1..99).  We use 0 to
+  -- branch probabilities are measured in tenth's of a percent (1..999).  We use 0 to
   -- represent the absence of probability information.
   --
     probability = int

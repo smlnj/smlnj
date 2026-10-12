@@ -262,7 +262,7 @@ structure PPCfg : sig
                       say " { ["; say(Int.toString prob); say "/1000]\n";
                       prStm (n+2) stm1;
                       space n; say "} else { [";
-                      say(Int.toString(100-prob)); say "/1000]\n";
+                      say(Int.toString(1000-prob)); say "/1000]\n";
                       prStm (n+2) stm2;
                       space n; say "}\n")
                   | C.ARITH(p, args, x, stm) => (

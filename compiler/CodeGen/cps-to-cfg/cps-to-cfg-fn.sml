@@ -769,7 +769,7 @@ C.NUMt{sz=sz}
 	  end
 
     val skidPad = 1024
-    val gcProb : C.probability = 1
+    val gcProb : C.probability = 1      (* 0.1% *)
 
   (* add a heap limit check to the beginning of the fragment; this transformation
    * may require splitting the fragment into a header and internal fragment, so
