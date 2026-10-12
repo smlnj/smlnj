@@ -178,7 +178,7 @@ structure IntBinaryMap :> ORD_MAP where type Key.ord_key = Int.int =
 		else let
 		  val v' = comb(x, value, v)
 		  in
-		    T{key=x,value=v,left=left,right=right,cnt=cnt}
+		    T{key=x,value=v',left=left,right=right,cnt=cnt}
 		  end
 	  in
 	    insert m
