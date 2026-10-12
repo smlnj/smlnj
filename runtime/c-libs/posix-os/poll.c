@@ -81,7 +81,7 @@ PVT ml_val_t ML_Poll (ml_state_t *msp, ml_val_t pollList, struct timeval *timeou
     if (timeout == NIL(struct timeval *)) {
         tout = -1;
     } else {
-      /* convert to miliseconds */
+        /* convert to miliseconds */
         tout = (timeout->tv_sec * 1000) + (timeout->tv_usec / 1000);
     }
 

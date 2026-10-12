@@ -1,6 +1,7 @@
 /* recv.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  */
 
 #include "sockets-osdep.h"

@@ -1,7 +1,8 @@
 /* sendbufto.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
- */
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+s */
 
 #include "sockets-osdep.h"
 #include INCLUDE_SOCKET_H
