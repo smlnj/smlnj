@@ -277,6 +277,8 @@ repository):
 * The order of the "don't route", "peek", and "out-of-band" flags for socket
   I/O operations was backwards in the runtime system.
 
+* `Socket.recvVecFrom` can corrupt the address data.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only

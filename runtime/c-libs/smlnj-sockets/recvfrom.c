@@ -36,22 +36,25 @@ ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
 	sock, PTR_MLtoC(char, vec), nbytes, flag,
 	(struct sockaddr *)addrBuf, &addrLen);
 
-    if (n < 0)
+    if (n < 0) {
 	return RAISE_SYSERR(msp, sts);
-    else {
-	ml_val_t	data = ML_CData (msp, addrBuf, addrLen);
-	ml_val_t	addr, res;
+    } else if (n == 0) {
+	return ML_string0;
+    } else {
+	ml_val_t addr, res;
 
-	if (n == 0)
-	    res = ML_string0;
-	else {
-	    if (n < nbytes)
-	      /* we need to shrink the vector */
-		ML_ShrinkRaw (msp, vec, BYTES_TO_WORDS(n));
-	    SEQHDR_ALLOC (msp, res, DESC_string, vec, n);
-	}
+        if (n < nbytes) {
+            /* we need to shrink the vector */
+            ML_ShrinkRaw (msp, vec, BYTES_TO_WORDS(n));
+        }
 
+        /* the header for the data vector */
+	SEQHDR_ALLOC (msp, res, DESC_string, vec, n);
+
+        /* allocate the address in the heap */
+	ml_val_t data = ML_CData (msp, addrBuf, addrLen);
 	SEQHDR_ALLOC (msp, addr, DESC_word8vec, data, addrLen);
+
 	REC_ALLOC2(msp, res, res, addr);
 
 	return res;
