@@ -34,7 +34,7 @@ FILES::
 
 == Summary
 
-This release contains roughly 90 (mostly minor) bug fixes for issues identified
+This release contains over 100 (mostly minor) bug fixes for issues identified
 by Claude and reported by Skye Soss.  There are also a number of other bug fixes
 and improvements.
 
@@ -273,6 +273,9 @@ repository):
 
 * The compiler no longer raises overflow when checking real literals with
   excessively large exponents
+
+* The order of the "don't route", "peek", and "out-of-band" flags for socket
+  I/O operations was backwards in the runtime system.
 
 == Supported systems
 

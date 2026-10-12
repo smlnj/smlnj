@@ -13,7 +13,7 @@
 
 /* _ml_Sock_recvfrom : (sock * int * bool * bool) -> (Word8Vector.vector * addr)
  *
- * The arguments are: socket, number of bytes, OOB flag and peek flag.  The
+ * The arguments are: socket, number of bytes, peek flag, and OOB flag.  The
  * result is the vector of bytes read and the source address.
  */
 ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
@@ -26,8 +26,8 @@ ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
     ml_val_t	vec;
     int		n;
 
-    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_OOB;
-    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_OOB;
 
   /* allocate the vector; note that this might cause a GC */
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS(nbytes));

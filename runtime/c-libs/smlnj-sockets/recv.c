@@ -13,7 +13,7 @@
 
 /* _ml_Sock_recv : (sock * int * bool * bool) -> int
  *
- * The arguments are: socket, number of bytes, OOB flag and peek flag; the
+ * The arguments are: socket, number of bytes, peek flag, and OOB flag; the
  * result is the vector of bytes received.
  */
 ml_val_t _ml_Sock_recv (ml_state_t *msp, ml_val_t arg)
@@ -25,8 +25,8 @@ ml_val_t _ml_Sock_recv (ml_state_t *msp, ml_val_t arg)
     int		m, n;
     char	*s;
 
-    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_OOB;
-    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_OOB;
 
   /* allocate the vector; note that this might cause a GC */
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS(nbytes));
