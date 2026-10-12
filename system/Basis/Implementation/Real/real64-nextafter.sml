@@ -96,10 +96,22 @@ end (* local *)
 
 (* tests:
  *
+ *      0wx8000000000000000     -0
+ *      0wx0000000000000000     +0
+ *      0wx000fffffffffffff     largest positive subnormal
+ *      0wx0000000000000001     smallest positive subnormal
+ *      0wx3fefffffffffffff     the largest number less than 1
+ *      0wx3ff0000000000000     1
+ *      0wx3ff0000000000001     the smallest number greater than 1
+ *      0wx7fefffffffffffff     largest normal number
+ *      0wx7ff0000000000000     positive infinity
+ *      0wx7ff8000000000001     a NaN
+ *
  *      nextAfter(zero, 1.0)
  *      nextAfter(zero, -1.0)
  *      nextAfter(maxSubNormal, 1.0)
  *      nextAfter(maxFloat, +infinity)
+ *
  *)
 
 
