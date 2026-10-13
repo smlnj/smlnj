@@ -500,10 +500,11 @@ structure PrimopBindings : sig
 	    (wName ^ "_to_cptr", ar(addrTy, BT.pointerTy), P.PRIM CP.WORD_TO_CPTR)
 	  end
 
-  (* primops for host properties *)
+  (* primops for machine properties *)
     val prims = prims :-:
           ("host_word_size", ar(BT.unitTy, BT.intTy), P.INLINE InlP.HOST_WORD_SIZE) :-:
-          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.INLINE InlP.HOST_BIG_ENDIAN)
+          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.INLINE InlP.HOST_BIG_ENDIAN) :-:
+          ("has_feature", ar(BT.stringTy, BT.boolTy), P.INLINE InlP.HAS_FEATURE)
 
   (* primops for C FFI *)
     val prims = let

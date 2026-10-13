@@ -578,9 +578,9 @@ val lt_unit = LB.ltc_unit
 val lt_u_u = LD.ltc_parrow (lt_unit, lt_unit)
 
 (* translation of prim ops *)
-val transPrim =
-    TransPrim.trans {coreAcc = coreAcc, coreExn = coreExn, mkv = mkv,
-		     mkRaise = mkRaise}
+val transPrim = TransPrim.trans {
+        coreAcc = coreAcc, coreExn = coreExn, mkv = mkv, mkRaise = mkRaise
+      }
 
 (* genintinfswitch : var * (con * exp) list * lexp -> lexp *)
 (* generates PLambda.lexp code for a case over an IntInf.int value. *)
@@ -1385,7 +1385,21 @@ and mkExp (exp, d) =
         | mkExp0 (SEQexp [e]) = mkExp0 e
         | mkExp0 (SEQexp (e::r)) = LET(mkv(), mkExp0 e, mkExp0 (SEQexp r))
 
-        | mkExp0 (APPexp (e1, e2)) = APP(mkExp0 e1, mkExp0 e2)
+        | mkExp0 (APPexp (e1, e2)) = let
+            fun default () = APP(mkExp0 e1, mkExp0 e2)
+            in
+              (* check for the primop test `hasFeature <str>`, which is evaluated
+               * statically.
+               *)
+              case (e1, e2)
+               of (VARexp(ref(V.VALvar{prim = PrimopId.Prim p, ...}), _), STRINGexp s) => (
+                    case PrimopBind.defnOf p
+                     of PO.INLINE InlineOps.HAS_FEATURE => TransPrim.hasFeature s
+                      | _ => default ()
+                    (* end case *))
+                | _ => default ()
+              (* end case *)
+            end
         | mkExp0 (MARKexp (e, reg)) = withRegion reg mkExp0 e
         | mkExp0 (CONSTRAINTexp (e,_)) = mkExp0 e
 

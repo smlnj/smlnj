@@ -283,6 +283,7 @@ structure UnpickMod : UNPICKMOD = struct
               | inl #"\030" = InlP.IDENTITY
               | inl #"\031" = InlP.HOST_WORD_SIZE
               | inl #"\032" = InlP.HOST_BIG_ENDIAN
+              | inl #"\033" = InlP.HAS_FEATURE
               | inl _ = raise Format
             in
               share inlM inl

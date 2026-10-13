@@ -9,13 +9,17 @@
 structure Target : TARGET =
   struct
 
+    val name = "generic32"
+
     val pointerSz = 32
     val mlValueSz = 32
     val defaultIntSz = 31
     val fixedIntSz = 32
     val defaultRealSz = 64
     val is64 = false
-    val bigEndian = Endianess.bigEndian
     val alignInBytes = 4
+    val bigEndian = Endianess.bigEndian
+
+    val features = []
 
   end

@@ -353,6 +353,7 @@ structure PickMod :> PICKMOD =
             | InlP.IDENTITY => "\030" $ []
             | InlP.HOST_WORD_SIZE => "\031" $ []
             | InlP.HOST_BIG_ENDIAN => "\032" $ []
+            | InlP.HAS_FEATURE => "\033" $ []
           (* end case *)
         end
 

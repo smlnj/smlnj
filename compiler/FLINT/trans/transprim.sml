@@ -26,6 +26,9 @@ structure TransPrim : sig
 	    mkRaise : PLambda.lexp * Lty.lty -> PLambda.lexp
 	  } -> PrimOps.t * Lty.lty * Lty.tyc list -> PLambda.lexp
 
+    (* translation of `hasFeature str` to either true or false depending on the target *)
+    val hasFeature : string -> PLambda.lexp
+
   end = struct
 
     structure PO = PrimOps
@@ -715,6 +718,12 @@ structure TransPrim : sig
                     | InlP.HOST_BIG_ENDIAN =>
                         mkFn lt_unit (fn _ =>
                           if Target.bigEndian then trueLexp else falseLexp)
+                    (* if we get here, then this is a use of `hasFeature` that is
+                     * not being applied to a string literal and thus cannot be
+                     * replaced by a constant function.  We could just always
+                     * return `fn _ => false` in this case, but for now we complain.
+                     *)
+                    | InlP.HAS_FEATURE => bug "bogus 'hasFeature' use"
                     | p => bug("bogus inline primop " ^ InlineOps.toString p)
                   (* end case *))
               | PO.ARITH{oper, sz} => PL.PRIM(FP.ARITH{oper=oper, sz=sz}, lt, ts)
@@ -735,5 +744,9 @@ structure TransPrim : sig
                   (* end case *))
             (* end case *)
           end (* trans *)
+
+    fun hasFeature feature = if List.exists (fn s' => (feature = s')) Target.features
+          then trueLexp
+          else falseLexp
 
   end (* PrimTrans *)

@@ -9,6 +9,8 @@
 structure Target : TARGET =
   struct
 
+    val name = "generic64"
+
     val pointerSz = 64
     val mlValueSz = 64
     val defaultIntSz = 63
@@ -17,5 +19,8 @@ structure Target : TARGET =
     val is64 = true
     val bigEndian = Endianess.bigEndian
     val alignInBytes = 8
+
+    (* generic machine has no hardware features *)
+    val features = []
 
   end
