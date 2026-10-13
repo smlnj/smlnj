@@ -281,11 +281,11 @@ structure SocketImp : SOCKET =
     fun sendVec arg = sendVec0 fdB arg
     fun sendVecNB arg = wrapNB_o (sendVec0 fdNB) arg
 
-    fun sendVec'0 getfd (sock, buffer, {don'tRoute, oob}) = let
+    fun sendVec'0 getfd (sock, buffer, {don't_route, oob}) = let
 	val fd = getfd sock
 	val (vec, i, len) = vbuf buffer
     in
-	if (len > 0) then sendV (fd, vec, i, len, don'tRoute, oob) else 0
+	if (len > 0) then sendV (fd, vec, i, len, don't_route, oob) else 0
     end
     fun sendVec' arg = sendVec'0 fdB arg
     fun sendVecNB' arg = wrapNB_o (sendVec'0 fdNB) arg
@@ -300,11 +300,11 @@ structure SocketImp : SOCKET =
     fun sendArr arg = sendArr0 fdB arg
     fun sendArrNB arg = wrapNB_o (sendArr0 fdNB) arg
 
-    fun sendArr'0 getfd (sock, buffer, {don'tRoute, oob}) = let
+    fun sendArr'0 getfd (sock, buffer, {don't_route, oob}) = let
 	val fd = getfd sock
 	val (arr, i, len) = abuf buffer
     in
-	if (len > 0) then sendA (fd, arr, i, len, don'tRoute, oob) else 0
+	if (len > 0) then sendA (fd, arr, i, len, don't_route, oob) else 0
     end
     fun sendArr' arg = sendArr'0 fdB arg
     fun sendArrNB' arg = wrapNB_o (sendArr'0 fdNB) arg
@@ -328,12 +328,12 @@ structure SocketImp : SOCKET =
     fun sendVecTo arg = sendVecTo0 fdB arg
     fun sendVecToNB arg = wrapNB_b (sendVecTo0 fdNB) arg
 
-    fun sendVecTo'0 getfd (sock, ADDR addr, buffer, {don'tRoute, oob}) = let
+    fun sendVecTo'0 getfd (sock, ADDR addr, buffer, {don't_route, oob}) = let
 	val fd = getfd sock
 	val (vec, i, len) = vbuf buffer
     in
 	if (len > 0) then
-	    sendToV(fd, vec, i, len, don'tRoute, oob, addr)
+	    sendToV(fd, vec, i, len, don't_route, oob, addr)
 	else 0;
 	()
     end
@@ -352,12 +352,12 @@ structure SocketImp : SOCKET =
     fun sendArrTo arg = sendArrTo0 fdB arg
     fun sendArrToNB arg = wrapNB_b (sendArrTo0 fdNB) arg
 
-    fun sendArrTo'0 getfd (sock, ADDR addr, buffer, {don'tRoute, oob}) = let
+    fun sendArrTo'0 getfd (sock, ADDR addr, buffer, {don't_route, oob}) = let
 	val fd = getfd sock
 	val (arr, i, len) = abuf buffer
     in
 	if (len > 0) then
-	    sendToA(fd, arr, i, len, don'tRoute, oob, addr)
+	    sendToA(fd, arr, i, len, don't_route, oob, addr)
 	else 0;
 	()
     end
