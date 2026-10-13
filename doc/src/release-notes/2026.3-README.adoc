@@ -306,7 +306,7 @@ tested some of them:
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) |
 | | macOS 26 (Tahoe) | Tested
-| | macOS 27 (Golden Gate) |
+| | macOS 27 (Golden Gate) | Tested
 | | Linux |
 | {nbsp} | |
 |=======

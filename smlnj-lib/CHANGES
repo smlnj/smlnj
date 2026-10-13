@@ -5,6 +5,9 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-13]
+        Removed deprecated functions from the `HashConsSet` structure.  The
+        removed functions are: `listItems`, `foldl`, and `foldr`.
 [2026-10-12]
         Fixed `BitArray.bits` to raise `Subscript` in certain edge cases.
 

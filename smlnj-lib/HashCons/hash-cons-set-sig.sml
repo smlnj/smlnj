@@ -3,7 +3,11 @@
  * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Finnite sets of hash-consed objects.
+ * Functional finite sets of hash-consed objects.
+ *
+ * Note that while the underlying implementation of these sets is based on an
+ * `ORD_SET`, the order is that of the hash keys and, thus, is not very
+ * interesting, so we do not explicitly expose it.
  *)
 
 
@@ -62,12 +66,7 @@ signature HASH_CONS_SET =
 	(* Return the number of items in the table *)
 
     val toList : 'a set -> 'a obj list
-	(* Return an ordered list of the items in the set *)
-
-    val listItems : 'a set -> 'a obj list
-	(* Return an ordered list of the items in the set.  This function is
-	 * deprecated in favor of `toList`
-	 *)
+	(* Return a list of the items in the set *)
 
     val union : 'a set * 'a set -> 'a set
         (* Union *)
@@ -93,10 +92,6 @@ signature HASH_CONS_SET =
 
     val fold : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
 	(* Apply a folding function to the entries of the set *)
-
-    val foldl : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
-    val foldr : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
-	(* these functions are DEPRECATED *)
 
     val partition : ('a obj -> bool) -> 'a set -> ('a set * 'a set)
 	(* partition a set into two based using the given predicate.  Returns two
