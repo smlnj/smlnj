@@ -99,7 +99,9 @@ module CFG_Prim {
       | FADD | FSUB | FMUL | FDIV | FREM
       | FMADD                           -- fused multiply-add
       | FNEG | FABS | FCOPYSIGN
-      | FSQRT
+    -- the following operations may not be supported on all machines
+      | FSQRT                           -- floating-point square root
+      | FCEIL | FFLOOR | FROUND | FTRUNC -- float-to-float rounding
 
   -- These operations do not raise exceptions and do not access mutable memory.
     pure

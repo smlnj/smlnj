@@ -8,6 +8,7 @@ structure LambdaVarMemoryPickle : LAMBDA_VAR_PICKLE
   where type outstream = ASDLMemoryPickle.outstream = struct
     type instream = ASDLMemoryPickle.instream
     type outstream = ASDLMemoryPickle.outstream
+
     val read_lvar = LambdaVarPickle.read_lvar ASDLMemoryPickle.input1
     val write_lvar = LambdaVarPickle.write_lvar ASDLMemoryPickle.output1
   end
@@ -210,10 +211,8 @@ structure CFG_PrimMemoryPickle : CFG_PRIM_PICKLE
             | 0w3 => let val x0 = ASDLMemoryPickle.readInt inS in CFG_Prim.FSGN (x0) end
             | 0w4 => CFG_Prim.PEQL
             | 0w5 => CFG_Prim.PNEQ
-            | 0w6 => let
-              val x0 = ASDLMemoryPickle.readUInt inS
-              in CFG_Prim.LIMIT (x0)
-              end
+            | 0w6 => let val x0 = ASDLMemoryPickle.readUInt inS in CFG_Prim.LIMIT (x0) end
+
             | _ => raise ASDL.DecodeError)
     fun read_numkind (inS : instream) = (case ASDLMemoryPickle.readTag8 inS
            of 0w1 => CFG_Prim.INT
@@ -286,6 +285,10 @@ structure CFG_PrimMemoryPickle : CFG_PRIM_PICKLE
             | 0w26 => CFG_Prim.FABS
             | 0w27 => CFG_Prim.FCOPYSIGN
             | 0w28 => CFG_Prim.FSQRT
+            | 0w29 => CFG_Prim.FCEIL
+            | 0w30 => CFG_Prim.FFLOOR
+            | 0w31 => CFG_Prim.FROUND
+            | 0w32 => CFG_Prim.FTRUNC
             | _ => raise ASDL.DecodeError)
     fun read_pure (inS : instream) = (case ASDLMemoryPickle.readTag8 inS
            of 0w1 => let
@@ -492,7 +495,11 @@ structure CFG_PrimMemoryPickle : CFG_PRIM_PICKLE
             | CFG_Prim.FNEG => ASDLMemoryPickle.writeTag8 (outS, 0w25)
             | CFG_Prim.FABS => ASDLMemoryPickle.writeTag8 (outS, 0w26)
             | CFG_Prim.FCOPYSIGN => ASDLMemoryPickle.writeTag8 (outS, 0w27)
-            | CFG_Prim.FSQRT => ASDLMemoryPickle.writeTag8 (outS, 0w28))
+            | CFG_Prim.FSQRT => ASDLMemoryPickle.writeTag8 (outS, 0w28)
+            | CFG_Prim.FCEIL => ASDLMemoryPickle.writeTag8 (outS, 0w29)
+            | CFG_Prim.FFLOOR => ASDLMemoryPickle.writeTag8 (outS, 0w30)
+            | CFG_Prim.FROUND => ASDLMemoryPickle.writeTag8 (outS, 0w31)
+            | CFG_Prim.FTRUNC => ASDLMemoryPickle.writeTag8 (outS, 0w32))
     fun write_pure (outS : outstream, obj) = (case obj
            of CFG_Prim.PURE_ARITH{oper, sz} => (
               ASDLMemoryPickle.writeTag8 (outS, 0w1);
