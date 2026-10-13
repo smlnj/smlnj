@@ -6,8 +6,12 @@ SML/NJ 2026.3
 -------------------
 
 [2026-10-13]
+        Fixed `GetOpt`'s handling of bare `-` in the argument list.
+
+[2026-10-13]
         Removed deprecated functions from the `HashConsSet` structure.  The
         removed functions are: `listItems`, `foldl`, and `foldr`.
+
 [2026-10-12]
         Fixed `BitArray.bits` to raise `Subscript` in certain edge cases.
 
