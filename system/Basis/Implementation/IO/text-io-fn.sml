@@ -115,7 +115,7 @@ functor TextIOFn (
 	fun chunkSzOfIBuf buf = let
 	      val INFO{reader=PIO.RD{chunkSize, ...}, ...} = infoOfIBuf buf
 	      in
-		chunkSize
+		Int.max(1, chunkSize)
 	      end
 	fun readVec (IBUF{info=INFO{readVec=f, ...}, ...}) = f
 
@@ -151,14 +151,11 @@ functor TextIOFn (
 
       (* read a chunk that is at least the specified size *)
 	fun readChunk buf = let
-	      val INFO{readVec, reader=PIO.RD{chunkSize, ...}, ...} =
-		     infoOfIBuf buf
+	      val INFO{readVec, reader=PIO.RD{chunkSize, ...}, ...} = infoOfIBuf buf
+              val chunkSize = Int.max(1, chunkSize)
 	      in
 (* FIXME: what if the rounded size is > maxInputSz? *)
-                if (chunkSize <= 1)
-                  then (fn n => readVec n)
-                  (* round up to next multiple of chunkSize *)
-                  else (fn n => readVec(Int.quot((n+chunkSize-1), chunkSize) * chunkSize))
+                fn n => readVec(Int.quot((n+chunkSize-1), chunkSize) * chunkSize)
 	      end
 
 	fun generalizedInput getBuf = let
@@ -576,18 +573,19 @@ functor TextIOFn (
 		  CleanIO.removeCleaner cleanTag;
 		  close())
 
-	fun mkOutstream (wr as PIO.WR{chunkSize, writeArr, writeVec, ...}, mode) =
-	      let
-		  fun iterate (f, size, subslice) sl = let
-		      fun lp sl =
-			  if size sl = 0 then ()
-			  else let val n = f sl
-			       in
-				   lp (subslice (sl, n, NONE))
-			       end
-		  in
-		      lp sl
-		  end
+	fun mkOutstream (wr as PIO.WR{chunkSize, writeArr, writeVec, ...}, mode) = let
+              val chunkSize = Int.max(1, chunkSize)
+              fun iterate (f, size, subslice) sl = let
+                    fun lp sl = if size sl = 0
+                          then ()
+                          else let
+                            val n = f sl
+                            in
+                              lp (subslice (sl, n, NONE))
+                            end
+              in
+                lp sl
+              end
 	      val writeArr' = (case writeArr
 		     of NONE => (fn _ => raise IO.BlockingNotSupported)
 		      | (SOME f) => iterate (f, AS.length, AS.subslice)

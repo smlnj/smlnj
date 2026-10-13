@@ -264,7 +264,7 @@ functor PrimIO (
 	    (* random access not supported because pos type is abstract *)
 	    RD{
 		name = "<vector>",
-		chunkSize = len,
+		chunkSize = InlineT.Int.max(1, len),
 		readVec = SOME readV,
 		readArr = SOME readA,
 		readVecNB = SOME (SOME o readV),

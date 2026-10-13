@@ -279,6 +279,8 @@ repository):
 
 * `Socket.recvVecFrom` can corrupt the address data.
 
+* Fix edge case of primitive readers/writers with chunk sizes < 1.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
