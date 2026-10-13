@@ -281,6 +281,8 @@ repository):
 
 * Fix edge case of primitive readers/writers with chunk sizes < 1.
 
+* Fixed `Date.fromTimeUniv` and `Date.fromTimeLocal` on negative time values.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
