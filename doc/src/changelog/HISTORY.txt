@@ -110,6 +110,16 @@ Here is an update to the entry
 //--------------------------------------------------------------------
 [2026-10-13]::
 +
+Add code generator support for new primops: `FCEIL`, `FFLOOR`, `FROUND`,
+and `FTRUNC`.  These can be used to implement the `Real.realCeil` _etc._
+functions.  Note that they may not be available on all machines, so we
+will use the `HAS_FEATURE` mechanism to conditionally include them.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-10-13]::
++
 Added the `HAS_FEATURE` primop to `InlineOps` and also a `features`
 list to the `TARGET` signature.  The idea is that one can use a
 test of the form
@@ -124,6 +134,10 @@ is translated to PLambda, it is replaced with either `true` or `false`,
 depending on if `"builtin_foobar"` is in the `Targets.features` list.
 Note that the compiler requires that the argument to `hasFeature` be
 a literal string (i.e., not a variable or expression).
++
+The one disadvantage of this approach is that we lose cross-module
+inlining of primops (since the conditional is evaluated later in the
+pipeline).
 +
 This mechanism is in the `InLine` structure, but has not yet been exposed
 in the `InlineT` structure, since it will also require changing
