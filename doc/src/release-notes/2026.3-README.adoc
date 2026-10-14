@@ -1,5 +1,5 @@
-:version: 2026.3-rc2
-:date: October 9, 2026
+:version: 2026.3-rc3
+:date: October 14, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -282,6 +282,13 @@ repository):
 * Fix edge case of primitive readers/writers with chunk sizes < 1.
 
 * Fixed `Date.fromTimeUniv` and `Date.fromTimeLocal` on negative time values.
+
+* Fixed an issue where large strings were getting allocated as bytearrays, which
+  broke the REPL printing.
+
+* (Mostly) fixed the behavior of rounding reals to integers.  The ceiling, floor,
+  and truncation functions are correct, but `round` and `realRound` do not break
+  ties correctly.
 
 == Supported systems
 

@@ -94,23 +94,14 @@ structure InlineT =
 	val from_int64 : int64 -> real    = InLine.int64_to_real64
 	val from_int : int -> real        = InLine.int63_to_real64
 
-(* FIXME: should use InLine.floor_real64_to_int, but it is currently not supported by
- * the CPS code generator.  Can also use InLine.round_real64_to_int.
+        val realCeil : real -> real       = InLine.real64_ceil
+        val realFloor : real -> real      = InLine.real64_floor
+(* FIXME: the hardware semantics of `round` rounds `x.5` away from `0` (which
+ * also the C standard, whereas the SML Basis Library says that it should
+ * round to the `x` if `x` is even and to `x+1` if x is odd.
  *)
-	local
-	(* the minInt (~4611686018427387904) and maxInt (4611686018427387904)
-	 * values converted to reals (with loss of precision).
-	 *)
-	  val rminInt = ~4611686018427390000.0
-	  val rmaxInt = 4611686018427390000.0
-	in
-	fun floor (x : real) =
-	      if InLine.real64_le(rminInt, x) andalso InLine.real64_le(x, rmaxInt)
-		then Assembly.A.floor x
-	      else if InLine.real64_eql(x, x)
-		then raise Assembly.Overflow
-		else raise Core.Domain (* nan *)
-	end (* local *)
+        val realRound : real -> real      = InLine.real64_round
+        val realTrunc : real -> real      = InLine.real64_trunc
 
 	val signBit : real -> bool = InLine.real64_sgn
 

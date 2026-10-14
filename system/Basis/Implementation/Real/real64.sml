@@ -65,24 +65,10 @@ structure Real64Imp : REAL =
   (* This is the IEEE double-precision maxint == 2^52 *)
     val maxInt = 4503599627370496.0
 
-    local
-    (* realround mode x returns x rounded to the nearest integer using the
-     * given rounding mode.
-     * May be applied to inf's and nan's.
-     *)
-      fun realround mode x = let
-	    val saveMode = IEEEReal.getRoundingMode ()
-	    in
-	      IEEEReal.setRoundingMode mode;
-	      (if x>=0.0 then x+maxInt-maxInt else x-maxInt+maxInt)
-		before IEEEReal.setRoundingMode saveMode
-	    end
-    in
-    val realFloor = realround IEEEReal.TO_NEGINF
-    val realCeil = realround IEEEReal.TO_POSINF
-    val realTrunc = realround IEEEReal.TO_ZERO
-    val realRound = realround IEEEReal.TO_NEAREST
-    end
+    val realFloor = InlineT.Real64.realFloor
+    val realCeil = InlineT.Real64.realCeil
+    val realTrunc = InlineT.Real64.realTrunc
+    val realRound = InlineT.Real64.realRound
 
     val abs : real -> real = InlineT.Real64.abs
     val fromInt : int -> real = InlineT.Real64.from_int

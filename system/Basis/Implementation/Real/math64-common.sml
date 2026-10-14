@@ -162,8 +162,12 @@ structure Math64Common : sig
 
     fun op mod (a, b) = I.-(a, I.*(I.div(a, b), b))
 
-   (* we will never call floor with an inf or nan *)
-    val floor = InlineT.Real64.floor
+  (* we use the definition of floor from the `smlnj/init/pervasive.sml` file.
+   * We might be able to optimize this based on the fact that we will never call
+   * `floor` with an inf or nan
+   *)
+    val floor = floor
+
     val real = InlineT.Real64.from_int
 
   (* This is the IEEE double-precision maxint *)
@@ -173,7 +177,7 @@ structure Math64Common : sig
    * the nearest integer.
    *  May be applied to inf's and nan's.
    *)
-    fun realround x = if x>=0.0 then x+maxint-maxint else x-maxint+maxint
+    val realround = InlineT.Real64.realRound
 
   (* for exp and ln *)
     val ln2hi = 6.9314718036912381649E~1

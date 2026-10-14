@@ -108,6 +108,17 @@ Here is an update to the entry
 == Version 2026.3; 2026-10-??
 
 //--------------------------------------------------------------------
+[2026-10-14]::
++
+Switched to using inlined primops for `realCeil`, `realFloor`, `realRound`,
+and `realTrunc`.  Note that the hardware semantics of `realRound` does
+not match the **Standard ML Basis Library** specification w.r.t. how
+ties are broken.  The hardware (and C standard) round away from 0, whereas
+the Basis Library specifies rounding toward the nearest even number.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-10-13]::
 +
 Add code generator support for new primops: `FCEIL`, `FFLOOR`, `FROUND`,
