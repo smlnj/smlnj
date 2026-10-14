@@ -579,6 +579,10 @@ C.NUMt{sz=sz}
 			| (P.FDIV, args) => pureOp (TP.FDIV, sz, args)
 			| (P.FABS, args) => pureOp (TP.FABS, sz, args)
 			| (P.FSQRT, args) => pureOp (TP.FSQRT, sz, args)
+                        | (P.FCEIL, args) => pureOp (TP.FCEIL, sz, args)
+                        | (P.FFLOOR, args) => pureOp (TP.FFLOOR, sz, args)
+                        | (P.FROUND, args) => pureOp (TP.FROUND, sz, args)
+                        | (P.FTRUNC, args) => pureOp (TP.FTRUNC, sz, args)
 			| _ => error ["genPure: ", PPCps.pureToString p]
 		      (* end case *))
 		  | (P.PURE_NUMSUBSCRIPT{kind=P.INT sz}, [v1, v2]) =>

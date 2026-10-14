@@ -63,6 +63,7 @@ signature CPS =
           | CNTPOP | CNTLZ | CNTTZ
           | ROTL | ROTR
 	  | FDIV | FABS | FSQRT
+          | FCEIL | FFLOOR | FROUND | FTRUNC
 
       (* comparison operators
        * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)

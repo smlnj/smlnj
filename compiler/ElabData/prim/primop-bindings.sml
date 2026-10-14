@@ -206,6 +206,10 @@ structure PrimopBindings : sig
 	    mk_rr_r("max", P.INLINE(InlP.MAX nk)) :-:
 	    arith_r_r("abs", PureP.FABS) :-:
 	    arith_r_r("sqrt", PureP.FSQRT) :-:
+	    arith_r_r("ceil", PureP.FCEIL) :-:
+	    arith_r_r("floor", PureP.FFLOOR) :-:
+	    arith_r_r("round", PureP.FROUND) :-:
+	    arith_r_r("trunc", PureP.FTRUNC) :-:
 	    mk("to_bits", ar(rty, wTy sz), P.PRIM(CP.REAL_TO_BITS sz)) :-:
 	    mk("from_bits", ar(wTy sz, rty), P.PRIM(CP.BITS_TO_REAL sz))
 	  end

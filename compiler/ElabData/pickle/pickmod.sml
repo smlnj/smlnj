@@ -394,6 +394,10 @@ structure PickMod :> PICKMOD =
           | arithopc PureP.FDIV = "\018"
           | arithopc PureP.FABS = "\019"
           | arithopc PureP.FSQRT = "\020"
+          | arithopc PureP.FCEIL = "\021"
+          | arithopc PureP.FFLOOR = "\022"
+          | arithopc PureP.FROUND = "\023"
+          | arithopc PureP.FTRUNC = "\024"
         in
           arithopc oper $ []
         end
