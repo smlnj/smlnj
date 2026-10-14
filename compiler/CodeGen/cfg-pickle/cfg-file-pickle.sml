@@ -284,6 +284,10 @@ structure CFG_PrimFilePickle : CFG_PRIM_PICKLE
             | 0w26 => CFG_Prim.FABS
             | 0w27 => CFG_Prim.FCOPYSIGN
             | 0w28 => CFG_Prim.FSQRT
+            | 0w29 => CFG_Prim.FCEIL
+            | 0w30 => CFG_Prim.FFLOOR
+            | 0w31 => CFG_Prim.FROUND
+            | 0w32 => CFG_Prim.FTRUNC
             | _ => raise ASDL.DecodeError)
     fun read_pure (inS : instream) = (case ASDLFilePickle.readTag8 inS
            of 0w1 => let
@@ -490,7 +494,11 @@ structure CFG_PrimFilePickle : CFG_PRIM_PICKLE
             | CFG_Prim.FNEG => ASDLFilePickle.writeTag8 (outS, 0w25)
             | CFG_Prim.FABS => ASDLFilePickle.writeTag8 (outS, 0w26)
             | CFG_Prim.FCOPYSIGN => ASDLFilePickle.writeTag8 (outS, 0w27)
-            | CFG_Prim.FSQRT => ASDLFilePickle.writeTag8 (outS, 0w28))
+            | CFG_Prim.FSQRT => ASDLFilePickle.writeTag8 (outS, 0w28)
+            | CFG_Prim.FCEIL => ASDLFilePickle.writeTag8 (outS, 0w29)
+            | CFG_Prim.FFLOOR => ASDLFilePickle.writeTag8 (outS, 0w30)
+            | CFG_Prim.FROUND => ASDLFilePickle.writeTag8 (outS, 0w31)
+            | CFG_Prim.FTRUNC => ASDLFilePickle.writeTag8 (outS, 0w32))
     fun write_pure (outS : outstream, obj) = (case obj
            of CFG_Prim.PURE_ARITH{oper, sz} => (
               ASDLFilePickle.writeTag8 (outS, 0w1);

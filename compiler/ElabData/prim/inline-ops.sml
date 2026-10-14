@@ -60,9 +60,10 @@ structure InlineOps =
       | OPTION_GETOPT                   (* `Option.getOpt` *)
 
  *)
-      (* host-machine properties *)
+      (* machine properties *)
       | HOST_WORD_SIZE
       | HOST_BIG_ENDIAN
+      | HAS_FEATURE                     (* test for target support for named feature *)
 
     (* string representation of the primop *)
     local
@@ -103,6 +104,7 @@ structure InlineOps =
             | IDENTITY => "identity"
             | HOST_WORD_SIZE => "hostWordSize"
             | HOST_BIG_ENDIAN => "hostBigEndian"
+            | HAS_FEATURE => "hasFeature"
           (* end case *))
     end (* local *)
 

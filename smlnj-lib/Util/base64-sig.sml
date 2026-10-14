@@ -5,7 +5,7 @@
  *
  * Support for Base64 encoding/decoding as specified by RFC 4648.
  *
- *	http://www.ietf.org/rfc/rfc4648.txt
+ *	https://www.ietf.org/rfc/rfc4648.txt
  *)
 
 signature BASE64 =

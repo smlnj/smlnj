@@ -45,7 +45,7 @@ structure ElabTop : ELABTOP =
     val debugPrint = (fn x => ElabDebug.debugPrint debugging x)
 
     fun ppAbsynDec ppstrm (dec,env) =
-	PPAbsyn.ppDec (env, NONE) ppstrm (dec, !Control_Print.printDepth)
+	PPAbsyn.ppDec (env, NONE) ppstrm (dec, PrintUtil.printDepth())
 
   (* localStrName: used in makeOpenDec to build redeclaration of components *)
     val localStrName = S.strSymbol "<a funny structure>"

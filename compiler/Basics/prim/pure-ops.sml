@@ -20,6 +20,7 @@ structure PureOps =
       | CNTPOP | CNTLZ | CNTTZ
       | ROTL | ROTR
       | FDIV | FABS | FSQRT
+      | FCEIL | FFLOOR | FROUND | FTRUNC
 
     fun toString ADD = "add"
       | toString SUB = "sub"
@@ -42,5 +43,9 @@ structure PureOps =
       | toString FDIV = "fdiv"
       | toString FABS = "fabs"
       | toString FSQRT = "fsqrt"
+      | toString FCEIL = "fceil"
+      | toString FFLOOR = "ffloor"
+      | toString FROUND = "fround"
+      | toString FTRUNC = "ftrunc"
 
   end

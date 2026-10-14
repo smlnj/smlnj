@@ -579,6 +579,10 @@ C.NUMt{sz=sz}
 			| (P.FDIV, args) => pureOp (TP.FDIV, sz, args)
 			| (P.FABS, args) => pureOp (TP.FABS, sz, args)
 			| (P.FSQRT, args) => pureOp (TP.FSQRT, sz, args)
+                        | (P.FCEIL, args) => pureOp (TP.FCEIL, sz, args)
+                        | (P.FFLOOR, args) => pureOp (TP.FFLOOR, sz, args)
+                        | (P.FROUND, args) => pureOp (TP.FROUND, sz, args)
+                        | (P.FTRUNC, args) => pureOp (TP.FTRUNC, sz, args)
 			| _ => error ["genPure: ", PPCps.pureToString p]
 		      (* end case *))
 		  | (P.PURE_NUMSUBSCRIPT{kind=P.INT sz}, [v1, v2]) =>
@@ -769,7 +773,7 @@ C.NUMt{sz=sz}
 	  end
 
     val skidPad = 1024
-    val gcProb : C.probability = 1
+    val gcProb : C.probability = 1      (* 0.1% *)
 
   (* add a heap limit check to the beginning of the fragment; this transformation
    * may require splitting the fragment into a header and internal fragment, so

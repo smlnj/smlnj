@@ -105,7 +105,78 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.3; 2026-10-04
+== Version 2026.3; 2026-10-??
+
+//--------------------------------------------------------------------
+[2026-10-14]::
++
+Switched to using inlined primops for `realCeil`, `realFloor`, `realRound`,
+and `realTrunc`.  Note that the hardware semantics of `realRound` does
+not match the **Standard ML Basis Library** specification w.r.t. how
+ties are broken.  The hardware (and C standard) round away from 0, whereas
+the Basis Library specifies rounding toward the nearest even number.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-10-13]::
++
+Add code generator support for new primops: `FCEIL`, `FFLOOR`, `FROUND`,
+and `FTRUNC`.  These can be used to implement the `Real.realCeil` _etc._
+functions.  Note that they may not be available on all machines, so we
+will use the `HAS_FEATURE` mechanism to conditionally include them.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-10-13]::
++
+Added the `HAS_FEATURE` primop to `InlineOps` and also a `features`
+list to the `TARGET` signature.  The idea is that one can use a
+test of the form
+[source,sml]
+------------
+val foobar = if InlineT.hasFeature "builtin_foobar"
+      then InlineT.foobar
+      else ... (* a software implementation of foobar *) ...
+------------
+in Basis code.  When the application `InlineT.hasFeature "builtin_foobar"`
+is translated to PLambda, it is replaced with either `true` or `false`,
+depending on if `"builtin_foobar"` is in the `Targets.features` list.
+Note that the compiler requires that the argument to `hasFeature` be
+a literal string (i.e., not a variable or expression).
++
+The one disadvantage of this approach is that we lose cross-module
+inlining of primops (since the conditional is evaluated later in the
+pipeline).
++
+This mechanism is in the `InLine` structure, but has not yet been exposed
+in the `InlineT` structure, since it will also require changing
+to architecture-specific `Target` implementations to be useful.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-10-11]::
++
+Added functions to the `PrintUtil` module for getting the various
+control values that limit how much gets printed.  These functions
+have sensible minimums (e.g., the line length must be at least `40`).
+This helps rationalize printing and ensures that negative values
+do not cause essentially infinite recursions.  Also increased the
+`printDepth` to 15, `printLength` to 20, and `lineWidth` to 90.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
+[2026-10-10]::
++
+New implementation of `Real64.rem` that produces exact results (_i.e._,
+no rounding errors).  The implementation works on the bit representation
+of the numbers and has been put into its own source file
+(`Basis/Implementation/Real/real64-rem.sml`).
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
 
 //--------------------------------------------------------------------
 [2026-10-04]::

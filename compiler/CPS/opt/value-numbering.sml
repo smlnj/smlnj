@@ -143,6 +143,10 @@ structure ValueNumbering : sig
             | toCode P.FDIV = 19
             | toCode P.FABS = 20
             | toCode P.FSQRT = 21
+            | toCode P.FCEIL = 22
+            | toCode P.FFLOOR = 23
+            | toCode P.FROUND = 24
+            | toCode P.FTRUNC = 25
           in
             cmpCode(toCode op1, toCode op2)
           end

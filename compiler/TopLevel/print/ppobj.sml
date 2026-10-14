@@ -382,7 +382,7 @@ structure PPObj : PPOBJ =
                                     then ppVector (
                                       Obj.toVector obj, hd argtys,
                                       membersOp, depth,
-                                      !Control.Print.printLength, accu)
+                                      PrintUtil.printLength(), accu)
                                       handle Obj.Representation => PP.string ppstrm  "<primvec?>"
                                   else if TU.eqTycon(tyc,BT.arrayTycon)
                                     then (printWithSharing ppstrm
@@ -392,10 +392,10 @@ structure PPObj : PPOBJ =
                                             of Obj.PolyArray =>
                                                ppArray(Obj.toArray obj, hd argtys,
                                                        membersOp, depth,
-                                                       !Control.Print.printLength, accu)
+                                                       PrintUtil.printLength(), accu)
                                              | Obj.RealArray =>
                                                ppRealArray(Obj.toRealArray obj,
-                                                           !Control.Print.printLength)
+                                                           PrintUtil.printLength())
                                              | _ => bug "array (neither Real nor Poly)"
                                                ))
                                       handle Obj.Representation => PP.string ppstrm  "<primarray?>")
@@ -408,12 +408,12 @@ structure PPObj : PPOBJ =
                                       family as {members,...}, freetycs, root, stripped}, _) =>
                           if TU.eqTycon(tyc,BT.ulistTycon) then
                               ppUrList(obj,hd argtys,membersOp,depth,
-                                       !Control.Print.printLength,accu)
+                                       PrintUtil.printLength(),accu)
                           else if TU.eqTycon(tyc,BT.suspTycon) then
                               PP.string ppstrm  "$$"  (* LAZY *)
                           else if TU.eqTycon(tyc,BT.listTycon) then
                               ppList(obj,hd argtys,membersOp,depth,
-                                     !Control.Print.printLength,accu)
+                                     PrintUtil.printLength(),accu)
                           else if TU.eqTycon(tyc,BT.refTycon) then
                               (printWithSharing ppstrm
                                (obj,accu,

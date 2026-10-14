@@ -7,6 +7,9 @@
 structure BitArray :> BIT_ARRAY =
   struct
 
+    (* unsigned comparison for bound checking: 0 <= i < len *)
+    fun uLt (i, len) = Word.fromInt i < Word.fromInt len
+
     structure Vector =
       struct
         local
@@ -108,18 +111,23 @@ structure BitArray :> BIT_ARRAY =
                   Byte.bytesToString (W8A.vector buf)
                 end
 
-          fun bits (len,l) = let
-                val (bv as BA{bits, ...}) = array (len, false)
-                fun init i = let
-                      val idx = byteOf i
-                      val b = 0w1 << Word.andb(Word.fromInt i, 0w7)
-                      in
-                        W8A.update (bits, idx, ((bits sub idx) ++ b))
-                      end
-                in
-                  List.app init l;
-                  bv
-                end
+          fun bits (len, l) = if uLt(len, maxLen)
+                then let
+                  val (bv as BA{bits, ...}) = array (len, false)
+                  fun init i = if uLt(i, len)
+                        then let
+                          val idx = byteOf i
+                          val b = 0w1 << Word.andb(Word.fromInt i, 0w7)
+                          in
+(* could use Unsafe.Word8Array,update/sub here *)
+                            W8A.update (bits, idx, (bits sub idx) ++ b)
+                          end
+                        else raise Subscript
+                  in
+                    List.app init l;
+                    bv
+                  end
+                else raise Size
 
           fun fromList [] = array (0, false)
             | fromList l = let
@@ -178,13 +186,13 @@ structure BitArray :> BIT_ARRAY =
                 val delta = Word.andb(Word.fromInt maxbit, 0w7)
                 in
                   extract (hiByte-1, maxbit - (Word.toIntX delta) - 1,
-                    extractBits(maxbit,(bits sub hiByte) << (0w7-delta),[]))
+                    extractBits (maxbit, (bits sub hiByte) << (0w7-delta), []))
                 end
 
           fun bitOf (BA{nbits, bits}, i) =
-                if i >= nbits
-                  then raise Subscript
-                  else ((W8A.sub (bits,byteOf i)) & (bit i)) <> 0w0
+                if uLt(i, nbits)
+                  then (W8A.sub(bits, byteOf i) & (bit i)) <> 0w0
+                  else raise Subscript
 
           fun isZero (BA{bits,...}) = let
                 fun isz i = (bits sub i) = 0w0 andalso (isz (i+1))
@@ -206,7 +214,7 @@ structure BitArray :> BIT_ARRAY =
                 end
 
           fun eqBits arg = let
-                fun order (arg as (ba as BA{nbits,...},ba' as BA{nbits=nbits',...})) =
+                fun order (arg as (ba as BA{nbits,...}, ba' as BA{nbits=nbits',...})) =
                       if nbits >= nbits'
                         then arg
                         else (ba',ba)

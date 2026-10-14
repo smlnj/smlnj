@@ -39,7 +39,7 @@ structure Real64Imp : REAL =
   (* negative infinity *)
     val negInf = Real64Values.negInf
   (* a NaN value *)
-    val nan = 0.0 / 0.0
+    val nan = Real64Values.posNaN
 
     (* some useful constants *)
     val nExpBits = 0w11                 (* # of exponent bits in double-precision real *)
@@ -65,24 +65,10 @@ structure Real64Imp : REAL =
   (* This is the IEEE double-precision maxint == 2^52 *)
     val maxInt = 4503599627370496.0
 
-    local
-    (* realround mode x returns x rounded to the nearest integer using the
-     * given rounding mode.
-     * May be applied to inf's and nan's.
-     *)
-      fun realround mode x = let
-	    val saveMode = IEEEReal.getRoundingMode ()
-	    in
-	      IEEEReal.setRoundingMode mode;
-	      (if x>=0.0 then x+maxInt-maxInt else x-maxInt+maxInt)
-		before IEEEReal.setRoundingMode saveMode
-	    end
-    in
-    val realFloor = realround IEEEReal.TO_NEGINF
-    val realCeil = realround IEEEReal.TO_POSINF
-    val realTrunc = realround IEEEReal.TO_ZERO
-    val realRound = realround IEEEReal.TO_NEAREST
-    end
+    val realFloor = InlineT.Real64.realFloor
+    val realCeil = InlineT.Real64.realCeil
+    val realTrunc = InlineT.Real64.realTrunc
+    val realRound = InlineT.Real64.realRound
 
     val abs : real -> real = InlineT.Real64.abs
     val fromInt : int -> real = InlineT.Real64.from_int
@@ -244,17 +230,7 @@ structure Real64Imp : REAL =
 
     fun realMod x = #frac (split x)
 
-    (* return `x - n*y` where `n = trunc(x / y)`.  Return `nan` when either `x` or
-     * `y` is `nan`, or when `x` is ±∞, or `y` is 0.  Return `x` when `y` is ±∞.
-     *)
-    fun rem (x, y) = let
-          (* note that `d` will be {+,-}0 when either `x` is `0` or `y` is {+,-}∞ *)
-          val d = x / y
-          in
-            if (d == 0.0) then x
-            else if isFinite d then y * #frac(split d)
-            else nan
-          end
+    val rem = Real64Rem.rem
 
     fun checkFloat x = if x>negInf andalso x<posInf then x
                        else if isNan x then raise General.Div

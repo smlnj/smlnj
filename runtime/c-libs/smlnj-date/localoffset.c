@@ -82,7 +82,7 @@ ml_val_t _ml_Date_localOffset (ml_state_t *msp, ml_val_t arg)
  */
 ml_val_t _ml_Date_localOffsetForTime (ml_state_t *msp, ml_val_t arg)
 {
-    return LocalOffset (msp, ns_to_time(WORD64_MLtoC(arg)));
+    return LocalOffset (msp, ns_to_time(INT64_MLtoC(arg)));
 
 } /* end of _ml_Date_localoffset */
 

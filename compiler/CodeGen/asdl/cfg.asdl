@@ -99,7 +99,9 @@ module CFG_Prim {
       | FADD | FSUB | FMUL | FDIV | FREM
       | FMADD                           -- fused multiply-add
       | FNEG | FABS | FCOPYSIGN
-      | FSQRT
+    -- the following operations may not be supported on all machines
+      | FSQRT                           -- floating-point square root
+      | FCEIL | FFLOOR | FROUND | FTRUNC -- float-to-float rounding
 
   -- These operations do not raise exceptions and do not access mutable memory.
     pure
@@ -201,7 +203,7 @@ module CFG (
 
     param = (LambdaVar.lvar name, ty ty)
 
-  -- branch probabilities are measured in percent (1..99).  We use 0 to
+  -- branch probabilities are measured in tenth's of a percent (1..999).  We use 0 to
   -- represent the absence of probability information.
   --
     probability = int

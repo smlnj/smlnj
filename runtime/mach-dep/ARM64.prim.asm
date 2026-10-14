@@ -529,7 +529,7 @@ ALIGNED_ENTRY(create_s_a)
         add     xtmp1, xtmp1, IM(8)
         asr     xtmp1, xtmp1, IM(3)             /* tmp1 := length in words (incl. null) */
         cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 > SMALL_OBJ_SZW) */
-        b.hi    L_create_b_large                /*    then goto create_b_large */
+        b.hi    L_create_s_large                /*    then goto create_s_large */
 
         /* build descriptor in tmp2 */
         mov     wtmp2, IM(MAKE_TAG(DTAG_raw))

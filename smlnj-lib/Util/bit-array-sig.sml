@@ -11,6 +11,7 @@ signature BIT_ARRAY =
   sig
 
     include MONO_ARRAY
+      where type elem = bool
 
     val fromString : string -> array option
       (* The string argument gives a hexadecimal
@@ -113,4 +114,3 @@ signature BIT_ARRAY =
       (* Invert all bits. *)
 
   end (* BIT_ARRAY *)
-    where type elem = bool

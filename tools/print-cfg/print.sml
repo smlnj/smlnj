@@ -144,6 +144,10 @@ structure Print : sig
             | P.FABS => "fabs"
             | P.FCOPYSIGN => "fcopysign"
             | P.FSQRT => "fsqrt"
+            | P.FCEIL => "fceil"
+            | P.FFLOOR => "ffloor"
+            | P.FROUND => "fround"
+            | P.FTRUNC => "ftrunc"
           (* end case *))
 
     fun pureToString (P.PURE_ARITH{oper, sz}) = pureopToString oper ^ i2s sz
@@ -262,7 +266,7 @@ structure Print : sig
                             say " { ["; say(Int.toString prob); say "/1000]\n";
                             prStm (n+2) stm1;
                             space n; say "} else { [";
-                            say(Int.toString(100-prob)); say "/1000]\n";
+                            say(Int.toString(1000-prob)); say "/1000]\n";
                             prStm (n+2) stm2;
                             space n; say "}\n")
                         | C.ARITH(p, args, x, stm) => (
@@ -276,11 +280,12 @@ structure Print : sig
                             say (String.concatWithMap "," LV.toString newRoots);
                             say ")\n";
                             pr stm)
-                        | C.RCC{reentrant, linkage, proto, args, results, live, k} => (
+                        | C.RCC{reentrant, linkage, proto, cfn, args, results, live, k} => (
                             if reentrant
                               then say "reentrant c_call "
                               else say "c_call ";
                             if linkage = "" then () else (say linkage; say " ");
+                            say(expToString cfn);
                             sayList (fn e => say(expToString e)) args;
                             say " -> "; sayList sayParam results; say "\n";
 (* FIXME: print live set too *)

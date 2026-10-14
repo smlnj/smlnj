@@ -1,5 +1,5 @@
-:version: 2026.3-rc2
-:date: October 9, 2026
+:version: 2026.3-rc3
+:date: October 14, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
@@ -34,14 +34,11 @@ FILES::
 
 == Summary
 
-This release contains a large number of mostly minor bug fixes for issues
-identified by Claude and reported by Skye Soss.  There are a number of regular
-bug fixes as well.  We have also added support for "mixed" records to the runtime
-system.
+This release contains over 100 (mostly minor) bug fixes for issues identified
+by Claude and reported by Skye Soss.  There are also a number of other bug fixes
+and improvements.
 
 == Details
-
-// **** details: include those sections that are relevant
 
 === Compiler
 
@@ -55,8 +52,9 @@ system.
 * Switch to using mixed records when spilling excess function arguments
   to the heap.
 
-* The REPL will now always print the top-most part of a value, even when the
-  `Control.Print.printDepth` flag is less than `1`.
+* Add sanity checking for the various integer controls in the `Control.Print`
+  structure.  For example, the REPL will now always print the top-most part
+  of a value, even when the `Control.Print.printDepth` flag is less than `1`.
 
 === Runtime System
 
@@ -98,6 +96,9 @@ A large number of *Basis Library bugs were fixed (see the list below for details
 
 * Fixed the behavior of **CML**'s `OS.Process.terminate` to match the Basis Library
   specification.
+
+* Fixed `TextIO.input1`, `TextIO.inputLine`, and `BinIO.input1` to restore the
+  `mVar` on end of file.
 
 === Installation
 
@@ -268,6 +269,27 @@ repository):
 
 * Fixed "unbounded" traversal of cyclic values when the `printDepth < 0`
 
+* Rewrote `Real64.rem` to produce **exact** results.
+
+* The compiler no longer raises overflow when checking real literals with
+  excessively large exponents
+
+* The order of the "don't route", "peek", and "out-of-band" flags for socket
+  I/O operations was backwards in the runtime system.
+
+* `Socket.recvVecFrom` can corrupt the address data.
+
+* Fix edge case of primitive readers/writers with chunk sizes < 1.
+
+* Fixed `Date.fromTimeUniv` and `Date.fromTimeLocal` on negative time values.
+
+* Fixed an issue where large strings were getting allocated as bytearrays, which
+  broke the REPL printing.
+
+* (Mostly) fixed the behavior of rounding reals to integers.  The ceiling, floor,
+  and truncation functions are correct, but `round` and `realRound` do not break
+  ties correctly.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
@@ -293,7 +315,7 @@ tested some of them:
 | | macOS 14 (Sonoma) |
 | | macOS 15 (Sequoia) |
 | | macOS 26 (Tahoe) | Tested
-| | macOS 27 (Golden Gate) |
+| | macOS 27 (Golden Gate) | Tested
 | | Linux |
 | {nbsp} | |
 |=======

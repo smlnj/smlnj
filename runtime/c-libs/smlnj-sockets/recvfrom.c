@@ -1,6 +1,7 @@
 /* recvbuffrom.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  */
 
 #include "sockets-osdep.h"
@@ -13,7 +14,7 @@
 
 /* _ml_Sock_recvfrom : (sock * int * bool * bool) -> (Word8Vector.vector * addr)
  *
- * The arguments are: socket, number of bytes, OOB flag and peek flag.  The
+ * The arguments are: socket, number of bytes, peek flag, and OOB flag.  The
  * result is the vector of bytes read and the source address.
  */
 ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
@@ -26,8 +27,8 @@ ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
     ml_val_t	vec;
     int		n;
 
-    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_OOB;
-    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 2) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 3) == ML_true) flag |= MSG_OOB;
 
   /* allocate the vector; note that this might cause a GC */
     vec = ML_AllocRaw (msp, BYTES_TO_WORDS(nbytes));
@@ -36,22 +37,25 @@ ml_val_t _ml_Sock_recvfrom (ml_state_t *msp, ml_val_t arg)
 	sock, PTR_MLtoC(char, vec), nbytes, flag,
 	(struct sockaddr *)addrBuf, &addrLen);
 
-    if (n < 0)
+    if (n < 0) {
 	return RAISE_SYSERR(msp, sts);
-    else {
-	ml_val_t	data = ML_CData (msp, addrBuf, addrLen);
-	ml_val_t	addr, res;
+    } else if (n == 0) {
+	return ML_string0;
+    } else {
+	ml_val_t addr, res;
 
-	if (n == 0)
-	    res = ML_string0;
-	else {
-	    if (n < nbytes)
-	      /* we need to shrink the vector */
-		ML_ShrinkRaw (msp, vec, BYTES_TO_WORDS(n));
-	    SEQHDR_ALLOC (msp, res, DESC_string, vec, n);
-	}
+        if (n < nbytes) {
+            /* we need to shrink the vector */
+            ML_ShrinkRaw (msp, vec, BYTES_TO_WORDS(n));
+        }
 
+        /* the header for the data vector */
+	SEQHDR_ALLOC (msp, res, DESC_string, vec, n);
+
+        /* allocate the address in the heap */
+	ml_val_t data = ML_CData (msp, addrBuf, addrLen);
 	SEQHDR_ALLOC (msp, addr, DESC_word8vec, data, addrLen);
+
 	REC_ALLOC2(msp, res, res, addr);
 
 	return res;

@@ -26,6 +26,9 @@ structure TransPrim : sig
 	    mkRaise : PLambda.lexp * Lty.lty -> PLambda.lexp
 	  } -> PrimOps.t * Lty.lty * Lty.tyc list -> PLambda.lexp
 
+    (* translation of `hasFeature str` to either true or false depending on the target *)
+    val hasFeature : string -> PLambda.lexp
+
   end = struct
 
     structure PO = PrimOps
@@ -402,20 +405,26 @@ structure TransPrim : sig
 			oper)
 		  (* end case *)
 		end
-	(* division operators with an explicit test for a zero divisor *)
+	(* division operators with an explicit test for a zero divisor and ~1 divisors *)
 	  fun inldiv (nk, po, lt, ts) = let
 		val oper = PL.PRIM (po, lt, ts)
 		in
 		  case coreExn ["Assembly", "Div"]
 		   of SOME divExn => let
-			val { lt_arg, lt_argpair, lt_cmp, zero, equal, ... } = inlops nk
+			val { lt_arg, lt_argpair, lt_cmp, zero, equal, negOne, negate, ... } = inlops nk
 			in
 			  mkFn lt_argpair (fn z =>
 			    mkLet (PL.SELECT(1, z)) (fn y =>
 			      mkCOND (
 				mkApp2 (equal, y, zero),
 				mkRaise (divExn, lt_arg),
-				PL.APP(oper, z))))
+                                mkCOND (
+                                  mkApp2 (equal, y, negOne),
+                                  (* we implement `x / ~1` as `~ x` to get Overflow
+                                   * when `x` in `minInt`
+                                   *)
+                                  PL.APP(negate, PL.SELECT(0, z)),
+				  PL.APP(oper, z)))))
 			end
 		   | NONE => (warn "no access to Div exception"; oper)
 		end
@@ -709,6 +718,12 @@ structure TransPrim : sig
                     | InlP.HOST_BIG_ENDIAN =>
                         mkFn lt_unit (fn _ =>
                           if Target.bigEndian then trueLexp else falseLexp)
+                    (* if we get here, then this is a use of `hasFeature` that is
+                     * not being applied to a string literal and thus cannot be
+                     * replaced by a constant function.  We could just always
+                     * return `fn _ => false` in this case, but for now we complain.
+                     *)
+                    | InlP.HAS_FEATURE => bug "bogus 'hasFeature' use"
                     | p => bug("bogus inline primop " ^ InlineOps.toString p)
                   (* end case *))
               | PO.ARITH{oper, sz} => PL.PRIM(FP.ARITH{oper=oper, sz=sz}, lt, ts)
@@ -729,5 +744,9 @@ structure TransPrim : sig
                   (* end case *))
             (* end case *)
           end (* trans *)
+
+    fun hasFeature feature = if List.exists (fn s' => (feature = s')) Target.features
+          then trueLexp
+          else falseLexp
 
   end (* PrimTrans *)

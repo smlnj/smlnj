@@ -196,7 +196,7 @@ structure GetOpt :> GET_OPT =
 		in
 		  if (SS.isPrefix "--" arg')
 		    then addOpt(longOpt (SS.triml 2 arg', rest))
-        	  else if (SS.isPrefix "-" arg')
+        	  else if (SS.isPrefix "-" arg') andalso (SS.size arg' > 1)
 		    then addOpt(shortOpt (SS.sub(arg', 1), SS.triml 2 arg', rest))
         	  else (case argOrder
 		     of RequireOrder => (List.rev opts, List.revAppend(nonOpts, arg::rest))

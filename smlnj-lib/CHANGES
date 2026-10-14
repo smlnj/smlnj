@@ -5,6 +5,30 @@ correspond to SML/NJ releases (past and future).
 SML/NJ 2026.3
 -------------------
 
+[2026-10-13]
+        Fixed `GetOpt`'s handling of bare `-` in the argument list.
+
+[2026-10-13]
+        Removed deprecated functions from the `HashConsSet` structure.  The
+        removed functions are: `listItems`, `foldl`, and `foldr`.
+
+[2026-10-12]
+        Fixed `BitArray.bits` to raise `Subscript` in certain edge cases.
+
+[2026-10-11]
+        Fixed various edge cases in the `Base64.decode` function.
+
+[2026-10-11]
+        Fixed various parsing issues in the `HTML4` library.
+
+[2026-10-11]
+        Fixed `UUID.fromString` to properly reject certain ill-formed strings.
+
+[2026-10-09]
+        Changed the `exists`, `all` and `find` functions in the splay-tree
+        implementation of sets to use an in-order traversal (instead of
+        pre-order).
+
 [2026-10-09]
 	Changed the name of the OG HTML library to HTML3.  The CM file is now
 	called `html3-lib.cm`, but the modules names in the library have not

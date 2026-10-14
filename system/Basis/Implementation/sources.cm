@@ -448,9 +448,9 @@ is
         pack-word-l32.sml
 
         (* reals and math modules *)
-        Real/float-rep.sml (* NEW *)
-        Real/frep-to-real64.sml (* NEW *)
-        Real/frep-to-string.sml (* NEW *)
+        Real/float-rep.sml
+        Real/frep-to-real64.sml
+        Real/frep-to-string.sml
         Real/ieee-real.sig
         Real/ieee-real.sml
         Real/ieee-real-types.sml
@@ -463,9 +463,10 @@ is
 #endif
         Real/real.sig
         Real/real64.sml
-        Real/real64-to-frep.sml (* NEW *)
+        Real/real64-to-frep.sml
         Real/real64-values.sml
-        Real/string-to-frep.sml (* NEW *)
+        Real/string-to-frep.sml
+        Real/real64-rem.sml
 
 #if defined(SIZE_32)
 	/* no longer supported */

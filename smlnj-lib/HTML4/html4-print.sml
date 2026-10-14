@@ -90,7 +90,9 @@ structure HTML4Print : sig
 	  end
 
     fun prScript (outS, H.SCRIPT(attrs, content)) =  (
-	  prTag (outS, "STYLE", attrs); prCDATA (outS, content); prEndTag (outS, "STYLE"))
+	  prTag (outS, "SCRIPT", attrs);
+          prCDATA (outS, content);
+          prEndTag (outS, "SCRIPT"))
 
     fun prParam (outS, H.PARAM attrs) = prEmptyTag (outS, "PARAM", attrs)
 

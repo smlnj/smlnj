@@ -89,7 +89,8 @@ structure UnpickMod : UNPICKMOD = struct
             PureP.ORB, PureP.XORB, PureP.ANDB, PureP.NOTB,
             PureP.CNTPOP, PureP.CNTLZ, PureP.CNTTZ,
             PureP.ROTL, PureP.ROTR,
-            PureP.FDIV, PureP.FABS, PureP.FSQRT
+            PureP.FDIV, PureP.FABS, PureP.FSQRT,
+            PureP.FCEIL, PureP.FFLOOR, PureP.FROUND, PureP.FTRUNC
           ]
 
     val cmpop_table =
@@ -283,6 +284,7 @@ structure UnpickMod : UNPICKMOD = struct
               | inl #"\030" = InlP.IDENTITY
               | inl #"\031" = InlP.HOST_WORD_SIZE
               | inl #"\032" = InlP.HOST_BIG_ENDIAN
+              | inl #"\033" = InlP.HAS_FEATURE
               | inl _ = raise Format
             in
               share inlM inl

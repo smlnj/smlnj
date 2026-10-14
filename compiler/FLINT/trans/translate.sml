@@ -80,21 +80,19 @@ fun dbsaynl (msg : string) =
 fun dbsaysnl (msgs : string list) =
     if !debugging then saysnl msgs else ()
 
-val ppDepth = Control.Print.printDepth
-
 val with_pp = PP.with_default_pp
 
 fun ppPat pat =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (PrintUtil.printDepth())))
 
 fun ppExp exp =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (PrintUtil.printDepth())))
 
 fun ppDec dec =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (PrintUtil.printDepth())))
 
 fun ppType msg ty =
     PP.with_default_pp
@@ -102,7 +100,7 @@ fun ppType msg ty =
 
 fun ppLexp lexp =
     PP.with_default_pp
-      (fn ppstrm => PPLexp.ppLexp (!ppDepth) ppstrm lexp)
+      (fn ppstrm => PPLexp.ppLexp (PrintUtil.printDepth()) ppstrm lexp)
 
 fun ppTycArgs tycs =
     PP.with_default_pp
@@ -580,9 +578,9 @@ val lt_unit = LB.ltc_unit
 val lt_u_u = LD.ltc_parrow (lt_unit, lt_unit)
 
 (* translation of prim ops *)
-val transPrim =
-    TransPrim.trans {coreAcc = coreAcc, coreExn = coreExn, mkv = mkv,
-		     mkRaise = mkRaise}
+val transPrim = TransPrim.trans {
+        coreAcc = coreAcc, coreExn = coreExn, mkv = mkv, mkRaise = mkRaise
+      }
 
 (* genintinfswitch : var * (con * exp) list * lexp -> lexp *)
 (* generates PLambda.lexp code for a case over an IntInf.int value. *)
@@ -1387,7 +1385,21 @@ and mkExp (exp, d) =
         | mkExp0 (SEQexp [e]) = mkExp0 e
         | mkExp0 (SEQexp (e::r)) = LET(mkv(), mkExp0 e, mkExp0 (SEQexp r))
 
-        | mkExp0 (APPexp (e1, e2)) = APP(mkExp0 e1, mkExp0 e2)
+        | mkExp0 (APPexp (e1, e2)) = let
+            fun default () = APP(mkExp0 e1, mkExp0 e2)
+            in
+              (* check for the primop test `hasFeature <str>`, which is evaluated
+               * statically.
+               *)
+              case (e1, e2)
+               of (VARexp(ref(V.VALvar{prim = PrimopId.Prim p, ...}), _), STRINGexp s) => (
+                    case PrimopBind.defnOf p
+                     of PO.INLINE InlineOps.HAS_FEATURE => TransPrim.hasFeature s
+                      | _ => default ()
+                    (* end case *))
+                | _ => default ()
+              (* end case *)
+            end
         | mkExp0 (MARKexp (e, reg)) = withRegion reg mkExp0 e
         | mkExp0 (CONSTRAINTexp (e,_)) = mkExp0 e
 
@@ -1543,7 +1555,7 @@ and mkExp (exp, d) =
 
         | mkExp0 e =
             EM.impossibleWithBody "untranslateable expression:\n  "
-              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, !ppDepth)))
+              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, PrintUtil.printDepth())))
 
    in mkExp0 exp
   end

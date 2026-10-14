@@ -414,19 +414,19 @@ in
 	 PP.closeBox ppstrm)
 
     fun printLexp lexp =
-	PP.with_pp (PP.mkDevice (!Control.Print.lineWidth))
-	  (fn ppstrm => (ppLexp ppstrm (lexp, !Control.Print.printDepth)))
+	PP.with_pp (PP.mkDevice (PrintUtil.lineWidth()))
+	  (fn ppstrm => (ppLexp ppstrm (lexp, PrintUtil.printDepth())))
 
     fun printLexpLimited (lexp, printDepth) =
-	PP.with_pp (PP.mkDevice (!Control.Print.lineWidth))
+	PP.with_pp (PP.mkDevice (PrintUtil.lineWidth()))
 		   (fn ppstrm => (ppLexp ppstrm (lexp, printDepth)))
 
     fun printProg prog =
-	PP.with_pp (PP.mkDevice (!Control.Print.lineWidth))
-		   (fn ppstrm => (ppFundec (!Control.Print.printDepth) ppstrm prog))
+	PP.with_pp (PP.mkDevice (PrintUtil.lineWidth()))
+		   (fn ppstrm => (ppFundec (PrintUtil.printDepth()) ppstrm prog))
 
     fun printProgLimited (prog, printDepth) =
-	PP.with_pp (PP.mkDevice (!Control.Print.lineWidth))
+	PP.with_pp (PP.mkDevice (PrintUtil.lineWidth()))
 		   (fn ppstrm => (ppFundec printDepth ppstrm prog))
 
 end (* top local *)

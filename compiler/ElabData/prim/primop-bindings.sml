@@ -206,6 +206,10 @@ structure PrimopBindings : sig
 	    mk_rr_r("max", P.INLINE(InlP.MAX nk)) :-:
 	    arith_r_r("abs", PureP.FABS) :-:
 	    arith_r_r("sqrt", PureP.FSQRT) :-:
+	    arith_r_r("ceil", PureP.FCEIL) :-:
+	    arith_r_r("floor", PureP.FFLOOR) :-:
+	    arith_r_r("round", PureP.FROUND) :-:
+	    arith_r_r("trunc", PureP.FTRUNC) :-:
 	    mk("to_bits", ar(rty, wTy sz), P.PRIM(CP.REAL_TO_BITS sz)) :-:
 	    mk("from_bits", ar(wTy sz, rty), P.PRIM(CP.BITS_TO_REAL sz))
 	  end
@@ -500,10 +504,11 @@ structure PrimopBindings : sig
 	    (wName ^ "_to_cptr", ar(addrTy, BT.pointerTy), P.PRIM CP.WORD_TO_CPTR)
 	  end
 
-  (* primops for host properties *)
+  (* primops for machine properties *)
     val prims = prims :-:
           ("host_word_size", ar(BT.unitTy, BT.intTy), P.INLINE InlP.HOST_WORD_SIZE) :-:
-          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.INLINE InlP.HOST_BIG_ENDIAN)
+          ("host_big_endian", ar(BT.unitTy, BT.boolTy), P.INLINE InlP.HOST_BIG_ENDIAN) :-:
+          ("has_feature", ar(BT.stringTy, BT.boolTy), P.INLINE InlP.HAS_FEATURE)
 
   (* primops for C FFI *)
     val prims = let

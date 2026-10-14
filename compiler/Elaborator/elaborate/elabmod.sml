@@ -101,19 +101,19 @@ fun showFct(msg,fct,env) =
 
 fun showDec (msg, dec, env) =
     let fun ppDec ppstrm d =
-	    PPAbsyn.ppDec (env, NONE) ppstrm (d, !Control_Print.printDepth)
+	    PPAbsyn.ppDec (env, NONE) ppstrm (d, PrintUtil.printDepth())
      in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppDec, dec)
     end
 
 fun showStrexp (msg, strexp: A.strexp, env) =
     let fun ppStrexp ppstrm sexp =
-	    PPAbsyn.ppStrexp (env, NONE) ppstrm (sexp, !Control_Print.printDepth)
+	    PPAbsyn.ppStrexp (env, NONE) ppstrm (sexp, PrintUtil.printDepth())
      in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
     end
 
 fun showStrExpAst (msg, strexp: Ast.strexp, env) =
     let fun ppStrexp ppstrm sexp =
-	    PPAst.ppStrExp NONE ppstrm (sexp, !Control_Print.printDepth)
+	    PPAst.ppStrExp NONE ppstrm (sexp, PrintUtil.printDepth())
      in ElabDebug.debugPrint ElabControl.printAbsyn (msg, ppStrexp, strexp)
     end
 
