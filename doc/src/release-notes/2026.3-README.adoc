@@ -56,6 +56,10 @@ and improvements.
   structure.  For example, the REPL will now always print the top-most part
   of a value, even when the `Control.Print.printDepth` flag is less than `1`.
 
+* for the **amd64** (a.k.a. **x86-64**) target, we now assume a
+  https://en.wikipedia.org/wiki/Haswell_(microarchitecture)[Haswell]
+  processor.
+
 === Runtime System
 
 * Changed the heap layout to include an arena for "mixed" records.

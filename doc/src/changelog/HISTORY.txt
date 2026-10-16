@@ -108,6 +108,18 @@ Here is an update to the entry
 == Version 2026.3; 2026-10-??
 
 //--------------------------------------------------------------------
+[2026-10-15]::
++
+We have added "cpu" and "features" strings to the `TargetInfo` struct
+in the **LLVM** code generator.  For the **amd64** target, we assume
+a https://en.wikipedia.org/wiki/Haswell_(microarchitecture)[Haswell]
+(or later) processor.  This assumption is necessary so that certain
+**LLVM** intrinsic functions are lowered to hardware instructions
+and not to library calls.
++
+owner:cs.uchicago.edu/~jhr[John Reppy]
+
+//--------------------------------------------------------------------
 [2026-10-14]::
 +
 Switched to using inlined primops for `realCeil`, `realFloor`, `realRound`,
