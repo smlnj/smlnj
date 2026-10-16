@@ -96,10 +96,11 @@ structure InlineT =
 
         val realCeil : real -> real       = InLine.real64_ceil
         val realFloor : real -> real      = InLine.real64_floor
-(* FIXME: the hardware semantics of `round` rounds `x.5` away from `0` (which
- * also the C standard, whereas the SML Basis Library says that it should
- * round to the `x` if `x` is even and to `x+1` if x is odd.
- *)
+        (* Note: the semantics of the `real64_round` primop does not match the
+         * Basis Library specification for `realRound` (the primop rounds away
+         * from zero vs. rounding to the nearest even number).  We fix this
+         * issue in the `Real64` structure.
+         *)
         val realRound : real -> real      = InLine.real64_round
         val realTrunc : real -> real      = InLine.real64_trunc
 

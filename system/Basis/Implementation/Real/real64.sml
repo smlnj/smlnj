@@ -62,13 +62,50 @@ structure Real64Imp : REAL =
     val trunc = trunc
     val round = round
 
-  (* This is the IEEE double-precision maxint == 2^52 *)
-    val maxInt = 4503599627370496.0
 
     val realFloor = InlineT.Real64.realFloor
     val realCeil = InlineT.Real64.realCeil
     val realTrunc = InlineT.Real64.realTrunc
-    val realRound = InlineT.Real64.realRound
+
+    (* The hardware semantics of `round` rounds `x.5` away from `0` (which
+     * also the C standard), whereas the SML Basis Library specifies that
+     * `realRound` should round to the `x` if `x` is even and to `x+1` if
+     * x is odd.  For the interval [-2^51..2^51+0.5], we can force this
+     * behavior using addition/subtraction with the rounding mode set to
+     * "NEAREST" (See "Hackers Delight 2nd Ed (Section 17.2).  Outside that
+     * range, we fallback to the hardware instruction.
+     *)
+    local
+      (* integers in the range [-2^52..2^52] are exactly representable as doubles. *)
+      val mc51 = InlineT.Real64.fromBits 0wxc320000000000000    (* -2^51 *)
+      val c51ph = InlineT.Real64.fromBits 0wx4320000000000001   (* 2^51 + 0.5 *)
+      val c521 = InlineT.Real64.fromBits 0wx4338000000000000    (* 2^52 + 2^51 *)
+      val ctlRoundingMode : int option -> int =
+            CInterface.c_function "SMLNJ-Math" "ctlRoundingMode"
+      val kNearest = 0
+      fun setRoundingMode m = ignore(ctlRoundingMode (SOME m))
+      fun getRoundingMode () = ctlRoundingMode NONE
+    in
+    fun realRound x = if (mc51 < x) andalso (x < c51ph)
+          (* x is in the range [-2^51..2^51+0.5] *)
+          then let
+            val saveMode = getRoundingMode ()
+            in
+              if (saveMode = kNearest)
+                then (x + c521) - c521
+                else let
+                  val () = setRoundingMode kNearest
+                  val result = (x + c521) - c521
+                  in
+                    setRoundingMode saveMode;
+                    result
+                  end
+            end
+          (* fall back to the hardwre round operation, which be correct, since
+           * ties are not possible outside [-2^51..2^51+0.5]
+           *)
+          else InlineT.Real64.realRound x
+    end (* local *)
 
     val abs : real -> real = InlineT.Real64.abs
     val fromInt : int -> real = InlineT.Real64.from_int
