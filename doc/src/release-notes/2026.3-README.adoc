@@ -90,6 +90,9 @@ A large number of *Basis Library bugs were fixed (see the list below for details
 
 * Fixed regression in `ml-lex-mode` (Issue #463)
 
+* Fixed a bug in handling grammars where there is no `%start` declaration, but the
+  first nonterminal is declared as an `%entry`.
+
 === Concurrent ML
 
 * Fixes to the `Barrier` module.

@@ -31,10 +31,10 @@ structure SMLOutput =
    * used throughout the backend
    *)
 
-    fun NTFnName nt = NT.name nt ^ "_NT"
+    fun NTFnName nt = NT.toString nt ^ "_NT"
     fun NTFnVar nt = ML_Var (NTFnName nt)
 
-    fun predFnName nt = NT.name nt ^ "_PRED"
+    fun predFnName nt = NT.toString nt ^ "_PRED"
 
     fun tokConName tok = "Tok." ^ Token.name tok
     fun tokConVar tok = ML_Var (tokConName tok)
@@ -291,7 +291,7 @@ structure SMLOutput =
 	      ]);
 	    TextIO.output (strm, "  in\n");
 	    wrEntry ("parse", startnt);
-	    app (wrEntry o (fn x => ("parse" ^ Nonterm.name x, x))) entryPoints;
+	    app (wrEntry o (fn x => ("parse" ^ Nonterm.toString x, x))) entryPoints;
 	    TextIO.output (strm, "  end\n")
           end
 
