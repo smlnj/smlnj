@@ -121,6 +121,11 @@ module CFG_Prim {
       | RAW_SELECT (numkind kind, int sz, int offset)
                                                 -- select from RAW_RECORD
 
+-- TODO: add GET_ROUNDING_MODE/SET_ROUNDING_MODE as looker/setter ops.
+-- these can map to the `@llvm.get.rounding`/`@llvm.set.rounding` LLVM intrinsics.
+-- We need to verify that LLVM maps these to hardware instructions (and not
+-- library calls)
+
   -- These operations fetch from mutable memory.
     looker
       = DEREF
