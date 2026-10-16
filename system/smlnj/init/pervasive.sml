@@ -221,10 +221,41 @@ local
                     end
               end
         end
+  (* The following code is copied from the `Real64` structure; see that module
+   * for a description of what we are doing.
+   *)
+  val mc51 = InlineT.Real64.fromBits 0wxc320000000000000    (* -2^51 *)
+  val c51ph = InlineT.Real64.fromBits 0wx4320000000000001   (* 2^51 + 0.5 *)
+  val c521 = InlineT.Real64.fromBits 0wx4338000000000000    (* 2^52 + 2^51 *)
+  val ctlRoundingMode' =
+        Assembly.A.bind_cfun ("SMLNJ-Math", "ctlRoundingMode")
+  fun ctlRoundingMode (m : int option) : int = Assembly.A.callc (ctlRoundingMode', m)
+  val kNearest = 0
+  fun setRoundingMode m = ignore(ctlRoundingMode (SOME m))
+  fun getRoundingMode () = ctlRoundingMode NONE
+  fun realRound x = if (mc51 < x) andalso (x < c51ph)
+        (* x is in the range [-2^51..2^51+0.5] *)
+        then let
+          val saveMode = getRoundingMode ()
+          in
+            if (saveMode = kNearest)
+              then (x + c521) - c521
+              else let
+                val () = setRoundingMode kNearest
+                val result = (x + c521) - c521
+                in
+                  setRoundingMode saveMode;
+                  result
+                end
+          end
+        (* fall back to the hardwre round operation, which be correct, since
+         * ties are not possible outside [-2^51..2^51+0.5]
+         *)
+        else R64.realRound x
 in
 fun floor x = toInt (R64.realFloor x)
 fun ceil x = toInt (R64.realCeil x)
-fun round x = toInt (R64.realRound x)
+fun round x = toInt (realRound x)
 fun trunc x = toInt (R64.realTrunc x)
 end (* local *)
 
