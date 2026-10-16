@@ -3,7 +3,7 @@
  * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * The SML Int.div and Int.mod operations round to negative infinity, with
+ * The SML Int.div and Int.mod operations round toward negative infinity, with
  * the properties:
  *
  *	x div y		= floor(x / y)
@@ -11,12 +11,12 @@
  *
  * The signs of the of the arguments and results satisfy the following table:
  *
- *      x       y      (x div y)     (x mod y)
- *     ---     ---     ---------     ---------
- *      +       +          +             +
- *      +       -          -             -
- *      -       +          -             +
- *      -       -          +             -
+ *      x       y      (x div y)     (x mod y)     (x / y)     (x % y)
+ *     ---     ---     ---------     ---------     -------     -------
+ *      +       +          +             +            +           +
+ *      +       -          -             -            -           +
+ *      -       +          -             +            -           -
+ *      -       -          +             -            +           -
  *
  * When the signs of x and y are the same, then Int.div and Int.mod return the
  * same results as Int.quot and Int.rem (resp.), but when the signs are different,
@@ -24,23 +24,45 @@
  *
  * We use the following implementation:
  *
- *    int div ( int D, int d )
+ *    int64_t div ( int64_t x, int64_t y )
  *    {
- *      int q = D / d;
- *      int r = D % d;
+ *      int64_t q = x / y;
+ *      int64_t r = x % y;
  *	if (((x ^ y) < 0) && (r != 0)) q = q-1;
  *      return q;
  *    }
  *
- *    int mod ( int D, int d )
+ *    int64_t div ( int64_t x, int64_t y )
  *    {
- *      int r = D % d;
- *      if (((x ^ y) < 0) && (r != 0)) r = r+d;
+ *      int64_t r = x % y;
+ *      if (((x ^ y) < 0) && (r != 0)) r = r+y;
  *      return r;
  *    }
  *
- * For the LLVM backend, the `/` and `%` operations in `div` will be be combined into
+ * For the LLVM backend, the `/` and `%` operations in `div` may be be combined into
  * a single `/` operation (that produces both results).
+ *
+ * Note that there is an alternative, branchless, implementation, but for the code
+ * that LLVM generates, it appears to be slower (at least on the Arm architecture).
+ *
+ *    int64_t div ( int64_t x, int64_t y )
+ *    {
+ *      int64_t q = x / y;
+ *      int64_t r = x % y;
+ *      int64_t s = (r ^ y) >> shift;     // == -1 if sign(r) != sign(y); 0 otherwise
+ *      int64_t nz = (r | -r) >> shift;   // == -1 if (r != 0); 0 otherwise
+ *      int64_t m = s & nz;               // == -1 if s == -1 && nz == -1
+ *      return q + m;
+ *    }
+ *
+ *    int64_t mod ( int64_t x, int64_t y )
+ *    {
+ *      int64_t r = x % y;
+ *      int64_t s = (r ^ y) >> shift;     // == -1 if sign(r) != sign(d); 0 otherwise
+ *      int64_t nz = (r | -r) >> shift;   // == -1 if (r != 0); 0 otherwise
+ *      int64_t m = s & nz;               // == -1 if s == -1 && nz == -1
+ *      return r + (y & m);
+ *    }
  *)
 
 structure DivCnv : sig
