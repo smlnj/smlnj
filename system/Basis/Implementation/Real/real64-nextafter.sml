@@ -4,6 +4,13 @@
  * All rights reserved.
  *
  * This is an implementation of `Real64.nextAfter`.
+ *
+ * Note that the SML Basis Library specification states that
+ *
+ *      ..., if `r` is ±∞ it returns ±∞.
+ *
+ * This semantics differs from that of the C library, which will return
+ * `maxFinite` for `nextAfter (posInf, 0.0)`.
  *)
 
 structure Real64NextAfter : sig
@@ -18,20 +25,10 @@ structure Real64NextAfter : sig
     structure I = InlineT.Int
     structure W = InlineT.Word
 
-local
-  structure W64 = struct
-      open Word64
-      val rshiftl = >>
-      val lshift = <<
-    end
-
     (* signed comparison of two 64-bit words *)
     fun i64LT (w1, w2) = I64.<(
           I64.fromLarge(W64.toLargeIntX w1),
           I64.fromLarge(W64.toLargeIntX w2))
-
-    val fromBits = Unsafe.Real64.castFromWord
-    val toBits = Unsafe.Real64.castToWord
 
     val kSignBit = W64.lshift(0w1, 0w63)
     val kExpAndMatMask = W64.notb kSignBit
@@ -48,26 +45,34 @@ local
 
     (* the non-sign bits of +/- infinity *)
     val infBits = kExpMask
-in
 
     fun nextAfter (x, y) = let
-        val bitsx = toBits x
-        val bitsy = toBits y
-        fun isNan bits = let
-              val exp = getExponent bits
-              in
-                (exp = 2047) andalso (W64.andb(bits, kMantMask) <> 0w0)
-              end
+        val bitsx = R64.toBits x
+        val bitsy = R64.toBits y
+        val expx = getExponent bitsx
+        val expy = getExponent bitsy
         (* copy y's sign into z *)
         fun copySignFromY z = W64.orb(W64.andb(bitsy, kSignBit), z)
         in
-          if (isNan bitsx orelse isNan bitsy)
-            then (x + y) (* return a NaN *)
+          if (expx = 2047)
+            then if (W64.andb(bitsx, kMantMask) <> 0w0)
+            orelse ((expy = 2047) andalso (W64.andb(bitsy, kMantMask) <> 0w0))
+              (* either `x` or `y` is a NaN, so return a NaN *)
+              then (x + y)
+              (* `x` is an infinity and `y` is not a NaN, so return `x`.
+               * Note that that this is where the semantics of the SML Basis
+               * Library's `Real.nextAfter` differs from that of the C Library.
+               *)
+              else x
+          else if (expy = 2047) andalso (W64.andb(bitsx, kMantMask) <> 0w0)
+            (* `y` is a NaN, so return a NaN *)
+            then y
+          (* here we know that neither `x` or `y` is a NaN and that `x` is finite *)
           else if (bitsx = bitsy)
-            then return y;
-          else if (W64.shiftl(bitsx, 0w1) = 0w0)
+            then y
+          else if (W64.lshift(bitsx, 0w1) = 0w0)
             (* x = 0: return the minimum subnormal with the same sign as `y` *)
-            then fromBits (copySignFromY 0w1)
+            then R64.fromBits (copySignFromY 0w1)
             else let
               val ix = if (W64.andb(bitsx, kSignBit) = 0w0)
                     (* x > 0 *)
@@ -79,7 +84,7 @@ in
                     (* x < 0 *)
                     else if (W64.andb(bitsy, kSignBit) = 0w0)
                       then bitsx - 0w1 (* x < 0 <= y: return x - ulp *)
-                    else if (W64.shiftl(bitsx, 0w1) < W64.shiftl(bitsy, 0w1))
+                    else if (W64.lshift(bitsx, 0w1) < W64.lshift(bitsy, 0w1))
                       then bitsx - 0w1 (* x < y < 0: return x - ulp *)
                       else bitsx + 0w1 (* y < x < 0: return x + ulp *)
               in
@@ -87,12 +92,12 @@ in
                   (* the mantissa overflowed into the exponent, which was already
                    * the maximum, so return an infinity.
                    *)
-                  then fromBits (copySignFromY infBits)
-                  else fromBits ix
+                  then R64.fromBits (copySignFromY infBits)
+                  else R64.fromBits ix
               end
         end (* nextAfter *)
 
-end (* local *)
+  end (* Real64NextAfter *)
 
 (* tests:
  *

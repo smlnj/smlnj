@@ -466,6 +466,7 @@ is
         Real/real64-to-frep.sml
         Real/real64-values.sml
         Real/string-to-frep.sml
+        Real/real64-nextafter.sml
         Real/real64-rem.sml
 
 #if defined(SIZE_32)

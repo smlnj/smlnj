@@ -273,63 +273,7 @@ structure Real64Imp : REAL =
                        else if isNan x then raise General.Div
 			 else raise General.Overflow
 
-    fun nextAfter (r, t) = if (r == t)
-            then r
-          else let
-            (* split the bits of an IEEE double into sign, exp, and fractional parts *)
-            fun split x = let
-                  val bits = toBits x
-                  val sign = W64.andb(signBitMask, bits)
-                  val exp = W64.andb(W64.rshiftl(bits, nFracBits), expMask)
-                  val frac = W64.andb(bits, fracMask)
-                  in
-                    (bits, sign, exp, frac)
-                  end
-            val (rBits, rSign, rExp, rFrac) = split r
-            val (tBits, tSign, tExp, tFrac) = split t
-            (* increment the magnitude of r by one ulp *)
-            fun stepUp () = let
-                  val ef = W64.andb(rBits, expAndFracMask) + 0w1
-                  in
-                    if (ef > expAndFracMask)
-                      (* overflow, so return ±infinity *)
-                      then fromBits(W64.orb(rSign, infBits))
-                      else fromBits(W64.orb(rSign, ef))
-                  end
-            (* decrement the magnitude of r by one ulp *)
-            fun stepDn () = let
-                  val ef = W64.andb(rBits, expAndFracMask) - 0w1
-                  in
-                    if (ef < 0wx0010000000000000)
-                      (* underflow, so return ±zero *)
-                      then fromBits rSign
-                      else fromBits(W64.orb(rSign, ef))
-                  end
-            in
-              if (rExp = expMask)
-                then r  (* r is either a NaN or infinity so return it *)
-              else if (tExp = expMask)
-                then if (tFrac <> 0w0)
-                  then t (* t is a NaN, so return it *)
-                  else if (rSign = tSign)
-                    (* t is infinity with the same sign as r, so make r bigger *)
-                    then stepUp ()
-                    (* t is infinity with the opposite sign as r, so make r smaller *)
-                    else stepDn ()
-              (* both r and t are normal/subnormal numbers *)
-              else if (W64.orb(rExp, rFrac) = 0w0)
-                (* rExp = 0 && rFrac = 0 ==> r = ±0.0 *)
-                then fromBits(W64.orb(tSign, 0w1)) (* ± minimum subnormal *)
-              (* bit r and t are non-zero normal/subnormal numbers *)
-              else if (rSign <> tSign)
-                (* when different signs, move `r` toward 0 *)
-                then stepDn()
-              else if (rBits > tBits)
-                (* either `r < t < 0` or `0 < t < r`, so move `r` toward 0 *)
-                then stepDn()
-                (* either `t < r < 0` or `0 < r < t`, so move `r` toward 0 *)
-                else stepUp ()
-            end
+    val nextAfter = Real64NextAfter.nextAfter
 
     val min : real * real -> real = InlineT.Real64.min
     val max : real * real -> real = InlineT.Real64.max
