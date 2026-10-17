@@ -46,7 +46,8 @@ body:
       label: Version
       description: What version of SML/NJ are you using?
       options:
-        - "2026.2 (latest)"
+        - "2026.3 (latest)"
+        - "2026.2"
         - "2026.1"
         - "2025.3"
         - "2025.2"
