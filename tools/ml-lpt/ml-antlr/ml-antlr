@@ -3,7 +3,7 @@
 # COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
-# Wrapper for ml-antlr heap image; this scrit is for debugging the tool
+# Wrapper for ml-antlr heap image; this script is for debugging the tool
 # during devlopment
 #
 

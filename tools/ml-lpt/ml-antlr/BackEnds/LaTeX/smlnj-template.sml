@@ -9,6 +9,6 @@
 structure LaTeXTemplate =
   struct
 
-    val template  = ExpandFile.mkTemplateFromFile "BackEnds/LaTeX/template.tex" 
+    val template  = ExpandFile.mkTemplateFromFile "BackEnds/LaTeX/template.tex"
 
   end

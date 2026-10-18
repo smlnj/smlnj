@@ -10,11 +10,11 @@ struct
   datatype raw_ml = Raw of ml_token list
 
   and ml_token = Tok of string
-			
+
   datatype cmp_op = LT | GT | EQ | LEQ | GEQ
   datatype bool_op = AND | OR
 
-  datatype ml_file 
+  datatype ml_file
     = OBJECT of ml_object
 
   and ml_object
@@ -26,7 +26,7 @@ struct
     = D_VAL of (ml_pat * ml_exp) list
     | D_FUN of ml_fundecl list
     | D_TYPE of ml_type_binding
-    | D_ABS_DATATYPE of ml_datatype_binding * ml_type_binding option 
+    | D_ABS_DATATYPE of ml_datatype_binding * ml_type_binding option
           (* datatype $1 withtype $2*)
     | D_ABS_TYPE of ml_datatype_binding * ml_type_binding option * ml_decl list
              (* abstype $1 withtype $2 with $3 end *)
@@ -37,13 +37,13 @@ struct
 
   and ml_fundecl = FUN of (ml_fun_heading * ml_type option * ml_exp) list (* none-empty list *)
 
-  and ml_type_binding 
+  and ml_type_binding
     = TypeBind of (typevar list * ml_type) list (* none-empty *)
 
-  and ml_datatype_binding 
+  and ml_datatype_binding
     = DatatypeBind of (typevar list * (id * ml_type option) list (* none-empty*)) list (* none-empty *)
 
-  and ml_fun_heading 
+  and ml_fun_heading
     = FUNHEAD of atom * ml_pat list (* none-empty *)
 
   and ml_type
@@ -58,7 +58,7 @@ struct
     (* Signature::= "sig" Specification "end" | Ident.*)
     = SG of ml_specification (* fix this *)
 
-  and ml_specification 
+  and ml_specification
     = SP_EMPTY (* fix this *)
   (*Specification::= Empty | value_spec | various_type_spec | exception_spec | structure_spec | other_spec | inclusion | Specification O(";") Specification. *)
 
@@ -87,7 +87,7 @@ struct
     | ML_Raw of ml_token list
   (* the following added by Chunyan *)
     | ML_TypeExp of ml_exp * ml_type
-		
+
   and ml_pat
     = ML_Wild
     | ML_VarPat of string
@@ -95,11 +95,11 @@ struct
     | ML_ConPat of string * ml_pat list
     | ML_TupPat of ml_pat list
     (* the following added by Chunyan *)
-    | ML_TypePat of ml_pat * ml_type 
+    | ML_TypePat of ml_pat * ml_type
     | ML_ListPat of ml_pat list
-		    
+
 (*
-  and pattern 
+  and pattern
     (* Pattern::= Atomic_Pattern | Compound_Name Atomic_Pattern | Pattern infix_constructor Pattern | Pattern ":" ml_type | Name O(":" ml_type) "as" Pattern. *)
     = P_ATOM of atomic_pattern
     | P_TYPE of pattern * ml_type
@@ -110,13 +110,13 @@ struct
     (*    | P_CONST  why?? *)
     | AP_TUPLE of pattern list
     | AP_LIST of pattern list
-    | AP_RECORD of (label * pattern) list 
+    | AP_RECORD of (label * pattern) list
   (* more? *)
 
   and exp
     (* # Expression::= Infix_Expression | Expression ":" ml_type | Expression boolean_operator Expression | Expression "handle" Match | "raise" Expression | selection| loop | "fn" Match. *)
     (* atomic expressions *)
-    = E_COMPNAME of atom 
+    = E_COMPNAME of atom
     | E_CONST of const
     | E_TUPLE of exp list
     | E_LIST of exp list (* NoneEmptyList *)
@@ -126,26 +126,26 @@ struct
     (* *)
     | E_TYPE of exp * ml_type
     | E_APPLY of exp list (* NoneEmptyList *)
-    | E_BOOLEAN of exp * boolop * exp 
-    | E_HANDLE of exp * match 
-    | E_RAISE of exp 
+    | E_BOOLEAN of exp * boolop * exp
+    | E_HANDLE of exp * match
+    | E_RAISE of exp
 (*
     | E_SELECTION of selection
-    | E_LOOP of loop 
+    | E_LOOP of loop
 *)
-    | E_FN of match 
+    | E_FN of match
   and const
     = C_INT of int
     | C_REAL of real
-    | C_STRING of string 
+    | C_STRING of string
   (* ... *)
 
   and boolop
     = B_AND
-    | B_OR 
+    | B_OR
 *)
-  withtype label = atom 
-  and id = atom 
+  withtype label = atom
+  and id = atom
   and typevar = atom (* fix this *)
   and match = (ml_pat * ml_exp) list (* NoneEmptyList *)
 

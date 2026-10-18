@@ -1,3 +1,9 @@
+(* preitem.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
 structure Preitem =
   struct
 

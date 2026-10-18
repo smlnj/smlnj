@@ -9,7 +9,7 @@
 structure Templates =
   struct
 
-    val lexTemplate  = ExpandFile.mkTemplateFromFile "BackEnds/SML/template-ml-lex.sml" 
-    val ulexTemplate = ExpandFile.mkTemplateFromFile "BackEnds/SML/template-ml-ulex.sml" 
+    val lexTemplate  = ExpandFile.mkTemplateFromFile "BackEnds/SML/template-ml-lex.sml"
+    val ulexTemplate = ExpandFile.mkTemplateFromFile "BackEnds/SML/template-ml-ulex.sml"
 
   end

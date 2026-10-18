@@ -25,4 +25,3 @@ if test ! -r $heap ; then
 fi
 
 exec sml @SMLload=$heap "$@"
-

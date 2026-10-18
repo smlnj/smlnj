@@ -4,7 +4,7 @@
  * All rights reserved.
  *)
 
-structure CalcTest = 
+structure CalcTest =
   struct
 
     structure Tok = CalcParseTokens
