@@ -1,5 +1,5 @@
 :version: 2026.3
-:date: October 20, 2026
+:date: October 19, 2026
 :dist-url: https://smlnj.org/dist/working/{version}/
 :history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
