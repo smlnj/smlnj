@@ -105,7 +105,7 @@ Here is an update to the entry
 //== Recent updates
 
 //====================================================================
-== Version 2026.3; 2026-10-20
+== Version 2026.3; 2026-10-19
 
 //--------------------------------------------------------------------
 [2026-10-15]::
@@ -146,12 +146,14 @@ owner:cs.uchicago.edu/~jhr[John Reppy]
 Added the `HAS_FEATURE` primop to `InlineOps` and also a `features`
 list to the `TARGET` signature.  The idea is that one can use a
 test of the form
++
 [source,sml]
 ------------
 val foobar = if InlineT.hasFeature "builtin_foobar"
       then InlineT.foobar
       else ... (* a software implementation of foobar *) ...
 ------------
++
 in Basis code.  When the application `InlineT.hasFeature "builtin_foobar"`
 is translated to PLambda, it is replaced with either `true` or `false`,
 depending on if `"builtin_foobar"` is in the `Targets.features` list.
