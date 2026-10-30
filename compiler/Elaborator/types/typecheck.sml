@@ -406,6 +406,8 @@ fun generalizePat(pat: pat, userbound: tyvar list, occ: OC.occ, generalize: bool
 	  | gen (CONSTRAINTpat (pat,_)) = gen pat
 	  | gen (LAYEREDpat (varPat,pat)) = (gen varPat; gen pat)
           | gen (MARKpat (pat,reg)) = gen pat
+          | gen (VECTORpat (pats, _)) = app gen pats
+          | gen (ORpat (p1, p2)) = (gen p1; gen p2)
 	  | gen _ = ()
      in gen pat;
 	!tvs
@@ -518,20 +520,16 @@ fun patType(pat: pat, depth, region) : pat * ty =
 		else (pat, WILDCARDty)
 	   end
        | LAYEREDpat (vpat, basePat) =>
-	   (case stripMarksVar vpat
-              of VARpat(V.VALvar{typ,...}) =>
-		 let val (npat,patTy) = patType(basePat,depth,region)
-		     val _ = (typ := patTy)
-		  in (LAYEREDpat(vpat,npat),MARKty(patTy, region))
-		 end
-	       | (cpat as CONSTRAINTpat(VARpat(V.VALvar{typ,...}),ty)) =>
-		 let val (npat,patTy) = patType (basePat,depth,region)
-		  in if unifyErr{ty1=patTy, name1="pattern", ty2=ty, name2="constraint",
-				 message="pattern and constraint do not agree",
-				 region=region, kind=ppPat, kindname="pattern", phrase=pat}
-		     then (typ := ty; (LAYEREDpat(cpat,npat),MARKty(ty, region)))
-		     else (pat,WILDCARDty)
-		 end)
+           let val (vpat, vTy) = patType(vpat, depth, region)
+               val (basePat, baseTy) = patType(basePat, depth, region)
+           in  if unifyErr{
+                    ty1=vTy, name1="variable",
+                    ty2=baseTy, name2="pattern",
+                    message="variable and pattern do not agree",
+                    region=region, kind=ppPat, kindname="pattern", phrase=pat}
+                  then (LAYEREDpat (vpat, basePat), MARKty(baseTy, region))
+                  else (pat, WILDCARDty)
+           end
        | NOpat => (pat, mkMETAtyBounded depth) (* allow error *)
        | VARpat V.ERRORvar => (pat, mkMETAtyBounded depth) (* allow error *)
        | p => bug "patType -- unexpected pattern"
