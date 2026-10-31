@@ -21,9 +21,11 @@ structure Arm64Spec : MACH_SPEC =
     val bigEndian = false
 
     (* the ARM64 has 18 misc regs and 32 float regs *)
+(* FIXME: numRegs = 22? (stdLink + stdClos + stdCont + stdArg + 17 misc regs *)
     val numRegs = 21	                (* #misc regs + 3 *)
+(* numArgsRegs = 15? *)
     val numArgRegs = 16                 (* non-callee-save misc regs + stdArg *)
-    val numFloatRegs = 32               (* number of floating-point registers *)
-    val numFloatArgRegs = 30            (* number of floating-point argument registers *)
+    val numFloatRegs = 16               (* number of floating-point registers *)
+    val numFloatArgRegs = 16            (* number of floating-point argument registers *)
 
   end

@@ -82,6 +82,9 @@ repository):
 
 // ***** include a list of unnumbered/legacy bugs here *****
 
+* fixed the number of FP registers available for argument passing
+  on the arm64 architecture (should be 16 based on the JWA specification)
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
