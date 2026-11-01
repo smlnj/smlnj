@@ -22,10 +22,10 @@
 #  define FlushICache(addr, size)	_sync_cache_range((addr), (size))
 
 #elif (defined(ARCH_SPARC) || defined(OPSYS_MKLINUX))
-extern FlushICache (void *addr, int nbytes);
+extern void FlushICache (void *addr, int nbytes);
 
 #elif (defined(ARCH_PPC) && (defined(OPSYS_LINUX) || defined(OPSYS_DARWIN) ))
-extern FlushICache (void *addr, int nbytes);
+extern void FlushICache (void *addr, int nbytes);
 
 #elif defined(ARCH_ARM64) && defined(OPSYS_DARWIN)
 /* on "Apple Silicon" (aka, arm64), memory that is executable cannot be written
