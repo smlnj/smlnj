@@ -25,8 +25,6 @@
  * A difference with Sven's port: errors now invoke an error callback, rather
  * than returning error strings while continuing processing options.
  * The full generality of the latter does not seem justified.
- *
- * QUESTION:
  *)
 
 signature GET_OPT =

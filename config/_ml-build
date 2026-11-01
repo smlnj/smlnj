@@ -5,10 +5,9 @@
 #
 # usage: ml-build [options] root-group [main-function [heapfile]]
 #   options:
-#       -hack           print this message
+#       -h              print this message
 #       -S setup
 #       -standalone
-# usage: ml-build [-S setup] root-group [main-function [heapfile]]
 #
 
 thisscript=$0
