@@ -371,11 +371,13 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
 
     statsOut->bytesPerCnt = BYTES_PER_COUNT;
 
-    /* count the number of bytes allocated since the last GC or reset */
+    /* include the number of bytes allocated since the last GC or reset (but
+     * don't add them to the running total, since that would double-count them)
+     */
     Addr_t nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
-    cntr_t nAlloc = heap->numAlloc;
-    CNTR_INCR(&nAlloc, nbytesAlloc);
-    statsOut->allocCnt = ROUND_COUNT(&nAlloc);
+    cntr_t tmp = heap->numAlloc;
+    CNTR_INCR(&tmp, nbytesAlloc);
+    statsOut->allocCnt = ROUND_COUNT(&tmp);
 #ifdef COUNT_STORE_LIST
     statsOut->storeCnt = heap->numStores.cnt;
 #endif
