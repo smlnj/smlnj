@@ -71,7 +71,9 @@ Here is a list of the issues and pull requests that are closed with this release
 | Issue
 | Description
 | [.bugid]#481#
-| {issue-base}/481/[Type checker unsoundness related to pattern matching]
+| {issue-base}/481[Type checker unsoundness related to pattern matching]
+| [.bugid]#483#
+| {pull-base}/483[Don't count nursery allocation again on every read of the GC counters]
 // | [.bugid]#@ID@#
 // | {issue-base}/@ID@[@DESCRIPTION@]
 |=======
