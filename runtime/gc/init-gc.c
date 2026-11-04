@@ -373,8 +373,9 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
 
     /* count the number of bytes allocated since the last GC or reset */
     Addr_t nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
-    CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-    statsOut->allocCnt = ROUND_COUNT(&heap->numAlloc);
+    cntr_t nAlloc = heap->numAlloc;
+    CNTR_INCR(&nAlloc, nbytesAlloc);
+    statsOut->allocCnt = ROUND_COUNT(&nAlloc);
 #ifdef COUNT_STORE_LIST
     statsOut->storeCnt = heap->numStores.cnt;
 #endif
