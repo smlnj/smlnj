@@ -12,11 +12,18 @@
 #       SMLNJ_VERSION
 #
 
+# QUESTION:
+#
+# an alternative approach is to read the `config/version` file and
+# parsing its contents
+# file(READ "${CMAKE_CURRENT_LIST_DIR}/config/version" config_version)
+# string(STRIP "${config_version}" PACKAGE_VERSION)
+
 if(NOT DEFINED SMLNJ_VERSION_MAJOR)
-  set(SMLNJ_VERSION_MAJOR 2025)
+  set(SMLNJ_VERSION_MAJOR 2026)
 endif()
 if(NOT DEFINED SMLNJ_VERSION_MINOR)
-  set(SMLNJ_VERSION_MINOR 2)
+  set(SMLNJ_VERSION_MINOR 3)
 endif()
 if(NOT DEFINED SMLNJ_VERSION_PATCH)
   set(SMLNJ_VERSION_PATCH 0)
@@ -31,3 +38,6 @@ if (NOT PACKAGE_VERSION)
   string(CONCAT PACKAGE_VERSION
     "${SMLNJ_VERSION}" "${SMLNJ_VERSION_SUFFIX}")
 endif()
+
+# cache the version in `config/version`
+file(WRITE "${CMAKE_CURRENT_LIST_DIR}/config/version" "${PACKAGE_VERSION}")
