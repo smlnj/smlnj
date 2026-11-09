@@ -20,6 +20,7 @@ using a _subtract-with-borrow_ algorithm.
 
 [source,sml]
 ------------
+signature RANDOM
 structure Random :> RANDOM
 ------------
 
@@ -127,4 +128,5 @@ val randRange : (int * int) -> rand -> int
 == See Also
 
 xref:str-Rand.adoc[`Rand`],
+xref:str-Rand48.adoc[`Rand48`],
 xref:smlnj-lib.adoc[__The Util Library__]

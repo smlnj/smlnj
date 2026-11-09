@@ -1,6 +1,6 @@
 (* contract-prim.sml
  *
- * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2024 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Contraction for CPS primitive operations.  For details about the fusion of conversion
@@ -96,13 +96,15 @@ structure ContractPrim : sig
     local
       val tt = {sz = Target.defaultIntSz, tag = true}
     in
-    fun tagInt n = NUM{ival = IntInf.fromInt n, ty = tt}
+    fun tagInt' n = NUM{ival = n, ty = tt}
+    fun tagInt n = tagInt'(IntInf.fromInt n)
     end
 
   (* get the size of an integer operation *)
     fun sizeOfKind (P.INT sz) = sz
       | sizeOfKind (P.UINT sz) = sz
       | sizeOfKind (P.FLOAT _) = bug "sizeOfKind(FLOAT _)"
+      | sizeOfKind P.ENUM = bug "sizeOfKind(ENUM)"
 
     fun mkNum (sz, ival) = let
         (* NOTE: currently all tagged integer constants have the default size *)
@@ -127,8 +129,8 @@ structure ContractPrim : sig
     datatype result
       = None                                    (* no contraction *)
       | Val of CPS.value                        (* contract to value *)
-      | Arith of CPS.P.arith * CPS.value list   (* strength reduction *)
-      | Pure of CPS.P.pure * CPS.value list     (* strength reduction *)
+      | Arith of P.arith * CPS.value list       (* strength reduction *)
+      | Pure of P.pure * CPS.value list         (* strength reduction *)
 
     fun lshift sz = P.PURE_ARITH{oper=P.LSHIFT, kind=P.UINT sz}
     fun rshift sz = P.PURE_ARITH{oper=P.RSHIFT, kind=P.INT sz}
@@ -147,6 +149,16 @@ structure ContractPrim : sig
     fun mkCOPY (from, to, arg) = if (from = to)
           then Val arg
           else Pure(P.COPY{from=from, to=to}, [arg])
+
+  (* an arithmetic expression that is guaranteed to produce an `Overflow` *)
+    val raiseOvflw = let
+          val maxInt = NUM{
+                  ival = IntInf.<<(1, Word.fromInt(Target.mlValueSz-1)) - 1,
+                  ty = {sz=Target.mlValueSz, tag=false}
+                }
+          in
+            Arith(P.IARITH{oper=P.IADD, sz=Target.mlValueSz}, [maxInt, maxInt])
+          end
 
   (* contraction for impure arithmetic operations; note that 64-bit IMUL, IDIV,
    * IMOD, IQUOT, and IREM have three arguments on 32-bit targets, so we need
@@ -180,8 +192,12 @@ structure ContractPrim : sig
             (***** IDIV *****)
             | (P.IARITH{oper=P.IDIV, ...}, v :: NUM{ival=1, ...} :: _) => Val v
             | (P.IARITH{oper=P.IDIV, ...}, _ :: NUM{ival=0, ...} :: _) => None
-            | (P.IARITH{oper=P.IDIV, sz=sz}, NUM i :: NUM j :: _) =>
+            | (P.IARITH{oper=P.IDIV, sz=sz}, NUM i :: NUM j :: _) => (
                 Val(NUM{ival = CA.sDiv(sz, #ival i, #ival j), ty = #ty i})
+                  (* Return an expression that will cause the `Overflow` exception,
+                   * since hardware division does not.
+                   *)
+                  handle Overflow => raiseOvflw)
             | (P.IARITH{oper=P.IDIV, sz}, v :: NUM{ival= ~1, ...} :: _) =>
                 Arith(P.IARITH{oper=P.INEG, sz=sz}, [v])
             | (P.IARITH{oper=P.IDIV, sz}, v :: NUM{ival, ...} :: _) => (case log2 ival
@@ -198,8 +214,12 @@ structure ContractPrim : sig
             (***** IQUOT *****)
             | (P.IARITH{oper=P.IQUOT, ...}, v :: NUM{ival=1, ...} :: _) => Val v
             | (P.IARITH{oper=P.IQUOT, ...}, _ :: NUM{ival=0, ...} :: _) => None
-            | (P.IARITH{oper=P.IQUOT, sz=sz}, NUM i :: NUM j :: _) =>
+            | (P.IARITH{oper=P.IQUOT, sz=sz}, NUM i :: NUM j :: _) => (
                 Val(NUM{ival = CA.sQuot(sz, #ival i, #ival j), ty = #ty i})
+                  (* Return an expression that will cause the `Overflow` exception,
+                   * since hardware division does not.
+                   *)
+                  handle Overflow => raiseOvflw)
             | (P.IARITH{oper=P.IQUOT, sz}, v :: NUM{ival= ~1, ...} :: _) =>
                 Arith(P.IARITH{oper=P.INEG, sz=sz}, [v])
             (***** IREM *****)
@@ -399,11 +419,33 @@ structure ContractPrim : sig
             | (P.PURE_ARITH{oper=P.NOTB, kind}, [NUM i]) =>
                 Val(NUM{ival = CA.bNot(sizeOfKind kind, #ival i), ty = #ty i})
             (***** ROTL *****)
+            | (P.PURE_ARITH{oper=P.ROTL, kind}, [NUM n, NUM m]) =>
+                Val(NUM{ival = CA.bRotateL(sizeOfKind kind, #ival n, #ival m), ty = #ty n})
             | (P.PURE_ARITH{oper=P.ROTL, ...}, [i as NUM{ival=0, ...}, _]) => Val i
-            | (P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
-                if (ival mod IntInf.fromInt sz = 0)
-                  then Val i (* effectively no rotation *)
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTL, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, tagInt' n])
                   else None
+                end
+            (***** ROTR *****)
+            | (P.PURE_ARITH{oper=P.ROTR, ...}, [i as NUM{ival=0, ...}, _]) => Val i
+(* TODO: rotation of all ones is also a no-op *)
+            | (p as P.PURE_ARITH{oper=P.ROTR, kind=P.UINT sz}, [v, i as NUM{ival, ...}]) =>
+                let
+                val sz' = IntInf.fromInt sz
+                val n = ival mod sz'
+                in
+                  if (n = 0) then Val v
+                  else if (sz' <> n) then Pure(p, [v, tagInt' n])
+                  else None
+                end
+            | (P.PURE_ARITH{oper=P.ROTR, kind}, [NUM n, NUM m]) =>
+                Val(NUM{ival = CA.bRotateR(sizeOfKind kind, #ival n, #ival m), ty = #ty n})
             (***** PURE_NUMSUBSCRIPT *****)
             | (P.PURE_NUMSUBSCRIPT{kind}, [STRING s, NUM i]) => let
                 val v = ord(String.sub(s, Int.fromLarge(#ival i)))
@@ -577,6 +619,7 @@ structure ContractPrim : sig
     fun branch (get : get_info) = let
           fun cond (P.UNBOXED, vl) = notCond(P.BOXED, vl)
             | cond (P.BOXED, [NUM{ty={tag, ...}, ...}]) = SOME(not tag)
+            | cond (P.BOXED, [ENUM _]) = SOME false
             | cond (P.BOXED, [STRING s]) = SOME true
             | cond (P.BOXED, [VAR v]) = (case #info(get v)
                  of RECinfo _ => SOME true
@@ -585,12 +628,15 @@ structure ContractPrim : sig
                   | PUREinfo(P.WRAP _, _) => SOME true
                   | _ => NONE
                 (* end case *))
+            | cond (P.IS_POW2 _, [i as NUM{ival, ...}]) =
+                SOME((ival <> 0) andalso (IntInf.andb(ival, ival-1) = 0))
             | cond (P.CMP{oper=P.LT, ...}, [VAR v, VAR w]) =
                 if v=w then SOME false else NONE
             | cond (P.CMP{oper=P.LT, kind=P.INT sz}, [NUM i, NUM j]) =
                 SOME(CA.toSigned(sz, #ival i) < CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLess(sz, #ival i, #ival j))
+            | cond (P.CMP{oper=P.LT, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i < j)
             | cond (P.CMP{oper=P.LT, kind=P.UINT sz}, [_, NUM{ival=0, ...}]) =
                 SOME false (* no unsigned value is < 0 *)
             | cond (P.CMP{oper=P.LT, kind=P.UINT _}, [VAR v, NUM{ival=256, ...}]) = (
@@ -608,6 +654,7 @@ structure ContractPrim : sig
                 SOME(CA.toSigned(sz, #ival i) <= CA.toSigned(sz, #ival j))
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM i, NUM j]) =
                 SOME(CA.uLessEq(sz, #ival i, #ival j))
+            | cond (P.CMP{oper=P.LTE, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i <= j)
             | cond (P.CMP{oper=P.LTE, kind=P.UINT sz}, [NUM{ival=0, ...}, _]) =
                 SOME true (* 0 is <= all unsigned values *)
             | cond (P.CMP{oper=P.GT, kind}, [w,v]) =
@@ -633,9 +680,11 @@ structure ContractPrim : sig
                  * their unsigned value.
                  *)
                 SOME(CA.uEq(k, #ival i, #ival j))
+            | cond (P.CMP{oper=P.EQL, kind=P.ENUM}, [ENUM i, ENUM j]) = SOME(i = j)
             | cond (P.CMP{oper=P.NEQ, kind}, vl) = notCond (P.CMP{oper=P.EQL, kind=kind}, vl)
             | cond (P.PEQL, [NUM i, NUM j]) =
                 SOME(CA.uEq(Target.pointerSz, #ival i, #ival j))
+            | cond (P.PEQL, [ENUM i, ENUM j]) = SOME(i = j)
             | cond (P.PNEQ, vl) = notCond(P.PEQL, vl)
             | cond _ = NONE
           and notCond arg = Option.map not (cond arg)

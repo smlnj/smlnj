@@ -1,6 +1,6 @@
 (* elabtop.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -45,7 +45,7 @@ structure ElabTop : ELABTOP =
     val debugPrint = (fn x => ElabDebug.debugPrint debugging x)
 
     fun ppAbsynDec ppstrm (dec,env) =
-	PPAbsyn.ppDec (env, NONE) ppstrm (dec, !Control_Print.printDepth)
+	PPAbsyn.ppDec (env, NONE) ppstrm (dec, PrintUtil.printDepth())
 
   (* localStrName: used in makeOpenDec to build redeclaration of components *)
     val localStrName = S.strSymbol "<a funny structure>"

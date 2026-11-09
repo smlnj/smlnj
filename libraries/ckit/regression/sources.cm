@@ -1,6 +1,14 @@
+(* sources.cm
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
 Group is
-   ../src/ast/sources.cm
+
+  $/basis.cm
+
+  ../src/ast/sources.cm
 (*   ../src/ast-utils/simplifier/sources.cm *)
 
    test-fn.sml
-

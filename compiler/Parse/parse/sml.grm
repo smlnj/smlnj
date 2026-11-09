@@ -1,6 +1,6 @@
 (* sml.grm
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This version of the parser supports the following Successor ML syntactic extensions.
@@ -264,6 +264,9 @@ rule	: pat DARROW exp        (Rule{pat=pat, exp=markexp(exp,expleft,expright)})
 		(* 	EXPRESSIONS	*)
 
 elabel	: selector EQUALOP exp	(selector,exp)
+	| id COLON ty		(labSymbol id,
+				 ConstraintExp{expr=VarExp [varSymbol id],
+					       constraint=ty})
 	| id			(labSymbol id, VarExp [varSymbol id])
 
 elabels : elabel COMMA elabels	(elabel :: elabels)

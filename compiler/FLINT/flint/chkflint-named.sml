@@ -1,6 +1,6 @@
 (* chkflint-named.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -195,6 +195,7 @@ fun check (postReify: bool) (envs: envs) lexp =
 		    fun typeofVal (VAR lv) = typeofVar lv
 		      | typeofVal (INT{ty, ...}) = LE.ltc_num ty
 		      | typeofVal (WORD{ty, ...}) = LE.ltc_num ty
+		      | typeofVal (ENUM _) = LE.ltc_enum
 		      | typeofVal (REAL _) = LE.ltc_real
 		      | typeofVal (STRING _) = LE.ltc_string
 		      (* REAL64: need more cases *)

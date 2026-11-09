@@ -1,6 +1,6 @@
 (* amd64-gen.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Translate MLRISC trees into AMD64 instructions.

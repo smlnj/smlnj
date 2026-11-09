@@ -129,26 +129,42 @@ structure ThompsonEngine : REGEXP_ENGINE =
                        * out and the other goes to next SPLIT in the sequence
                        * (when `optMax` is `SOME m`).
                        *)
-                      val suffix : frag = (case optMax
-                             of NONE => closure re
-                              | SOME m => let
-                                  val out = ref final
-                                  fun mkSuffix 1 = reComp re
-                                    | mkSuffix i = let
-                                        val f = reComp re
-                                        val f' = mkSuffix(i-1)
-                                        val s = newSplit(out, ref(#start f))
-                                        in
-                                          setOuts (f, #start f');
-                                          {start = s, out = out :: #out f'}
-                                        end
-                                  in
-                                    if (m <= min) then raise RE.CannotCompile else ();
-                                    mkSuffix (m - min)
-                                  end
+                      val suffixOpt : frag option = (case optMax
+                             of NONE => SOME(closure re)
+                              | SOME m => if (m < min)
+                                    then raise RE.CannotCompile
+                                  else if (m = min)
+                                    then NONE
+                                    else let
+                                      val out = ref final
+                                      fun mkSuffix 1 = reComp re
+                                        | mkSuffix i = let
+                                            val f = reComp re
+                                            val f' = mkSuffix(i-1)
+                                            val s = newSplit(out, ref(#start f))
+                                            in
+                                              setOuts (f, #start f');
+                                              {start = s, out = out :: #out f'}
+                                            end
+                                      in
+                                        SOME(mkSuffix (m - min))
+                                      end
                             (* end case *))
                       (* the prefix is `min` iterations of `re` *)
-                      fun mkPrefix 0 = suffix
+                      fun mkPrefix 0 = (case suffixOpt
+                             of NONE => raise RE.CannotCompile
+                              | SOME suffix => suffix
+                            (* end case *))
+                        | mkPrefix 1 = let
+                            val f = reComp re
+                            in
+                              case suffixOpt
+                               of NONE => f
+                                | SOME suffix => (
+                                    setOuts (f, #start suffix);
+                                    {start = #start f, out = #out suffix})
+                              (* end case *)
+                            end
                         | mkPrefix i = let
                             val f = reComp re
                             val f' = mkPrefix (i-1)
@@ -248,6 +264,7 @@ structure ThompsonEngine : REGEXP_ENGINE =
               (fn (i, st) => (print(Int.toString i ^ ": "); prState st; print "\n"))
 	        states
 	  end
+    val compile = fn arg => let val m = compile arg in dump m; m end
 ** -DEBUG *)
 
     (* is a stream at the end of line? *)
@@ -284,11 +301,15 @@ structure ThompsonEngine : REGEXP_ENGINE =
                 in
                   add (stateList, id)
                 end
-          (* get the list of start states by performing epsilon moves *)
-	  fun startStates strm = let
+          (* get the list of start states by performing epsilon moves.
+           *   - isFirst      true if the current stream position is the start of
+           *                  a line (or the input)
+           *   - strm         the initial stream to scan
+           *)
+	  fun startStates (isFirst, strm) = let
 		val stamp' = incr()
 		in
-		  addState (true, strm, stamp', [], start)
+		  addState (isFirst, strm, stamp', [], start)
 		end
           (* is the accepting state in the current set of states? *)
 	  fun isMatch stamp = (Array.sub(lastStamp, 0) = stamp)
@@ -373,7 +394,7 @@ end;
                               (* end case *)
                             end
                       (* end case *))
-                val nfaStart = startStates strm
+                val nfaStart = startStates (isFirst, strm)
                 val lastMatch = if isMatch(!stamp)
                       then SOME(0, strm)
                       else NONE

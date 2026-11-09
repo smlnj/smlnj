@@ -1,6 +1,6 @@
 (* generic-xml-tree.sml
  *
- * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is a generic instantiation of the XMLTreeFn with a representation of
@@ -19,7 +19,7 @@ structure GenericXMLTree : XML_TREE
 	  type attribute = (Atom.atom * string)
 
 	(* create an element; returns NONE if the element name is unrecognized *)
-	  fun element s = SOME(Atom.atom(CharVector.map Char.toUpper s))
+	  fun element s = SOME(Atom.atom s)
 
 	(* should leading and trailing whitespace be preserved in the content of this element? *)
 	  fun preserveWS _ = false

@@ -3,7 +3,7 @@
  * Hash-cons wrapper for `word` values; this directly uses the value
  * as its representation w/o a tabke.
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

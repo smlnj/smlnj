@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Build and installation script for SML/NJ System.
@@ -14,8 +14,16 @@
 cmd=$0
 here=$(pwd)
 
+#
+# set the SML root directory
+#
+SMLNJ_ROOT=$(CDPATH='' cd "$(dirname "$0")" && pwd)
+
+# default LLVM directory
+LLVM_DIRNAME=llvm21
+
 complain() {
-  echo "$cmd: !!! $@"
+  echo "$cmd: !!! $*"
   exit 1
 }
 
@@ -23,6 +31,7 @@ usage() {
   echo "usage: build.sh [ options ]"
   echo "options:"
   echo "    -h,-help           print this message and exit"
+  echo "    -install <dir>     specify installation directory (default $SMLNJ_ROOT)"
   echo "    -nolib             skip building libraries/tools"
   echo "    -runtime           build the runtime system only"
   echo "    -doc               generate documentation"
@@ -33,30 +42,34 @@ usage() {
   echo "developer options:"
   echo "    -debug-llvm        build a debug version of the LLVM libraries"
   echo "    -sanitize-address  sanitize addresses to check for memory bugs"
-  echo "    -llvmdir dir       specify the path to the LLVM directory"
+  echo "    -llvmdir dir       specify the name of the LLVM directory (default $LLVM_DIRNAME)"
   echo "    -build-cfgc        build the cfgc compiler"
   exit 1
 }
 
-# specifying the LLVM subdirectory (which is a submodule)
-#
-LLVM_DIRNAME=llvm18
-LLVMDIR_OPTION=
-
 # process options
+#
 NOLIB=no
 QUIET=yes
+INSTALLDIR=""
 CLEAN_INSTALL=no
 INSTALL_DEBUG=no
 INSTALL_DEV=no
 ONLY_RUNTIME=no
 MAKE_DOC=no
 SANITIZE_ADDRESS=no
+LLVMDIR_OPTION=""
 BUILD_LLVM_FLAGS=""
 while [ "$#" != "0" ] ; do
   arg=$1; shift
   case $arg in
     -help|-h) usage ;;
+    -install)
+      if [ "$#" -gt 0 ] ; then
+        INSTALLDIR=$1; shift
+      else
+        usage
+      fi ;;
     -nolib) NOLIB=yes ;;
     -verbose) QUIET=no ;;
     -clean) CLEAN_INSTALL=yes ;;
@@ -73,7 +86,7 @@ while [ "$#" != "0" ] ; do
       BUILD_LLVM_FLAGS="-sanitize-address $BUILD_LLVM_FLAGS"
       ;;
     -llvmdir)
-      if [[ $# -gt 0 ]] ; then
+      if [ "$#" -gt 0 ] ; then
         LLVMDIR_OPTION=$1; shift
       else
         usage
@@ -99,6 +112,8 @@ dsay() {
   fi
 }
 
+vsay "$cmd: SML root is $SMLNJ_ROOT"
+
 export CM_VERBOSE
 if [ x${QUIET} = xyes ] ; then
   CM_VERBOSE=false
@@ -108,15 +123,24 @@ fi
 
 # pre-flight cleanup
 #
+cd "$SMLNJ_ROOT" || exit 1
 if [ x${CLEAN_INSTALL} = xyes ] ; then
   vsay "$cmd: remove existing executables and libraries"
-  rm -rf bin lib runtime/bin runtime/lib runtime/$LLVM_DIRNAME/build
+  rm -rf bin include lib runtime/$LLVM_DIRNAME/build
+  (cd runtime/objs || exit; make clean)
+elif [ x${INSTALL_DEV} = xyes ]; then
+  # since we are building the development version, we first remove the
+  # existing runtime system
+  #
+  vsay "$cmd: remove existing run-time system"
+  rm -rf "bin/.run" runtime/$LLVM_DIRNAME/build
 fi
+
 #
 # create the preloads.standard file
 #
 if [ ! -r config/preloads ]; then
-  complain "File config/preloads is missing."
+  complain "File config/preloads is missing"
 fi
 cp config/preloads preloads.standard
 
@@ -124,17 +148,20 @@ SHELL=/bin/sh
 dsay "$cmd: Using shell $SHELL."
 
 #
-# set the SML root directory
+# check the installation directory (if specified)
 #
-cd $(dirname $cmd) || exit 1
-SMLNJ_ROOT=$(pwd)
-vsay "$cmd: SML root is $SMLNJ_ROOT."
-
-cd $here || exit 1
-cd "${INSTALLDIR:=$SMLNJ_ROOT}" || exit 1
-INSTALLDIR=`pwd`
-cd "$SMLNJ_ROOT" || exit 1
-vsay "$cmd: Installation directory is ${INSTALLDIR}."
+cd "$here" || exit 1
+if [ x"$INSTALLDIR" != x ] ; then
+  if [ ! -d "$INSTALLDIR" ] ; then
+    vsay "$cmd: creating $INSTALLDIR."
+    mkdir -p "$INSTALLDIR"
+  fi
+  cd "$INSTALLDIR" || exit 1
+  INSTALLDIR=$(pwd)
+else
+  INSTALLDIR="$SMLNJ_ROOT"
+fi
+vsay "$cmd: Installation directory is $INSTALLDIR."
 
 #
 # set the various directory and file pathname variables
@@ -142,7 +169,7 @@ vsay "$cmd: Installation directory is ${INSTALLDIR}."
 CONFIGDIR="$SMLNJ_ROOT/config"
 RUNTIMEDIR="$SMLNJ_ROOT/runtime"
 if [ x"$LLVMDIR_OPTION" != x ] ; then
-  LLVMDIR="$LLVMDIR_OPTION"
+  LLVMDIR="$RUNTIMEDIR/$LLVMDIR_OPTION"
   # check the validity of the path specified by the user
   if [ ! -x "$LLVMDIR/build-llvm.sh" ] ; then
     complain "invalid LLVM directory: build-llvm.sh script is missing"
@@ -159,7 +186,8 @@ HEAPDIR=$BINDIR/.heap		# where heap images live
 RUNDIR=$BINDIR/.run		# where executables (i.e., the RTS) live
 LIBDIR=$INSTALLDIR/lib		# where libraries live
 
-export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LLVMDIR
+# export variables used by the installer
+export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR LIBDIR LLVMDIR
 
 #
 # old root environment variable (for compatibility)
@@ -182,8 +210,10 @@ trap 'cd "$SMLNJ_ROOT"; rm -f $tmpfiles' 0 1 2 3 15
 # that will be queried by the bootstrap code)
 # Especially important is CM_PATHCONFIG.
 #
-export CM_PATHCONFIG
-CM_PATHCONFIG=$LIBDIR/pathconfig
+SMLNJ_HOME="$INSTALLDIR"
+export SMLNJ_HOME CM_PATHCONFIG
+CM_PATHCONFIG="$LIBDIR/pathconfig"
+
 #
 # the release version that we are installing
 #
@@ -239,7 +269,7 @@ fish() {
       break
     fi
   done
-  if [ $ORIG_CM_DIR_ARC = unknown ] ; then
+  if [ "$ORIG_CM_DIR_ARC" = unknown ] ; then
     complain "Could not determine CM metadata directory name"
   else
     vsay "$cmd: CM metadata directory name is \"${ORIG_CM_DIR_ARC}\""
@@ -325,13 +355,13 @@ installdriver _arch-n-opsys .arch-n-opsys
 # corresponding variables...
 #
 ARCH_N_OPSYS=`"$BINDIR"/.arch-n-opsys`
+# shellcheck disable=SC2181
 if [ "$?" != "0" ]; then
   complain "$BINDIR/.arch-n-opsys fails on this machine; please patch by hand and repeat the installation."
-  exit 2
 else
   vsay "$cmd: Script $BINDIR/.arch-n-opsys reports $ARCH_N_OPSYS."
 fi
-eval $ARCH_N_OPSYS
+eval "$ARCH_N_OPSYS"
 
 #
 # now install most of the other driver scripts
@@ -361,6 +391,7 @@ case $OPSYS in
     ;;
   linux)
     XDEFS=$("$CONFIGDIR/chk-global-names.sh")
+    # shellcheck disable=SC2181 # need to set XDEFS to result of command
     if [ "$?" != "0" ]; then
       complain "Problems checking for underscores in asm names."
     fi
@@ -370,57 +401,57 @@ esac
 # add other runtime-system options
 #
 if [ x"$SANITIZE_ADDRESS" = xyes ] ; then
-  if [ x"XDEFS" = x ] ; then
+  if [ x"$XDEFS" = x ] ; then
     XDEFS="-fsanitize=address"
   else
     XDEFS="$XDEFS -fsanitize=address"
   fi
 fi
 
-if [ x"XDEFS" != x ] ; then
-  if [ x"EXTRA_DEFS" = x ] ; then
-    EXTRA_DEFS="XDEFS=\"$XDEFS\""
-  else
-    EXTRA_DEFS="XDEFS=\"$XDEFS\" $EXTRA_DEFS"
-  fi
-fi
-
 #
 # build the run-time system
 #
-if [ -x "$RUNDIR"/run.$ARCH-$OPSYS ]; then
-  vsay $cmd: Run-time system already exists.
+if [ -x "$RUNDIR/run.$ARCH-$OPSYS" ]; then
+  vsay "$cmd: Run-time system already exists."
 else
   #
   # first we configure and build the LLVM and CFGCodeGen libraries.  Note that
   # if the "-dev" option was given, then we rebuild LLVM even if it is already
   # built, since we want to assure that the cross compiler is supported.
   #
-  BUILD_LLVM_FLAGS="-install $RUNTIMEDIR $BUILD_LLVM_FLAGS"
+  BUILD_LLVM_FLAGS="-install $INSTALLDIR $BUILD_LLVM_FLAGS"
   if [ x"$INSTALL_DEV" = xyes ] ; then
-    vsay $cmd: Building LLVM for all targets in $LLVMDIR
+    vsay "$cmd: Building LLVM for all targets in $LLVMDIR"
     cd "$LLVMDIR" || exit 1
-    dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
+    dsay "./build-llvm.sh $BUILD_LLVM_FLAGS"
+    # shellcheck disable=SC2086 # want BUILD_LLVM_FLAGS to be split
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
-  elif [ ! -x "$RUNTIMEDIR/bin/llvm-config" ] ; then
-    vsay $cmd: Building LLVM in $LLVMDIR
+  elif [ ! -x "$BINDIR/llvm-config" ] ; then
+    vsay "$cmd: Building LLVM in $LLVMDIR"
     cd "$LLVMDIR" || exit 1
-    dsay ./build-llvm.sh $BUILD_LLVM_FLAGS
+    dsay "./build-llvm.sh $BUILD_LLVM_FLAGS"
+    # shellcheck disable=SC2086 # want BUILD_LLVM_FLAGS to be split
     ./build-llvm.sh $BUILD_LLVM_FLAGS || complain "Unable to build LLVM"
   fi
   cd "$RUNTIMEDIR/objs" || exit 1
-  vsay $cmd: Compiling the run-time system.
-  make -f $RT_MAKEFILE $EXTRA_DEFS
-  if [ -x run.$ARCH-$OPSYS ]; then
-    mv run.$ARCH-$OPSYS "$RUNDIR"
-    if [ -f runx.$ARCH-$OPSYS ]; then
-      mv runx.$ARCH-$OPSYS "$RUNDIR"
+  vsay "$cmd: Compiling the run-time system."
+  if [ x"$XDEFS" != x ] ; then
+    # shellcheck disable=SC2086 # want EXTRA_DEFS to be split
+    make -f $RT_MAKEFILE "XDEFS=\"$XDEFS\"" $EXTRA_DEFS
+  else
+    # shellcheck disable=SC2086 # want EXTRA_DEFS to be split
+    make -f "$RT_MAKEFILE" $EXTRA_DEFS
+  fi
+  if [ -x "run.$ARCH-$OPSYS" ]; then
+    mv "run.$ARCH-$OPSYS" "$RUNDIR"
+    if [ -f "runx.$ARCH-$OPSYS" ]; then
+      mv "runx.$ARCH-$OPSYS" "$RUNDIR"
     fi
-    if [ -f runx.$ARCH-$OPSYS.so ]; then
-      mv runx.$ARCH-$OPSYS.so "$RUNDIR"
+    if [ -f "runx.$ARCH-$OPSYS.so" ]; then
+      mv "runx.$ARCH-$OPSYS.so" "$RUNDIR"
     fi
-    if [ -f runx.$ARCH-$OPSYS.a ]; then
-      mv runx.$ARCH-$OPSYS.a "$RUNDIR"
+    if [ -f "runx.$ARCH-$OPSYS.a" ]; then
+      mv "runx.$ARCH-$OPSYS.a" "$RUNDIR"
     fi
     make MAKE=make clean
   else
@@ -429,49 +460,56 @@ else
 fi
 cd "$SMLNJ_ROOT" || exit 1
 
-vsay $cmd: runtime system built
+#
+# remove unused LLVM executables from bin directory
+#
+for f in llvm-libtool-darwin llvm-tblgen ; do
+  rm -f bin/$f
+done
+
+vsay "$cmd: runtime system built"
 if [ x"$ONLY_RUNTIME" = xyes ] ; then
   exit 1
 fi
 
 #
-# the name of the bin files directory
+# the name of the boot files archive and directory
 #
 # FIXME: should make these file names more consistent!!
 #
-BOOT_ARCHIVE=boot.$ARCH-unix
-BOOT_FILES=sml.boot.$ARCH-unix
+BOOT_ARCHIVE="boot.$ARCH-unix"
+BOOT_FILES="sml.boot.$ARCH-unix"
 
 #
 # boot the base SML system
 #
-if [ -r "$HEAPDIR"/sml.$HEAP_SUFFIX ]; then
+if [ -r "$HEAPDIR/sml.$HEAP_SUFFIX" ]; then
   vsay "$cmd: Heap image $HEAPDIR/sml.$HEAP_SUFFIX already exists."
   fish "$LIBDIR"/smlnj/basis
   # ignore requested arc name since we have to live with what is there:
   export CM_DIR_ARC
-  CM_DIR_ARC=$ORIG_CM_DIR_ARC
+  CM_DIR_ARC="$ORIG_CM_DIR_ARC"
   # now re-dump the heap image:
   vsay "$cmd: Re-creating a (customized) heap image..."
   "$BINDIR"/sml @CMredump "$SMLNJ_ROOT"/sml
   cd "$SMLNJ_ROOT" || exit 1
-  if [ -r sml.$HEAP_SUFFIX ]; then
-    mv sml.$HEAP_SUFFIX "$HEAPDIR"
+  if [ -r "sml.$HEAP_SUFFIX" ]; then
+    mv "sml.$HEAP_SUFFIX" "$HEAPDIR"
   else
     complain "Unable to re-create heap image (sml.$HEAP_SUFFIX)."
   fi
 else
   cd "$SMLNJ_ROOT" || exit 1
-
+  vsay "$cmd: unpack boot files ($BOOT_ARCHIVE)"
   "$CONFIGDIR"/unpack "$SMLNJ_ROOT" "$BOOT_ARCHIVE"
-
-  fish "$SMLNJ_ROOT"/"$BOOT_FILES"/smlnj/basis
+  vsay "$cmd: extract $SMLNJ_ROOT/$BOOT_FILES/smlnj/basis"
+  fish "$SMLNJ_ROOT/$BOOT_FILES/smlnj/basis"
 
   # Target arc:
   export CM_DIR_ARC
   CM_DIR_ARC=${CM_DIR_ARC:-".cm"}
 
-  if [ $CM_DIR_ARC != $ORIG_CM_DIR_ARC ] ; then
+  if [ "$CM_DIR_ARC" != "$ORIG_CM_DIR_ARC" ] ; then
     # now we have to make a symbolic link for each occurrence of
     # $ORIG_CM_DIR_ARC to $CM_DIR_ARC
     dirarcs "$ORIG_CM_DIR_ARC" "$CM_DIR_ARC" "$BOOT_FILES"
@@ -480,23 +518,23 @@ else
   cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
 
   # now link (boot) the system and let it initialize itself...
-  dsay "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC
-  if "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc=$ALLOC ; then
+  dsay "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc="$ALLOC"
+  if "$BINDIR"/.link-sml @SMLheap="$SMLNJ_ROOT"/sml @SMLboot=BOOTLIST @SMLalloc="$ALLOC" ; then
     cd "$SMLNJ_ROOT" || exit 1
-    if [ -r sml.$HEAP_SUFFIX ]; then
-      mv sml.$HEAP_SUFFIX "$HEAPDIR"
+    if [ -r "sml.$HEAP_SUFFIX" ]; then
+      mv "sml.$HEAP_SUFFIX" "$HEAPDIR"
       cd "$BINDIR" || exit 1
       ln -s .run-sml sml
       #
       # Now move all stable libraries to $LIBDIR and generate
       # the pathconfig file.
       #
-      cd "$SMLNJ_ROOT"/"$BOOT_FILES" || exit 1
+      cd "$SMLNJ_ROOT/$BOOT_FILES" || exit 1
       for anchor in * ; do
-        if [ -d $anchor ] ; then
+        if [ -d "$anchor" ] ; then
           dsay "move $anchor to $LIBDIR"
-          echo $anchor $anchor >> $CM_PATHCONFIG
-          move $anchor "$LIBDIR"/$anchor
+          echo "$anchor" "$anchor" >> "$CM_PATHCONFIG"
+          move "$anchor" "$LIBDIR/$anchor"
         fi
       done
       cd "$SMLNJ_ROOT" || exit 1
@@ -523,12 +561,10 @@ cd "$SMLNJ_ROOT" || exit 1
 #
 if [ x"$NOLIB" = xno ] ; then
   vsay "$cmd: Installing other libraries and programs:"
-  # export variables used by the installer
-  export SMLNJ_ROOT INSTALLDIR CONFIGDIR BINDIR
   CM_TOLERATE_TOOL_FAILURES=true
   export CM_TOLERATE_TOOL_FAILURES
   if "$BINDIR"/sml -m \$smlnj/installer.cm ; then
-    vsay $cmd: Installation complete.
+    vsay "$cmd: Installation complete."
   else
     complain "Installation of libraries and programs failed."
   fi
@@ -545,8 +581,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   #
   unset CM_PATHCONFIG CM_DIR_ARC CM_TOLERATE_TOOL_FAILURES
   export SMLNJ_HOME SML_CMD
-  SMLNJ_HOME=$here      # gives access to the version of SML/NJ that we are building
-  SML_CMD=$here/bin/sml
+  SML_CMD="$BINDIR/sml"
   cd doc || exit 1
   if autoconf -Iconfig ; then
     :
@@ -557,7 +592,7 @@ if [ x"$MAKE_DOC" = xyes ] ; then
   ./configure
 
   if make doc && make distclean ; then
-    vsay $cmd: Documentation generation complete.
+    vsay "$cmd: Documentation generation complete."
   else
     complain "Error generating documentation."
   fi

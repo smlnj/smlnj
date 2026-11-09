@@ -1,18 +1,26 @@
-structure Preitem = 
+(* preitem.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
+structure Preitem =
   struct
 
     structure S = LLKSpec
 
-    fun ntToString nt = 
-	  if not (Nonterm.isSubrule nt) then Nonterm.name nt
-	  else "(" ^ 
-	       (String.concatWith " | " (map prodToString (Nonterm.prods nt))) ^
-	       ")"
+    fun ntToString nt = if not (Nonterm.isSubrule nt)
+          then Nonterm.toString nt
+	  else concat[
+              "(",
+              String.concatWithMap " | " prodToString (Nonterm.prods nt),
+              ")"
+            ]
 
     and prodToString (S.PROD{rhs, ...}) = listToString (map symOf (!rhs))
     and symOf (S.ITEM {sym, ...}) = sym
     and toString (S.TOK t) = Token.toString t
-      | toString (S.NONTERM (nt, args)) = 
+      | toString (S.NONTERM (nt, args)) =
 	  String.concat ([ntToString nt] @ (
 	    case args
 	     of SOME args =>
@@ -24,9 +32,9 @@ structure Preitem =
     and listToString l = String.concatWith " " (map toString l)
 
     fun name (S.TOK t) = Token.name t
-      | name (S.NONTERM (nt, _)) = Nonterm.name nt
-      | name (S.CLOS nt) = Nonterm.name nt
-      | name (S.POSCLOS nt) = Nonterm.name nt
-      | name (S.OPT nt) = Nonterm.name nt
+      | name (S.NONTERM (nt, _)) = Nonterm.toString nt
+      | name (S.CLOS nt) = Nonterm.toString nt
+      | name (S.POSCLOS nt) = Nonterm.toString nt
+      | name (S.OPT nt) = Nonterm.toString nt
 
   end

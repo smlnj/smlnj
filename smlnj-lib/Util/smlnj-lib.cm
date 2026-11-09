@@ -47,8 +47,10 @@ signature PROP_LIST
 signature QUEUE
 signature RAND
 signature RANDOM
+signature RAND48
 signature SCAN
 signature SPLAY_TREE
+signature TRILEAN
 signature UREF
 signature UTF8
 
@@ -99,9 +101,12 @@ structure PropList
 structure Queue
 structure Rand
 structure Random
+structure Rand48
 structure Scan
 structure SimpleURef
 structure TimeLimit
+structure Timestamp
+structure Trilean
 structure URef
 structure WordHashTable
 structure WordRedBlackMap
@@ -231,6 +236,8 @@ queue.sml
 rand-sig.sml
 rand.sml
 random-sig.sml
+rand48-sig.sml
+rand48.sml
 real-format.sml
 redblack-map-fn.sml
 redblack-set-fn.sml
@@ -242,6 +249,9 @@ splay-set-fn.sml
 splaytree-sig.sml
 splaytree.sml
 time-limit.sml
+timestamp.sml
+trilean-sig.sml
+trilean.sml
 uref-sig.sml
 uref.sml
 word-hash-table.sml

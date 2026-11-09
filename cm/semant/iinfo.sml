@@ -4,7 +4,7 @@
  * dependency graph.  (This is information about a library "interface",
  * hence "iinfo" = "interface information".)
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)

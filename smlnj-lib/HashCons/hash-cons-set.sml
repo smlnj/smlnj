@@ -4,7 +4,7 @@
  * trees.  Eventually, it should be replaced by an implmementation that uses
  * Patricia trees.
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -217,11 +217,8 @@ structure HashConsSet : HASH_CONS_SET =
 	    fn init => fn (SET(_, m)) => foldf(m, init)
 	  end
 
-    val foldl = fold	(* DEPRECATED *)
-    val foldr = fold	(* DEPRECATED *)
-
   (* return an ordered list of the items in the set. *)
-    fun toList s = foldr (fn (x, l) => x::l) [] s
+    fun toList s = fold (fn (x, l) => x::l) [] s
 
   (* functions for walking the tree while keeping a stack of parents
    * to be visited.
@@ -416,7 +413,7 @@ structure HashConsSet : HASH_CONS_SET =
     fun map f = let
 	  fun addf (x, m) = add(m, f x)
 	  in
-	    foldl addf empty
+	    fold addf empty
 	  end
 
     fun mapPartial f (SET(_, m)) = let
@@ -483,8 +480,5 @@ structure HashConsSet : HASH_CONS_SET =
 	  in
 	    fn (SET(_, t)) => test t
 	  end
-
-  (* deprecated *)
-    val listItems = toList
 
   end

@@ -1,6 +1,6 @@
 (* hash-key-sig.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Abstract hash table keys.  This is the argument signature for the hash table

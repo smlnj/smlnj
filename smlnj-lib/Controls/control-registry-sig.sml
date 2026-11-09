@@ -1,6 +1,6 @@
 (* control-registry-sig.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A registry collects together string controls; it supports generation

@@ -43,7 +43,7 @@ is
 (* code to rebind modules and signatures to the old APIs *)
   basis.sml
 #if defined(SIZE_64)
-  target32-basis.sml
-#else (* SIZE_32 *)
   target64-basis.sml
+#else (* SIZE_32 *)
+  target32-basis.sml
 #endif

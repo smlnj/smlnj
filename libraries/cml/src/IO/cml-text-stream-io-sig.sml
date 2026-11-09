@@ -1,6 +1,6 @@
 (* cml-text-stream-io-sig.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This extends the SMLBL TEXT_STREAM_IO interface with event-valued operations.

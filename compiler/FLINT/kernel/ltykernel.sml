@@ -15,7 +15,6 @@ local
   open Lty
 
   val debugging : bool ref = FLINT_Control.lkdebugging
-  val dp : int ref = Control_Print.printDepth
 
   val say = Control_Print.say
   fun newline () = say "\n"
@@ -185,13 +184,13 @@ fun tcc_app (fntyc, argtycs) =
 			      (with_pp (fn s =>
 				 (PU.pps s "ERROR: checkParamArity - FIX";
 				  PP.newline s;
-				  PPLty.ppTyc (!dp) s gen;
+				  PPLty.ppTyc (PrintUtil.printDepth()) s gen;
 				  PP.newline s));
 			       bug "FIX without generator!" ))
 		       | _ => (with_pp (fn s =>
 				 (PU.pps s "getArity?:";
 				  PP.newline s;
-				  PPLty.ppTyc (!dp) s tc;
+				  PPLty.ppTyc (PrintUtil.printDepth()) s tc;
 				  PP.newline s));
 			       0))  (* giving up! *)
 		val arity = getArity tc
@@ -203,7 +202,7 @@ fun tcc_app (fntyc, argtycs) =
 			PU.pps s "no. arguments: "; PU.ppi s (length tcs);
 			PP.newline s;
 			PU.pps s "operator:"; PP.newline s;
-			PPLty.ppTyc (!dp) s tc; PP.newline s) )
+			PPLty.ppTyc (PrintUtil.printDepth()) s tc; PP.newline s) )
 	    end
     in
 	((* checkParamArity(fntyc, argtycs); *)
@@ -303,7 +302,7 @@ and tcc_arrow (x as (FF_FIXED, _, _)) = tc_inj (TC_ARROW x)
 		   in (flag, ntycs)
 		   end
 		 | _ => bug "tcc_arrow - multiple tycs")
-	  val (argflag, argtycs) = 
+	  val (argflag, argtycs) =
 	      if argflag then (argflag, argtycs)   (* known argty rep *)
 	      else tcs_autoflat ("argtycs", argtycs)
           val (resflag, restycs) =
@@ -330,7 +329,7 @@ and tc_lzrd(t: tyc) =
 		             handle TCENV =>
                                (with_pp(fn s =>
                                  (PU.pps s "tc_lzrd.prop:"; PP.newline s;
-                                  PPLty.ppTyc (!dp) s z; PP.newline s));
+                                  PPLty.ppTyc (PrintUtil.printDepth()) s z; PP.newline s));
                                 bug "tc_lzrd prop")
              in (case tc_out x
                   of TC_VAR (n,k) =>
@@ -355,14 +354,14 @@ and tc_lzrd(t: tyc) =
                        in openHVBox 0;
                           pps "***Debugging***"; break{nsp=1,offset=0};
                           pps "tc_lzrd arg:"; newline();
-                          PPLty.ppTyc (!dp) s t; break{nsp=1,offset=0};
+                          PPLty.ppTyc (PrintUtil.printDepth()) s t; break{nsp=1,offset=0};
 		          pps "n = "; ppi n; pps ", k = "; ppi k;
 			  newline();
                           pps "length(ts) = : "; ppi (length ts);
 			  newline();
                           pps "ts elements: "; break{nsp=2,offset=2};
                           openHOVBox 2;
-                          PPLty.ppList s {sep=",",pp=PPLty.ppTyc (!dp)} ts;
+                          PPLty.ppList s {sep=",",pp=PPLty.ppTyc (PrintUtil.printDepth())} ts;
                           closeBox ();
                           closeBox ()
 			end);
@@ -440,7 +439,7 @@ and lt_lzrd t =
    in if ltp_norm(t) then t else g t
   end (* function lt_lzrd *)
 
-(* wrap_reduce : tyc -> tyc 
+(* wrap_reduce : tyc -> tyc
  *  used in TC_WRAP case of tc_whnm
  *  INVARIANT: tc itself is in whnm but wrap_is_whnm tc = false (why ???) *)
 and wrap_reduce tc =

@@ -4,7 +4,7 @@
  */
 
 /*
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Utility code for date functions on Windows
@@ -68,7 +68,7 @@ int _ml_year_day (const SYSTEMTIME *st)
 ml_val_t _ml_alloc_tm (ml_state_t *msp, const SYSTEMTIME *st, BOOL isDST)
 {
   /* The SYSTEMTIME struct has everything that we need except the day of the year */
-    ML_AllocWrite(msp, 0, MAKE_DESC(DTAG_record, 9));
+    ML_AllocWrite(msp, 0, MAKE_DESC(9, DTAG_record));
     ML_AllocWrite(msp, 1, INT_CtoML(st->wSecond));
     ML_AllocWrite(msp, 2, INT_CtoML(st->wMinute));
     ML_AllocWrite(msp, 3, INT_CtoML(st->wHour));

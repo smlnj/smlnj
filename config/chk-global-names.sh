@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Check to see if "_" is prepended to global names in the symbol table.
@@ -23,7 +23,7 @@ if [ "$?" != "0" ]; then
     exit 1
 fi
 
-if `nm $TMP_FILE | grep -q "_$WITNESS"`
+if nm $TMP_FILE | grep -q "_$WITNESS"
   then echo "-DGLOBALS_HAVE_UNDERSCORE"
 fi
 

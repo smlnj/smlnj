@@ -1,6 +1,6 @@
 (* environ.sml
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -183,7 +183,7 @@ fun describe static (s: symbol) : unit =
 	  (fn ppstrm =>
 	    (PP.openHVBox ppstrm (PP.Rel 0);
 	      PPModules.ppBinding ppstrm static
-	        (s, SE.look(static,s), !Control.Print.printDepth);
+	        (s, SE.look(static,s), PrintUtil.printDepth());
 	      PP.newline ppstrm;
 	     PP.closeBox ppstrm))
       handle SE.Unbound => print (S.name s ^ " not found\n")

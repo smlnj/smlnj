@@ -13,7 +13,7 @@
  * and thus have troubles with the birthday test. Thus, we combine this SWB
  * generator with the linear congruential generator (48271*a)mod(2^31-1).
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

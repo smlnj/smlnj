@@ -1,6 +1,7 @@
 /* sendbuf.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  */
 
 #include "sockets-osdep.h"
@@ -14,7 +15,7 @@
  *
  * Send data from the buffer; bytes is either a Word8Array.array, or
  * a Word8Vector.vector.  The arguemnts are: socket, data buffer, start
- * position, number of bytes, OOB flag, and don't_route flag.
+ * position, number of bytes, don't-route flag, and OOB flag.
  */
 ml_val_t _ml_Sock_sendbuf (ml_state_t *msp, ml_val_t arg)
 {
@@ -26,8 +27,8 @@ ml_val_t _ml_Sock_sendbuf (ml_state_t *msp, ml_val_t arg)
 
   /* initialize the flags */
     flgs = 0;
-    if (REC_SEL(arg, 4) == ML_true) flgs |= MSG_OOB;
-    if (REC_SEL(arg, 5) == ML_true) flgs |= MSG_DONTROUTE;
+    if (REC_SEL(arg, 4) == ML_true) flgs |= MSG_DONTROUTE;
+    if (REC_SEL(arg, 5) == ML_true) flgs |= MSG_OOB;
 
     n = send (sock, data, nbytes, flgs);
 

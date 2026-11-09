@@ -73,7 +73,7 @@ structure Real64ToFRep : sig
                     else (i, a, b, c, digit, allAZero, allBZero)
                 end
           val (i, a, b, c, digit, allAZero, allBZero) =
-                iter1 (0, a, b, if acceptBounds then c - 1 else c, 0, true, true)
+                iter1 (0, a, b, if acceptBounds then c else c - 1, 0, true, true)
           fun iter2 (i, a, b, c, digit, allBZero) = let
                 val (aq10, ar10) = IntInf.quotRem (a, 10)
                 in
@@ -132,8 +132,8 @@ structure Real64ToFRep : sig
                       then v - 0w1
                       else v - 0w2
                 val w = v + 0w2
-                (* convert (u, v, w)×2^e₂ to a decimal power base:
-                 * (a, b, c)×10^e₁₀ == (u, v, w)×2^e₂
+                (* convert (u, v, w)×2^e2 to a decimal power base:
+                 * (a, b, c)×10^e10 == (u, v, w)×2^e2
                  *)
                 val (e10, a, b, c) = if e2 >= 0
                       then let

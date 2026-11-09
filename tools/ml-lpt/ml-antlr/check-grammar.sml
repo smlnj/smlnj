@@ -277,7 +277,7 @@ structure CheckGrammar : sig
 		val (nt as S.NT{prods, formals, loc = ntLoc, ...}, nextProdID) =
 		      lookupNTerm lhs
 		val nextSRID = nextId (ref 1)
-		val prodName = concat [Nonterm.name nt, "_PROD_", Int.toString (nextProdID())]
+		val prodName = concat [Nonterm.toString nt, "_PROD_", Int.toString (nextProdID())]
              (* check the rhs, creating a production *)
 		val Syn.RHS {items, action, try, predicate, loc = rhsLoc} = rhs
 		val (userNames, items) = ListPair.unzip items
@@ -371,16 +371,19 @@ structure CheckGrammar : sig
 		 of NONE => hd nterms
 		  | SOME s => findNT "%start" s
 		(* end case *))
-	  val entryPoints = map (findNT "%entry") (ATbl.listItemsi entryPts)
+	  val entryPoints = (
+                (* ensure that `startnt` is not in the list of entries *)
+                ignore (ATbl.findAndRemove entryPts (Nonterm.name startnt));
+                map (findNT "%entry") (ATbl.listItemsi entryPts))
 	  val sortedTops = Nonterm.topsort (startnt::entryPoints)
-	  val topsSet = AtomSet.addList
-			  (AtomSet.empty,
-			   map (Atom.atom o Nonterm.name) (List.concat sortedTops))
+	  val topsSet = AtomSet.addList (
+                AtomSet.empty,
+                map Nonterm.name (List.concat sortedTops))
 	(* check that all defined nonterminals are used *)
 	  fun checkNTInTops nt =
 	        if Nonterm.isSubrule nt = false
-		  andalso AtomSet.member (topsSet, Atom.atom (Nonterm.name nt)) = false
-		then Err.warning ["Warning: nonterminal ", Nonterm.name nt,
+		  andalso AtomSet.member (topsSet, Nonterm.name nt) = false
+		then Err.warning ["Warning: nonterminal ", Nonterm.toString nt,
 				  " is not reachable from any entry point."]
 		else ()
 	  val _ = app checkNTInTops nterms

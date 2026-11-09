@@ -65,8 +65,8 @@ val topOrder : { root: node, follow: node -> node list } -> component list
   `topOrder` {roots, follow}` returns a topologically-sorted list of
   strongly-connected components for a directed graph.  The graph is specified
   by a list of root nodes and a _follow_ (or _successor_) function that returns
-  the list of successors for a node.  The first component in the result will
-  contain the first node in the `roots` list.
+  the list of successors for a node.  Assuming that `roots` does not contain
+  duplicates, the first component in the result will contain the first root.
 
 `[.kw]#val# topOrder : { root: node, follow: node \-> node list } \-> component list`::
   `topOrder {root, follow}` is equivalent to the expression

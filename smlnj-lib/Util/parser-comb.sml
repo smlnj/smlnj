@@ -1,6 +1,6 @@
 (* parser-comb.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Parser combinators over readers.  These are modeled after the Haskell
@@ -61,7 +61,7 @@ structure ParserComb : PARSER_COMB =
 
     fun skipBefore pred p getc strm = let
 	  fun skip' strm = (case getc strm
-		 of NONE => NONE
+		 of NONE => p getc strm
 		  | SOME(c, strm') =>
 		      if (pred c) then skip' strm' else p getc strm
 		(* end case *))

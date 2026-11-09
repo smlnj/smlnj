@@ -1,6 +1,6 @@
 (* json-rpc-util.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Support for generating and parsing JSON RPC messages (Version 2.0).
@@ -154,7 +154,7 @@ structure JSONRPCUtil : sig
     fun error (code, msg, optId) = let
 	  val err = ("error", OBJECT[
 		  ("code", INT(IntInf.fromInt code)),
-		  ("msg", STRING msg)
+		  ("message", STRING msg)
 		])
 	  val id = (case optId
 		 of NONE => ("id", NULL)
@@ -167,7 +167,7 @@ structure JSONRPCUtil : sig
     fun errorWithData (code, msg, data, optId) = let
 	  val err = ("error", OBJECT[
 		  ("code", INT(IntInf.fromInt code)),
-		  ("msg", STRING msg),
+		  ("message", STRING msg),
 		  ("data", data)
 		])
 	  val id = (case optId
@@ -211,7 +211,7 @@ structure JSONRPCUtil : sig
 	    | parse1 _ = InvalidReq
 	  and parse2 (("params", v as ARRAY _)::flds, m) = parse3 (flds, m, SOME v)
 	    | parse2 (("params", v as OBJECT _)::flds, m) = parse3 (flds, m, SOME v)
-	    | parse2 _ = InvalidReq
+            | parse2 (flds, m) = parse3 (flds, m, NONE)
 	  and parse3 ([], m, params) = Notify{method = m, params = params}
 	    | parse3 ([("id", INT id)], m, params) = Request{
 		  method = m, params = params, id = IdNum(IntInf.toInt id)

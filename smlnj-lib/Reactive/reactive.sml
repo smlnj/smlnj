@@ -1,6 +1,6 @@
 (* reactive.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A simple ractive engine modelled after RC and SugarCubes.
@@ -80,7 +80,7 @@ structure Reactive : REACTIVE =
 	  val body' = trans (body, initialEnv)
 	  in
 	    M.M{
-		now = ref 0,
+		now = ref 2,
 		moveFlg = ref false,
 		endOfInstant = ref false,
 		prog = body',

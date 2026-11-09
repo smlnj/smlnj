@@ -19,8 +19,10 @@
  */
 void ResetTimers (vproc_state_t *vsp)
 {
-    vsp->vp_gcTime->seconds = 0;
-    vsp->vp_gcTime->uSeconds = 0;
+    vsp->vp_gcUsrTime->seconds = 0;
+    vsp->vp_gcUsrTime->uSeconds = 0;
+    vsp->vp_gcSysTime->seconds = 0;
+    vsp->vp_gcSysTime->uSeconds = 0;
 
 } /* end of ResetTimers. */
 
@@ -29,7 +31,7 @@ void ResetTimers (vproc_state_t *vsp)
  */
 void StartGCTimer (vproc_state_t *vsp)
 {
-    GetCPUTime (vsp->vp_gcTime0, NIL(Time_t *));
+    GetCPUTime (vsp->vp_gcUsrTime0, vsp->vp_gcSysTime0);
 
 } /* end of StartGCTimer */
 
@@ -43,35 +45,60 @@ void StartGCTimer (vproc_state_t *vsp)
 void StopGCTimer (vproc_state_t *vsp, long *time)
 {
     int			sec, usec;
-    Time_t		t1;
-    Time_t		*gt0 = vsp->vp_gcTime0;
-    Time_t		*gt = vsp->vp_gcTime;
+    Time_t		ut, st;
+    Time_t		*usr0 = vsp->vp_gcUsrTime0;
+    Time_t		*sys0 = vsp->vp_gcSysTime0;
+    Time_t		*usr = vsp->vp_gcUsrTime;
+    Time_t		*sys = vsp->vp_gcSysTime;
 
-    GetCPUTime (&t1, NIL(Time_t *));
+    GetCPUTime (&ut, &st);
 
-    sec = t1.seconds - gt0->seconds;
-    usec = t1.uSeconds - gt0->uSeconds;
+  /* First: process the user time */
+    sec = ut.seconds - usr0->seconds;
+    usec = ut.uSeconds - usr0->uSeconds;
 
+    if (usec < 0) {
+        sec--; usec += 1000000;
+    }
+    else if (usec > 1000000) {
+        sec++; usec -= 1000000;
+    }
     if (time != NIL(long *)) {
-	if (usec < 0) {
-	    sec--; usec += 1000000;
-	}
-	else if (usec > 1000000) {
-	    sec++; usec -= 1000000;
-	}
 	*time = (usec/1000 + sec*1000);
     }
 
-    sec = gt->seconds + sec;
-    usec = gt->uSeconds + usec;
+    sec = usr->seconds + sec;
+    usec = usr->uSeconds + usec;
     if (usec < 0) {
 	sec--; usec += 1000000;
     }
     else if (usec > 1000000) {
 	sec++; usec -= 1000000;
     }
-    gt->seconds = sec;
-    gt->uSeconds = usec;
+    usr->seconds = sec;
+    usr->uSeconds = usec;
+
+  /* Second: process the system time */
+    sec = st.seconds - sys0->seconds;
+    usec = st.uSeconds - sys0->uSeconds;
+
+    if (usec < 0) {
+        sec--; usec += 1000000;
+    }
+    else if (usec > 1000000) {
+        sec++; usec -= 1000000;
+    }
+
+    sec = sys->seconds + sec;
+    usec = sys->uSeconds + usec;
+    if (usec < 0) {
+	sec--; usec += 1000000;
+    }
+    else if (usec > 1000000) {
+	sec++; usec -= 1000000;
+    }
+    sys->seconds = sec;
+    sys->uSeconds = usec;
 
 } /* end of StopGCTimer */
 

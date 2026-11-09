@@ -1,6 +1,6 @@
 (* sexp-parser.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Author: Damon Wang (with modifications by John Reppy)
@@ -43,7 +43,7 @@ structure SExpParser : sig
 		   of T.DELIM(delim, T.OPEN) => parseList (delim, strm)
 		    | T.QUOTE => let val (strm', value) = parseValue strm
 			in
-			  (strm, S.QUOTE value)
+			  (strm', S.QUOTE value)
 			end
 		    | T.KW_true => (strm, S.BOOL true)
 		    | T.KW_false => (strm, S.BOOL false)

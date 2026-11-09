@@ -1,6 +1,6 @@
 (* list.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Available (unqualified) at top level:
@@ -37,7 +37,7 @@ structure List : LIST =
 
     exception Empty = Empty
 
-  (* these functions are implemented in base/system/smlnj/init/pervasive.sml *)
+  (* these functions are implemented in system/smlnj/init/pervasive.sml *)
     val null = null
     val hd = hd
     val tl = tl

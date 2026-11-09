@@ -57,9 +57,9 @@ structure ANSITermDev : sig
 		(* end case *))
 	(* compute the commands to set the background color *)
 	  val mv = (case (#bg s1, #bg s2)
-		 of (SOME c1, SOME c2) => if c1 = c2 then mv else A.FG c2 :: mv
+		 of (SOME c1, SOME c2) => if c1 = c2 then mv else A.BG c2 :: mv
 		  | (_, SOME c) => A.BG c :: mv
-		  | (_, NONE) => A.FG A.Default :: mv
+		  | (_, NONE) => A.BG A.Default :: mv
 		(* end case *))
 	(* compute the commands to set the other display attributes *)
 	  fun add (proj, cmd, off, mv) = (case (proj s1, proj s2)

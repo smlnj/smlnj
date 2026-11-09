@@ -1,6 +1,6 @@
 (* types.sig
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -55,15 +55,17 @@ and tycpath
   | TP_SEL of tycpath * int
 
 and tyckind
-   = PRIMITIVE 		(* primitive tycons *)
-  | ABSTRACT of tycon
+  = PRIMITIVE                   (* primitive tycons *)
   | DATATYPE of
      {index: int,			(* index for RECtyc *)
       stamps: Stamps.stamp vector,
-      root : EntPath.entVar option,    (* the root field used by type spec only *)
-      freetycs: tycon list,            (* tycs derived from functor params *)
+      root : EntPath.entVar option,     (* the root field used by type spec only *)
+      freetycs: tycon list,             (* tycs derived from functor params *)
       family : dtypeFamily,
-      stripped : bool}                 (* true if datatype has matched a simple type spec *)
+      stripped : bool}          (* true if datatype has matched a simple type spec *)
+  | ABSTRACT of tycon           (* abstract type; the argument is the underlying
+                                 * concrete type.
+                                 *)
   | FLEXTYC of tycpath          (* instantiated formal type constructor *)
   | FORMAL                      (* used only inside signatures *)
   | TEMP                        (* used only during datatype elaborations *)

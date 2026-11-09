@@ -67,6 +67,9 @@ structure ValueNumbering : sig
       | cmpNumKind (P.UINT _, _) = LESS
       | cmpNumKind (_, P.UINT _) = GREATER
       | cmpNumKind (P.FLOAT n1, P.FLOAT n2) = cmpCode(n1, n2)
+      | cmpNumKind (P.FLOAT _, _) = LESS
+      | cmpNumKind (_, P.FLOAT _) = GREATER
+      | cmpNumKind (P.ENUM, P.ENUM) = EQUAL
 
     fun cmpRecordKind (rk1, rk2) = let
           fun toCode C.RK_VECTOR = 0
@@ -75,8 +78,8 @@ structure ValueNumbering : sig
             | toCode C.RK_CONT = 3
             | toCode C.RK_FCONT = 4
             | toCode C.RK_KNOWN = 5
-            | toCode C.RK_RAW64BLOCK = 6
-            | toCode C.RK_RAWBLOCK = 7
+            | toCode (C.RK_MIXED _) = raise Fail "unexpected MIXED record"
+            | toCode C.RK_RAWBLOCK = 6
           in
             cmpCode (toCode rk1, toCode rk2)
           end
@@ -135,11 +138,15 @@ structure ValueNumbering : sig
             | toCode P.CNTPOP = 13
             | toCode P.CNTLZ  = 14
             | toCode P.CNTTZ = 15
-            | toCode P.ROTL = 16
-            | toCode P.ROTR = 17
-            | toCode P.FDIV = 18
-            | toCode P.FABS = 19
-            | toCode P.FSQRT = 20
+            | toCode P.ROTL = 17
+            | toCode P.ROTR = 18
+            | toCode P.FDIV = 19
+            | toCode P.FABS = 20
+            | toCode P.FSQRT = 21
+            | toCode P.FCEIL = 22
+            | toCode P.FFLOOR = 23
+            | toCode P.FROUND = 24
+            | toCode P.FTRUNC = 25
           in
             cmpCode(toCode op1, toCode op2)
           end
@@ -260,6 +267,9 @@ structure ValueNumbering : sig
           end
       | cmpValue (C.NUM _, _) = LESS
       | cmpValue (_, C.NUM _) = GREATER
+      | cmpValue (C.ENUM i1, C.ENUM i2) = Int.compare(i1, i2)
+      | cmpValue (C.ENUM _, _) = LESS
+      | cmpValue (_, C.ENUM _) = GREATER
       | cmpValue (C.REAL{rval=r1, ty=n1}, C.REAL{rval=r2, ty=n2}) =
           RealLit.compare(r1, r2) ?=> (fn () => cmpCode(n1, n2))
       | cmpValue (C.REAL _, _) = LESS
@@ -277,6 +287,7 @@ structure ValueNumbering : sig
       | sameValue (C.NUM{ival=i1, ty=ty1}, C.NUM{ival=i2, ty=ty2}) =
 (* QUESTION: can we ignore the tag, since it is implied by the size? *)
           (#sz ty1 = #sz ty2) andalso (i1 = i2) andalso (#tag ty1 = #tag ty2)
+      | sameValue (C.ENUM i1, C.ENUM i2) = (i1 = i2)
       | sameValue (C.REAL{rval=r1, ty=n1}, C.REAL{rval=r2, ty=n2}) =
           (n1 = n2) andalso RealLit.same(r1, r2)
       | sameValue (C.STRING s1, C.STRING s2) = (s1 = s2)
@@ -326,6 +337,7 @@ structure ValueNumbering : sig
           fun sameNumKind (P.INT n1, P.INT n2) = (n1 = n2)
             | sameNumKind (P.UINT n1, P.UINT n2) = (n1 = n2)
             | sameNumKind (P.FLOAT n1, P.FLOAT n2) = (n1 = n2)
+            | sameNumKind (P.ENUM, P.ENUM) = true
             | sameNumKind _ = false
           in
             case (op1, op2)
@@ -334,6 +346,7 @@ structure ValueNumbering : sig
               | (P.FCMP{oper=cmp1, size=n1}, P.FCMP{oper=cmp2, size=n2}) =>
                   (cmp1 = cmp2) andalso (n1 = n2)
               | (P.FSGN n1, P.FSGN n2) => (n1 = n2)
+              | (P.IS_POW2 n1, P.IS_POW2 n2) => (n1 = n2)
               | (P.BOXED, P.BOXED) => true
               | (P.UNBOXED, P.UNBOXED) => true
               | (P.PEQL, P.PEQL) => true

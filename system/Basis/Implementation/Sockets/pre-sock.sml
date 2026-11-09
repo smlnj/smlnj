@@ -1,6 +1,6 @@
 (* pre-sock.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are some common type definitions used in the sockets library.  This
@@ -106,6 +106,7 @@ structure Socket = struct
 		SOME([chk(a, 0w32)], strm)
 	    | _ => NONE
 	  (* end case *))
+            handle General.Overflow => NONE
     fun fromBytes (a, b, c, d) = let
 	  val fmt = Word8.fmt StringCvt.DEC
 	  in

@@ -1,6 +1,6 @@
 (* generic-xml-tree.sml
  *
- * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is a generic instantiation of the XMLTreeFn with a representation of

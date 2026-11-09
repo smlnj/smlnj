@@ -1,6 +1,6 @@
 (* core-cml.cm
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the "core" of CML.  It is provided as a library so that

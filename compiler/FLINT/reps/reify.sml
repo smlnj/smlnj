@@ -1,6 +1,6 @@
 (* reify.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -23,7 +23,7 @@ local
   structure LV = LambdaVar
   structure DA = Access
   structure DI = DebIndex
-  structure PO = Primop
+  structure PO = FPrimOps
   structure PL = PLambda
   structure FU = FlintUtil
   open FLINT
@@ -39,6 +39,7 @@ fun debugmsg(m) = if !debugging then say (m^"\n") else ()
 val mkv = LambdaVar.mkLvar
 
 fun tagInt i = INT{ival = IntInf.fromInt i, ty = Target.defaultIntSz}
+fun enum i = ENUM i
 
 (** a special version of WRAP and UNWRAP for post-reify typechecking *)
 val lt_arw = LD.ltc_tyc o LK.tcc_arrow
@@ -208,7 +209,7 @@ let val getlty =  Recover.recover (fdec, false)
               | SELECT(u, i, v, e) => SELECT(u, i, v, loop e)
 
               | CON ((_, DA.CONSTANT i, _), _, _, v, e) =>
-                  WRAP(LB.tcc_int, [tagInt i], v, loop e)
+                  WRAP(LB.tcc_enum, [enum i], v, loop e)
 
               | CON ((_, DA.EXN (DA.LVAR x), nt), [], u, v, e) =>
                   let val z = mkv()
@@ -216,7 +217,7 @@ let val getlty =  Recover.recover (fdec, false)
 			  handle LD.DeconExn => bug "transform loop"
                       val lt_exr =
                         LD.tcc_tuple [LB.tcc_void, tycNarrow ax, LB.tcc_int]
-                   in RECORD(FU.rk_tuple, [VAR x, u, tagInt 0], z,
+                   in RECORD(FU.rk_tuple, [VAR x, u, enum 0 (* List.nil *)], z,
                              WRAP(lt_exr, [VAR z], v, loop e))
                   end
 
@@ -258,11 +259,10 @@ let val getlty =  Recover.recover (fdec, false)
                       val hdr = LP.mkuwp(tc, kenv, true, tycNarrow tc)
                    in LET([v], hdr(RET u), loop e)
                   end
-	      | PRIMOP((_, PO.INLMKARRAY, _, _), _, _, _) => bug "unexpected INLMKARRAY"
               | PRIMOP(xp as (NONE, po, lt, ts), vs, v, e) =>
                   PRIMOP((NONE, po, ltyNarrow lt, ts), vs, v, loop e)
               | PRIMOP((_,po,_,_), vs, v, e) =>
-                  (say(concat["\n####", PrimopUtil.toString po, "####\n"]);
+                  (say(concat["\n####", PO.toString po, "####\n"]);
                    bug "unexpected PRIMOP in loop")
              (* end case *))
       in loop

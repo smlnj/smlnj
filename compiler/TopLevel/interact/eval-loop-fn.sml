@@ -24,8 +24,6 @@ functor EvalLoopFn (C : TOP_COMPILE) : EVALLOOP =
     fun saynl msg = (Control.Print.say msg; newline ())
     fun saysnl strs = saynl (concat strs)
     fun dbsaynl msg = if !debugging then saynl msg else ()
-    (* diagnostic printing of Ast and Absyn *)
-    val printDepth = Control_Print.printDepth
 
     fun debugPrint flag (msg: string, printfn: PP.stream -> 'a -> unit, arg: 'a) =
           if !flag

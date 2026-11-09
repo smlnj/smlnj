@@ -369,7 +369,7 @@ functor RealToBitsFn (FP : IEEE_FLOAT_PARAMS) : REAL_TO_BITS =
             | RealLit.NegInf => IEEEReal.INF
             | RealLit.QNaN => IEEEReal.NAN
             | RealLit.Flt{isNeg, digits=[], exp} => IEEEReal.ZERO
-            | RealLit.Flt{isNeg, digits, exp} => let
+            | RealLit.Flt{isNeg, digits, exp} => (let
               (* convert the digits to a IntInf.int and adjust the exponent *)
                 val (frac_10, exp_10) = let
                       fun doDigit (d, (m, e)) = (IntInf.fromInt d + 10*m, e-1)
@@ -396,6 +396,8 @@ functor RealToBitsFn (FP : IEEE_FLOAT_PARAMS) : REAL_TO_BITS =
                     then IEEEReal.INF
                     else IEEEReal.NORMAL
                 end
+                  (* converting the exponent to finite precision can raise Overflow *)
+                  handle Overflow => IEEEReal.INF)
           (* end case *))
 
     fun toBits lit = (case RealLit.toRep lit

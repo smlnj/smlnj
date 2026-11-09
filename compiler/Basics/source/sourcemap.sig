@@ -1,6 +1,6 @@
 (* sourcemap.sig
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -94,5 +94,11 @@ sig
   val newlineCount : sourcemap -> region -> int
 
   val widenToLines : sourcemap -> region -> region
+
+
+  (* An upper bound on line and column numbers.  We impose this limit to
+   * avoid `Overflow` exceptions when processing `#line` directives.
+   *)
+  val limit : IntInf.int
 
 end (* signature SOURCE_MAP *)

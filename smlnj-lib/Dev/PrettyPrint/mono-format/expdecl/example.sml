@@ -1,6 +1,6 @@
 (* example.sml
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This example demonstrates that one can use a single pretty-printer

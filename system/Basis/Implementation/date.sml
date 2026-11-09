@@ -1,6 +1,6 @@
 (* date.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The SML Basis Library Date module.  This code is partially based on
@@ -315,6 +315,8 @@ structure Date : DATE =
 	    hour = hour, minute = minute, second = second
 	  } end
 
+    val secsPerDay : IntInf.int = 24*60*60
+
     fun date {year, month, day, hour, minute, second, offset} = let
 	  val (secAdjust, offset) = (case offset
 		 of NONE => (0, NONE)
@@ -323,7 +325,8 @@ structure Date : DATE =
                        * it is necessary to use "quot/rem" so that we round toward
                        * zero when `t` is negative!
                        *)
-		      val (adjust, offset) = IntInf.quotRem(Time.toSeconds t, 24*60*60)
+		      val (adjust, offset) = IntInf.quotRem(Time.toSeconds t, secsPerDay)
+                      val adjust = adjust * secsPerDay
 		      in
 			(Int.fromLarge adjust, SOME(Time.fromSeconds offset))
 		      end
@@ -361,13 +364,13 @@ structure Date : DATE =
 	  in
 	    case offset
 	     of NONE => nsToTime t
-	      | SOME offset =>
-		(* note that representation of a date is canonical, which means that the
-		 * offset has already been applied, so we do not need to adjust by the
-		 * date's offset.  On the other hand, mkTime' returns the _local_ time,
-		 * so we do need to adjust for the local offset.
-		 *)
-		  Time.+(nsToTime t, localOffsetForTime t)  (* converts local time to UTC *)
+	      | SOME offset => let
+                  (* adjust the local time to UTC *)
+                  val utcT = Time.-(nsToTime t, localOffsetForTime t)
+                  in
+                    (* add the date's offset *)
+                    Time.+(utcT, offset)
+                  end
 	    (* end case *)
 	  end
 
@@ -426,6 +429,7 @@ structure Date : DATE =
 			  | SOME(#"y", ss') => continue(2, ss')
 			  | SOME(#"Y", ss') => continue(4, ss')
 			  | SOME(#"Z", ss') => continue(3, ss')
+                          | SOME(#"%", ss') => (1, SS.full "%%", ss')
 			  | SOME(c, ss') => (1, SS.full(String.str c), ss')
 			(* end case *)
 		      end
@@ -466,13 +470,15 @@ structure Date : DATE =
 		end
 	  val fmtFns = scan (SS.full fmtStr, 0, [], [])
 	  in
-	    fn d => let val tm = date2tm d in String.concat(List.map (fn f => f tm) fmtFns) end
+	    fn d => let
+                val tm = date2tm d
+                in String.concat (List.map (fn f => f tm) fmtFns) end
 	  end
 
     val toString = fmt "%a %b %d %H:%M:%S %Y"
 
   (* Date scanner *)
-    fun scan getc s = let
+    fun scan getc = let
 	  fun getword s = StringCvt.splitl Char.isAlpha getc s
 	(* consume the character c from the stream s and then pass the remaining
 	 * stream to the continuation k.  Returns NONE if a different character
@@ -555,8 +561,9 @@ structure Date : DATE =
 		  | ("Sat", s') => month Sat s'
 		  | _ => NONE
 		(* end case *))
+          val skipWS = StringCvt.skipWS getc
 	  in
-	    wday s
+	    fn s => wday (skipWS s)
 	  end (* scan *)
 
     fun fromString s = StringCvt.scanString scan s

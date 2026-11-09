@@ -58,6 +58,7 @@ val numItems : 'a hash_table ->  int
 
 val listItems  : 'a hash_table -> 'a list
 val listItemsi : 'a hash_table -> (Key.hash_key * 'a) list
+val listKeys   : 'a hash_table -> Key.hash_key list
 
 val app  : ('a -> unit) -> 'a hash_table -> unit
 val appi : ((Key.hash_key * 'a) -> unit) -> 'a hash_table -> unit
@@ -143,6 +144,9 @@ val bucketSizes : 'a hash_table -> int list
 
 `[.kw]#val# listItemsi : 'a hash_table \-> (Key.hash_key * 'a) list`::
   `listItemsi tbl` returns a list of the key-value entries in `tbl`.
+
+`[.kw]#val# listKeys : 'a hash_table \-> Key.hash_key list`::
+  `listKeys tbl` returns a list of the keys in `tbl`.
 
 `[.kw]#val# app  : ('a \-> unit) \-> 'a hash_table \-> unit`::
   `app f tbl` applies the function `f` to each item in the range of `tbl`.

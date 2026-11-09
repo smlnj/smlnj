@@ -1,6 +1,7 @@
-/* arena-id.h
+/*! \file arena-id.h
  *
- * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *
  * Definitions for the arena IDs and for mapping from addresses to arena IDs.
  *
@@ -37,9 +38,10 @@
 /* The different classes of objects; each class lives in a different arena */
 #define	RECORD_INDX		0
 #define PAIR_INDX		1
-#define STRING_INDX		2
-#define ARRAY_INDX		3
-#define NUM_ARENAS		4
+#define MIXED_INDX              2
+#define STRING_INDX		3
+#define ARRAY_INDX		4
+#define NUM_ARENAS		5
 
 /* the different classes of big-objects, which live in big-object regions */
 #define CODE_INDX		0
@@ -66,9 +68,12 @@ typedef page_id_t aid_t;
 /* The different classes of objects. */
 #define MAKE_OBJC(INDX)		(INDX+1)
 #define MAKE_BIGOBJC(INDX)	(0x8|((INDX)<<1))
+#define OBJC_TO_INDEX(OBJC)     ((OBJC)-1)
+
 #define OBJC_new		0x0
 #define OBJC_record		MAKE_OBJC(RECORD_INDX)
 #define OBJC_pair		MAKE_OBJC(PAIR_INDX)
+#define OBJC_mixed		MAKE_OBJC(MIXED_INDX)
 #define OBJC_string		MAKE_OBJC(STRING_INDX)
 #define OBJC_array		MAKE_OBJC(ARRAY_INDX)
 #define OBJC_bigobj		MAKE_BIGOBJC(CODE_INDX)

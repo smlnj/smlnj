@@ -4,27 +4,19 @@
  = struct
 
   local
-    structure Tok =
-@tokmod@
+    structure Tok = @tokmod@
 
     structure UserCode =
       struct
-@usrdefs@
+        @usrdefs@
 
-@actions@
+        @actions@
       end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
 
-(* replace functor with inline structure for better optimization
-    structure EBNF = AntlrEBNF(
-      struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
-      end)
-*)
     structure EBNF =
       struct
 	fun optional (pred, parse, strm) =
@@ -54,19 +46,19 @@
 	      in
 		(y::ys, (left, right), strm'')
 	      end
-      end
+      end (* EBNF *)
 
     fun mk lexFn = let
-@ehargs@
+        @ehargs@
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) =
-	        (Err.whileDisabled eh (fn() => prod strm))
-		handle Err.ParseError => try (prods)
-          in try prods end
-@matchfns@
+              fun try [] = fail()
+                | try (prod :: prods) =
+                    (Err.whileDisabled eh (fn() => prod strm))
+                    handle Err.ParseError => try (prods)
+              in try prods end
+        @matchfns@
 
 @parser@
 

@@ -1,6 +1,6 @@
 (* normalize.sml
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Normalize a CFG compilation unit by alpha-converting the lambda variables to
@@ -61,9 +61,10 @@ structure Normalize : sig
                 C.SETTER(oper, cvtExps args, cvtStm stm)
             | cvtStm (C.CALLGC(args, xs, stm)) =
                 C.CALLGC(cvtExps args, List.map rn xs, cvtStm stm)
-            | cvtStm (C.RCC{reentrant, linkage, proto, args, results, live, k}) =
+            | cvtStm (C.RCC{reentrant, linkage, proto, cfn, args, results, live, k}) =
                 C.RCC{
                     reentrant = reentrant, linkage = linkage, proto = proto,
+                    cfn = cvtExp cfn,
                     args = cvtExps args,
                     results = List.map cvtParam results,
                     live = List.map cvtParam live,

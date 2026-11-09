@@ -15,7 +15,7 @@ the library structure:
 					of data structures and efficient sets and
 					maps using hash-consed keys.
 
-  HTML		html-lib.cm		This library provides parsing and pretty
+  HTML		html3-lib.cm		This library provides parsing and pretty
 					printing of HTML (Version 3.2).
 
   INet		inet-lib.cm		Networking utilities (for both Unix

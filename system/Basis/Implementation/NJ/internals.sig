@@ -11,21 +11,25 @@ signature INTERNALS = sig
     structure ProfControl : PROF_CONTROL
     structure GC : GC
 
+    (* this hook can be used to change the top-level print function *)
     val prHook : (string -> unit) ref
-	(* this hook can be used to change the top-level print function *)
 
-  (* Routines for managing the internal signal handler tables.  These are
-   * for programs that must otherwise bypass the standard initialization
-   * mechanisms.
-   *)
+    (* Routines for managing the internal signal handler tables.  These are
+     * for programs that must otherwise bypass the standard initialization
+     * mechanisms.
+     *)
     val initSigTbl : unit -> unit
     val clearSigTbl : unit -> unit
     val resetSigTbl : unit -> unit
 
-  (* reset the total real and CPU time timers *)
+    (* reset the total real and CPU time timers *)
     val resetTimers : unit -> unit
+    (* set the internal CPU and wall-clock timers to zero.  We do this when exporting
+     * a heap image so that random time values do not get embedded in the image file.
+     *)
+    val clearTimers : unit -> unit
 
-  (* generic trace/debug/profile control; M.Blume 10/2004 *)
+    (* generic trace/debug/profile control; M.Blume 10/2004 *)
     structure TDP : sig
 	type plugin = { name: string,
 			save: unit -> unit -> unit,
@@ -53,5 +57,6 @@ signature INTERNALS = sig
 	val mode : bool ref
 
 	val with_monitors : bool -> (unit -> unit) -> unit
-    end
-end
+      end
+
+  end

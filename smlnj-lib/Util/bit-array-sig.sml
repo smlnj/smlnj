@@ -1,6 +1,6 @@
 (* bit-array-sig.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Signature for mutable bit array.  The model here treats bit array as an
@@ -11,6 +11,7 @@ signature BIT_ARRAY =
   sig
 
     include MONO_ARRAY
+      where type elem = bool
 
     val fromString : string -> array option
       (* The string argument gives a hexadecimal
@@ -113,4 +114,3 @@ signature BIT_ARRAY =
       (* Invert all bits. *)
 
   end (* BIT_ARRAY *)
-    where type elem = bool

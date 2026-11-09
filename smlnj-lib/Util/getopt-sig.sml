@@ -1,6 +1,6 @@
 (* getopt-sig.sml
  *
- * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2016 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A SML port of GNU's getopt library.
@@ -26,7 +26,6 @@
  * than returning error strings while continuing processing options.
  * The full generality of the latter does not seem justified.
  *)
-
 
 signature GET_OPT =
   sig
@@ -80,4 +79,3 @@ signature GET_OPT =
        *)
 
   end
-

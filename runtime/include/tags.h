@@ -1,6 +1,6 @@
 /*! \file tags.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are the macros for object tags and descriptors.  They should agree
@@ -40,6 +40,7 @@
 #define DTAG_WID	5
 #define DTAG_MASK	(((1 << DTAG_WID)-1) << DTAG_SHIFTW)
 #define TAG_SHIFTW	(DTAG_SHIFTW+DTAG_WID)
+#define MIXED_SHIFTW    32
 
 #define DTAG_record	HEXLIT(0)	/* records (including pairs) */
 #define DTAG_vec_hdr	HEXLIT(1)	/* vector header; length is kind */
@@ -48,7 +49,7 @@
 #define DTAG_arr_data	HEXLIT(3)	/* polymorphic array data */
 #define DTAG_ref	DTAG_arr_data	/* reference cell */
 #define DTAG_raw	HEXLIT(4)	/* word-size aligned non-pointer data */
-#define DTAG_raw64	HEXLIT(5)	/* 64-bit aligned non-pointer data */
+#define DTAG_mixed      HEXLIT(5)       /* mixed record */
 #define DTAG_special	HEXLIT(6)	/* Special object; length is kind */
 #define DTAG_extern	HEXLIT(10)	/* external symbol reference (used in */
 					/* exported heap images) */
@@ -76,7 +77,15 @@
 /* Build a descriptor from a descriptor tag and a length */
 #ifndef _ASM_
 #define MAKE_TAG(t)	((Word_t)(((t) << DTAG_SHIFTW) | TAG_desc))
-#define MAKE_DESC(l,t)	((ml_val_t)(Word_t)(((l) << TAG_SHIFTW) | MAKE_TAG(t)))
+#define MAKE_DESC(l,t)	((ml_val_t)(((Word_t)(l) << TAG_SHIFTW) | MAKE_TAG(t)))
+/* make a mixed-record descriptor: p is "pointer" len, r is "raw" len */
+STATIC_INLINE ml_val_t MAKE_MIXED_DESC (int ptrLen, int rawLen)
+{
+    return (ml_val_t)(
+        ((Word_t)(ptrLen) << MIXED_SHIFTW) |
+        ((Word_t)(ptrLen + rawLen) << TAG_SHIFTW) |
+        MAKE_TAG(DTAG_mixed));
+}
 #else
 #define MAKE_TAG(t)	(((t)*4) + TAG_desc)
 #define MAKE_DESC(l,t)	(((l)*128) + MAKE_TAG(t))
@@ -85,7 +94,7 @@
 #define DESC_pair	MAKE_DESC(2, DTAG_record)
 #define DESC_exn	MAKE_DESC(3, DTAG_record)
 #define DESC_ref	MAKE_DESC(1, DTAG_ref)
-#define DESC_reald	MAKE_DESC(REALD_SZW, DTAG_raw64)
+#define DESC_reald	MAKE_DESC(REALD_SZW, DTAG_raw)
 #define DESC_word64	MAKE_DESC(WORD64_SZW, DTAG_raw)
 #define DESC_polyvec	MAKE_DESC(SEQ_poly, DTAG_vec_hdr)
 #define DESC_polyarr	MAKE_DESC(SEQ_poly, DTAG_arr_hdr)
@@ -121,5 +130,9 @@
 /* extract descriptor fields */
 #define GET_LEN(D)		(((Word_t)(D)) >> TAG_SHIFTW)
 #define GET_TAG(D)		((((Word_t)(D)) ANDOP DTAG_MASK) >> DTAG_SHIFTW)
+
+/* extract descriptor fields from mixed records */
+#define MIXED_GET_LEN(D)        ((Unsigned32_t)(Addr_t)(D) >> TAG_SHIFTW)
+#define MIXED_GET_PTRLEN(D)     ((Addr_t)(D) >> MIXED_SHIFTW)
 
 #endif /* !_TAGS_ */

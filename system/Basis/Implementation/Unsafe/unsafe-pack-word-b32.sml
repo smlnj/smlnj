@@ -1,6 +1,6 @@
 (* unsafe-pack-word-b32.sml
  *
- * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the unsafe non-native implementation of 32-bit big-endian packing

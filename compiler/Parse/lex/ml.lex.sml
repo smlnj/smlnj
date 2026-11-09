@@ -1,4 +1,5 @@
-functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
+functor MLLexFun (structure Tokens : ML_TOKENS)
+  = struct
 
     structure yyInput : sig
 
@@ -20,7 +21,7 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 
         datatype stream = Stream of {
             strm : TSIO.instream,
-	    id : int,  (* track which streams originated 
+	    id : int,  (* track which streams originated
 			* from the same stream *)
 	    pos : int,
 	    lineNo : int,
@@ -36,7 +37,7 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 	val initPos = 2 (* ml-lex bug compatibility *)
 
 	fun mkStream inputN = let
-              val strm = TSIO.mkInstream 
+              val strm = TSIO.mkInstream
 			   (TPIO.RD {
 			        name = "lexgen",
 				chunkSize = 4096,
@@ -54,7 +55,7 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 				close = (fn () => ()),
 				ioDesc = NONE
 			      }, "")
-	      in 
+	      in
 		Stream {strm = strm, id = nextId(), pos = initPos, lineNo = 1,
 			lastWasNL = true}
 	      end
@@ -65,12 +66,12 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 
 	fun getc (Stream {strm, pos, id, lineNo, ...}) = (case TSIO.input1 strm
               of NONE => NONE
-	       | SOME (c, strm') => 
+	       | SOME (c, strm') =>
 		   SOME (c, Stream {
-			        strm = strm', 
-				pos = pos+1, 
+			        strm = strm',
+				pos = pos+1,
 				id = id,
-				lineNo = lineNo + 
+				lineNo = lineNo +
 					 (if c = #"\n" then 1 else 0),
 				lastWasNL = (c = #"\n")
 			      })
@@ -85,10 +86,10 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 	      val Stream {pos = newPos, id = newId, ...} = new
               val (diff, _) = if newId = oldId andalso newPos >= oldPos
 			      then TSIO.inputN (strm, newPos - oldPos)
-			      else raise Fail 
+			      else raise Fail
 				"BUG: yyInput: attempted to subtract incompatible streams"
-	      in 
-		diff 
+	      in
+		diff
 	      end
 
 	fun eof s = not (isSome (getc s))
@@ -97,9 +98,9 @@ functor MLLexFun (structure Tokens : ML_TOKENS)  = struct
 
       end
 
-    datatype yystart_state = 
-AQ | LL | LLC | F | A | L | Q | S | INITIAL | LLCQ
-    structure UserDeclarations = 
+    datatype yystart_state = AQ | LL | LLC | F | A | L | Q | S | INITIAL | LLCQ
+
+    structure UserDeclarations =
       struct
 
 (* ml.lex
@@ -128,15 +129,20 @@ val atoi = cvt StringCvt.DEC
 val xtoi = cvt StringCvt.HEX
 end (* local *)
 
-fun mysynch (srcmap, initpos, pos, args) =
-    let fun cvt digits = getOpt(Int.fromString digits, 0)
-	val resynch = SourceMap.resynch srcmap
-     in case args
-          of [col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, NONE)
-           | [file, col, line] =>
-	       resynch (initpos, pos, cvt line, cvt col, SOME file)
-           | _ => impossible "ill-formed args in (*#line...*)"
+fun mysynch (srcmap, initpos, pos, args) = let
+    fun cvt digits = (case IntInf.fromString digits
+           of SOME n => if (n > SourceMap.limit)
+                then raise Overflow
+                else IntInf.toInt n
+            | _ => 0 (* should be impossible *)
+          (* end case *))
+    val resynch = SourceMap.resynch srcmap
+    in
+      case args
+       of [col, line] => resynch (initpos, pos, cvt line, cvt col, NONE)
+        | [file, col, line] => resynch (initpos, pos, cvt line, cvt col, SOME file)
+        | _ => impossible "ill-formed args in (*#line...*)"
+      (* end case *)
     end
 
 fun has_quote s = CharVector.exists (fn #"`" => true | _ => false) s
@@ -145,16 +151,17 @@ fun inc (ri as ref i) = (ri := i+1)
 fun dec (ri as ref i) = (ri := i-1)
 
 
+
       end
 
-    datatype yymatch 
+    datatype yymatch
       = yyNO_MATCH
       | yyMATCH of yyInput.stream * action * yymatch
     withtype action = yyInput.stream * yymatch -> UserDeclarations.lexresult
 
     local
 
-    val yytable = 
+    val yytable =
 #[([(#"\^@",#"\b",10),
 (#"\v",#"\v",10),
 (#"\^N",#"\^_",10),
@@ -409,7 +416,7 @@ fun dec (ri as ref i) = (ri := i-1)
 (#"0",#"9",149),
 (#"A",#"Z",149),
 (#"_",#"_",149),
-(#"a",#"z",149)], [33]), ([(#"*",#"*",142)], [11, 33]), ([], [12, 33]), ([], [4, 33]), ([(#".",#".",140)], [13, 33]), ([(#".",#".",116),
+(#"a",#"z",149)], [15, 33]), ([(#"*",#"*",142)], [11, 33]), ([], [12, 33]), ([], [4, 33]), ([(#".",#".",140)], [13, 33]), ([(#".",#".",116),
 (#"0",#"9",133),
 (#"E",#"E",117),
 (#"e",#"e",117),
@@ -517,6 +524,7 @@ fun dec (ri as ref i) = (ri := i-1)
 (#"*",#"\255",154),
 (#")",#")",157)], [40, 43]), ([(#"\^@",#"!",154),
 (#"#",#"\255",154)], [40, 42]), ([(#")",#")",159)], []), ([], [41])]
+
     fun mk yyins = let
         (* current start state *)
         val yyss = ref INITIAL
@@ -528,48 +536,47 @@ fun dec (ri as ref i) = (ri := i-1)
 	(* create yytext *)
 	fun yymktext(strm) = yyInput.subtract (strm, !yystrm)
         open UserDeclarations
-        fun lex 
-(yyarg as ({
+        fun lex (yyarg as ({
   comLevel,
   sourceMap,
   err,
   charlist,
   stringstart,
   stringtype,
-  brack_stack})) () = let 
-     fun continue() = let
-            val yylastwasn = yyInput.lastWasNL (!yystrm)
-            fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
-	      | yystuck (yyMATCH (strm, action, old)) = 
-		  action (strm, old)
-	    val yypos = yyInput.getpos (!yystrm)
-	    val yygetlineNo = yyInput.getlineNo
-	    fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
-	      | yyactsToMatches (strm, act::acts, oldMatches) = 
-		  yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
-	    fun yygo actTable = 
-		(fn (~1, _, oldMatches) => yystuck oldMatches
-		  | (curState, strm, oldMatches) => let
-		      val (transitions, finals') = Vector.sub (yytable, curState)
-		      val finals = List.map (fn i => Vector.sub (actTable, i)) finals'
-		      fun tryfinal() = 
-		            yystuck (yyactsToMatches (strm, finals, oldMatches))
-		      fun find (c, []) = NONE
-			| find (c, (c1, c2, s)::ts) = 
-		            if c1 <= c andalso c <= c2 then SOME s
-			    else find (c, ts)
-		      in case yygetc strm
-			  of SOME(c, strm') => 
-			       (case find (c, transitions)
-				 of NONE => tryfinal()
-				  | SOME n => 
-				      yygo actTable
-					(n, strm', 
-					 yyactsToMatches (strm, finals, oldMatches)))
-			   | NONE => tryfinal()
-		      end)
-	    in 
-let
+  brack_stack})) () = let
+            fun continue() = let
+                val yylastwasn = yyInput.lastWasNL (!yystrm)
+                fun yystuck (yyNO_MATCH) = raise Fail "stuck state"
+                  | yystuck (yyMATCH (strm, action, old)) =
+                      action (strm, old)
+                val yypos = yyInput.getpos (!yystrm)
+                val yygetlineNo = yyInput.getlineNo
+                fun yyactsToMatches (strm, [],	  oldMatches) = oldMatches
+                  | yyactsToMatches (strm, act::acts, oldMatches) =
+                      yyMATCH (strm, act, yyactsToMatches (strm, acts, oldMatches))
+                fun yygo actTable =
+                    (fn (~1, _, oldMatches) => yystuck oldMatches
+                      | (curState, strm, oldMatches) => let
+                          val (transitions, finals') = Vector.sub (yytable, curState)
+                          val finals = List.map (fn i => Vector.sub (actTable, i)) finals'
+                          fun tryfinal() =
+                                yystuck (yyactsToMatches (strm, finals, oldMatches))
+                          fun find (c, []) = NONE
+                            | find (c, (c1, c2, s)::ts) =
+                                if c1 <= c andalso c <= c2 then SOME s
+                                else find (c, ts)
+                          in case yygetc strm
+                              of SOME(c, strm') =>
+                                   (case find (c, transitions)
+                                     of NONE => tryfinal()
+                                      | SOME n =>
+                                          yygo actTable
+                                            (n, strm',
+                                             yyactsToMatches (strm, finals, oldMatches)))
+                               | NONE => tryfinal()
+                          end)
+                in
+                  let
 fun yyAction0 (strm, lastMatch : yymatch) = (yystrm := strm; (continue()))
 fun yyAction1 (strm, lastMatch : yymatch) = (yystrm := strm;
       (SourceMap.newline sourceMap yypos; continue()))
@@ -740,8 +747,15 @@ fun yyAction37 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN LLC; addString(charlist, "1");    continue()
 		(* note hack, since ml-lex chokes on the empty string for 0* *)))
 fun yyAction38 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+2, !charlist);
-		              comLevel := 0; charlist := []; continue()))
+      (YYBEGIN INITIAL;
+                    mysynch (sourceMap, !stringstart, yypos+2, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+2)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+		    comLevel := 0; charlist := [];
+                    continue ()))
 fun yyAction39 (strm, lastMatch : yymatch) = (yystrm := strm;
       (YYBEGIN LLCQ; continue()))
 fun yyAction40 (strm, lastMatch : yymatch) = let
@@ -750,16 +764,23 @@ fun yyAction40 (strm, lastMatch : yymatch) = let
         yystrm := strm; (addString(charlist, yytext); continue())
       end
 fun yyAction41 (strm, lastMatch : yymatch) = (yystrm := strm;
-      (YYBEGIN INITIAL; mysynch(sourceMap, !stringstart, yypos+3, !charlist);
-		              comLevel := 0; charlist := []; continue()))
+      (YYBEGIN INITIAL;
+                    mysynch(sourceMap, !stringstart, yypos+3, !charlist)
+                      handle Overflow => err
+                        (!stringstart, yypos+3)
+                        COMPLAIN
+                        "illegal '#line' comment; line number too large"
+                        nullErrorBody;
+                    comLevel := 0; charlist := [];
+                    continue()))
 fun yyAction42 (strm, lastMatch : yymatch) = (yystrm := strm;
       (err (!stringstart, yypos+1) WARN
                        "ill-formed (*#line...*) taken as comment" nullErrorBody;
                      YYBEGIN INITIAL; comLevel := 0; charlist := []; continue()))
 fun yyAction43 (strm, lastMatch : yymatch) = (yystrm := strm;
       (err (!stringstart, yypos+1) WARN
-                       "ill-formed (*#line...*) taken as comment" nullErrorBody;
-                     YYBEGIN A; continue()))
+                      "ill-formed (*#line...*) taken as comment" nullErrorBody;
+                    YYBEGIN A; continue()))
 fun yyAction44 (strm, lastMatch : yymatch) = (yystrm := strm;
       (inc comLevel; continue()))
 fun yyAction45 (strm, lastMatch : yymatch) = (yystrm := strm;
@@ -961,13 +982,13 @@ in
         | LLCQ => yygo yyactTable (9, !(yystrm), yyNO_MATCH)
       (* end case *))
 end
+                end (* continue *)
+            in
+              continue()
+	        handle IO.Io{cause, ...} => raise cause
             end
-	  in 
-            continue() 	  
-	    handle IO.Io{cause, ...} => raise cause
-          end
-        in 
-          lex 
+        in
+          lex
         end
     in
     fun makeLexer yyinputN = mk (yyInput.mkStream yyinputN)

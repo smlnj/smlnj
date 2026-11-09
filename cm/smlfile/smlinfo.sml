@@ -270,9 +270,10 @@ structure SmlInfo :> SMLINFO = struct
 		fun setguid g = (guid_cache := SOME g; tofile g)
 		fun saveguid g = (setguid g; g)
 		fun getguid () = let
-		    fun newguid () =
-			concat ["guid-", SrcPath.descr sourcepath, "-",
-				Time.toString (Time.now ()), "\n"]
+		    fun newguid () = concat [
+			  "guid-", SrcPath.descr sourcepath, "-",
+			  Time.toString (Timestamp.now ()), "\n"
+			]
 		in
 		    case !guid_cache of
 			SOME g => g

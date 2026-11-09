@@ -1,6 +1,6 @@
 (* json.sml
  *
- * COPYRIGHT (c) 2008 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2008 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the tree representation of a JSON data as produced/consumed

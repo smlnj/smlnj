@@ -34,9 +34,11 @@ signature STABILIZE = sig
 
     val loadStable : { getGroup: groupgetter, anyerrors: bool ref } -> groupgetter
 
-    val stabilize : GP.info -> { group: GG.group, anyerrors: bool ref,
-				 rebindings: SrcPath.rebindings } ->
-		    GG.group option
+    val stabilize : GP.info -> {
+          group : GG.group,
+          anyerrors : bool ref,
+          rebindings : SrcPath.rebindings
+        } -> GG.group option
   end
 
 functor StabilizeFn (

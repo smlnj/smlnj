@@ -1,6 +1,6 @@
 (* primtyc.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -30,11 +30,12 @@ signature PRIM_TYC =
 
     val ptc_obj    : primtyc
     val ptc_pointer : primtyc	(* raw runtime-system pointer; include C functions *)
-    val ptc_barray : primtyc
-    val ptc_rarray : primtyc
+    val ptc_barray : primtyc    (* word8array and chararray *)
+    val ptc_rarray : primtyc    (* real64array *)
     val ptc_slock  : primtyc
 
-  (* ptc_void and pct_etag do not correspond to "real" primitive types (from BasisTypes) *)
+  (* these do not have corresponding primitive types from BasicTypes *)
+    val ptc_enum   : primtyc
     val ptc_void   : primtyc
     val ptc_etag   : primtyc
 

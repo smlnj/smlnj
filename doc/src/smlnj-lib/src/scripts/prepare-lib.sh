@@ -3,7 +3,7 @@
 # usage scripts/prepare-lib.sh <dir>
 #
 
-function usage {
+usage() {
   echo "usage: scripts/prepare-lib.sh <dir>"
   exit 1
 }

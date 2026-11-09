@@ -1,6 +1,6 @@
 /* gc-ctl.c
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * General interface for GC control functions.
@@ -103,6 +103,7 @@ PVT void SetVMCache (ml_state_t *msp, ml_val_t arg)
 	int i;
 	for (i = level;  i < heap->cacheGen;  i++) {
 	    MEM_FreeMemObj (heap->gen[i]->cacheObj);
+            heap->gen[i]->cacheObj = NIL(mem_obj_t *);
         }
     }
 

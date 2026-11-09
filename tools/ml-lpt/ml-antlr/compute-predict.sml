@@ -5,7 +5,7 @@
  * Aaron Turon (http://www.cs.uchicago.edu/~adrassi)
  * All rights reserved.
  *
- * Prediction tree computation; given a grammar, 
+ * Prediction tree computation; given a grammar,
  * produce a decision tree for each decision point.
  *)
 
@@ -15,7 +15,7 @@ structure ComputePredict :
     val mkPM : LLKSpec.grammar * GLA.gla -> Predict.predict_maps
 
   end = struct
-	
+
     structure P = Predict
     structure TSet = Token.Set
     structure NMap = Nonterm.Map
@@ -38,21 +38,21 @@ structure ComputePredict :
           end
 
     fun ntToString (S.NT{binding = S.WITHIN prod, ...}) = Prod.toString prod
-      | ntToString nt = Nonterm.name nt
+      | ntToString nt = Nonterm.toString nt
 
   (* error handling, for lookahead computation failure *)
     fun doErr (prePath, nt, msg) = let
 	  val (prefix, obj) = (case nt
 		 of S.NT{binding = S.WITHIN prod, ...} =>
 		      ("Error " ^ Err.span2str(Prod.span prod), concat["\n  ", Prod.toString prod, "\n"])
-		  | _ => ("Error", concat[" '", Nonterm.name nt, "',\n"])
+		  | _ => ("Error", concat[" '", Nonterm.toString nt, "',\n"])
 		(* end case *))
 	  in
 	    Err.errMsg [
 		prefix, ": lookahead computation failed for",
 		obj, msg, "\n",
 		"The conflicting token sets are:\n  ",
-		String.concatWith "\n  " 
+		String.concatWith "\n  "
 		  (mapi (fn (k, s) => concat[
 		      "k = ", Int.toString (k+1), ": ", Token.setToString s
 		    ]) prePath),
@@ -64,7 +64,7 @@ structure ComputePredict :
     fun compute(gla, nt) = let
 	  fun tryToks (prePath, k) (prod, branches) = let
 	        fun consNE ((set, prods), ls) =
-		      if TSet.isEmpty set 
+		      if TSet.isEmpty set
 		      then ls
 		      else (set, prods)::ls
 	        fun intersect ((set, prods), (branches, toks)) = let
@@ -83,7 +83,7 @@ structure ComputePredict :
 	  fun try (prePath, k, prods) = let
 		fun finBranch (set, [prod]) = (set, P.Pick prod)
 		  | finBranch (set, []) = raise Fail "bug: ComputePredict"
-		  | finBranch (set, prods) = 
+		  | finBranch (set, prods) =
 		      if List.all Prod.canTry prods then
 			(set, P.Choice (Prod.sortProds prods))
 		      else if k = maxK then (
@@ -106,7 +106,7 @@ structure ComputePredict :
 
     fun unionAll sets = foldl TSet.union TSet.empty sets
 
-  (* compute a decision tree for an EBNF decision, e.g., for 
+  (* compute a decision tree for an EBNF decision, e.g., for
    * (A* B), the tree will predict true if A appears again and
    * false otherwise.
    *)
@@ -127,7 +127,7 @@ structure ComputePredict :
 		      if TSet.isEmpty isct then []
 		        else (if k <= maxK
 			      then [(isct, tryToks (k+1, prePath @ [isct]))]
-			      else (doErr (prePath @ [isct], nt, 
+			      else (doErr (prePath @ [isct], nt,
 			                   "deciding between the subrule and "
 					   ^ "the sequence following it:");
 				    raise Err.Abort))]

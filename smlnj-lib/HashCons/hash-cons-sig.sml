@@ -1,6 +1,6 @@
 (* hash-cons-sig.sml
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * TODO: better support for nodes that mix lists and non-lists as args.

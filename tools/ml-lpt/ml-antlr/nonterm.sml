@@ -13,12 +13,12 @@ structure Nonterm =
 
     datatype nonterm = datatype LLKSpec.nonterm
 
-    fun name (NT{name, ...}) = Atom.toString name
-    fun toString nt = name nt
+    fun name (NT{name, ...}) = name
+    fun toString nt = Atom.toString(name nt)
 
-    fun qualName (nt as NT{binding = LLKSpec.WITHIN (LLKSpec.PROD {lhs, ...}), ...}) = 
-	  (qualName lhs) ^ "_" ^ (name nt)
-      | qualName nt = name nt
+    fun qualName (nt as NT{binding = LLKSpec.WITHIN(LLKSpec.PROD{lhs, ...}), ...}) =
+	  concat[qualName lhs, "_", toString nt]
+      | qualName nt = toString nt
 
     fun isSubrule (NT{binding = LLKSpec.TOP, ...}) = false
       | isSubrule _ = true
@@ -38,7 +38,7 @@ structure Nonterm =
 	  String.compare(Atom.toString a, Atom.toString b)
     fun same (NT{id=a, ...}, NT{id=b, ...}) = (a = b)
 
-    structure Ord = 
+    structure Ord =
       struct
 	type ord_key = nonterm
 	val compare = compare
@@ -70,7 +70,7 @@ structure Nonterm =
     fun topsort (starts) = let
           fun prodItems (S.PROD {rhs, ...}) = !rhs
 	  fun sym (S.ITEM {sym, ...}) = sym
-          fun followItem (S.NONTERM (nt, _)) = 
+          fun followItem (S.NONTERM (nt, _)) =
 	        if isSubrule nt then follow nt
 		else [nt]
 	    | followItem (S.CLOS nt) = follow nt
@@ -79,7 +79,7 @@ structure Nonterm =
 	    | followItem (S.TOK _) = []
           and followItems itms = List.concat (map (followItem o sym) itms)
 	  and follow nt =
-	        List.concat (map (followItems o prodItems) 
+	        List.concat (map (followItems o prodItems)
 				 (prods nt))
 	  val scc = SCC.topOrder' {roots = starts, follow = follow}
 	  fun compToList (SCC.SIMPLE nt) = [nt]

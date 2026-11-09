@@ -1,6 +1,6 @@
 dnl check_smlnj.m4
 dnl
-dnl COPYRIGHT (c) 2022 The The SML/NJ Fellowship (http://smlnj.org/)
+dnl COPYRIGHT (c) 2026 The The SML/NJ Fellowship (https://smlnj.org/)
 dnl
 dnl @synopsis CHECK_SMLNJ(ACTION-IF-UNKNOWN)
 dnl
@@ -9,7 +9,7 @@ dnl as well as its version.  It will check the user's path, as well as the
 dnl standard locations of /usr/local/smlnj/bin and /usr/local/bin.
 dnl You can override the version of SML/NJ used by defining either the SML_CMD
 dnl or the SMLNJ_CMD variable in the environment (SMLNJ_CMD is for backwards
-dnl compatibility; SML_CMD is prefered).
+dnl compatibility; SML_CMD is preferred).
 dnl This macro sets the following shell variables when it executes successfully:
 dnl
 dnl	SML_CMD*		-- the absolute path to the "sml" command
@@ -77,12 +77,20 @@ dnl
 	*.*) ac_check_smlnj_version="$ac_check_smlnj_version".0 ;;
 	*) ac_check_smlnj_version="$ac_check_smlnj_version".0.0 ;;
       esac
-      [SMLNJ_MAJOR_VERSION=`echo $ac_check_smlnj_version \
-	| sed -e 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`]
-      [SMLNJ_MINOR_VERSION=`echo $ac_check_smlnj_version \
-	| sed -e 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`]
-      [SMLNJ_PATCH_VERSION=`echo $ac_check_smlnj_version \
-	| sed -e 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`]
+dnl
+dnl remove any "-suffix" before getting the major/minor/patch version numbers
+dnl
+      [ac_check_smlnj_version_stem=`echo $ac_check_smlnj_version \
+	| sed -e 's/\([.0-9]*\).*/\1/'`]
+      [SMLNJ_MAJOR_VERSION=`echo $ac_check_smlnj_version_stem \
+	| sed -e 's/\([0-9]*\).*/\1/'`]
+      [SMLNJ_MINOR_VERSION=`echo $ac_check_smlnj_version_stem \
+	| sed -e 's/\([0-9]*\)\.\([0-9]*\).*/\2/'`]
+      [SMLNJ_PATCH_VERSION=`echo $ac_check_smlnj_version_stem \
+	| sed -e 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*/\3/'`]
+      if test x"SMLNJ_PATCH_VERSION" = "" ; then
+        SMLNJ_PATCH_VERSION=0
+      fi
       AC_MSG_RESULT([$SMLNJ_VERSION])
       AC_SUBST(SML_CMD)
       AC_SUBST(SMLNJ_CMD)

@@ -1,0 +1,7 @@
+(* test of defining start symbol as an "%entry" *)
+
+%name G;
+%tokens : A ("a") | B ("b") | C ("c") | D ("d");
+%entry start;
+start : A B ;
+

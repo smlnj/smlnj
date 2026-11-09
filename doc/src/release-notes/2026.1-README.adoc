@@ -1,7 +1,7 @@
 :version: 2026.1
-:date: @DATE@
-:dist-dir: https://smlnj.org/dist/working/{version}/
-:history: {dist-dir}HISTORY.html
+:date: March 14, 2026
+:dist-url: https://smlnj.org/dist/working/{version}/
+:history: {dist-url}HISTORY.html
 :issue-base: https://github.com/smlnj/smlnj/issues
 :legacy-issue-base: https://github.com/smlnj/legacy/issues
 :pull-base: https://github.com/smlnj/smlnj/pull
@@ -28,37 +28,43 @@
 SML/NJ HOME::
   https://www.smlnj.org/index.html[[.tt]#https://smlnj.org#]
 FILES::
-  {dist-dir}index.html[[.tt]#{dist-dir}#]
+  {dist-url}index.html[[.tt]#{dist-url}#]
 --
 ''''''''
 
 == Summary
 
-// **** summary description of release
+This release modifies the startup script to support Linux 7.  It also contains a
+critical bug fix in the *LLVM* code generator.
 
 == Details
 
-// **** details: include those sections that are relevant
-
 === Compiler
+
+* Switched the backend to use *LLVM* 21.1.8
 
 === CM
 
-=== MLRISC
-
-=== Runtime System
+* The "required privileges" message is no longer printed when the CM verbose flag is
+  set to `false` (e.g., by using the command-line option `-Ccm.verbose=false`)
 
 === Basis Library
 
+* Added `Unsafe.Int` structure to provide typed access to integer addition
+  and subtraction without overflow checking.
+
 === SML/NJ Library
 
-=== Successor ML
+* Added `sizeOfValue` function to the `JSON_STREAM_OUTPUT` signature
 
-=== ML-LPT
-
-=== Documentation
+* Added `Rand48` structure.
 
 === Installation
+
+* We now provide architecture-specific compressed tarballs of the system
+  (in addition to the **macOS** installer packages).  These files include
+  all of the source code and the boot files for the architecture.  See the
+  {dist-url}/install.html[installation instructions for details].
 
 == Bugs
 
@@ -68,17 +74,18 @@ Here is a list of the issues and pull requests that are closed with this release
 |=======
 | Issue
 | Description
+| [.bugid]#327#
+| {issue-base}/327[JSON library: hint size of `JSON.value` after serialization]
 | [.bugid]#335#
-| {issue-base}/225[REPL should always print reals as valid SML real literals]
-// | [.bugid]#@ID@#
-// | {issue-base}/@ID@[@DESCRIPTION@]
+| {issue-base}/335[REPL should always print reals as valid SML real literals]
+| [.bugid]#338#
+| {issue-base}/338[incorrect compilation of some large integer literals]
 |=======
 
 We also fixed the following bugs that did not have issues
 associated with them (or were bug fixes ported from the legacy
 repository):
 
-// ***** include a list of unnumbered/legacy bugs here *****
 * Merged {legacy-issue-base}/374[Legacy pull request 374 (`OS.FileSys.tmpName`
   should support `TMPDIR`)].
 

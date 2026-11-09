@@ -1,11 +1,14 @@
 (* cps.sig
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
 signature CPS =
   sig
+
+    (* mixed-record representation *)
+    type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
       = RK_VECTOR	(* vector *)
@@ -14,25 +17,31 @@ signature CPS =
       | RK_CONT		(* closure record for continuation *)
       | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
       | RK_KNOWN	(* closure record for known function *)
-      | RK_RAW64BLOCK	(* 64-bit aligned raw data record *)
-      | RK_RAWBLOCK	(* word-aligned raw data record *)
+      | RK_MIXED of record_rep	(* mixed record *)
+      | RK_RAWBLOCK	(* raw data record *)
 
-    datatype pkind = VPT | RPT of int | FPT of int
+    datatype pkind = VPT | RPT of record_rep
 
   (* type info for integers: size in bits and tagged vs boxed *)
     type intty = {sz : int, tag : bool}
 
     datatype cty
       = NUMt of intty	        (* integers of the given type *)
+      | ENUMt			(* datatype-constructor tag *)
       | PTRt of pkind	        (* pointer *)
       | FUNt		        (* function? *)
       | FLTt of int	        (* float of given size *)
       | CNTt of cty list	(* continuation *)
 
+    (* useful pointer types *)
+    val ptrTy : cty             (* == PTRt VPT *)
+    val rPtrTy : int -> cty     (* rPtrTy n == PTRt(RPT{ptrLen = n, rawLen = 0}) *)
+    val fPtrTy : int -> cty     (* fPtr n == PTRt(RPT{ptrLen = 0, rawLen = n}) *)
+
     structure P : sig
 
       (* numkind includes kind and size *)
-        datatype numkind = INT of int | UINT of int | FLOAT of int
+        datatype numkind = INT of int | UINT of int | FLOAT of int | ENUM
 
       (* arithmetic operations that may overflow; for the division operators,
        * we assume that the second argument is never zero (i.e., an explicit
@@ -54,6 +63,7 @@ signature CPS =
           | CNTPOP | CNTLZ | CNTTZ
           | ROTL | ROTR
 	  | FDIV | FABS | FSQRT
+          | FCEIL | FFLOOR | FROUND | FTRUNC
 
       (* comparison operators
        * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
@@ -73,6 +83,7 @@ signature CPS =
 	  = CMP of {oper: cmpop, kind: numkind}
 	  | FCMP of {oper: fcmpop, size: int}
 	  | FSGN of int
+          | IS_POW2 of int
 	  | BOXED | UNBOXED | PEQL | PNEQ
 	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
 	 * the same length as `s` and `s` is not the empty string.
@@ -138,8 +149,9 @@ signature CPS =
     datatype value
       = VAR of lvar
       | LABEL of lvar			(* function labels after closure conversion *)
-      | NUM of intty IntConst.t
-      | REAL of int RealConst.t
+      | NUM of intty IntConst.t         (* `NUM{ival, ty = {sz, tag}}` *)
+      | ENUM of int			(* datatype-constructor tag *)
+      | REAL of int RealConst.t         (* `REAL{rval, ty = sz}` *)
       | STRING of string
       | VOID                            (* used in closure conversion *)
 
@@ -167,7 +179,7 @@ signature CPS =
     datatype cexp
       = RECORD of record_kind * (value * accesspath) list * lvar * cexp
       | SELECT of int * value * lvar * cty * cexp
-      | OFFSET of int * value * lvar * cexp
+      | OFFSET of int * value * lvar * cexp     (* DEPRECATED *)
       | APP of value * value list
       | FIX of function list * cexp
 (* FIXME: SWITCH is currently restricted to tagged integers, should also support boxed ints *)

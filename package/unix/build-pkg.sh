@@ -13,7 +13,7 @@
 CMD="build-pkg.sh"
 GITHUB_URL="git@github.com:smlnj/smlnj.git"
 DISTROOT=smlnj
-ARCH=""
+ARCH="none"
 VERSION=none
 VERBOSE=""
 CLEANUP=yes
@@ -22,7 +22,7 @@ ROOT=$(pwd)
 
 cleanup () {
   if [ x"$CLEANUP" = xyes ] ; then
-    cd $ROOT
+    cd "$ROOT" || exit 1
     rm -rf $DISTROOT
   fi
 }
@@ -38,21 +38,21 @@ usage() {
 }
 
 complain() {
-  echo "$CMD [Error]: $@"
+  echo "$CMD [Error]: $*"
   cleanup
   exit 1
 }
 
 vsay() {
   if [ x"$VERBOSE" = x-verbose ] ; then
-    echo "$CMD: $@"
+    echo "$CMD: $*"
   fi
 }
 
 make_tarball() {
-  if [ x"$OPSYS" = xdarwin ] ; then
-     TARFLAGS="--no-mac-metadata $TARFLAGS"
-  fi
+  case `uname -s` in
+    Darwin) TARFLAGS="--no-mac-metadata $TARFLAGS" ;;
+  esac
   vsay "tar $TARFLAGS -czf \"$1\" \"$2\""
   tar $TARFLAGS -czf "$1" "$2" || exit 1
 }
@@ -89,8 +89,8 @@ fi
 #
 if [ x"$ARCH" = xnone ] ; then
   case `uname -p` in
-    i386) ARCH=amd64 ;;
-    arm) ARCH=arm64 ;;
+    i386|x86_64|amd64) ARCH=amd64 ;;
+    arm|aarch64) ARCH=arm64 ;;
     *)
       complain "unknown architecture"
     ;;
@@ -116,12 +116,17 @@ fi
 
 # switch to the cloned source directory
 #
-cd $DISTROOT
+cd "$DISTROOT" || exit 1
 
 # remove stuff that we do not need
 #
-rm -rf .git .gitignore .gitmodules .github package
+# support directories
+rm -rf github-scripts package
+# Git/GitHub metadata
+rm -rf .git .gitignore .gitmodules .github
 rm -rf runtime/llvm*/.git runtime/llvm*/.gitignore runtime/llvm*/.github
+# the development subdirectory for the SML/NJ Library
+rm -rf smlnj-lib/Dev
 
 # get the version from the source code
 #
@@ -135,18 +140,21 @@ if [ x"$VERSION" = xnone ] ; then
   VERSION=$CONFIG_VERSION
 elif [ x"$VERSION" != x"$CONFIG_VERSION" ] ; then
   echo "$CMD [Error]: version in config/version is $CONFIG_VERSION"
-  cd $HERE
-  rm -rf $DISTROOT
+  cleanup
   exit 1
 fi
 
 # get the bootfiles
 #
-config/unpack . "$BOOT_ARCHIVE"
+if ! config/fetch.sh . "$BOOT_ARCHIVE" ; then
+  echo "$CMD: [Error]: unable to fetch boot files"
+  cleanup
+  exit 1
+fi
 
 # package up the source tree as a compressed tar file
 #
-cd $ROOT
+cd "$ROOT" || exit 1
 make_tarball smlnj-$ARCH-unix-$VERSION.tgz smlnj
 
 cleanup

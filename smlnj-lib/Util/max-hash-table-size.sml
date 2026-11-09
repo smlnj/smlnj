@@ -1,6 +1,6 @@
 (* max-hash-table-size.sml
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Common code for computing an upper-limit on the size of hash tables

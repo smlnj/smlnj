@@ -28,7 +28,7 @@ Group
 	signature BASICTYPES
 	signature ENTITY_ENV
 	signature PRIMOP_ID
-	signature PRIMOP
+	signature PRIM_OPS
 	signature PPUTIL
 	signature PPTYPE
 	signature PPABSYN
@@ -76,15 +76,13 @@ Group
 	structure GenModIdMap
 	structure CoreAccess
 	structure BrowseStatEnv
+        structure InlineOps
 	structure PrimopId
 	structure PPPrim
-	structure ArithOps
-	structure Primop
-	structure PrimopUtil
+	structure PrimOps
 	structure PrimopBind
 	structure PrimopBindings
 	structure CProto
-	structure CTypes
 	structure TKind
 	structure SigPropList
 	structure PPUtil
@@ -157,16 +155,14 @@ is
 	statenv/coreacc.sml
 	statenv/browse.sml
 
-	prim/arithops.sml
+        prim/inline-ops.sml
 	prim/primop.sig
 	prim/primop.sml
 	prim/primop-bind.sml
 	prim/primop-id.sig
 	prim/primop-id.sml
-	prim/primop-util.sml
 	prim/ppprim.sml
 	prim/cproto.sml
-	prim/c-types.sml
 	prim/primop-bindings.sml
 
 	$smlnj/viscomp/basics.cm

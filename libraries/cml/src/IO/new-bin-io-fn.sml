@@ -688,22 +688,28 @@ functor BinIOFn (
     type outstream = StreamIO.outstream SV.mvar
 
   (** Input operations **)
-    fun input strm = let val (v, strm') = StreamIO.input(SV.mTake strm)
+    fun input inS = let
+          val (v, strm') = StreamIO.input(SV.mTake inS)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
-    fun input1 strm = (case StreamIO.input1(SV.mTake strm)
-	   of NONE => NONE
-	    | (SOME(elem, strm')) => (SV.mPut (strm, strm'); SOME elem)
-	  (* end case *))
-    fun inputN (strm, n) = let val (v, strm') = StreamIO.inputN (SV.mTake strm, n)
+    fun input1 inS = let
+          val strm = SV.mTake inS
+          in
+            case StreamIO.input1 strm
+             of NONE => (SV.mPut (inS, strm); NONE)
+              | (SOME(elem, strm')) => (SV.mPut (inS, strm'); SOME elem)
+            (* end case *)
+          end
+    fun inputN (inS, n) = let
+          val (v, strm') = StreamIO.inputN (SV.mTake inS, n)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
-    fun inputAll (strm : instream) = let
-	  val (v, strm') = StreamIO.inputAll(SV.mTake strm)
+    fun inputAll (inS : instream) = let
+	  val (v, strm') = StreamIO.inputAll(SV.mTake inS)
 	  in
-	    SV.mPut (strm, strm'); v
+	    SV.mPut (inS, strm'); v
 	  end
     fun input1Evt _ = raise Fail "input1Evt unimplemented"
     fun inputEvt _ = raise Fail "inputEvt unimplemented"

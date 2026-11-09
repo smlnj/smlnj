@@ -1,6 +1,6 @@
 /*! \file ml-limits.h
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Various limits and default settings for the SML/NJ run-time system.

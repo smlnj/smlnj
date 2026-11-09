@@ -1,6 +1,6 @@
 (* target64.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Definition of TARGET for 64-bit targets
@@ -8,6 +8,8 @@
 
 structure Target : TARGET =
   struct
+
+    val name = "generic64"
 
     val pointerSz = 64
     val mlValueSz = 64
@@ -17,5 +19,8 @@ structure Target : TARGET =
     val is64 = true
     val bigEndian = Endianess.bigEndian
     val alignInBytes = 8
+
+    (* generic machine has no hardware features *)
+    val features = []
 
   end

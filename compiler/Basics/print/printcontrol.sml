@@ -1,7 +1,9 @@
 (* printcontrol.sml
  *
- * (C) 2001 Lucent Technologies, Bell Labs
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  *)
+
 signature PRINTCONTROL = sig
     val printDepth  : int ref
     val printLength : int ref
@@ -14,7 +16,7 @@ signature PRINTCONTROL = sig
     val out : {say : string -> unit, flush : unit -> unit} ref
     val say : string -> unit
     val flush : unit -> unit
-end
+  end
 
 structure Control_Print : PRINTCONTROL = struct
 
@@ -48,23 +50,24 @@ structure Control_Print : PRINTCONTROL = struct
 	r
     end
 
-    val printDepth = new (int_cvt, "depth", "max print depth", 10)
-    val printLength = new (int_cvt, "length", "max print length", 16)
+    val printDepth = new (int_cvt, "depth", "max print depth", 15)
+    val printLength = new (int_cvt, "length", "max print length", 20)
     val stringDepth =
 	new (int_cvt, "string-depth", "max string print depth", 70)
     val intinfDepth =
 	new (int_cvt, "intinf-depth", "max IntInf.int print depth", 70)
     val lineWidth =
-	new (int_cvt, "lineWidth", "line-width hint for pretty printer", 79)
+	new (int_cvt, "lineWidth", "line-width hint for pretty printer", 90)
 
     val printLoop = new (bool_cvt, "loop", "print loop", true) (* ? *)
     val signatures =
 	new (int_cvt, "signatures", "max signature expansion depth", 2) (* ? *)
     val printOpens = new (bool_cvt, "opens", "print `open'", true)
     val out = ref{
-		  say = fn s => TextIO.output(TextIO.stdOut,s),
-		  flush = fn () => TextIO.flushOut TextIO.stdOut
-		  }
+          say = fn s => TextIO.output(TextIO.stdOut,s),
+          flush = fn () => TextIO.flushOut TextIO.stdOut
+        }
     fun say s = #say (!out) s
     fun flush() = #flush (!out) ()
-end
+
+  end

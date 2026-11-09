@@ -4,7 +4,7 @@
  * support for arithmetic.
  *
  * COPYRIGHT (c) 2018 John Reppy (http://cs.uchicago.edu/~jhr)
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -8,7 +8,7 @@ is
 
   $/basis.cm
   $/smlnj-lib.cm
-  $/html-lib.cm
+  $/html3-lib.cm
 
   ../devices/sources.cm
   ../src/pretty-print-lib.cm

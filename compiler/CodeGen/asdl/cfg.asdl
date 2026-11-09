@@ -99,7 +99,9 @@ module CFG_Prim {
       | FADD | FSUB | FMUL | FDIV | FREM
       | FMADD                           -- fused multiply-add
       | FNEG | FABS | FCOPYSIGN
-      | FSQRT
+    -- the following operations may not be supported on all machines
+      | FSQRT                           -- floating-point square root
+      | FCEIL | FFLOOR | FROUND | FTRUNC -- float-to-float rounding
 
   -- These operations do not raise exceptions and do not access mutable memory.
     pure
@@ -118,6 +120,11 @@ module CFG_Prim {
                                                 -- packed numeric vector
       | RAW_SELECT (numkind kind, int sz, int offset)
                                                 -- select from RAW_RECORD
+
+-- TODO: add GET_ROUNDING_MODE/SET_ROUNDING_MODE as looker/setter ops.
+-- these can map to the `@llvm.get.rounding`/`@llvm.set.rounding` LLVM intrinsics.
+-- We need to verify that LLVM maps these to hardware instructions (and not
+-- library calls)
 
   -- These operations fetch from mutable memory.
     looker
@@ -201,7 +208,7 @@ module CFG (
 
     param = (LambdaVar.lvar name, ty ty)
 
-  -- branch probabilities are measured in percent (1..99).  We use 0 to
+  -- branch probabilities are measured in tenth's of a percent (1..999).  We use 0 to
   -- represent the absence of probability information.
   --
     probability = int
@@ -244,7 +251,8 @@ module CFG (
           bool reentrant,               -- true for reentrant calls
           string linkage,               -- ??
           CTypes.c_proto proto,         -- function prototype
-          exp* args,                    -- arguments
+          exp cfn,                      -- the C function
+          exp* args,                    -- the arguments
           param* results,               -- result variables (with types)
           param* live,                  -- live variables across call (with types)
           stm k)                        -- the continuation
@@ -286,6 +294,20 @@ view Cpp {
 
 %%
     <file> <= suppress : pickler
+
+-- c_type
+    { CTypes.c_type } <= public_code %%
+        virtual llvm::Type *toLLVM (smlnj::cfgcg::Context *cxt) = 0;
+        bool isVoid () const { return this->_tag == _con_C_void; }
+%%
+    { CTypes.c_type.* } <= public_code %%
+        llvm::Type *toLLVM (smlnj::cfgcg::Context *cxt);
+%%
+
+-- c_proto
+    { CTypes.c_proto } <= public_code %%
+        llvm::FunctionType *toLLVM (smlnj::cfgcg::Context *cxt);
+%%
 
 -- alloc
     { CFG_Prim.alloc }  <= public_code %%

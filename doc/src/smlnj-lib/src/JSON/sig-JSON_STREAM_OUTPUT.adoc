@@ -46,6 +46,8 @@ val beginArray : printer -> unit
 val endArray : printer -> unit
 
 val value : printer * JSON.value -> unit
+
+val sizeOfValue : JSON.value -> int
 ------------
 
 == Description
@@ -149,6 +151,10 @@ val value : printer * JSON.value -> unit
   `value (pr, v)` embeds the *JSON* value `v` in the output.  It is
   equivalent to recursively traversing the *JSON* value while calling
   the appropriate output functions from above.
+
+`[.kw]#val# sizeOfValue : JSON.value \-> int`::
+  `sizeOfValue v` returns the size of the *JSON* value `v` when
+  rendered as a condensed string.
 
 == See Also
 

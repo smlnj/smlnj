@@ -23,16 +23,16 @@ if [ ! -x ../../../bin/asdlgen ] ; then
   exit 1
 fi
 
-cd ../../../bin
+cd ../../../bin || exit 1
 BINDIR=$(pwd)
-cd "$HERE"
+cd "$HERE" || exit 1
 
 ASDL="$BINDIR/asdlgen"
 
 echo "$cmd: generating SML code"
-$ASDL sml $src || exit 1
+"$ASDL" sml "$src" || exit 1
 
 echo "$cmd: generating C++ code"
-$ASDL c++ $src || exit 1
+"$ASDL" c++ "$src" || exit 1
 
 exit 0

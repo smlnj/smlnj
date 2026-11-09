@@ -1,0 +1,53 @@
+= The `Timestamp` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Timestamp` structure provides a mechanism for generating timestamps that
+respect the https://reproducible-builds.org/specs/source-date-epoch[`SOURCE_DATE_EPOCH`]
+environment variable.
+
+== Synopsis
+
+[source,sml]
+------------
+structure Timestamp
+------------
+
+== Interface
+
+[source,sml]
+------------
+exception InvalidSourceDateEpoch of string
+
+val makeTimestamp : Time.time -> Time.time
+
+val now : unit -> Time.time
+------------
+
+== Description
+
+[[exn:TimeOut]]
+`[.kw]#exception# InvalidSourceDateEpoch of string`::
+  The exception that is raised when the `SOURCE_DATE_EPOCH` environment
+  variable is defined, but malformed.
+
+`[.kw]#val# makeTimestamp : Time.time \-> Time.time`::
+  `makeTimestamp t` returns a timestamp that is either `t`, when the
+  environment variable `SOURCE_DATA_EPOCH` is not defined, and is
+  the value of `SOURCE_DATA_EPOCH` interpreted as the number of seconds
+  (excluding leap seconds) since January 1, 1970 00:00:00 UTC otherwise.
+  If `SOURCE_DATE_EPOCH` is defined, but malformed, then the exception
+  `InvalidSourceDateEpoch s` is raised, where `s` is the value of the
+  `SOURCE_DATE_EPOCH` environment variable.
+
+`[.kw]#val# now : unit \-> Time.time`::
+  `now ()` is equivalent to the expression `makeTimestamp (Time.now ())`.
+
+== See Also
+
+xref:smlnj-lib.adoc[__The Util Library__],
+https://reproducible-builds.org/specs/source-date-epoch[The `SOURCE_DATE_EPOCH`
+specification].

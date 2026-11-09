@@ -1,6 +1,6 @@
 (* int64.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Implementation of Word64 for 32-bit targets.
@@ -39,7 +39,7 @@ structure Int64Imp : sig
     val op < : int * int -> bool = I64.<
     val op <= : int * int -> bool = I64.<=
 
-    val ~   : int -> int = ~
+    val ~   : int -> int = I64.~
     val min : int * int -> int = I64.min
     val max : int * int -> int = I64.max
     val abs : int -> int = I64.abs

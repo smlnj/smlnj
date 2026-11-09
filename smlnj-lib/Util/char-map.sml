@@ -1,6 +1,6 @@
 (* char-map.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Fast, read-only, maps from characters to values.
@@ -23,7 +23,7 @@ structure CharMap :> CHAR_MAP =
    *)
     fun mkCharMap {default, bindings} = let
 	(* this array maps characters to indices in the valMap *)
-	  val arr = Array.array (Char.maxOrd, default)
+	  val arr = Array.array (Char.maxOrd+1, default)
 	  fun doBinding (s, v) =
 		CharVector.app (fn c => update(arr, Char.ord c, v)) s
 	  in

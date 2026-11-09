@@ -11,7 +11,7 @@ for scanning large files for particular items without having
 to first build an in-memory data structure.  It can also
 be useful to directly translate from *JSON* to a specific *SML*
 datatype without having to go through the intermediate
-xref:str-JSON.adoc#type:value[`JSON.value`] representation.
+xref:../Util/str-JSON.adoc#type:value[`JSON.value`] representation.
 
 == Synopsis
 

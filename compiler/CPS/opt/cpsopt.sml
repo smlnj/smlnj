@@ -1,6 +1,6 @@
 (* cpsopt.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -19,6 +19,14 @@ functor CPSopt (MachSpec: MACH_SPEC) : CPSOPT =
     structure Uncurry = Uncurry(MachSpec)
 
     fun say msg = Control.Print.say(String.concat msg)
+
+(* TODO: first and last contract should not be part of this list *)
+    val () = CG.cpsopt := [
+            "first_contract", "eta", "zeroexpand", "vn", "check",
+            "last_contract"
+          ]
+    (* ["first_contract", "eta", "uncurry", "etasplit",
+	"cycle_expand", "eta", "last_contract" ] *)
 
   (** the main optimization function *)
 (* NOTE: The third argument to reduce is currently ignored.

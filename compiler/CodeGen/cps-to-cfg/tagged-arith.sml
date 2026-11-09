@@ -1,6 +1,6 @@
 (* tagged-arith.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Support for tagged arithmetic, which we lower to machine arithmetic
@@ -10,11 +10,11 @@
 
 structure TaggedArith : sig
 
-  (* convert pure tagged arithmetic to CFG expressions *)
+    (* convert pure tagged arithmetic to CFG expressions *)
     val pure : (CPS.value -> CFG.exp)
 	  -> CPS.P.pureop * bool * int * CPS.value list -> CFG.exp
 
-  (* convert tagged trapping arithmetic to CFG *)
+    (* convert tagged trapping arithmetic to CFG *)
     val trapping : (CPS.value -> CFG.exp)
 	  -> CPS.P.arithop * CPS.value list * LambdaVar.lvar * (CFG.exp -> CFG.stm)
 	  -> CFG.stm
@@ -23,6 +23,7 @@ structure TaggedArith : sig
 
     structure P = CFG_Prim
     structure C = CFG
+    structure CA = ConstArith
 
     datatype pureop = datatype CPS.P.pureop
     datatype arithop = datatype CPS.P.arithop
@@ -36,7 +37,13 @@ structure TaggedArith : sig
     fun pureOp (rator, sz, args) =
 	  C.PURE{oper=P.PURE_ARITH{oper=rator, sz=sz}, args=args}
 
+    fun zExt (from, to, arg) =
+          C.PURE{oper=P.EXTEND{signed=false, from=from, to=to}, args=[arg]}
+
     fun var x = C.VAR{name=x}
+
+    (* maximum tagged signed integer *)
+    val maxInt = IntInf.<<(1, Word.fromInt Target.defaultIntSz - 0w1) - 1
 
   (* CFG integer constants *)
     fun num iv = C.NUM{iv = iv, sz = ity}
@@ -65,10 +72,7 @@ structure TaggedArith : sig
 	    | (ADD, [v1, v2]) =>
 		pureOp (P.ADD, ity, [comp v1, stripTag (comp v2)])
 	    | (SUB, [NUM{ival, ...}, v2]) =>
-(* QUESTION: if ival is the maximum tagged word value, then ival+ival+2 is 0w0 in
- * the native integer size.  Does this cause problems?
- *)
-		pureOp (P.SUB, ity, [num (ival+ival+2), comp v2])
+                pureOp (P.SUB, ity, [num (CA.uNarrow(ity, ival+ival+2)), comp v2])
 	    | (SUB, [v1, NUM{ival, ...}]) =>
 		pureOp (P.SUB, ity, [comp v1, num (ival+ival)])
 	    | (SUB, [v1, v2]) =>
@@ -138,24 +142,33 @@ structure TaggedArith : sig
 		end
             | (CNTPOP, [v]) =>
                 (* untag argument and then count ones *)
-                pureOp (P.CNTPOP, ity, [untagUInt (comp v)])
-            | (CNTLZ, [v]) =>
-                (* the tagging does not affect the leading-zero count; plus,
-                 * we know that the argument is not zero!
+                tag(pureOp (P.CNTPOP, ity, [untagUInt (comp v)]))
+            | (CNTLZ, [v]) => if (sz < Target.defaultIntSz)
+                (* for smaller sizes, we need to adjust the result *)
+                then tag(pureOp (P.SUB, ity, [
+                    pureOp (P.CNTLZ, ity, [zExt(sz, ity, comp v)]),
+                    num(IntInf.fromInt(Target.defaultIntSz - sz))
+                  ]))
+                (* for default ints, the tagging does not affect the
+                 * leading-zero count; plus we know that the argument is not zero!
                  *)
-                pureOp (P.CNTLZ, ity, [comp v])
-            | (CNTTZ, [v]) =>
+                else tag(pureOp (P.CNTLZ, ity, [comp v]))
+            | (CNTTZ, [v]) => if (sz < Target.defaultIntSz)
+                (* CNTTZ(v) == CNTTZ((1 << sz) | (v >> 1)) *)
+                then tag(pureOp(P.CNTTZ, ity, [
+                    pureOp(P.ORB, ity, [
+                        num(IntInf.<<(1, Word.fromInt sz)),
+                        untagUInt (comp v)
+                      ])
+                  ]))
                 (* rotate the argument right by one; this puts the tag bit into
                  * the high-order bit, so the count for zero will return the correct
-                 * answer (e.g., Word63.countLeadingZeros 0w0 = 0w63
+                 * answer (e.g., Word63.countTrailingZeros 0w0 = 0w63)
                  *)
-                pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])])
-            | (ROTL, [v1, v2]) =>
-                (* untag the operands, do the rotations, and tag the result *)
-                tag(pureOp(P.ROTL, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
-            | (ROTR, [v1, v2]) =>
-                (* untag the operands, do the rotations, and tag the result *)
-                tag(pureOp(P.ROTR, ity, [untagUInt(comp v1), untagUInt(comp v2)]))
+                else tag(pureOp (P.CNTTZ, ity, [pureOp (P.ROTR, ity, [comp v, one])]))
+            (* NOTE: `CPS/opt/lower.sml` should eliminate the following two cases *)
+            | (ROTL, _) => error [".pure: ROTL not supported on tagged words"]
+            | (ROTR, _) => error [".pure: ROTR not supported on tagged words"]
 	    | (rator, _) => error [".pure: ", PPCps.pureopToString rator]
 	  (* end case *))
 
@@ -195,7 +208,10 @@ structure TaggedArith : sig
 	     of (IADD, [NUM{ival, ...}, b]) => continue (P.IADD, [num(ival+ival), comp b])
 	      | (IADD, [a, NUM{ival, ...}]) => continue (P.IADD, [comp a, num(ival+ival)])
 	      | (IADD, [a, b]) => continue (P.IADD, [comp a, stripTag(comp b)])
-	      | (ISUB, [NUM{ival, ...}, b]) => continue (P.ISUB, [num(ival+ival+2), comp b])
+	      | (ISUB, [NUM{ival, ...}, b]) =>
+                  if (ival = maxInt)
+                    then continue (P.ISUB, [num(ival+ival+1), stripTag(comp b)])
+                    else continue (P.ISUB, [num(ival+ival+2), comp b])
 	      | (ISUB, [a, NUM{ival, ...}]) => continue (P.ISUB, [comp a, num(ival+ival)])
 	      | (ISUB, [a, b]) => tagResult (P.ISUB, [comp a, comp b])
 	      | (IMUL, [NUM{ival=m, ...}, NUM{ival=n, ...}]) =>

@@ -58,6 +58,7 @@ structure CFG_Prim =
       | FMADD
       | FNEG | FABS | FCOPYSIGN
       | FSQRT
+      | FCEIL | FFLOOR | FROUND | FTRUNC
 
     datatype pure
       = PURE_ARITH of {oper : pureop, sz : int}
@@ -150,7 +151,8 @@ structure CFG =
 	    reentrant : bool,		(* true for reentrant functions *)
 	    linkage : string,		(*  *)
 	    proto : CTypes.c_proto,	(* function prototype *)
-	    args : exp list,		(* arguments; first arg is function pointer *)
+            cfn : exp,                  (* the function pointer *)
+	    args : exp list,		(* arguments *)
 	    results : param list,	(* result bindings *)
 	    live : param list,		(* variables that are live across the call;
 					 * this list is [] for non-reentrant functions.

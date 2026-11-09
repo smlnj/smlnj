@@ -6,7 +6,7 @@
 # usage: scripts/prepare-str.sh <dir> <str>
 #
 
-function usage {
+usage() {
   echo "usage: scripts/prepare-str.sh <dir> <str>"
   exit 1
 }

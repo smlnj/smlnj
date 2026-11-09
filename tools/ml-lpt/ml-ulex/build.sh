@@ -14,9 +14,7 @@ ROOT="ml-ulex"
 HEAP_IMAGE=""
 SMLNJROOT=`pwd`/../../..
 BIN=${INSTALLDIR:-$SMLNJROOT}/bin
-LIB=${INSTALLDIR:-$SMLNJROOT}/lib
-BUILD=$BIN/ml-build
-SML=$BIN/sml
+BUILD="$BIN/ml-build"
 
 #
 # process command-line options
@@ -46,6 +44,6 @@ fi
 
 #
 # Build the ml-ulex standalone program:
-"$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main $HEAP_IMAGE
+"$BUILD" -DNO_ML_ANTLR -DNO_ML_LEX -DNO_ML_YACC sources.cm Main.main "$HEAP_IMAGE"
 
 exit 0

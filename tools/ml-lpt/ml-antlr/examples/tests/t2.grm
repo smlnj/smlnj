@@ -1,0 +1,6 @@
+%name TE;
+%tokens : A ("a") | B ("b") | C ("c") | D ("d") ;
+%entry start1, start2;
+start1 : A ;
+start2 : B ;
+

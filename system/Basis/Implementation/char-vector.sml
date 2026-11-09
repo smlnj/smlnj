@@ -1,6 +1,6 @@
 (* char-vector.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Vectors of characters (aka strings).
@@ -44,9 +44,26 @@ structure CharVector : MONO_VECTOR =
     val sub      = InlineT.CharVector.chkSub
     val concat   = String.concat
 
-    fun update (v, i, x) = tabulate (length v,
-				     fn i' => if i = i' then x
-					      else usub (v, i'))
+    fun update (v, i, x) = let
+          val len = length v
+          in
+            if InlineT.Int.ltu(i, len)
+              then let
+                val v' = Assembly.A.create_s len
+                fun fill j = if (j >= len)
+                        then v'
+                      else if (i = j)
+                        then (
+                          uupd (v', i, x);
+                          fill (j ++ 1))
+                        else (
+                          uupd (v', j, usub (v, j));
+                          fill (j ++ 1))
+                in
+                  fill 0
+                end
+              else raise General.Subscript
+          end
 
     fun appi f vec = let
 	val len = length vec

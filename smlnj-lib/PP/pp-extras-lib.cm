@@ -1,6 +1,6 @@
 (* pp-extras-lib.cm
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * CM file for compiling the PP Library with the extra devices.
@@ -32,7 +32,7 @@ Library
 is
 
   $/basis.cm
-  $/html-lib.cm
+  $/html3-lib.cm
   $/pp-lib.cm
 
   devices/html3-dev.sml
