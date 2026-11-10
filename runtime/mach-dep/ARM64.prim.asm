@@ -378,12 +378,20 @@ jmp_ml:
 /* QUESTION: would using a `ret` instruction be better here? */
 	br	lr
 
-    /* here we have pending signals */
+    /* here we have pending signals; if the inSigHandler flag is set, then
+     * we just go to the SML signal handler code; otherwise, we set the
+     * handlerPending flag and set the limitPtr=0 to force a GC on the next
+     * check.
+     */
 pending:
     /* if (we are in a signal handler) then limitptr := 0 */
         ldr     xtmp2, MEM(xtmp1, InSigHandlerOffVSP)
-        cmp     xtmp2, IM(0)
-	csel	limitptr, limitptr, xzero, eq
+        cmp     xtmp2, IM(0)             /* if (vsp->inSigHandler) */
+        b.ne    jmp_ml                   /*   then goto jmp_ml */
+
+        mov     xtmp2, IM(1)             /* vsp->handlerPending = 1 */
+        str     xtmp2, MEM(xtmp1, HandlerPendingOffVSP)
+        mov     limitptr, xzero          /* limitptr = 0 (force GC) */
         b       jmp_ml
 
 

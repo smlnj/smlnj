@@ -87,6 +87,9 @@ repository):
 * fixed the number of FP registers available for argument passing
   on the arm64 architecture (should be 16 based on the JWA specification)
 
+* fixed the arm64 assembly code to correctly set the `handlerPending` flag
+  when returning to SML when signals are pending.
+
 == Supported systems
 
 We believe that SML/NJ will build and run on the following systems, but have only
