@@ -25,6 +25,7 @@ structure Arm64Spec : MACH_SPEC =
     val numRegs = 21	                (* #misc regs + 3 *)
 (* numArgsRegs = 15? *)
     val numArgRegs = 16                 (* non-callee-save misc regs + stdArg *)
+(* should be 32 float regs *)
     val numFloatRegs = 16               (* number of floating-point registers *)
     val numFloatArgRegs = 16            (* number of floating-point argument registers *)
 
