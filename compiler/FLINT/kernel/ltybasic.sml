@@ -16,7 +16,7 @@ local
   structure LD = LtyDef
 
       (** common utility functions *)
-		   
+
   fun bug msg = ErrorMsg.impossible("LtyExtern: "^msg)
   val say = Control.Print.say
 

@@ -89,7 +89,7 @@ type depth = DebIndex.depth   (* rep = int *)
 type kindenv = LE.tkindEnv    (* = tkind list list -- lty.sml *)
 type varenv = LE.ltyEnv       (* = (lty * DI.depth) LambdaVar.Map.map -- ltybasic.sml *)
 type envs = kindenv * varenv * depth
-		   
+
 fun check (postReify: bool) (envs: envs) lexp =
     let val definedLvars = ref S.empty
         (* imperative table -- keeps track of already bound variables,
