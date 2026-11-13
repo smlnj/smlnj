@@ -35,7 +35,7 @@ OPTIONS
 *--match*::
   enter interactive matching mode.  This will allow interactive testing of the machine; presently,
   only the +INITIAL+ start state is available for testing
-  (see the http://www.smlnj.org/doc/ml-lpt/manual.pdf[User Guide] for details on start states).
+  (see the https://smlnj.org/doc/ml-lpt/manual.pdf[User Guide] for details on start states).
 
 *--ml-lex-mode*::
   operate in *ml-lex* compatibility mode.

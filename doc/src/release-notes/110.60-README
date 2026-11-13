@@ -1,7 +1,7 @@
                          S  M  L   /   N  J
 
                    1  1  0  .  6  0      N  E  W  S
-			
+
                             November 9, 2006
 
                                 WARNING
@@ -32,7 +32,7 @@ compiler:
 runtime:
 
   - worked around problem with signal delivery on Intel-based Macs
-    
+
 ml-lpt ("language processing tools"):
 
   - two new tools: ml-ulex, ml-antlr

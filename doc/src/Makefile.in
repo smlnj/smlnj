@@ -12,7 +12,7 @@ INSTALL =       @INSTALL@
 
 # default target base
 #
-TARGET_BASE =		http://smlnj.org
+TARGET_BASE =		https://smlnj.org
 
 # place to put documentation for doc target
 #

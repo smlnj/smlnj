@@ -1,7 +1,7 @@
                          S  M  L   /   N  J
 
                    1  1  0  .  5  4      N  E  W  S
-			
+
                              May 18, 2005
 
                                 WARNING
@@ -70,5 +70,5 @@ Installer:
 Code generator:
 ---------------
 
-- Added a gc protocol checking phase.  This phase is enabled with 
+- Added a gc protocol checking phase.  This phase is enabled with
   the flag "check-gc".  "debug-check-gc" turns on the verbose mode.

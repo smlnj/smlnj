@@ -5,7 +5,7 @@ dnl All rights reserved.
 dnl
 dnl This the configuration script for autoconf version 2.60+.
 
-AC_INIT([smlnj-lib-doc],[1.0],[],[],[http://smlnj.org])
+AC_INIT([smlnj-lib-doc],[1.0],[],[],[https://smlnj.org])
 
 AC_PREREQ([2.71])
 AC_COPYRIGHT([[COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)]])

@@ -9,7 +9,7 @@
 #
 # variables to be defined by parent:
 #
-#    TARGET_BASE	-- the target's base URL (e.g., http://sml3d.cs.uchicago.edu/)
+#    TARGET_BASE	-- the target's base URL (e.g., https://smlnj.org/)
 #    DOC_BASE		-- the target document's root URL
 #    DST_DIR		-- the location where generated files should be placed
 
