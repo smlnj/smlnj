@@ -7,7 +7,9 @@
 signature CPS =
   sig
 
-    (* mixed-record representation *)
+    (* record representation; regular records have `rawLen = 0` and raw records
+     * have `ptrLen = 0`.
+     *)
     type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
