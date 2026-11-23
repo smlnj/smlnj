@@ -205,20 +205,22 @@ structure CPS : CPS =
       | KNOWN_TAIL     (* tail-recursive kernal *)
       | KNOWN_CONT     (* known continuation functions *)
       | ESCAPE         (* before the closure phase, any user function;
-			  after the closure phase, escaping user function *)
+			* after the closure phase, escaping user function *)
       | NO_INLINE_INTO (* before the closure phase,
-			  a user function inside of which no in-line expansions
-			  should be performed;
-			  does not occur after the closure phase *)
+			* a user function inside of which no in-line expansions
+			* should be performed;
+			* does not occur after the closure phase
+                        *)
 
     datatype cexp
-      = RECORD of record_kind * (value * accesspath) list * lvar * cty * cexp
+      = RECORD of record_kind * (value * accesspath) list * lvar * cexp
 (* TODO: move access paths into the `SELECT` expression and simplify the `RECORD`
  * expression form.
       = RECORD of record_kind * value list * lvar * cexp
       | SELECT of accesspath * lvar * lvar * cty * cexp
 *)
       | SELECT of int * value * lvar * cty * cexp
+(* TODO: remove `OFFSET` *)
       | OFFSET of int * value * lvar * cexp     (* DEPRECATED *)
       | APP of value * value list
       | FIX of function list * cexp
