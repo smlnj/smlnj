@@ -1,6 +1,6 @@
 (* uncurry.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -61,10 +61,8 @@ val unboxedfloat = MachSpec.unboxedFloats
 fun isFltCty (FLTt _) = unboxedfloat
   | isFltCty _ = false
 
-val numCSgpregs = MachSpec.numCalleeSaves
-val numCSfpregs = MachSpec.numFloatCalleeSaves
-val maxgpregs = MachSpec.numRegs - numCSgpregs - 1
-val maxfpregs = MachSpec.numFloatRegs - numCSfpregs - 2
+val maxgpregs = MachSpec.numArgRegs
+val maxfpregs = MachSpec.numFloatArgRegs
 
 fun checklimit(cl) =
   let fun h(FLTt _::r, m, n) = if unboxedfloat then h(r,m,n+1) else h(r,m+1,n)

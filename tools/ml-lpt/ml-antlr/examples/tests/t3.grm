@@ -1,0 +1,6 @@
+%name ET2;
+%tokens : A ("a") | B ("b") | C ("c") | D ("d") ;
+%entry second;
+first : A ;
+second : B ;
+

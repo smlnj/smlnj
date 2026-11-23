@@ -16,7 +16,7 @@ long options, the argument follows an equal character (_e.g._,
 as non-options.
 
 This implementation was ported from Sven Panne's Haskell implementation
-by Riccardo Pucella and has then been updated in various ways.
+by Riccardo Pucella (many years ago) and has then been updated in various ways.
 
 == Synopsis
 

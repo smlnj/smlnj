@@ -1,6 +1,6 @@
 (* word8.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -60,7 +60,11 @@ structure Word8Imp : WORD =
     val min : word * word -> word = W8.min
     val max : word * word -> word = W8.max
 
-    fun fmt radix = (NumFormat32.fmtWord radix) o InlineT.Word32.fromLarge o toLargeWord
+    fun fmt radix = let
+	  val fmt' = NumFormat.fmtWord radix
+	  in
+	    fn b => fmt' (InlineT.Word.fromLarge (InlineT.Word8.toLarge b))
+	  end
     val toString = fmt StringCvt.HEX
 
     fun scan radix = let
@@ -76,18 +80,20 @@ structure Word8Imp : WORD =
 	  end
     val fromString = PreBasis.scanString (scan StringCvt.HEX)
 
-  (* added for Basis Library proposal 2016-001 *)
+  (* added for Basis Library proposal 2026-001 *)
+    val rotateL  : word * Word.word -> word = W8.rotateL
+    val rotateR : word * Word.word -> word = W8.rotateR
 
-    fun popCount w = let
-        (* pop count of each 2 bits into those 2 bits *)
-          val w = w - W8.andb(W8.rshiftl(w, 0w1), 0wx55)
-        (* pop count of each 4 bits into those 4 bits *)
-          val w = W8.andb(w, 0wx33) + W8.andb(W8.rshiftl(w, 0w2), 0wx33)
-        (* pop count of each 8 bits into those 8 bits *)
-          val w = w + W8.rshiftl(w, 0w4)
-	  in
-          (* mask out result *)
-	    W8.toIntX (W8.andb(w, 0wx0F))
-	  end
+    val countZeros = W8.cntZeros
+    val countOnes = W8.cntOnes
+
+    val countLeadingZeros = W8.cntLeadingZeros
+    val countLeadingOnes = W8.cntLeadingOnes
+
+    val countTrailingZeros = W8.cntTrailingZeros
+    val countTrailingOnes = W8.cntTrailingOnes
+
+    val isPowerOf2 = W8.isPowOf2
+    val ceilLog2 = W8.ceilLog2
 
   end  (* structure Word8 *)

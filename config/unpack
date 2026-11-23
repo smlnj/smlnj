@@ -2,7 +2,7 @@
 #
 # NOTE: this script is not really necessary anymore, since the sources are
 # fetched by cloning the GitHub repository.  We are keeping it for now because
-# the SML installer (`system/smlnj/installer`) in 2021.1 uses it.
+# several scripts use it to fetch the boot files.
 #
 # This script was extracted from install.sh and deals with the fetching
 # and unpacking of source/bootfile trees.  The first argument must be
@@ -76,8 +76,8 @@ fetchurl() {
 	done
     done
     if [ $fetched = no ] ; then
-	echo $this: Fetching $try was no success.
-	echo '  ' You should try to do it manually now.
+	echo "$this: Fetching $try was no success."
+	echo "  You should try to do it manually now."
 	askurl "$1" "$2" "$3"
     fi
 }
@@ -94,11 +94,11 @@ uselynx() {
 
 # wrapper for curl
 usecurl() {
-    curl -s "$1" >"$2"
+    curl -s --fail "$1" >"$2"
 }
 
 testurlgetter() {
-    (exec >/dev/null 2>&1 ; exec $*)
+    (exec >/dev/null 2>&1 ; exec "$@")
 }
 
 #
@@ -187,7 +187,7 @@ unarchive() {
 # no archive is found locally, it invokes $URLGETTER and tries again.
 # The variable $tryfetch is used to make sure this happens only once.
 fetch_n_unpack() {
-    cd "$2"
+    cd "$2" || exit 1
     if unarchive "$1" "$4".tgz un_tar_gz ||
        unarchive "$1" "$4".tar.gz un_tar_gz ||
        unarchive "$1" "$4".tar.Z un_tar_Z ||
@@ -195,7 +195,7 @@ fetch_n_unpack() {
        unarchive "$1" "$4".tar.bz2 un_tar_bz2 ||
        unarchive "$1" "$4".tz un_tar_Z
     then
-	: we are done
+	: # we are done
     elif [ $tryfetch = yes ] ; then
 	urlgetter
 	$URLGETTER "$1" "$4" "$SRCARCHIVEURL"
@@ -204,6 +204,7 @@ fetch_n_unpack() {
     fi
 }
 
+# unpack <name> <dir> <component> <tarfile>
 #
 # The main "unpack" driver function that invokes the above helper.
 #
@@ -230,9 +231,9 @@ do
 #       runtime)
 #         unpack run-time "$ROOT"/base runtime runtime
 # 	;;
-#       boot.*)
-#         unpack bootfiles "$ROOT" sml.$i $i
-# 	;;
+      boot.*)
+        unpack bootfiles "$ROOT" sml.$i $i
+ 	;;
       compiler)
 	unpack compiler "$ROOT" compiler compiler
 	;;

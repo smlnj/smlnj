@@ -1,6 +1,6 @@
 /*! \file flip.c
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This code determines which generations to flip and what the

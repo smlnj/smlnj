@@ -58,25 +58,43 @@ structure StringToFRep : sig
                         if (d <= 0w9)
                           then scanWhole (cs', sign, n+1, W.toIntX d :: digits)
                         else if (d = ptCode)
-                          then scanFrac (cs', sign, n, 0, digits)
+                          then scanFrac (cs, cs', sign, n, digits)
                         else if (d = eCode)
                           then scanExp (cs, cs', sign, n, 0, digits)
                           else mkNoExp (cs, sign, n, 0, digits)
                       end
                   | NONE => mkNoExp (cs, sign, n, 0, digits)
                 (* end case *))
-          and scanFrac (cs, mSign, nWhole, nFrac, digits) = (case getc cs
-                 of SOME(c, cs') => let
-                      val d = U.code c
-                      in
-                        if (d <= 0w9)
-                          then scanFrac (cs', mSign, nWhole, nFrac+1, W.toIntX d :: digits)
-                        else if (d = eCode)
-                          then scanExp (cs, cs', mSign, nWhole, nFrac, digits)
-                          else mkNoExp (cs, mSign, nWhole, nFrac, digits)
-                      end
-                  | NONE => mkNoExp (cs, mSign, nWhole, nFrac, digits)
-                (* end case *))
+          (* scan "[0-9]+([eE][[+~-]?[0-9]+)?" following a "."
+           * `cs` is the stream with the '.' as its first character, while `cs'` is
+           * the suffix following the '.'
+           *)
+          and scanFrac (cs, cs', mSign, nWhole, digits) = let
+                fun scan (cs, nFrac, digits) = (case getc cs
+                       of SOME(c, cs') => let
+                            val d = U.code c
+                            in
+                              if (d <= 0w9)
+                                then scan (cs', nFrac+1, W.toIntX d :: digits)
+                              else if (d = eCode)
+                                then scanExp (cs, cs', mSign, nWhole, nFrac, digits)
+                                else mkNoExp (cs, mSign, nWhole, nFrac, digits)
+                            end
+                        | NONE => mkNoExp (cs, mSign, nWhole, nFrac, digits)
+                      (* end case *))
+                in
+                  (* we expect at least one digit following the "." *)
+                  case getc cs'
+                   of SOME(c, cs'') => let
+                        val d = U.code c
+                        in
+                          if (d <= 0w9)
+                            then scan (cs'', 1, W.toIntX d :: digits)
+                            else mkNoExp (cs, mSign, nWhole, 0, digits)
+                        end
+                    | NONE => mkNoExp (cs, mSign, nWhole, 0, digits)
+                  (* end case *)
+                end
           and scanExp (eIx, cs, mSign, nWhole, nFrac, digits) = let
                 val (eSign, cs) = scanSign cs
                 fun scan (cs, eDigits) = (case getc cs
@@ -112,7 +130,8 @@ structure StringToFRep : sig
            *   nFrac    -- number of fractional digits (i.e., right of decimal)
            *   rDigits   -- the digits in reverse order
            *)
-          and mkNoExp (cs, mSign, nWhole, nFrac, rDigits) =
+          and mkNoExp (_, _, _, _, []) = NONE
+            | mkNoExp (cs, mSign, nWhole, nFrac, rDigits) =
                 mk (cs, mSign, nWhole + nFrac, rDigits, ~nFrac)
           (* make a number with an exponent.  The first five arguments are the same
            * as `mkNoExp`; the additional arguments are:
@@ -186,21 +205,13 @@ structure StringToFRep : sig
                 val (sign, cs) = scanSign cs
                 in
                   case getc cs
-                   of SOME(#".", cs') => (case getc cs'
-                         of SOME(c, cs'') => let
-                              val d = U.code c
-                              in
-                                if (d <= 0w9)
-                                  then scanFrac (cs'', sign, 0, 1, [W.toIntX d])
-                                  else NONE
-                              end
-                          | NONE => NONE
-                        (* end case *))
-                    | SOME(c, cs') => let
+                   of SOME(c, cs') => let
                         val d = U.code c
                         in
                           if (d <= 0w9)
                             then scanWhole (cs', sign, 1, [W.toIntX d])
+                          else if (d = ptCode)
+                            then scanFrac (cs, cs', sign, 0, [])
                             else scanSpecial (sign, c, cs')
                         end
                     | NONE => NONE

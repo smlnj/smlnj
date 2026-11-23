@@ -3,22 +3,21 @@
  * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
- * Internal conversions for creating strings from IEEEReal.decimal_approx
+ * Internal conversions for creating strings from FloatRep.float_rep
  * values.  Note that we assume that the inputs are well formed; i.e.,
  *
  *      - the list of digits only contain values in the range [0..9]
  *
- *      - the list of digits is normalized; i.e., there are no trailing
+ *      - the list of digits is normalized; i.e., there are no leading
  *        zeros.
  *
- *      - if the class is ZERO, then the list of digits is empty and the
- *        exponent is 0.  Likewise, if the list of digits is empty, then
- *        the class should be ZERO.
+ * The interpretation of a FloatRep.decimal_rep number with sign "s",
+ * digits "d_1", ..., "d_n", and exponent "e" is
  *
- * The interpretation of a IEEEReal.decimal_approx normal or sub-normal
- * number with sign "s", digits "d_1", ..., "d_n", and exponent "e" is
+ *      (-1)^s * d_1 ... d_n * 10^e
  *
- *      (-1)^s * 0.d_1 ... d_n * 10^e
+ * Note that this is different than the `IEEEReal.decimal_approx` type, where
+ * the digits are to the right of the decimal point.
  *)
 
 structure FRepToString : sig

@@ -67,6 +67,7 @@ namespace asdl {
     }
 
     integer::integer (instream &is)
+    : _sign(false), _digits{}
     {
       // first we read the sequence of 7-bit digits
 	std::vector<unsigned char> digits;
@@ -86,23 +87,30 @@ namespace asdl {
 	else if (b > 0xf) firstBits = 5;
 	else if (b > 0x7) firstBits = 4;
 	else if (b > 0x3) firstBits = 3;
-	else if (b > 0x2) firstBits = 2;
+	else if (b > 0x1) firstBits = 2;
 	else if (b > 0x0) firstBits = 1;
 	else firstBits = 0;
 
-      // the total number of bits (not counting the sign) is computed
-      // as 7 bits per continuation byte plus the bits required for the
-      // first byte
+        // the total number of bits (not counting the sign) is computed
+        // as 7 bits per continuation byte plus the bits required for the
+        // first byte
 	int nbits = (digits.size() - 1) * 7 + firstBits;
 
 	if (nbits > 0) {
 	    this->_digits.reserve((nbits + 31) >> 5);
-	  // the number of bits available in the current digit
+	    // the number of bits available in the current digit
 	    uint32_t availBits = nbits % 32;
 	    if (availBits == 0) { availBits = 32; }
-	  // initialize the current result digit to the first byte
-	    uint32_t w = digits[0];
-	    availBits -= firstBits;
+	    // initialize the current result digit to the first byte
+            uint32_t w = b;
+            if (availBits < firstBits) {
+                int k = firstBits - availBits;
+                this->_digits.push_back(w >> k);
+                w &= (1 << k) - 1;
+                availBits = 32 - k;
+            } else {
+                availBits -= firstBits;
+            }
 	    int idx = 1;
 	    while (idx < digits.size()) {
 		b = digits[idx];

@@ -1,6 +1,6 @@
 (* real64.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -38,6 +38,8 @@ structure Real64Imp : REAL =
     val posInf = Real64Values.posInf
   (* negative infinity *)
     val negInf = Real64Values.negInf
+  (* a NaN value *)
+    val nan = Real64Values.posNaN
 
     (* some useful constants *)
     val nExpBits = 0w11                 (* # of exponent bits in double-precision real *)
@@ -60,27 +62,50 @@ structure Real64Imp : REAL =
     val trunc = trunc
     val round = round
 
-  (* This is the IEEE double-precision maxint == 2^52 *)
-    val maxInt = 4503599627370496.0
 
-    local
-    (* realround mode x returns x rounded to the nearest integer using the
-     * given rounding mode.
-     * May be applied to inf's and nan's.
+    val realFloor = InlineT.Real64.realFloor
+    val realCeil = InlineT.Real64.realCeil
+    val realTrunc = InlineT.Real64.realTrunc
+
+    (* The hardware semantics of `round` rounds `x.5` away from `0` (which
+     * also the C standard), whereas the SML Basis Library specifies that
+     * `realRound` should round to the `x` if `x` is even and to `x+1` if
+     * x is odd.  For the interval [-2^51..2^51+0.5], we can force this
+     * behavior using addition/subtraction with the rounding mode set to
+     * "NEAREST" (See "Hackers Delight 2nd Ed (Section 17.2).  Outside that
+     * range, we fallback to the hardware instruction.
      *)
-      fun realround mode x = let
-	    val saveMode = IEEEReal.getRoundingMode ()
-	    in
-	      IEEEReal.setRoundingMode mode;
-	      (if x>=0.0 then x+maxInt-maxInt else x-maxInt+maxInt)
-		before IEEEReal.setRoundingMode saveMode
-	    end
+    local
+      (* integers in the range [-2^52..2^52] are exactly representable as doubles. *)
+      val mc51 = InlineT.Real64.fromBits 0wxc320000000000000    (* -2^51 *)
+      val c51ph = InlineT.Real64.fromBits 0wx4320000000000001   (* 2^51 + 0.5 *)
+      val c521 = InlineT.Real64.fromBits 0wx4338000000000000    (* 2^52 + 2^51 *)
+      val ctlRoundingMode : int option -> int =
+            CInterface.c_function "SMLNJ-Math" "ctlRoundingMode"
+      val kNearest = 0
+      fun setRoundingMode m = ignore(ctlRoundingMode (SOME m))
+      fun getRoundingMode () = ctlRoundingMode NONE
     in
-    val realFloor = realround IEEEReal.TO_NEGINF
-    val realCeil = realround IEEEReal.TO_POSINF
-    val realTrunc = realround IEEEReal.TO_ZERO
-    val realRound = realround IEEEReal.TO_NEAREST
-    end
+    fun realRound x = if (mc51 < x) andalso (x < c51ph)
+          (* x is in the range [-2^51..2^51+0.5] *)
+          then let
+            val saveMode = getRoundingMode ()
+            in
+              if (saveMode = kNearest)
+                then (x + c521) - c521
+                else let
+                  val () = setRoundingMode kNearest
+                  val result = (x + c521) - c521
+                  in
+                    setRoundingMode saveMode;
+                    result
+                  end
+            end
+          (* fall back to the hardwre round operation, which be correct, since
+           * ties are not possible outside [-2^51..2^51+0.5]
+           *)
+          else InlineT.Real64.realRound x
+    end (* local *)
 
     val abs : real -> real = InlineT.Real64.abs
     val fromInt : int -> real = InlineT.Real64.from_int
@@ -242,69 +267,13 @@ structure Real64Imp : REAL =
 
     fun realMod x = #frac (split x)
 
-    fun rem(x,y) = y * #frac(split(x/y))
+    val rem = Real64Rem.rem
 
     fun checkFloat x = if x>negInf andalso x<posInf then x
                        else if isNan x then raise General.Div
 			 else raise General.Overflow
 
-    fun nextAfter (r, t) = if (r == t)
-            then r
-          else let
-            (* split the bits of an IEEE double into sign, exp, and fractional parts *)
-            fun split x = let
-                  val bits = toBits x
-                  val sign = W64.andb(signBitMask, bits)
-                  val exp = W64.andb(W64.rshiftl(bits, nFracBits), expMask)
-                  val frac = W64.andb(bits, fracMask)
-                  in
-                    (bits, sign, exp, frac)
-                  end
-            val (rBits, rSign, rExp, rFrac) = split r
-            val (tBits, tSign, tExp, tFrac) = split t
-            (* increment the magnitude of r by one ulp *)
-            fun stepUp () = let
-                  val ef = W64.andb(rBits, expAndFracMask) + 0w1
-                  in
-                    if (ef > expAndFracMask)
-                      (* overflow, so return ±infinity *)
-                      then fromBits(W64.orb(rSign, infBits))
-                      else fromBits(W64.orb(rSign, ef))
-                  end
-            (* decrement the magnitude of r by one ulp *)
-            fun stepDn () = let
-                  val ef = W64.andb(rBits, expAndFracMask) - 0w1
-                  in
-                    if (ef < 0wx0010000000000000)
-                      (* underflow, so return ±zero *)
-                      then fromBits rSign
-                      else fromBits(W64.orb(rSign, ef))
-                  end
-            in
-              if (rExp = expMask)
-                then r  (* r is either a NaN or infinity so return it *)
-              else if (tExp = expMask)
-                then if (tFrac <> 0w0)
-                  then t (* t is a NaN, so return it *)
-                  else if (rSign = tSign)
-                    (* t is infinity with the same sign as r, so make r bigger *)
-                    then stepUp ()
-                    (* t is infinity with the opposite sign as r, so make r smaller *)
-                    else stepDn ()
-              (* both r and t are normal/subnormal numbers *)
-              else if (W64.orb(rExp, rFrac) = 0w0)
-                (* rExp = 0 && rFrac = 0 ==> r = ±0.0 *)
-                then fromBits(W64.orb(tSign, 0w1)) (* ± minimum subnormal *)
-              (* bit r and t are non-zero normal/subnormal numbers *)
-              else if (rSign <> tSign)
-                (* when different signs, move `r` toward 0 *)
-                then stepDn()
-              else if (rBits > tBits)
-                (* either `r < t < 0` or `0 < t < r`, so move `r` toward 0 *)
-                then stepDn()
-                (* either `t < r < 0` or `0 < r < t`, so move `r` toward 0 *)
-                else stepUp ()
-            end
+    val nextAfter = Real64NextAfter.nextAfter
 
     val min : real * real -> real = InlineT.Real64.min
     val max : real * real -> real = InlineT.Real64.max

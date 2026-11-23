@@ -27,14 +27,21 @@ structure SMLOutput =
     datatype ml_fundecl = datatype ML.ml_fundecl
     datatype ml_fun_heading = datatype ML.ml_fun_heading
 
+    fun ppML (strm, exp) = let
+          val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
+          in
+            ML.ppML (ppStrm, exp);
+            TextIOPP.closeStream ppStrm
+          end
+
   (* the following functions compute names or small expressions
    * used throughout the backend
    *)
 
-    fun NTFnName nt = NT.name nt ^ "_NT"
+    fun NTFnName nt = NT.toString nt ^ "_NT"
     fun NTFnVar nt = ML_Var (NTFnName nt)
 
-    fun predFnName nt = NT.name nt ^ "_PRED"
+    fun predFnName nt = NT.toString nt ^ "_PRED"
 
     fun tokConName tok = "Tok." ^ Token.name tok
     fun tokConVar tok = ML_Var (tokConName tok)
@@ -259,7 +266,6 @@ structure SMLOutput =
     fun parserHook spec strm = let
           val (grm as S.Grammar {toks, nterms, startnt, sortedTops, entryPoints, ...},
 	       pm) = spec
-          val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  val entries = map NTFnName (startnt :: entryPoints)
 	  val entriesVal = "val (" ^ String.concatWith ", " entries ^ ") = "
 	  val innerExp = ML_Tuple (map ML_Var entries)
@@ -281,7 +287,7 @@ structure SMLOutput =
 		])
           in
             TextIO.output (strm, entriesVal ^ "\n");
-            ML.ppML (ppStrm, parser);
+            ppML (strm, parser);
 	    TextIO.output (strm, "\n");
 	    app wrWrapParse (startnt::entryPoints);
             TextIO.output (strm, concat [
@@ -291,12 +297,12 @@ structure SMLOutput =
 	      ]);
 	    TextIO.output (strm, "  in\n");
 	    wrEntry ("parse", startnt);
-	    app (wrEntry o (fn x => ("parse" ^ Nonterm.name x, x))) entryPoints;
+	    app (wrEntry o (fn x => ("parse" ^ Nonterm.toString x, x))) entryPoints;
 	    TextIO.output (strm, "  end\n")
           end
 
   (* make a match function for a token *)
-    fun ppMatch (strm, ppStrm) t = let
+    fun ppMatch strm t = let
           val matchCase =
 	        (ML_TupPat
 		   [ML_ConPat (tokConName t,
@@ -312,7 +318,7 @@ structure SMLOutput =
           val exp = ML_Case (mkGet1 "strm", [matchCase, errCase])
 	  in
             TextIO.output (strm, "fun " ^ tokMatch' t ^ " strm = ");
-	    ML.ppML (ppStrm, exp);
+	    ppML (strm, exp);
 	    TextIO.output (strm, "\n")
           end
 
@@ -354,7 +360,6 @@ structure SMLOutput =
   (* output the tokens structure *)
     fun tokenStructHook spec strm = let
           val (S.Grammar{name, toks, toksImport, changes, ...}, _) = spec
-          val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
 	  fun pr s = TextIO.output (strm, s)
 	  fun prl s = TextIO.output (strm, concat s)
 	  fun prDT () = let
@@ -466,11 +471,11 @@ structure SMLOutput =
 	      ];
 	  (* "toString" function *)
             TextIO.output (strm, "    fun toString tok =\n");
-	    ML.ppML (ppStrm, casesExp);
+	    ppML (strm, casesExp);
 	    pr "\n";
 	  (* "isKW" function *)
             TextIO.output (strm, "    fun isKW tok =\n");
-	    ML.ppML (ppStrm, kwCasesExp);
+	    ppML (strm, kwCasesExp);
 	    pr "\n";
 	  (* "isEOF" function *)
 	    pr "    fun isEOF EOF = true\n";
@@ -482,9 +487,8 @@ structure SMLOutput =
 
     fun matchfnsHook spec strm = let
           val (S.Grammar {toks, ...}, _) = spec
-          val ppStrm = TextIOPP.openOut {dst = strm, wid = 80}
           in
-	    app (ppMatch (strm, ppStrm)) toks
+	    app (ppMatch strm) toks
           end
 
   (* output header *)
@@ -556,16 +560,16 @@ structure SMLOutput =
           in
             app (out o mkc) refcells;
 	    out (String.concat ["fun getS() = {",
-		   String.concatWith ", "
-		     (map (fn nm => nm ^ " = !" ^ nm ^ rcSuffix)
-			  names),
+		   String.concatWithMap ", "
+                     (fn nm => concat[nm, " = !", nm, rcSuffix])
+                     names,
 		   "}\n"]);
 	    out (String.concat ["fun putS{",
 		   String.concatWith ", " names,
 		   "} = (",
-		   String.concatWith
-		     "; " (map (fn nm => nm ^ rcSuffix ^ " := " ^ nm)
-			       names),
+		   String.concatWithMap "; "
+                     (fn nm => concat[nm, rcSuffix, " := ", nm])
+                     names,
 		   ")\n"]);
 	    out (String.concat ["fun unwrap (ret, strm, repairs) = ",
 		   "(ret, strm, repairs",

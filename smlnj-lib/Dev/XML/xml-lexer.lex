@@ -1,6 +1,6 @@
 (* xml-lexer.lex
  *
- * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2013 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An ML-ULex parser for parsing XML files.

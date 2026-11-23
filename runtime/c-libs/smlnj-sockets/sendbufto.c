@@ -1,7 +1,8 @@
 /* sendbufto.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
- */
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+s */
 
 #include "sockets-osdep.h"
 #include INCLUDE_SOCKET_H
@@ -15,7 +16,7 @@
  *
  * Send data from the buffer; bytes is either a Word8Array.array, or
  * a Word8Vector.vector.  The arguments are: socket, data buffer, start
- * position, number of bytes, OOB flag, don't_route flag, and destination address.
+ * position, number of bytes, don't-route flag, OOB flag, and destination address.
  */
 ml_val_t _ml_Sock_sendbufto (ml_state_t *msp, ml_val_t arg)
 {
@@ -28,8 +29,8 @@ ml_val_t _ml_Sock_sendbufto (ml_state_t *msp, ml_val_t arg)
 
   /* initialize the flags. */
     flgs = 0;
-    if (REC_SEL(arg, 4) == ML_true) flgs |= MSG_OOB;
-    if (REC_SEL(arg, 5) == ML_true) flgs |= MSG_DONTROUTE;
+    if (REC_SEL(arg, 4) == ML_true) flgs |= MSG_DONTROUTE;
+    if (REC_SEL(arg, 5) == ML_true) flgs |= MSG_OOB;
 
     n = sendto (
 	sock, data, nbytes, flgs,

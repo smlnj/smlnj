@@ -1,14 +1,13 @@
 (* lcontract.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * bug 290 [DBM, 06.12.2022]
+ * function swiInfo (line ?) has been modified to suppressing the rewrite of
+ * a switch with a constructor subject matching one of the case constructors
+ * when the subject constructor is an exception constructor (rep = EXN).
  *)
-
-(* bug 290 [DBM, 06.12.2022]
-   function swiInfo (line ?) has been modified to suppressing the rewrite of
-   a switch with a constructor subject matching one of the case constructors
-   when the subject constructor is an exception constructor (rep = EXN).
-*)
 
 signature LCONTRACT =
 sig
@@ -32,7 +31,7 @@ local  (* local definitions *)
   structure PL = PLambda
   structure F  = FLINT
   structure FU = FlintUtil
-  structure PO = Primop
+  structure PO = FPrimOps
   open FLINT
 
   fun bug msg = ErrorMsg.impossible ("LContract: "^msg)
@@ -206,7 +205,7 @@ fun swiInfo (VAR v, arms, defaultOp) =
           | (_, ConExp ((_,rep,_), _, value)) =>  (* subject is a Constr exp *)
 	    (case rep
 	       of DA.EXN _ => NONE
-	        | _ => 
+	        | _ =>
 		  let fun check ((PL.DATAcon((_,nrep,_), _, lvar), e) :: rest) =
 			    if nrep = rep then SOME(LET([lvar], RET [value], e)) else check rest
 			| check (_::_) = bug "unexpected case in swiInfo"
@@ -254,7 +253,7 @@ fun boolDcon((PL.DATAcon((_,DA.CONSTANT 1,lt1),[],v1), e1),
       boolDcon (ce2, ce1)
   | boolDcon _ = NONE
 
-(* ssplit : F.lexp -> (F.lexp -> F.Lexp) * F.lexp *) 
+(* ssplit : F.lexp -> (F.lexp -> F.Lexp) * F.lexp *)
 fun ssplit (LET(vs,e1,e2)) = (fn x => LET(vs,x,e2), e1)
   | ssplit e = ((fn x => x), e)
 

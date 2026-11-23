@@ -1,10 +1,10 @@
 (* pplexp.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
+ *
+ * _Real_ pretty printing for plambda lexp
  *)
-
-(* _Real_ pretty printing for plambda lexp *)
 
 signature PPLEXP =
 sig
@@ -132,7 +132,7 @@ fun ppLexp (pd:int) ppstrm (l: lexp): unit =
             (openHOVBox 4;
               pps "PRM(";
               openHOVBox 0;
-               pps(PrimopUtil.toString p); pps ","; br1 0;
+               pps(FPrimOps.toString p); pps ","; br1 0;
                ppLty' t;
 	       pps ",";
 	       br1 0;
@@ -231,7 +231,7 @@ fun ppLexp (pd:int) ppstrm (l: lexp): unit =
             (openHOVBox 4;
               pps "GEN(";
               openHOVBox 0;
-               pps(PrimopUtil.toString p); pps ","; br1 0;
+               pps(FPrimOps.toString p); pps ","; br1 0;
                ppLty' t; br1 0;
                ppClosedSeq ("[",",","]") (PPLty.ppTyc (pd-1)) ts;
               closeBox();

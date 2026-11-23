@@ -23,9 +23,11 @@
 #include <ostream>
 #include <cstdint>
 
+#define _IN_ASDL_HPP_
 #include "asdl-stream.hpp"
 #include "asdl-integer.hpp"
 /* TODO: asdl-identifier.hpp */
+#undef _IN_ASDL_HPP_
 
 namespace asdl {
 

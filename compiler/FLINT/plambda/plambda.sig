@@ -1,6 +1,6 @@
 (* plambda.sig
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -43,8 +43,8 @@ signature PLAMBDA =
       | WORD of int IntConst.t
       | REAL of int RealConst.t
       | STRING of string
-      | PRIM of Primop.primop * Lty.lty * Lty.tyc list
-      | GENOP of dict * Primop.primop * Lty.lty * Lty.tyc list
+      | PRIM of FPrimOps.t * Lty.lty * Lty.tyc list
+      | GENOP of dict * FPrimOps.t * Lty.lty * Lty.tyc list
 
       | FN of LambdaVar.lvar * Lty.lty * lexp
       | FIX of LambdaVar.lvar list * Lty.lty list * lexp list * lexp
@@ -64,7 +64,7 @@ signature PLAMBDA =
       | VECTOR of lexp list * Lty.tyc
       | RECORD of lexp list
       | SRECORD of lexp list
-      | SELECT of int * lexp
+      | SELECT of int * lexp    (* record selection (zero based) *)
 
       | WRAP of Lty.tyc * bool * lexp
       | UNWRAP of Lty.tyc * bool * lexp

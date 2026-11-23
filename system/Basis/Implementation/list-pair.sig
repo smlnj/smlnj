@@ -1,6 +1,6 @@
 (* list-pair.sig
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * If lists are of unequal length, the excess elements from the

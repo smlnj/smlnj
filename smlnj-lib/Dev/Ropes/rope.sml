@@ -1,6 +1,6 @@
 (* rope.sml
  *
- * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Ropes are a balanced-tree representation of immutable vectors.  This

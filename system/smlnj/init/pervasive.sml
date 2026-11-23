@@ -1,6 +1,6 @@
 (* pervasive.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * These are the pervasive bindings as defined by the SML'97
@@ -169,21 +169,95 @@ type real = PrimTypes.real
 
 val real = R64.from_int
 
-val floor = R64.floor
-
-fun ceil x = Int.- (~1, floor (R64.~ (x + 1.0)))
-
-fun trunc x = if R64.< (x, 0.0) then ceil x else floor x
-
-fun round x = let
-    (* ties go to the nearest even number *)
-      val fl = floor(x+0.5)
-      val cl = ceil(x-0.5)
-      in
-	if fl=cl then fl
-	else if Word.andb(Word.fromInt fl, 0w1) = 0w1 then cl
-	else fl
-      end
+local
+  (* convert a word64 to an int64 *)
+  fun w64ToI64 w = I64.fromLarge(W64.toLargeIntX w)
+  fun w64ToInt w = Int.fromLarge(W64.toLargeIntX w)
+  (* the 64-bit real encoding of the minimum and maximum 63-bit integers.
+   *
+   * Note that because the real values only have 53-bits of precision (including
+   * the leading `1`), these values are approximate.
+   *)
+  val minInt63 : PrimTypes.word64 = 0wxc3c0000000000000   (* ~4611686018427387904 *)
+  val maxInt63 : PrimTypes.word64 = 0wx43D0000000000000   (* +4611686018427387903 *)
+  (* given an integer represented as a real, convert it to an int.
+   * It the argument is infinte, the `Overflow` is raised; if it is
+   * a NaN, then `Domain` is raised.
+   *)
+  fun toInt x = let
+        val bits = R64.toBits x
+        in
+          if (W64.andb(bits, 0wx7fffffffffffffff) = 0w0)
+            then 0
+            else let
+              val sBits = w64ToI64 bits
+              val exp = Word.fromLarge(W64.andb(W64.rshiftl(bits, 0w52), 0wx7ff))
+              val mant = W64.andb(bits, 0wxfffffffffffff)
+              in
+                (* check for out-of-range values (including NaNs); see
+                 * Hacker's Delight 2nd Edition (Section 17.3) for details.
+                 *)
+                if I64.<(w64ToI64 maxInt63, sBits)
+                orelse ((sBits < 0) andalso W64.>(bits, minInt63))
+                  (* out of bounds (might be a NaN) *)
+                  then if (exp = 0wx7ff) andalso (mant <> 0w0)
+                    then raise Domain (* NaN *)
+                    else raise Overflow (* out of range; might be an infinity *)
+                  else let
+                    (* because `exp` is an integer represented as a real,
+                     * the adjusted exponent is guaranteed to be positive.
+                     *)
+                    val exp = exp - 0w1023 (* adjust for the bias *)
+                    (* add the implicit leading `1` bit to the mantissa *)
+                    val mant = W64.orb(0wx10000000000000, mant)
+                    (* compute the integer value *)
+                    val n = if exp <= 0w52
+                        then W64.rshiftl(mant, 0w52 - exp)
+                        else W64.lshift(mant, exp - 0w52)
+                    in
+                      if (w64ToI64 bits < 0)
+                        then w64ToInt(W64.~ n)
+                        else w64ToInt n
+                    end
+              end
+        end
+  (* The following code is copied from the `Real64` structure; see that module
+   * for a description of what we are doing.
+   *)
+  val mc51 = InlineT.Real64.fromBits 0wxc320000000000000    (* -2^51 *)
+  val c51ph = InlineT.Real64.fromBits 0wx4320000000000001   (* 2^51 + 0.5 *)
+  val c521 = InlineT.Real64.fromBits 0wx4338000000000000    (* 2^52 + 2^51 *)
+  val ctlRoundingMode' =
+        Assembly.A.bind_cfun ("SMLNJ-Math", "ctlRoundingMode")
+  fun ctlRoundingMode (m : int option) : int = Assembly.A.callc (ctlRoundingMode', m)
+  val kNearest = 0
+  fun setRoundingMode m = ignore(ctlRoundingMode (SOME m))
+  fun getRoundingMode () = ctlRoundingMode NONE
+  fun realRound x = if (mc51 < x) andalso (x < c51ph)
+        (* x is in the range [-2^51..2^51+0.5] *)
+        then let
+          val saveMode = getRoundingMode ()
+          in
+            if (saveMode = kNearest)
+              then (x + c521) - c521
+              else let
+                val () = setRoundingMode kNearest
+                val result = (x + c521) - c521
+                in
+                  setRoundingMode saveMode;
+                  result
+                end
+          end
+        (* fall back to the hardwre round operation, which be correct, since
+         * ties are not possible outside [-2^51..2^51+0.5]
+         *)
+        else R64.realRound x
+in
+fun floor x = toInt (R64.realFloor x)
+fun ceil x = toInt (R64.realCeil x)
+fun round x = toInt (realRound x)
+fun trunc x = toInt (R64.realTrunc x)
+end (* local *)
 
 (* List *)
 exception Empty

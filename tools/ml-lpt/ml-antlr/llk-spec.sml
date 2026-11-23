@@ -94,7 +94,9 @@ structure LLKSpec =
 	eof : token,
 	sortedTops : nonterm list list,	(* topologically sorted nonterms *)
 	startnt : nonterm,
-	entryPoints : nonterm list,
+	entryPoints : nonterm list,     (* list of declared entry points (not
+                                         * including `startnt`).
+                                         *)
 	refcells : refcell list
       }
 

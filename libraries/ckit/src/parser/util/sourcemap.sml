@@ -1,4 +1,10 @@
-structure SourceMap : SOURCE_MAP = 
+(* sourcemap.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
+structure SourceMap : SOURCE_MAP =
 struct
   structure F = Format
 
@@ -18,7 +24,7 @@ struct
   datatype sourcemap
     = SOURCEMAP of
        { linePos  : charpos list ref,
-         filePos  : {linePos : charpos list, 
+         filePos  : {linePos : charpos list,
                      line    : int,
                      srcFile : string} list ref,
          lineNum  : int ref}
@@ -39,9 +45,9 @@ struct
       (filePos := {linePos= !linePos,
                    line= !lineNum,
 		   srcFile=
-                   (case srcFile of 
+                   (case srcFile of
 		      SOME srcFile => srcFile
-		    | NONE => 
+		    | NONE =>
 			let val fpl = !filePos
 			in case fpl of
 			  nil => ""
@@ -58,9 +64,9 @@ struct
             | sep #"#"  = true
             | sep #"\n" = true
             | sep _     = false
-	  fun proc{line, srcOpt} = 
+	  fun proc{line, srcOpt} =
               (case Int.fromString line
-                 of SOME line => 
+                 of SOME line =>
                      resynch sourceMap {pos=pos,srcFile=srcOpt,line=line}
 		  |  _ => newline sourceMap pos)
        in if Config.ParseControl.parseDirective then
@@ -85,13 +91,13 @@ struct
            findPos(p,currPos,#srcFile(hd filePos),linePos,filePos,line)
               (* NOTE: very confusing...
                   filePos stack contains previous line info and srcFile of current file *)
-        | findPos(p,currPos,currFile,[],[],line) = 
+        | findPos(p,currPos,currFile,[],[],line) =
             {srcFile=currFile,line=line,column=0}
 
       val {srcFile=currFile,...} = hd(!filePos)
-      val {srcFile,line=l1,column=c1} = 
+      val {srcFile,line=l1,column=c1} =
              findPos(x,x,currFile,!linePos,!filePos,!lineNum)
-      val {srcFile,line=l2,column=c2} = 
+      val {srcFile,line=l2,column=c2} =
              findPos(y,y,currFile,!linePos,!filePos,!lineNum)
   in  LOC{srcFile   = srcFile,
           beginLine = l1,

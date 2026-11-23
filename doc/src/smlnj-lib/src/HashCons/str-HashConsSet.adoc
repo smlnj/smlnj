@@ -56,7 +56,6 @@ val disjoint : 'a set * 'a set -> bool
 val numItems : 'a set ->  int
 
 val toList : 'a set -> 'a obj list
-val listItems : 'a set -> 'a obj list
 
 val union : 'a set * 'a set -> 'a set
 val intersection : 'a set * 'a set -> 'a set
@@ -67,9 +66,6 @@ val map : ('a obj -> 'b obj) -> 'a set -> 'b set
 val mapPartial : ('a obj -> 'b obj option) -> 'a set -> 'b set
 
 val app : ('a obj -> unit) -> 'a set -> unit
-
-val foldl : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
-val foldr : ('a obj * 'b -> 'b) -> 'b -> 'a set -> 'b
 
 val partition : ('a obj -> bool) -> 'a set -> ('a set * 'a set)
 
@@ -231,20 +227,6 @@ List.foldl f init (toList set)
 `[.kw]#val# find : ('a obj \-> bool) \-> 'a set \-> 'a obj option`::
   `find pred set` returns `SOME obj` if there exists an object `obj`
   in the set for which `pred obj` returns `true`; otherwise `NONE` is returned.
-
-=== Deprecated functions
-
-The following functions are part of the interface, but have been
-deprecated.
-
-`[.kw]#val# listItems : 'a set \-> 'a obj list`::
-  Use xref:#val:toList[`toList`] instead.
-
-`[.kw]#val# foldl : ('a obj * 'b \-> 'b) \-> 'b \-> 'a set \-> 'b`::
-  Use xref:#val:fold[`fold`] instead.
-
-`[.kw]#val# foldr : ('a obj * 'b \-> 'b) \-> 'b \-> 'a set \-> 'b`::
-  Use xref:#val:fold[`fold`] instead.
 
 == See Also
 

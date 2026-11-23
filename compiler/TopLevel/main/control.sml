@@ -1,6 +1,6 @@
 (* control.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -40,13 +40,10 @@ structure Control_CG : CGCONTROL =
 	    r
 	  end
 
-    val closureStrategy = new (i, "closure-strategy", "?", 0)	(* see CPS/clos/closure.sml *)
-    val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [
-	    "first_contract", "eta", "zeroexpand", "vn", "check",
-            "last_contract"
-	  ])
-    (* ["first_contract", "eta", "uncurry", "etasplit",
-	"cycle_expand", "eta", "last_contract" ] *)
+    val closureStrategy = new (i, "closure-strategy", "specify the closure strategy", 0)	(* see CPS/clos/closure.sml *)
+    val mixedClosures = new (b, "mixed-closures", "use mixed records for closures", true)
+    (* CPS optimization phases (this is initialized in CPS/opt/cpsopt.sml) *)
+    val cpsopt = new (sl, "cpsopt", "cps optimizer phases", [])
     val rounds = new (i, "rounds", "max # of cpsopt rounds", 10)
     val path = new (b, "path", "?", false)
     val betacontract = new (b, "betacontract", "?", true)
@@ -90,12 +87,12 @@ structure Control_CG : CGCONTROL =
     val ifidiom = new (b, "if-idiom", "enable if-idiom optimization", true)
     val comparefold = new (b, "comparefold", "enable optimization of conditional tests", true)
     val debugLits = new (b, "debug-lits", "print results of literal lifting", false)
-    val newLiterals = new (b, "new-literals", "use new literal representation", false)
     val debugRep = new (b, "debug-rep", "?", false)
     val deadup = new (b, "deadup", "?", true)
     val printit = new (b, "printit", "whether to show CPS", false)
     val printClusters = new (b, "print-clusters", "whether to print clusters prior to codegen", false)
     val dumpClusters = new (b, "dump-clusters", "whether to dump clusters as a '.dot' file", false)
+    val normalizeCFG = new (b, "normalize-cfg", "whether to normalize the CFG IR", false)
     val printCFG = new (b, "print-cfg", "whether to convert to CFG and print it", false)
     val dumpCFG = new (b, "dump-cfg", "whether to convert to CFG and pickle it", false)
     val verifyLLVM = new (b, "verify-llvm", "enable verification of generated LLVM code", false)

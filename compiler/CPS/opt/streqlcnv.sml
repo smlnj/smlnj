@@ -1,6 +1,6 @@
 (* streqlcnv.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Code to lower the `STREQL` branch to a sequence of explicit
@@ -51,7 +51,7 @@ structure StrEqlCnv : sig
 	  val dp = LV.mkLvar()
 	(* wrap expression in binding of `dp` *)
 	  fun withStrData exp =
-		C.PURE(C.P.GETSEQDATA, [s], dp, C.PTRt C.VPT, exp)
+		C.PURE(C.P.GETSEQDATA, [s], dp, C.ptrTy, exp)
 	(* test the i'th word against `w` *)
 	  fun mkTest falseExp (i, w, k) = let
 		val tmp = LV.mkLvar()

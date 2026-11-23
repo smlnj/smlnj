@@ -1,6 +1,6 @@
 (* int-redblack-set.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This code is based on Chris Okasaki's implementation of

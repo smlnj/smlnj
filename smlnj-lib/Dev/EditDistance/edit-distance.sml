@@ -8,7 +8,7 @@
  *
  *      https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance
  *
- * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2023 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 

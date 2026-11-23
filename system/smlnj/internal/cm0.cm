@@ -1,6 +1,6 @@
 (* cm0.cm
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * link CM (+ some internal extension hooks, thus we really get "CM0")

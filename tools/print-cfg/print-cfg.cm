@@ -21,6 +21,7 @@ is
   cfg.sml
 
 (* extra files added by hand *)
+  c-types.sml
   lambda-var.sml
 
   main.sml

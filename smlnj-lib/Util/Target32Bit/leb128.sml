@@ -21,7 +21,7 @@ structure LEB128 : LEB128 = struct
 
     type ('ty, 'src) decoder =
           (Word8.word, 'src) StringCvt.reader -> 'src -> ('ty * 'src) option
-    type 'ty encoder = 'ty -> Word8Vector.vector
+    type ('ty, 'dst) encoder = ('dst * Word8.word -> 'dst) -> ('dst * 'ty) -> 'dst
 
     val mask : W8.word = 0wx7f
     val signBit : W8.word = 0wx40
@@ -45,8 +45,8 @@ structure LEB128 : LEB128 = struct
     fun decodeInt64 getB = let
           fun lp (inS, n, shift) = (case getB inS
                  of SOME(b, rest) => let
-                      val slice = W64.andb(byteToW64 b, 0wx7f)
-                      val n = n + Int64.fromLarge(W64.toLargeIntX(W64.<<(slice, shift)))
+                      val slice = NW.andb(byteToNW b, 0wx7f)
+                      val n = n + NInt.fromLarge(NW.toLargeIntX(NW.<<(slice, shift)))
                       in
                         if b >= contBit
                           then lp (rest, n, shift + 0w7)
@@ -135,7 +135,7 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
                   else ()
           fun lp (inS, w, shift) = (case getB inS
                  of SOME(b, rest) => let
-                      val slice = W.andb(NW.fromLarge(Word8.toLarge b), 0wx7f)
+                      val slice = NW.andb(byteToNW b, 0wx7f)
                       val w = NW.orb(w, NW.<<(slice, shift))
                       in
                         chkOverflow (shift, slice);
@@ -177,14 +177,14 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
           end
 
     fun decodeUIntInf getB = let
-          fun lp (inS, w, shift) = (case getB inS
+          fun lp (inS, n, shift) = (case getB inS
                  of SOME(b, rest) => let
                       val slice = W8.toLargeInt (W8.andb (b, mask))
                       val n = IntInf.<<(slice, shift) + n
                       in
                         if (W8.andb(b, contBit) <> 0w0)
-                          then lp (rest, w, shift + 0w7)
-                          else SOME(w, rest)
+                          then lp (rest, n, shift + 0w7)
+                          else SOME(n, rest)
                       end
                   | NONE => NONE
                 (* end case *))
@@ -192,7 +192,7 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
             fn inS => lp (inS, 0, 0w0)
           end
 
-    fun sizeOfNativeInt (n : Int.int) = let
+    fun sizeOfNativeInt (n : NInt.int) = let
           val value = NW.fromLargeInt(NInt.toLarge n)
           val sign = if (n < 0) then NW.fromInt ~1 else 0w0
           fun lp (value, sz) = let
@@ -278,7 +278,7 @@ fun decodeInt64 getB inS = (case decodeIntInf getB inS
                   if noMore then outS else encode (n, outS)
                 end
           in
-            encode (n, outS)
+            encode (NW.fromLargeInt(NInt.toLarge n), outS)
           end
 
     fun encodeInt putB (outS, n : Int.int) = encodeNativeInt putB (outS, NInt.fromInt n)

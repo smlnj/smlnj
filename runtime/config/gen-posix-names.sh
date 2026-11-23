@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+# COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
 # All rights reserved.
 #
 # Generate string-to-int tables for run-time POSIX values
@@ -11,7 +11,7 @@
 
 # redefine PATH so that we get the right versions of the various tools
 #
-PATH=/bin:/usr/bin
+#PATH=/bin:/usr/bin
 
 # set locale variables so that sort works right
 #

@@ -1,6 +1,6 @@
 (* html3-dev.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * A pretty printing device that uses HTML (Version 3.2) markup to control layout.

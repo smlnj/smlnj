@@ -548,14 +548,16 @@ structure HTML4Tokens =
       | isEOF _ = false
   end (* HTML4Tokens *)
 
-functor HTML4ParseFn (Lex : ANTLR_LEXER) = struct
+
+functor HTML4ParseFn (Lex : ANTLR_LEXER)
+ = struct
 
   local
-    structure Tok =
-HTML4Tokens
+    structure Tok = HTML4Tokens
+
     structure UserCode =
       struct
-
+        
 
 open HTML4Utils
 
@@ -566,7 +568,8 @@ fun optListToList NONE = []
   | optListToList (SOME thing) = thing
 
 
-fun document_PROD_1_SUBRULE_1_PROD_1_ACT (DOCTYPE, cdata_opt, DOCTYPE_SPAN : (Lex.pos * Lex.pos), cdata_opt_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
+
+        fun document_PROD_1_SUBRULE_1_PROD_1_ACT (DOCTYPE, cdata_opt, DOCTYPE_SPAN : (Lex.pos * Lex.pos), cdata_opt_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ((Lf (Tok.DOCTYPE DOCTYPE)) :: cdata_opt)
 fun document_PROD_1_SUBRULE_2_PROD_1_ACT (SR1, cdata_opt, STARTHTML, SR1_SPAN : (Lex.pos * Lex.pos), cdata_opt_SPAN : (Lex.pos * Lex.pos), STARTHTML_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   ((Lf (Tok.STARTHTML STARTHTML)) :: cdata_opt)
@@ -975,19 +978,13 @@ fun cdata_PROD_1_ACT (SR, SR_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * 
   ((Lf SR) : HTML4Tokens.token parsetree)
 fun cdata_opt_PROD_1_ACT (cdata, cdata_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (Lex.pos * Lex.pos)) = 
   (cdata : HTML4Tokens.token parsetree list)
+
       end (* UserCode *)
 
     structure Err = AntlrErrHandler(
       structure Tok = Tok
       structure Lex = Lex)
 
-(* replace functor with inline structure for better optimization
-    structure EBNF = AntlrEBNF(
-      struct
-	type strm = Err.wstream
-	val getSpan = Err.getSpan
-      end)
-*)
     structure EBNF =
       struct
 	fun optional (pred, parse, strm) =
@@ -1017,21 +1014,22 @@ fun cdata_opt_PROD_1_ACT (cdata, cdata_SPAN : (Lex.pos * Lex.pos), FULL_SPAN : (
 	      in
 		(y::ys, (left, right), strm'')
 	      end
-      end
+      end (* EBNF *)
 
     fun mk lexFn = let
-fun getS() = {}
+        fun getS() = {}
 fun putS{} = ()
 fun unwrap (ret, strm, repairs) = (ret, strm, repairs)
+
         val (eh, lex) = Err.mkErrHandler {get = getS, put = putS}
 	fun fail() = Err.failure eh
 	fun tryProds (strm, prods) = let
-	  fun try [] = fail()
-	    | try (prod :: prods) =
-	        (Err.whileDisabled eh (fn() => prod strm))
-		handle Err.ParseError => try (prods)
-          in try prods end
-fun matchOPENTAG strm = (case (lex(strm))
+              fun try [] = fail()
+                | try (prod :: prods) =
+                    (Err.whileDisabled eh (fn() => prod strm))
+                    handle Err.ParseError => try (prods)
+              in try prods end
+        fun matchOPENTAG strm = (case (lex(strm))
  of (Tok.OPENTAG(x), span, strm') => (x, span, strm')
   | _ => fail()
 (* end case *))
@@ -1743,6 +1741,7 @@ fun matchEOF strm = (case (lex(strm))
  of (Tok.EOF, span, strm') => ((), span, strm')
   | _ => fail()
 (* end case *))
+
 
 val (document_NT, block_NT, cdata_opt_NT, inline_NT, body_NT, flow_NT) = 
 let
@@ -8030,5 +8029,6 @@ fun parsebody lexFn  s = let val (document_NT, block_NT, cdata_opt_NT, inline_NT
 fun parseflow lexFn  s = let val (document_NT, block_NT, cdata_opt_NT, inline_NT, body_NT, flow_NT) = mk lexFn in flow_NT s end
 
   end
+
 
 end

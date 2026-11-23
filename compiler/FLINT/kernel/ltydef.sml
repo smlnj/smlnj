@@ -20,7 +20,6 @@ local
 
   val with_pp = PP.with_default_pp
   val debugging : bool ref = ref false
-  val dp : int ref = Control_Print.printDepth
 
 in
 
@@ -298,7 +297,8 @@ val ltd_poly   : LT.lty -> LT.tkind list * LT.lty list = fn lt =>
 			  in openHVBox 0;
                           pps "***ltd_poly***"; break{nsp=1,offset=0};
                           pps "arg:"; newline();
-                          PPLty.ppLty (!dp) s lt; break{nsp=1,offset=0};
+                          PPLty.ppLty (PrintUtil.printDepth()) s lt;
+                          break{nsp=1,offset=0};
                           closeBox ()
 			  end);
 	       bug "unexpected lty in ltd_poly"))

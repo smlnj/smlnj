@@ -1,6 +1,6 @@
 /*! \file localtime.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
@@ -21,11 +21,11 @@
  */
 ml_val_t _ml_Date_localtime (ml_state_t *msp, ml_val_t arg)
 {
-    time_t	t = ns_to_time(WORD64_MLtoC(arg));
+    time_t	t = ns_to_time(INT64_MLtoC(arg));
     struct tm	tmbuf;
 
     if (localtime_r (&t, &tmbuf) == NULL) {
-	RAISE_SYSERR(msp,0);
+	return RAISE_SYSERR(msp,0);
     }
     else {
 	return _ml_alloc_tm (msp, &tmbuf);

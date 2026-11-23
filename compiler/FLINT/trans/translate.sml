@@ -1,6 +1,6 @@
 (* translate.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -40,7 +40,9 @@ local
   structure LE = LtyExtern  (* == PLambdaType *)
   structure M  = Modules
   structure MC = MatchComp
-  structure PO = Primop
+  structure PO = PrimOps
+  structure FP = FPrimOps
+  structure CP = CommonOps
   structure PP = PrettyPrint
   structure PU = PPUtil
   structure S  = Symbol
@@ -78,21 +80,19 @@ fun dbsaynl (msg : string) =
 fun dbsaysnl (msgs : string list) =
     if !debugging then saysnl msgs else ()
 
-val ppDepth = Control.Print.printDepth
-
 val with_pp = PP.with_default_pp
 
 fun ppPat pat =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppPat StaticEnv.empty ppstrm (pat, (PrintUtil.printDepth())))
 
 fun ppExp exp =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppExp (StaticEnv.empty,NONE) ppstrm (exp, (PrintUtil.printDepth())))
 
 fun ppDec dec =
     PP.with_default_pp
-      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (!ppDepth)))
+      (fn ppstrm => PPAbsyn.ppDec (StaticEnv.empty,NONE) ppstrm (dec, (PrintUtil.printDepth())))
 
 fun ppType msg ty =
     PP.with_default_pp
@@ -100,7 +100,7 @@ fun ppType msg ty =
 
 fun ppLexp lexp =
     PP.with_default_pp
-      (fn ppstrm => PPLexp.ppLexp (!ppDepth) ppstrm lexp)
+      (fn ppstrm => PPLexp.ppLexp (PrintUtil.printDepth()) ppstrm lexp)
 
 fun ppTycArgs tycs =
     PP.with_default_pp
@@ -215,7 +215,7 @@ fun toDconLty d ty =
 
 (* CON' : Plambda.dataconstr * PlambdType.tyc list * lexp -> lexp *)
 (* version of CON with special translation of ref and susp pseudo datacons *)
-fun CON' ((_, DA.REF, lt), ts, e) = APP (PRIM (PO.MAKEREF, lt, ts), e)
+fun CON' ((_, DA.REF, lt), ts, e) = APP (PRIM (FP.PRIM CP.MAKEREF, lt, ts), e)
   | CON' ((_, DA.SUSP (SOME(DA.LVAR d, _)), lt), ts, e) =
       let val v   = mkv ()
           val fe = FN (v, LD.ltc_tuple [], e)
@@ -234,7 +234,7 @@ fun patToConsig (APPpat(dcon,_,_)) = TU.dataconSign dcon
 
 local
   val region = ref(0,0)
-  val markexn = PRIM(PO.MARKEXN,
+  val markexn = PRIM(FP.MARKEXN,
 		  LD.ltc_parrow(LD.ltc_tuple [LB.ltc_exn, LB.ltc_string],
 				LB.ltc_exn), [])
 in
@@ -578,9 +578,9 @@ val lt_unit = LB.ltc_unit
 val lt_u_u = LD.ltc_parrow (lt_unit, lt_unit)
 
 (* translation of prim ops *)
-val transPrim =
-    TransPrim.trans {coreAcc = coreAcc, coreExn = coreExn, mkv = mkv,
-		     mkRaise = mkRaise}
+val transPrim = TransPrim.trans {
+        coreAcc = coreAcc, coreExn = coreExn, mkv = mkv, mkRaise = mkRaise
+      }
 
 (* genintinfswitch : var * (con * exp) list * lexp -> lexp *)
 (* generates PLambda.lexp code for a case over an IntInf.int value. *)
@@ -608,7 +608,7 @@ fun genintinfswitch (subject: lexp, cases, default) =
 	      (* end case *))
 	fun gen () =
 	      (case split (cases, [], [])
-		 of ([], largeints) => build largeints
+		 of ([], largeints) => LET (sv, subject, build largeints)
 		  | (smallints, largeints) =>
 		      let val iv = mkv ()
 		       in LET (sv, subject,
@@ -693,14 +693,14 @@ fun mkVE (e as V.VALvar { typ, prim = PrimopId.Prim p, ... }, tys, d) =
                     bug "mkVE -- NONE")))
 	  val _ = dbsaynl "<<mkVE: after matchInstTypes"
        in case (primop, intrinsicParams)
-            of (PO.POLYEQL, [t]) => eqGen(intrinsicType, t, toTcLt d)
-             | (PO.POLYNEQ, [t]) =>
+            of (PO.PRIM CP.POLYEQL, [t]) => eqGen(intrinsicType, t, toTcLt d)
+             | (PO.PRIM CP.POLYNEQ, [t]) =>
                composeNOT(eqGen(intrinsicType, t, toTcLt d), toLty d t)
-             | (PO.RAW_CCALL NONE, [a, b, c]) =>
+             | (PO.PRIM(CP.RAW_CCALL NONE), [a, b, c]) =>
                let val i = SOME (CProto.decode cproto_conv
                                    { fun_ty = a, encoding = b })
                            handle CProto.BadEncoding => NONE
-               in PRIM (PO.RAW_CCALL i, toLty d intrinsicType,
+               in PRIM (FP.PRIM(CP.RAW_CCALL i), toLty d intrinsicType,
                         map (toTyc d) intrinsicParams)
                end
              | _ => (** where do these intrinsicType originate?
@@ -1378,14 +1378,28 @@ and mkExp (exp, d) =
 						  LB.ltc_tv 0)])
                     end
 		val indexLexp = INT{ival = IntInf.fromInt index, ty = Target.defaultIntSz}
-	     in APP(PRIM(PO.SUBSCRIPTV, lt_sub, [tc]),
+	     in APP(PRIM(FP.PRIM CP.SUBSCRIPTV, lt_sub, [tc]),
 		    RECORD[ mkExp0 exp, indexLexp ])
             end
 
         | mkExp0 (SEQexp [e]) = mkExp0 e
         | mkExp0 (SEQexp (e::r)) = LET(mkv(), mkExp0 e, mkExp0 (SEQexp r))
 
-        | mkExp0 (APPexp (e1, e2)) = APP(mkExp0 e1, mkExp0 e2)
+        | mkExp0 (APPexp (e1, e2)) = let
+            fun default () = APP(mkExp0 e1, mkExp0 e2)
+            in
+              (* check for the primop test `hasFeature <str>`, which is evaluated
+               * statically.
+               *)
+              case (e1, e2)
+               of (VARexp(ref(V.VALvar{prim = PrimopId.Prim p, ...}), _), STRINGexp s) => (
+                    case PrimopBind.defnOf p
+                     of PO.INLINE InlineOps.HAS_FEATURE => TransPrim.hasFeature s
+                      | _ => default ()
+                    (* end case *))
+                | _ => default ()
+              (* end case *)
+            end
         | mkExp0 (MARKexp (e, reg)) = withRegion reg mkExp0 e
         | mkExp0 (CONSTRAINTexp (e,_)) = mkExp0 e
 
@@ -1464,7 +1478,7 @@ and mkExp (exp, d) =
 		 of DATAcon((_, DA.REF, lt), ts, lvar) =>
 		      (* ref pseudo-constructor, single, hence unique rule *)
 		      LET(lvar,
-			  APP (PRIM (Primop.DEREF, LE.lt_swap lt, ts), scrutineeLexp),
+			  APP (PRIM(FP.PRIM CP.DEREF, LE.lt_swap lt, ts), scrutineeLexp),
 			  lexp1)
 		  | DATAcon((_, DA.SUSP(SOME(_, DA.LVAR f)), lt), ts, lvar) =>
 		      (* susp pseudo-constructor, single, hence unique rule *)
@@ -1499,7 +1513,7 @@ and mkExp (exp, d) =
 					 [LD.ltc_parrow(LB.ltc_tv 0, LB.ltc_int)])
 		val vectortyc = LB.tcc_vector elemtyc
 	     in LET(lengthLvar,
-		    APP(PRIM(PO.LENGTH, lt_len, [vectortyc]), scrutineeLexp),
+		    APP(PRIM(FP.PRIM CP.LENGTH, lt_len, [vectortyc]), scrutineeLexp),
 		    SWITCH(VAR lengthLvar, DA.CNIL, map transSRULE srules, SOME(mkExp0 default)))
 	    end
 
@@ -1541,7 +1555,7 @@ and mkExp (exp, d) =
 
         | mkExp0 e =
             EM.impossibleWithBody "untranslateable expression:\n  "
-              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, !ppDepth)))
+              (fn ppstrm => (PPAbsyn.ppExp (env,NONE) ppstrm (e, PrintUtil.printDepth())))
 
    in mkExp0 exp
   end

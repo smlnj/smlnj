@@ -48,10 +48,11 @@ struct vproc_state {
     int		vp_gcSigState;		/* the state of the GC signal handler */
     int         vp_gcSigThreshold;      /* the generation threshold for generating a */
                                         /* GC signal (0 => all, 1 => gen 1, ...) */
-    Time_t	*vp_gcTime0;	    /* The cumulative CPU time at the start of */
-				    /* the last GC (see kernel/timers.c). */
-    Time_t	*vp_gcTime;	    /* The cumulative GC time. */
-    Addr_t	vp_limitPtrMask;   /* for raw-C-call interface */
+    Time_t	*vp_gcUsrTime0;	    /* The user time at the start of the current GC */
+    Time_t	*vp_gcSysTime0;	    /* The system time at the start of the current GC */
+    Time_t	*vp_gcUsrTime;	    /* The cumulative GC user time. */
+    Time_t	*vp_gcSysTime;	    /* The cumulative GC system time. */
+    Addr_t	vp_limitPtrMask;    /* for raw-C-call interface */
 };
 
 #endif /* !_VPROC_STATE_ */

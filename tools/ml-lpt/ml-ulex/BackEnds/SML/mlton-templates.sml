@@ -1,6 +1,6 @@
 (* mlton-templates.sml
  *
- * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2009 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * In MLton, the templates live in files that we generate at compile time.

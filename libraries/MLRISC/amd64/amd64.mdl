@@ -1,6 +1,6 @@
 (* amd64.mdl
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * MLRISC machine description for AMD64 (aka x86-64) architecture.

@@ -1,0 +1,42 @@
+# mk.arm64-linux
+#
+
+SHELL =		/bin/sh
+
+MAKE =		make
+AS =		as
+CC =		gcc -std=gnu99 -Wall
+CFLAGS =	-O2 -no-pie -g
+CXX =           g++ --std=c++17
+CXX_FLAGS =     -g -O2 -no-pie
+CPP =		gcc -x assembler-with-cpp -E -P
+XOBJS =
+XLIBS =		../c-libs/dl/libunix-dynload.a
+LD_LIBS =	-lm -ldl
+#CHECK_HEAP =	check-heap.o
+XDEFS =
+BASE_DEFS =
+DEFS =		$(XDEFS) $(BASE_DEFS) -DARCH_ARM64 -DSIZE_64 \
+		-DOPSYS_UNIX -DOPSYS_LINUX -D_GNU_SOURCE -DGNU_ASSEMBLER -DDLOPEN \
+		-DINDIRECT_CFUNC
+TARGET =	ARM64
+VERSION =	v-arm64-linux
+RUNTIME =	run.arm64-linux
+STANDALONE =	runx.arm64-linux
+STANDALONE_A =	runx.arm64-linux.a
+
+BUILD_TARGETS =	$(RUNTIME) $(STANDALONE)
+
+all:	        $(BUILD_TARGETS)
+
+install:        $(BUILD_TARGETS)
+	mv $(BUILD_TARGETS) ../../bin/.run/
+
+$(RUNTIME):
+	($(MAKE) CHECK_HEAP=$(CHECK_HEAP) RUNTIME="$(RUNTIME)" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(RUNTIME))
+
+$(STANDALONE):
+	($(MAKE) RUNTIME="$(STANDALONE)" MAIN="standalone" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" LDFLAGS="-r" SYSTEM_LIBS="" $(STANDALONE))
+
+$(STANDALONE_A):
+	($(MAKE) RUNTIME_A="$(STANDALONE_A)" MAIN="standalone" VERSION="$(VERSION)" AS="$(AS)" CC="$(CC)" CFLAGS="$(CFLAGS)" CXX="$(CXX)" CXX_FLAGS="$(CXX_FLAGS)" CPP="$(CPP)" TARGET=$(TARGET) DEFS="$(DEFS)" XOBJS="$(XOBJS)" XLIBS="$(XLIBS)" LD_LIBS="$(LD_LIBS)" $(STANDALONE_A))

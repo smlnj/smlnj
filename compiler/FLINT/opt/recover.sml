@@ -1,6 +1,6 @@
 (* recover.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -64,6 +64,7 @@ fun recover (fdec: prog, postRep : bool) =
 	fun getlty (VAR v) = lookup v
 	  | getlty (INT{ty, ...}) = LB.ltc_num ty
 	  | getlty (WORD{ty, ...}) = LB.ltc_num ty
+	  | getlty (ENUM _) = LB.ltc_enum
 	  | getlty (REAL _) = LB.ltc_real
 	  | getlty (STRING _) = LB.ltc_string
 
@@ -125,7 +126,7 @@ fun recover (fdec: prog, postRep : bool) =
 		      let val _ = lpe e1
 		       in lpe e2
 		      end
-		  | lpe (PRIMOP((_,Primop.WCAST, lt, []), _, v, e)) =
+		  | lpe (PRIMOP((_,FPrimOps.WCAST, lt, []), _, v, e)) =
 		      if postRep
 		      then (case LD.ltd_fct lt
 			      of ([_],[r]) => (addv(v, r); lpe e)

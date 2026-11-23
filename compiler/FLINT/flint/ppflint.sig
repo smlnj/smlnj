@@ -1,6 +1,6 @@
 (* ppflint.sig
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Signature of new pretty printer (PPFlint) for FLINT IR.

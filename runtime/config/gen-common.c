@@ -1,6 +1,6 @@
 /* gen-common.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Common code for generating header files.
@@ -25,7 +25,7 @@ FILE *OpenFile (char *fname, char *flag)
 
     fprintf (f, "/* %s\n", fname);
     fprintf (f, " *\n");
-    fprintf (f, " * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)\n");
+    fprintf (f, " * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)\n");
     fprintf (f, " * All rights reserved.\n");
     fprintf (f, " *\n");
     fprintf (f, " * NOTE: this file is generated --- do not edit!!!\n");

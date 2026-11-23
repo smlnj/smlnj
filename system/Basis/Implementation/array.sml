@@ -1,6 +1,6 @@
 (* array.sml
  *
- * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2015 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -27,9 +27,9 @@ structure Array : ARRAY =
 
     fun fromList [] = InlineT.PolyArray.newArray0()
       | fromList (l as (first::rest)) =
-          let fun len(_::_::r, i) = len(r, i ++ 2)
-                | len([x], i) = i ++ 1
-                | len([], i) = i
+          let fun len (_::_::r, i) = len(r, i ++ 2)
+                | len ([x], i) = i ++ 1
+                | len ([], i) = i
               val n = len(l, 0)
               val a = array(n, first)
               fun fill (i, []) = a
@@ -39,15 +39,16 @@ structure Array : ARRAY =
           end
 
     fun tabulate (0, _) = InlineT.PolyArray.newArray0()
-      | tabulate (n, f : int -> 'a) : 'a array =
-          let val a = array(n, f 0)
-              fun tab i =
-                if (i < n) then (InlineT.PolyArray.update(a, i, f i);
-				 tab(i ++ 1))
-                else a
-           in tab 1
-          end
-
+      | tabulate (n, f : int -> 'a) : 'a array = if (InlineT.Int.ltu(maxLen, n))
+          then raise General.Size
+          else let
+            val a = array(n, f 0)
+            fun tab i = if (i < n)
+                  then (InlineT.PolyArray.update(a, i, f i); tab(i ++ 1))
+                  else a
+            in
+              tab 1
+            end
 
     val length : 'a array -> int = InlineT.PolyArray.length
     val sub : 'a array * int -> 'a = InlineT.PolyArray.chkSub

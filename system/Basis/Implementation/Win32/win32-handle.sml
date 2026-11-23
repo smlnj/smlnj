@@ -1,6 +1,6 @@
 (* win32-handle.sml
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * An SML interface to the HANDLE type for 32-bit platforms.

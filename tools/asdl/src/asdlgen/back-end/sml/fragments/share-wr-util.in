@@ -17,6 +17,6 @@
     (* write a shared value *)
     fun writeShared (wrFn, sMap) (cxt : outstream, obj) = (
           case ASDLShareMap.resolve (sMap cxt, obj)
-           of (true, id) => @PICKLER@.writeUInt (#outS cxt, Word.fromInt(id+1))
-            | (false, id) => (@PICKLER@.writeUInt (#outS cxt, 0w0); wrFn (cxt, obj))
+           of (true, id) => (@PICKLER@.writeUInt (#outS cxt, 0w0); wrFn (cxt, obj))
+            | (false, id) => @PICKLER@.writeUInt (#outS cxt, Word.fromInt(id+1))
           (* end case *))

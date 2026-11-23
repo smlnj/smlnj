@@ -1,0 +1,38 @@
+(* json-lib.cm
+ *
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
+Library
+
+  structure JSON (* defined in smlnj-lib.cm *)
+
+(* DOM-style API (tree based) *)
+  structure JSONParser
+  structure JSONPrinter
+  structure JSONDecode
+  structure JSONUtil
+
+(* SAX-style API (event based) *)
+  signature JSON_STREAM_OUTPUT
+  structure JSONStreamParser
+  structure JSONBufferPrinter
+  structure JSONStreamPrinter
+
+is
+
+  $/basis.cm
+  $/smlnj-lib.cm
+
+  errors.sml
+  json-buffer-printer.sml
+  json-decode.sml
+  json-parser.sml
+  json-printer.sml
+  json-source.sml
+  json-stream-output.sig
+  json-stream-output.fun
+  json-stream-parser.sml
+  json-stream-printer.sml
+  json-util.sml

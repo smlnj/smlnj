@@ -1,6 +1,6 @@
 (* splay-map-fn.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Functor implementing dictionaries using splay trees.

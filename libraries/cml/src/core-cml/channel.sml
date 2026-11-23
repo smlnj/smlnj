@@ -182,7 +182,7 @@ structure Channel : sig
             | NoItem => (S.atomicEnd(); false)
           (* end case *)))
 
-    fun recv (CHAN{priority, inQ, outQ}) = callcc (fn recvK => (
+    fun recv (CHAN{priority, inQ, outQ}) = (
 	  S.atomicBegin ();
 	  case (cleanAndRemove outQ)
 	   of Item(transId, sendK) => let
@@ -190,12 +190,18 @@ structure Channel : sig
 		in
 		  setCurThread transId;
 		  priority := 1;
-		  throw sendK (myId, recvK)
+		  callcc (fn recvK => throw sendK (myId, recvK))
 		end
-	    | NoItem => (
-		enqueue (inQ, (mkId(), recvK));
-		S.atomicDispatch())
-	  (* end case *)))
+	    | NoItem => let
+                val msg = callcc (fn recvK => (
+                      enqueue (inQ, (mkId(), recvK));
+                      S.atomicDispatch()))
+                in
+                  (* leave the atomic region that was established by the sender *)
+                  S.atomicEnd();
+                  msg
+                end
+	  (* end case *))
 
     fun recvEvt (CHAN{priority, inQ, outQ}) = let
 	  fun doFn () = let
@@ -227,7 +233,7 @@ structure Channel : sig
     fun recvPoll (CHAN{priority, inQ, outQ}) = (
 	  S.atomicBegin ();
 	  case (cleanAndRemove outQ)
-	   of Item(transId, sendK) => SOME(callcc (fn recvK => 
+	   of Item(transId, sendK) => SOME(callcc (fn recvK =>
 		let
 		val myId = S.getCurThread()
 		in

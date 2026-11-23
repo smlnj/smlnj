@@ -205,8 +205,6 @@ GenModIdMap
   ElabData/statenv/genmap.sml
 HppaBackend
   TopLevel/backend/HppaBackend
-IEEERealConst
-  MiscUtil/bignums/ieeereal.sml
 INCLUDE
   Elaborator/elaborate/include.sml
 Include
@@ -327,8 +325,6 @@ PRIM_TYC_NUM
   Elaborator/basics/ptnum.sml
 PrimEnv
   Semant/statenv/prim.sml
-PRIMREAL
-  MiscUtil/bignums/realconst.sml
 PrimTycNum
   Elaborator/basics/ptnum.sml
 PRINTCONTROL
@@ -339,10 +335,6 @@ PRINTUTIL
   Basics/print/printutil.sig
 PrintUtil
   Basics/print/printutil.sml
-REALCONST
-  MiscUtil/bignums/realconst.sml
-RealConst
-  MiscUtil/bignums/realconst.sml
 SIGMATCH
   Elaborator/modules/sigmatch.sml
 SigMatch

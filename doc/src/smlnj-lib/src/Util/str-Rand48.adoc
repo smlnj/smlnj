@@ -1,0 +1,75 @@
+= The `Rand48` structure
+:Author: John Reppy
+:Date: {release-date}
+:stem: latexmath
+:source-highlighter: pygments
+:VERSION: {smlnj-version}
+
+The `Rand48` structure implements the **C Standard Library**
+https://pubs.opengroup.org/onlinepubs/007908799/xsh/drand48.html[`rand48`].
+
+As described in the Open Group Specification, these routines work
+by generating a sequence of 48-bit integer values, stem:[X_i], according
+to the linear congruential formula:
+
+[stem]
+++++
+  X_{i+1} = (a \cdot X_{i} + c) \mod m \qquad\text{for $i \geq 0$}
+++++
+
+where
+
+--
+* stem:[m = 2^{48}]
+* stem:[a = 25214903917]
+* stem:[c = 11]
+--
+
+== Synopsis
+
+[source,sml]
+------------
+signature RAND48
+structure Rand48 : RAND48
+------------
+
+== Interface
+
+[source,sml]
+------------
+val seed : Word64.word -> Word64.word
+
+val srand : word -> unit
+
+val drand : unit -> real
+
+val lrand : unit -> word
+
+val mrand : unit -> int
+------------
+
+== Description
+
+`[.kw]#val# seed : Word64.word \-> Word64.word`::
+  `seed s` initializes the internal buffer with the 48 low-order
+  bits from `s`.  It returns the previous contents of the buffer.
+
+`[.kw]#val# srand : word \-> unit`::
+  `srand w` sets the internal buffer to `(w << 16) | 0x330E`.
+
+`[.kw]#val# drand : unit \-> real`::
+  `drand()` returns a random real number in the range stem:[[0..1)].
+
+`[.kw]#val# lrand : unit \-> word`::
+  `lrand()` returns a unsigned 31-bit random number (_i.e._, in the range
+  stem:[[0 .. 2^{31}-1]]).
+
+`[.kw]#val# mrand : unit \-> int`::
+  `mrand()` returns a signed 31-bit random number (_i.e._, in the range
+  stem:[[-2^{31} .. 2^{31}-1]]).
+
+== See Also
+
+xref:str-Rand48.adoc[`Rand48`],
+xref:str-Random.adoc[`Random`],
+xref:smlnj-lib.adoc[__The Util Library__]

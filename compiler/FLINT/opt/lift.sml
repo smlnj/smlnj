@@ -1,6 +1,6 @@
 (* lift.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -286,6 +286,7 @@ fun lift (e, env, td, d, ad, rename) =
 	     of VAR v' => loopcv env VAR v'
 	      | INT{ty, ...} => c (LB.ltc_num ty)
 	      | WORD{ty, ...} => c (LB.ltc_num ty)
+	      | ENUM _ => c LB.ltc_enum
 	      | REAL _  => c LB.ltc_real		(* REAL32: FIXME *)
 	      | STRING _ => c LB.ltc_string
 	end
@@ -629,5 +630,4 @@ fun typeLift fdec:fundec =
 
 end (* top local *)
 end (* structure Lift *)
-
 

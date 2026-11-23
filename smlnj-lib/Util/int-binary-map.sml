@@ -1,6 +1,6 @@
 (* int-binary-map.sml
  *
- * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2012 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * COPYRIGHT (c) 1993 by AT&T Bell Laboratories.  See COPYRIGHT file for details.
@@ -178,7 +178,7 @@ structure IntBinaryMap :> ORD_MAP where type Key.ord_key = Int.int =
 		else let
 		  val v' = comb(x, value, v)
 		  in
-		    T{key=x,value=v,left=left,right=right,cnt=cnt}
+		    T{key=x,value=v',left=left,right=right,cnt=cnt}
 		  end
 	  in
 	    insert m

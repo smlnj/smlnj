@@ -1,6 +1,6 @@
 /*! \file init-gc.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The GC initialization code.
@@ -371,10 +371,13 @@ void GetGCStats (ml_state_t *msp, gc_stats_t *statsOut)
 
     statsOut->bytesPerCnt = BYTES_PER_COUNT;
 
-    /* count the number of bytes allocated since the last GC or reset */
+    /* include the number of bytes allocated since the last GC or reset (but
+     * don't add them to the running total, since that would double-count them)
+     */
     Addr_t nbytesAlloc = (Addr_t)(msp->ml_allocPtr) - (Addr_t)(heap->allocBase);
-    CNTR_INCR(&(heap->numAlloc), nbytesAlloc);
-    statsOut->allocCnt = ROUND_COUNT(&heap->numAlloc);
+    cntr_t tmp = heap->numAlloc;
+    CNTR_INCR(&tmp, nbytesAlloc);
+    statsOut->allocCnt = ROUND_COUNT(&tmp);
 #ifdef COUNT_STORE_LIST
     statsOut->storeCnt = heap->numStores.cnt;
 #endif

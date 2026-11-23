@@ -4,7 +4,7 @@
  */
 
 /*
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  */
 
@@ -65,12 +65,6 @@
 /* convert a number of doubles to an even number of words */
 #define DOUBLES_TO_WORDS(N)	((N) * REALD_SZW)
 
-/* when ML values are 32-bits, it is useful to align doubles on 8-byte boundries */
-#ifndef SIZE_64
-#  define ALIGN_REALDS
-#endif
-
-
 #ifndef _ASM_
 
 #include <stdlib.h>
@@ -115,12 +109,14 @@ extern void AssertFail (const char *a, const char *file, int line);
 #define ASSERT(A)	do { } while(0)
 #endif
 
-/* Convert a bigendian 32-bit quantity into the host machine's representation. */
+/* Convert endianess */
 #if defined(BYTE_ORDER_BIG)
-#  define BIGENDIAN_TO_HOST32(x)	(x)
+#  define BIG_TO_HOST32(x)      (x)
+#  define LITTLE_TO_HOST32(x)   SwapBytes32(x)
 #elif defined(BYTE_ORDER_LITTLE)
    extern Unsigned32_t SwapBytes32 (Unsigned32_t x);
-#  define BIGENDIAN_TO_HOST32(x)	SwapBytes32(x)
+#  define BIG_TO_HOST32(x)      SwapBytes32(x)
+#  define LITTLE_TO_HOST32(x)   (x)
 #else
 #  error must define endianess
 #endif

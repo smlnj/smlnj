@@ -1,6 +1,6 @@
 (* object.sig
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -15,7 +15,6 @@ signature UNSAFE_OBJECT =
     datatype representation
       = Unboxed
       | Raw		(* packed raw data *)
-      | Raw64		(* 64-byte aligned raw data (used for Real64.real) *)
       | Pair
       | Record
       | Ref

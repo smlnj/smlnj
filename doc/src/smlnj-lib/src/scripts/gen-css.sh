@@ -51,7 +51,7 @@ TV_COLOR="#aa22ff"			# color for type variables
 TY_COLOR="#b00040"			# color for type names
 
 sed -e s/@BACKGROUND@/$BACKGROUND/g \
-    -e s/@LIGHT_BACKGROUND@/$MEDIUM_BACKGROUND/g \
+    -e s/@LIGHT_BACKGROUND@/$LIGHT_BACKGROUND/g \
     -e s/@MEDIUM_BACKGROUND@/$MEDIUM_BACKGROUND/g \
     -e s/@DARK_BACKGROUND@/$DARK_BACKGROUND/g \
     -e s/@BANNER_BACKGROUND@/$BANNER_BACKGROUND/g \

@@ -1,13 +1,17 @@
-(*
- * Toplevel description file for new implementation of CM
+(* cm-lib.cm
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * Toplevel description file for new implementation of CM
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
 Group
 	functor LinkCM
 	functor BootstrapCompileFn
+
+        signature CMB
 
 	signature VERSION
 	structure Version
@@ -20,6 +24,12 @@ is
 	$smlnj/basis/basis.cm
 	$smlnj/smlnj-lib/smlnj-lib.cm
 	$smlnj/smlnj-lib/controls-lib.cm
+
+	(* auxiliary libraries *)
+	$smlnj/ml-yacc/ml-yacc-lib.cm
+        $smlnj/asdl/asdl-lib.cm
+	$/pgraph.cm
+	$/pickle-lib.cm
 
 	(* the CM description file parser *)
 	parse/parse.sml
@@ -87,7 +97,7 @@ is
 	concur/sources.cm
 
 	(* doing actual compilation work *)
-	compile/compile.sml
+	compile/traverse.sml
 	compile/corehack.sml
 	compile/link.sml
 	compile/bfc.sml
@@ -108,6 +118,7 @@ is
 	$smlnj/internal/srcpath-lib.cm
 
 	(* bootstrap compiler (formerly known as "batch") *)
+        bootstrap/cmb.sig
 	bootstrap/names.sml
 	bootstrap/build-initdg.sml
 	bootstrap/btcompile.sml
@@ -124,10 +135,3 @@ is
 	$smlnj/viscomp/elabdata.cm
 	$smlnj/viscomp/execute.cm
 	$smlnj/viscomp/core.cm
-
-	$/pickle-lib.cm
-
-	(* auxiliary libraries *)
-	$smlnj/ml-yacc/ml-yacc-lib.cm
-        $smlnj/asdl/asdl-lib.cm
-	$/pgraph.cm

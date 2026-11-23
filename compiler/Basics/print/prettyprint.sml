@@ -78,7 +78,7 @@ structure PrettyPrint : PRETTYPRINT =
 
     val defaultDevice : device =
 	{consumer = Control_Print.say,
-	 linewidth = (fn () => !Control_Print.lineWidth),
+	 linewidth = PrintUtil.lineWidth,
 	 flush = Control_Print.flush}
 
     fun mkDevice (lineWidth : int) : device =

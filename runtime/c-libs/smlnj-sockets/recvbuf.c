@@ -1,6 +1,7 @@
 /* recvbuf.c
  *
- * COPYRIGHT (c) 1995 AT&T Bell Laboratories.
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
  */
 
 #include "sockets-osdep.h"
@@ -13,7 +14,7 @@
 /* _ml_Sock_recvbuf : (sock * Word8Array.array * int * int * bool * bool) -> int
  *
  * The arguments are: socket, data buffer, start position, number of
- * bytes, OOB flag and peek flag.
+ * bytes, peek flag, and OOB flag.
  */
 ml_val_t _ml_Sock_recvbuf (ml_state_t *msp, ml_val_t arg)
 {
@@ -24,8 +25,8 @@ ml_val_t _ml_Sock_recvbuf (ml_state_t *msp, ml_val_t arg)
     int		flag = 0;
     int		n;
 
-    if (REC_SEL(arg, 4) == ML_true) flag |= MSG_OOB;
-    if (REC_SEL(arg, 5) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 4) == ML_true) flag |= MSG_PEEK;
+    if (REC_SEL(arg, 5) == ML_true) flag |= MSG_OOB;
 
     n = recv (sock, start, nbytes, flag);
 

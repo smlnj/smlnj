@@ -1,6 +1,6 @@
 (* binfile.sig
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * author: Matthias Blume
@@ -16,8 +16,8 @@
 
 signature BINFILE = sig
 
-  (* the contents of a binfile *)
-    type bfContents
+    (* the contents of a binfile *)
+    type t
 
     type version_info = {
         bfVersion : word,       (* the binfile version; this will be 0w0 for
@@ -32,55 +32,61 @@ signature BINFILE = sig
     val mkVersion : {arch : string, smlnjVersion : string} -> version_info
 
   (* get the version info for the binfile *)
-    val version : bfContents -> version_info
+    val version : t -> version_info
 
     exception FormatError
 
     type pid = PersStamps.persstamp
-    type stats = { env: int, data: int, code: int }
-    type pickle = { pid: pid, pickle: Word8Vector.vector }
+    type stats = { env : int, data : int, code : int }
+    type pickle = { pid : pid, pickle : Word8Vector.vector }
 
-    val staticPidOf    : bfContents -> pid
-    val exportPidOf    : bfContents -> pid option
-    val cmDataOf       : bfContents -> pid list
+    val staticPidOf  : t -> pid
+    val exportPidOf  : t -> pid option
+    val cmDataOf     : t -> pid list
 
-    val senvPickleOf   : bfContents -> pickle
+    val literalsOf   : t -> CodeObj.literals
+    val codeOf       : t -> CodeObj.t
 
-    val guidOf         : bfContents -> string
+    val senvPickleOf : t -> pickle
+
+    val guidOf       : t -> string
 
   (* calculate the size in bytes occupied by some binfile contents *)
-    val size : { contents: bfContents, nopickle: bool } -> int
+    val size : { contents : t, nopickle : bool } -> int
 
   (* create the abstract binfile contents *)
     val create : {
             version : version_info,
-	    imports: ImportTree.import list,
-	    exportPid: pid option,
-	    cmData: pid list,
-	    senv: pickle,
-	    guid: string,
-	    csegments: CodeObj.csegments
-	  } -> bfContents
+	    imports : ImportTree.import list,
+	    exportPid : pid option,
+	    cmData : pid list,
+	    senv : pickle,
+	    guid : string,
+            lits : CodeObj.literals,
+            code : CodeObj.t
+	  } -> t
 
   (* read just the guid *)
     val readGUid : BinIO.instream -> string
 
   (* read binfile contents from an IO stream *)
     val read : {
-            version : version_info,                     (* expected binfile version *)
-	    stream: BinIO.instream
-	  } -> { contents: bfContents, stats: stats }
+            version : version_info,             (* expected binfile version *)
+	    stream : BinIO.instream,            (* input stream for binfile *)
+            offset : Position.int               (* archive file offset or zero *)
+	  } -> { contents : t, stats : stats }
 
   (* write binfile contents to an IO stream *)
     val write : {
-	    stream: BinIO.outstream,
-	    contents: bfContents, nopickle: bool
+	    stream : BinIO.outstream,
+	    contents : t,
+            nopickle : bool
 	  } -> stats
 
   (* Given a dynamic environment, link the code object contained in
-   * some given binfile contents. The result is the delta environment
+   * the given binfile contents. The result is the delta environment
    * containing the bindings (if any) resulting from this link operation.
    *)
-    val exec : bfContents * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
+    val exec : t * DynamicEnv.env * (exn -> exn) -> DynamicEnv.env
 
   end

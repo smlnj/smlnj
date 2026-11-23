@@ -12,17 +12,19 @@ https://doi.org/10.1145/63039.63042[__Random number generators: good ones
 are hard to find__], CACM 1988 (pp 1192-1201) with modifications described
 in CACM 1993 (pp. 105-110).
 
-Note: it is recommended that one use the xref:str-Random.adoc[`Random`]
-structure when the quality of the generated numbers is at all important.
+Note: it is recommended that one use either the xref:str-Rand48[`Rand48`] or
+xref:str-Random.adoc[`Random`] structure when the quality of the generated
+numbers is at all important.
 The main advantages of this implementation is that it is functional
-(the generators provided by the `Random` structure are imperative) and
-it is fast.
+(the generators provided by the `Rand48` and `Random` structures are
+imperative) and it is fast.
 
 == Synopsis
 
 [source,sml]
 ------------
-structure Rand
+signature RAND
+structure Rand : RAND
 ------------
 
 == Interface
@@ -80,5 +82,6 @@ This implementation needs to be updated for 64-bit systems.
 
 == See Also
 
+xref:str-Rand48.adoc[`Rand48`],
 xref:str-Random.adoc[`Random`],
 xref:smlnj-lib.adoc[__The Util Library__]

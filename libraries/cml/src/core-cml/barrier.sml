@@ -1,6 +1,6 @@
 (* barrier.sml
  *
- * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2011 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -20,10 +20,10 @@ structure Barrier :> BARRIER =
 	update : 'a -> 'a,
 	nEnrolled : int ref,
 	nWaiting : int ref,
-	waiting : (S.thread_id * 'a result cont) list ref
+	waiting : (S.thread_id * 'a result cont * status ref) list ref
       }
 
-    datatype status = ENROLLED | WAITING | RESIGNED
+    and status = ENROLLED | WAITING | RESIGNED
 
     datatype 'a enrollment = ENROLL of {
 	bar : 'a barrier,
@@ -49,9 +49,10 @@ structure Barrier :> BARRIER =
 	  S.atomicEnd();
 	  ENROLL{bar = bar, sts = ref ENROLLED})
 
-    fun wakeupThd result (tid, resumeK) =
+    fun wakeupThd result (tid, resumeK, sts) = (
+          sts := ENROLLED;
 	  S.enqueueThread(
-	    tid, callcc(fn k => (callcc(fn k' => throw k k'); throw resumeK result)))
+	    tid, callcc(fn k => (callcc(fn k' => throw k k'); throw resumeK result))))
 
     fun return (RAISE exn) = raise exn
       | return (VALUE x) = x
@@ -72,6 +73,7 @@ structure Barrier :> BARRIER =
 			    VALUE x
 			  end handle exn => RAISE exn
 		    in
+                      sts := ENROLLED; (* reset the enrollment status for this thread *)
 		      List.app (wakeupThd result) (!waiting);
 		      nWaiting := 0;
 		      waiting := [];
@@ -81,19 +83,23 @@ structure Barrier :> BARRIER =
 		  else (
 		    sts := WAITING;
 		    return (callcc (fn resumeK => (
-		      waiting := (S.getCurThread(), resumeK) :: !waiting;
+		      waiting := (S.getCurThread(), resumeK, sts) :: !waiting;
 		      S.atomicDispatch())))))
-	    | WAITING => (S.atomicEnd(); raise Fail "multiple barrier waits")
+	    | WAITING => (S.atomicEnd(); raise Fail "multiple barrier waits!")
 	    | RESIGNED => (S.atomicEnd(); raise Fail "barrier wait after resignation")
 	  (* end case *))
 
   (* resign from an enrolled barrier *)
-    fun resign (ENROLL{bar, sts}) = (
+    fun resign (ENROLL{bar=BAR{nEnrolled, ...}, sts}) = (
 	  S.atomicBegin();
 	  case !sts
-	   of RESIGNED => () (* ignore multiple resignations *)
+	   of RESIGNED => S.atomicEnd() (* ignore multiple resignations *)
 	    | WAITING => (S.atomicEnd(); raise Fail "resign while waiting")
-	    | ENROLLED => (sts := RESIGNED; S.atomicEnd()))
+	    | ENROLLED => (
+                sts := RESIGNED;
+                nEnrolled := !nEnrolled - 1;
+                S.atomicEnd())
+          (* end case *))
 
   (* get the current state of the barrier *)
     fun value (ENROLL{bar=BAR{state, ...}, ...}) = !state

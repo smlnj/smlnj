@@ -215,7 +215,7 @@ Basic datastructures used in elaboration (including type checking)
       special bindings (e.g Match and Bind exceptions)
       defs: CoreSym
     tkind.sml
-      TKind.tkind -- front-end version of PlambdaType tkinds (FLINT) 
+      TKind.tkind -- front-end version of PlambdaType tkinds (FLINT)
       defs: TKind
 
   ElabData/syntax/
@@ -469,16 +469,6 @@ Elaborator/
 Library/   (was MiscUtil)
   Contains various kinds of utility programs
 
-  bignums/   -- could be renamed real-literals?
-  supporting real constants (using bignums?, IntInf?)
-    ieeereal.sml
-      Support for IEEE floating-point constants. calls RealConst functor
-      see: MiscUtil/bignums/realconst.sml
-      defs: IEEERealConst
-    realconst.sml
-      generate ML real (i.e. ieee floating point?) constants
-      defs: PRIMREAL, REALCONST, RealConst: PRIMREAL => REALCONST
-
   const-arith/
   Implements constant arithmetic on SML integer and word constants.
   (adapted from the SML Compiler Utilities)
@@ -648,7 +638,7 @@ TopLevel/
     compile.sig
       defs: COMPILE0, COMPILE, TOP_COMPILE
     compile.sml
-      defs: CompileF: CODEGENERATOR # CCONFIG # {cproto_conv : string} => COMPILE0
+      defs: CompileFn: CODEGENERATOR # CCONFIG # {cproto_conv : string} => COMPILE0
 
 
 

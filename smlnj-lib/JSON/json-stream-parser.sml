@@ -611,7 +611,9 @@ structure JSONStreamParser :> sig
                        of (#".", src) => scanFrac(src, [])
                         | (#"e", src) => scanExp(src, [], [])
                         | (#"E", src) => scanExp(src, [], [])
-                        | _ => (#integer cb (ctx, 0), startSrc)
+                        | (c, _) => if (#"0" <= c) andalso (c <= #"9")
+                            then error' (ctx, startSrc, InvalidNumber)
+                            else (#integer cb (ctx, 0), startSrc)
                       (* end case *))
                     else scanWhole (startSrc, 1, [first])
                 end

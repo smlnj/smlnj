@@ -6,7 +6,7 @@
 # usage: scripts/prepare-sig.sh <dir> <sign>
 #
 
-function usage {
+usage() {
   echo "usage: scripts/prepare-sig.sh <dir> <sign>"
   exit 1
 }

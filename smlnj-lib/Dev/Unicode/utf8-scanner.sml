@@ -17,7 +17,7 @@
                 val (b, c, inS) = getByte inS
                 in
                   if inRange(0wx80, b, 0wxbf)
-                    then return (inS, c::chrs)
+                    then return (c::chrs, inS)
                     else raise InvalidUTF8
                 end
           (* handles second/third byte for three/four-byte sequences *)

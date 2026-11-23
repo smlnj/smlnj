@@ -1,6 +1,6 @@
 (* rttype.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -29,7 +29,7 @@ local
   structure LD = LtyDef
   structure LB = LtyBasic
   structure LE = LtyExtern
-  structure PO = Primop
+  structure PO = FPrimOps
   structure PT = PrimTyc
   structure LV = LambdaVar
   structure FR = FunRecMeta
@@ -149,7 +149,7 @@ fun UNWRAPg (z, b, e) =
 fun WRAPcast (z, b, e) =
   let val (v, h) = split e
       val pt = LD.ltc_arrow(LD.ffc_fixed, [LD.ltc_tyc z], [LB.ltc_void])
-      val pv = (NONE,PO.CAST,pt,[])
+      val pv = (NONE, PO.PRIM CommonOps.CAST, pt, [])
       val x = mkv()
    in h(PRIMOP(pv, [v], x, RET[VAR x]))
   end
@@ -157,7 +157,7 @@ fun WRAPcast (z, b, e) =
 fun UNWRAPcast (z, b, e) =
   let val (v, h) = split e
       val pt = LD.ltc_arrow(LD.ffc_fixed, [LB.ltc_void], [LD.ltc_tyc z])
-      val pv = (NONE,PO.CAST,pt,[])
+      val pv = (NONE, PO.PRIM CommonOps.CAST, pt, [])
       val x = mkv()
    in h(PRIMOP(pv, [v], x, RET[VAR x]))
   end
@@ -184,8 +184,8 @@ fun UNWRAP(t, u) =
   val boolty = (* LE.ltc_bool *) LB.ltc_void
   val inteqty = LD.ltc_arrow(LD.ffc_fixed, [intty, intty], [boolty])
   val intopty = LD.ltc_arrow(LD.ffc_fixed, [intty, intty], [intty])
-  val ieqprim = (NONE, PrimopUtil.IEQL, inteqty, [])
-  val iaddprim = (NONE, PrimopUtil.IADD, intopty, [])
+  val ieqprim = (NONE, PO.IEQL, inteqty, [])
+  val iaddprim = (NONE, PO.IADD, intopty, [])
   fun ieqLexp (e1, e2) =
       let val (v1, h1) = split e1
 	  val (v2, h2) = split e2

@@ -77,8 +77,10 @@ PVT void InitVProcState (vproc_state_t *vsp)
     vsp->vp_nextPendingSig		= MIN_SYSTEM_SIG;
     vsp->vp_gcSigState			= ML_SIG_IGNORE;
     vsp->vp_gcSigThreshold              = 1;  /* by default, we ignore minor collections */
-    vsp->vp_gcTime0			= NEW_OBJ(Time_t);
-    vsp->vp_gcTime			= NEW_OBJ(Time_t);
+    vsp->vp_gcUsrTime0			= NEW_OBJ(Time_t);
+    vsp->vp_gcSysTime0			= NEW_OBJ(Time_t);
+    vsp->vp_gcUsrTime			= NEW_OBJ(Time_t);
+    vsp->vp_gcSysTime			= NEW_OBJ(Time_t);
 
     for (i = 0;  i < SIGMAP_SZ;  i++) {
 	vsp->vp_sigCounts[i].nReceived = 0;

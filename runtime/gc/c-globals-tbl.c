@@ -1,6 +1,6 @@
 /*! \file c-globals-tbl.c
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This file implements a registry of global C symbols that may be referenced

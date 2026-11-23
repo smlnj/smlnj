@@ -1,10 +1,16 @@
-signature SOURCE_MAP = 
+(* sourcemap-sig.sml
+ *
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *)
+
+signature SOURCE_MAP =
 sig
 
-  type charpos = int 
+  type charpos = int
     (* char position in a file *)
 
-  type region = charpos * charpos 
+  type region = charpos * charpos
     (* region between two character positions, where it is assumed that
      * the first charpos is less than the second *)
 
@@ -19,7 +25,7 @@ sig
     (* encodes the information used to record locations in input sources.
      * a location designates a region within a (single) source file *)
 
-  type sourcemap 
+  type sourcemap
     (* a data structure maintaining a mapping between character positions
      * in an input source and locations.
      * This handles multiple source files, which can happen if the input

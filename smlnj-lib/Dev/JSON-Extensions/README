@@ -1,0 +1,14 @@
+This library supports the reading and writing of structured data using
+the "JavaScript Object Notation" (JSON).  This format is specified by
+RFC 426 (http://tools.ietf.org/html/rfc4627).
+
+There are two levels of I/O supported.  The "stream" level supports
+event-based parsing (e.g., like a SAX parser for XML) and output at
+the same level.  Use this mode to extract small amounts of information
+from large files or when you want to directly build your own representation
+of the file.  The "file" level supports a "DOM-style" approach that reads/writes
+trees (see json.sml for the representation).
+
+TODO:
+  add support for UBJSON (http://ubjson.org) or possibly one of the
+  other binary JSON representations

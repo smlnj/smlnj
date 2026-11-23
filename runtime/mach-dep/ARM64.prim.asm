@@ -1,6 +1,6 @@
 /*! \file ARM64.prim.asm
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Assembly code for the ARM64 (aka AARCH64) target.
@@ -378,12 +378,20 @@ jmp_ml:
 /* QUESTION: would using a `ret` instruction be better here? */
 	br	lr
 
-    /* here we have pending signals */
+    /* here we have pending signals; if the inSigHandler flag is set, then
+     * we just go to the SML signal handler code; otherwise, we set the
+     * handlerPending flag and set the limitPtr=0 to force a GC on the next
+     * check.
+     */
 pending:
     /* if (we are in a signal handler) then limitptr := 0 */
         ldr     xtmp2, MEM(xtmp1, InSigHandlerOffVSP)
-        cmp     xtmp2, IM(0)
-	csel	limitptr, limitptr, xzero, eq
+        cmp     xtmp2, IM(0)             /* if (vsp->inSigHandler) */
+        b.ne    jmp_ml                   /*   then goto jmp_ml */
+
+        mov     xtmp2, IM(1)             /* vsp->handlerPending = 1 */
+        str     xtmp2, MEM(xtmp1, HandlerPendingOffVSP)
+        mov     limitptr, xzero          /* limitptr = 0 (force GC) */
         b       jmp_ml
 
 
@@ -529,7 +537,7 @@ ALIGNED_ENTRY(create_s_a)
         add     xtmp1, xtmp1, IM(8)
         asr     xtmp1, xtmp1, IM(3)             /* tmp1 := length in words (incl. null) */
         cmp     xtmp1, IM(SMALL_OBJ_SZW)        /* if (xtmp1 > SMALL_OBJ_SZW) */
-        b.hi    L_create_b_large                /*    then goto create_b_large */
+        b.hi    L_create_s_large                /*    then goto create_s_large */
 
         /* build descriptor in tmp2 */
         mov     wtmp2, IM(MAKE_TAG(DTAG_raw))
@@ -571,7 +579,7 @@ ALIGNED_ENTRY(create_r_a)
         b.hi    L_create_r_large                /*    then goto create_r_large */
 
         /* build descriptor in tmp2 */
-        mov     wtmp2, IM(MAKE_TAG(DTAG_raw64))
+        mov     wtmp2, IM(MAKE_TAG(DTAG_raw))
         orr     xtmp2, xtmp2, xtmp1, lsl IM(TAG_SHIFTW)
         str     xtmp2, POSTINC(allocptr, WORD_SZB)  /* *allocptr++ = descriptor */
         mov     xtmp3, allocptr                     /* tmp3 = data object */

@@ -28,6 +28,7 @@ status_t HeapIO_WriteImageHeader (writer_t *wr, int kind)
 {
     ml_image_hdr_t	hdr;
 
+    CLEAR_MEM(&hdr, sizeof(hdr));
     hdr.byteOrder = ORDER;
     hdr.magic	  = ((kind == EXPORT_HEAP_IMAGE) || (kind == EXPORT_FN_IMAGE))
 			? IMAGE_MAGIC : BLAST_MAGIC;

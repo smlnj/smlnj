@@ -1,6 +1,6 @@
 (* fnv-hash.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * The interface to an implementation of the Fowler–Noll–Vo (FNV) hashing

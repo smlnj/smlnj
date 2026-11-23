@@ -1,6 +1,6 @@
 (* gen-toc.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This module is used to generate the HTML fragment for a sidebar

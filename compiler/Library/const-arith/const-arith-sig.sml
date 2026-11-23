@@ -86,6 +86,9 @@ signature CONST_ARITH =
     val bXor : width * t * t -> t
     val bNot : width * t -> t
 
+    val bRotateL : width * t * t -> t
+    val bRotateR : width * t * t -> t
+
   (* `toSigned (w, n)` converts an unsigned value `n` of width `w` to
    * a signed value of width `w`.  We assume that `0 <= n < 2^w-1`.
    *)

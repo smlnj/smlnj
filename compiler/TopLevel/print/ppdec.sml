@@ -1,6 +1,6 @@
 (* ppdec.sml
  *
- * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2020 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -44,7 +44,7 @@ type object = Unsafe.Object.object
 
 val signatures = Control.Print.signatures
 val printOpens = Control.Print.printOpens
-val printDepth = Control.Print.printDepth
+val printDepth = PrintUtil.printDepth
 val anonSym = S.strSymbol "<anonymousSig>"
 val anonFsym = S.fctSymbol "<anonymousFsig>"
 
@@ -123,16 +123,22 @@ fun ppDec ({static,dynamic}: Environment.environment)
 							   ...}) =>
 				  if isExport lv  (* is it "exported"? *)
 				  then (case DynamicEnv.look dynamic pid
-					 of SOME objv =>
-					     let val obj = xtract (objv, pos)
-					     in PO.ppObj static ppstrm (obj, ty, !printDepth);
-						sp (); pps ":"; nbSp();
-						PT.ppType static ppstrm (trueValType (path,ty))
-					     end
-					  | NONE => bug "ppVar: objv")
-				   else (PP.string ppstrm "<hidden>";
-					 sp (); pps ":"; sp();
-					 PT.ppType static ppstrm ty)
+                                     of SOME objv => let
+                                         val obj = xtract (objv, pos)
+                                         in
+                                           (* we put a floor of `1` on print depth so
+                                            * that we at least always print something.
+                                            *)
+                                           PO.ppObj static ppstrm (obj, ty, printDepth());
+                                           sp (); pps ":"; nbSp();
+                                           PT.ppType static ppstrm (trueValType (path,ty))
+                                         end
+                                      | NONE => bug "ppVar: objv"
+                                     (* end case *))
+				   else (
+                                     PP.string ppstrm "<hidden>";
+                                     sp (); pps ":"; sp();
+                                     PT.ppType static ppstrm ty)
 				| _ => PP.string ppstrm "<hidden>"
 			     (* end case *))
 		        | _ => bug "ppVar"

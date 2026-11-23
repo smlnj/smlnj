@@ -1,6 +1,6 @@
 (* closure.sml
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -265,12 +265,13 @@ fun subset (x,y) = (case SL.difference(x,y) of [] => true | _ => false)
 
 (* check if a CPS type is a small constant size object *)
 fun smallObj (FLTt _) = true
+  | smallObj ENUMt = true
   | smallObj (NUMt{sz, tag}) = tag
   | smallObj _ = false
 
-(* check if a record_kind is sharable by a function of fun_kind *)
+(* check if a closure of one fun_kind is sharable by another fun_kind *)
 (* removed quasiStack from MACH_SPEC -- jhr; 2019-06-03
-fun sharable((RK_CONT|RK_FCONT),(ESCAPE|KNOWN)) = not (MachSpec.quasiStack)
+fun sharable((CONT|KNOWN_CONT),(ESCAPE|KNOWN)) = not (MachSpec.quasiStack)
   | sharable _ = true
 *)
 fun sharable _ = true
@@ -278,12 +279,21 @@ fun sharable _ = true
 (* given a fun_kind return the appropriate unboxed closure kind *)
 (* need runtime support for RK_FCONT (new tags etc.) CURRENTLY NOT SUPPORTED *)
 fun unboxedKind (CONT | KNOWN_CONT) = RK_FCONT
-  | unboxedKind _ = RK_RAW64BLOCK
+  | unboxedKind _ = RK_RAWBLOCK
 
 (* given a fix kind return the appropriate boxed closure kind *)
 fun boxedKind (CONT | KNOWN_CONT) = RK_CONT
   | boxedKind KNOWN = RK_KNOWN
   | boxedKind _ = RK_ESCAPE
+
+fun rckind (fk, [], []) = raise Fail "empty closure"
+  | rckind (fk, [], _) = unboxedKind fk
+  | rckind (fk, _, []) = boxedKind fk
+  | rckind (_, values, raws) =
+      RK_MIXED { ptrLen=length values, rawLen=length raws }
+
+fun isRawCty (NUMt{tag=false, ...} | FLTt _) = true
+  | isRawCty _ = false
 
 fun COMMENT f = if !CGoptions.comment then (f(); ()) else ()
 
@@ -293,14 +303,27 @@ fun COMMENT f = if !CGoptions.comment then (f(); ()) else ()
 
 type csregs = (value list * value list) option
 
+(* Description of a closure record:
+ *   fns: function labels (can only be 0 or 1)
+ *   kind: logical function kind represented by the closure
+ *   values: ordinary free variables
+ *   closures: pointers to other closure records
+ *   raws: untagged numbers and floats
+ * The closure layout is [fns labels @ values @ closures @ raws].
+ *
+ * All other fields are cached properties about the record.
+ *   free: all transitively reachable values
+ *   core: all transitively reachable pointer values (for space safety)
+ *)
 datatype closureRep = CR of int * closure
 withtype closure = {functions : (lvar * lvar) list,
-		    values : lvar list,
-		    closures : (lvar * closureRep) list,
-                    kind : record_kind,
+                    values : lvar list,
+                    closures : (lvar * closureRep) list,
+                    raws : lvar list,
+                    kind : fun_kind,
                     core : lvar list,
                     free : lvar list,
-		    stamp : lvar}
+                    stamp : lvar}
 
 type knownfunRep = {label : lvar,
                     gpfree : lvar list,
@@ -426,7 +449,7 @@ fun printEnv(Env(valueL,closureL,dispL,whatMap)) =
             vp v; pr "/callee(F) "; sayv v'; pr " -"; vallist fl)
         | cp _ = ()
       fun p(indent,l,seen) =
-	let fun c(v,CR(off, {functions,values,closures,stamp,kind,...})) =
+	let fun c(v,CR(off, {functions,values,closures,raws,stamp,kind,...})) =
 	      (indent(); pr "Closure "; vp v; pr "/"; pr(LV.prLvar stamp);
 	       pr " @"; ip off;
 	       if SL.member seen stamp
@@ -438,6 +461,9 @@ fun printEnv(Env(valueL,closureL,dispL,whatMap)) =
 		     case values
 		       of nil => ()
 		        | _ => (indent(); pr "  Vals:"; ilist values);
+		     case raws
+		       of nil => ()
+		        | _ => (indent(); pr "  Raws:"; ilist raws);
 		     p(fn() => (indent();pr "  "),closures,SL.enter(stamp,seen))))
 	 in app c l
 	end
@@ -471,8 +497,12 @@ fun augvar(v,e as Env(valueL,closureL,dispL,whatMap)) =
 fun whereIs (env as Env(valueL,closureL,_,whatMap), target) = let
       fun bfs (nil, nil) = raise Lookup("whereIs",target,env)
 	| bfs (nil, next) = bfs(next,nil)
-	| bfs ((h, ox as (_, CR(off, {functions,values, closures,stamp,...})))::m, next) = let
-            fun cls(nil, _, next) = bfs(m,next)
+	| bfs ((h, ox as (_, CR(off, {functions,values,closures,raws,stamp,...})))::m, next) = let
+            fun rvls(nil, _, next) = bfs(m,next)
+              | rvls(v::t, i, next) =
+                  if target=v then h(SELp(i, OFFp 0), [])
+                  else rvls(t, i+1, next)
+            fun cls(nil, i, next) = rvls(raws, i, next)
 	      | cls((u as (v,cr))::t, i, next) =
 		 if target=v then h(SELp(i, OFFp 0), [])
 		 else let val nh = fn (p,z) => h(SELp(i, p), u::z)
@@ -545,10 +575,10 @@ fun extractClosures (l,n,base) =
   end
 
 (* fetch all free variables residing above level n in the closure cr *)
-fun fetchFree(v,CR(_,{closures,functions,values,...}),n) =
+fun fetchFree(v,CR(_,{closures,functions,values,raws,...}),n) =
   if n <= 0 then [v]
   else (let fun g((x,cr),z) = SL.merge(fetchFree(x,cr,n-1),z)
-         in foldr g (SL.uniq (v::values@(map #1 functions))) closures
+         in foldr g (SL.uniq (v::values@raws@(map #1 functions))) closures
         end)
 
 (* filter out all closures in the current env that are safe to reuse *)
@@ -565,7 +595,8 @@ fun fetchClosures(env as Env(_,closureL,_,_),lives,fkind) =
 
       fun reusable2 (_,CR(_,{kind,...})) = sharable(kind,fkind)
 
-      fun fblock (_,CR(_,{kind=(RK_RAW64BLOCK|RK_FCONT),...})) = true
+      fun fblock (_,CR(_, {functions=[], values=[], closures=[],
+                            raws=_::_, ...})) = true
         | fblock _ = false
 
       val level = 4 (* should be made adjustable in the future *)
@@ -595,7 +626,7 @@ fun recoverFrames(vl,Env(valueL,closureL,dispL,whatMap)) =
   end
 
 (* save the continuation closure "v" and its descendants *)
-fun saveFrames(v,CR(_,{free,kind=(RK_CONT|RK_FCONT),...}),env) =
+fun saveFrames(v,CR(_,{free,kind=(CONT|KNOWN_CONT),...}),env) =
          recoverFrames(free,env)
   | saveFrames(_,_,env) = env
 
@@ -632,6 +663,14 @@ fun fetchCSregs(c,m,n,env) =
 fun fetchCSvars(c,m,n,env) =
  let val (gpregs,fpregs) = fetchCSregs(c,m,n,env)
   in (uniqvar gpregs,uniqvar fpregs)
+ end
+
+(* check if a slot is already in csregs *)
+fun inCSregs(csg,c) =
+ let fun exists (SOME v :: r) = (v = c) orelse exists r
+       | exists (NONE :: r) = exists r
+       | exists [] = false
+  in exists csg
  end
 
 (* fill the empty csgpregs with the closure *)
@@ -675,7 +714,7 @@ fun varsCSregs(gpbase,fpbase,env) =
 fun freevCSregs(gpbase,env) =
  let fun h(NONE,l) = l
        | h(SOME v,l) = case whatIs(env,v)
-          of (Closure (CR(_,{free,kind=(RK_CONT|RK_FCONT),...}))) =>
+          of (Closure (CR(_,{free,kind=(CONT|KNOWN_CONT),...}))) =>
                  (SL.merge(free,l))
            | _ => l
   in foldr h [] gpbase
@@ -723,19 +762,21 @@ fun fillbase(base,newv) =
  ****************************************************************************)
 
 (** simulating the OFFSET operation by reconstructing the closures *)
-fun offset ((z, CR(n,{functions,values,closures,...})), i, u, x, env) =
+fun offset ((z, CR(n,{functions,values,closures,raws,...})), i, u, x, env) =
   let (* invariants: length functions > 1 *)
       val (_,l) = List.nth(functions, n+i)
       val _ = case u of VAR z' => if z = z' then ()
                                   else bug "unexpected case in offset 1"
                       | _ => bug "unexpected case in offset 2"
       val lab = (LABEL l, OFFp0)
-      val vl =
-        case (closures, values)
-         of (([(v,_)], []) | ([], [v])) => [lab, (VAR v, OFFp0)]
-          | ([], []) => [lab]
+      val (rk, vl) =
+        case (closures, values, raws)
+         of ([(v,_)], [], []) => (RK_ESCAPE, [lab, (VAR v, OFFp0)])
+          | ([], [v], []) => (RK_ESCAPE, [lab, (VAR v, OFFp0)])
+          | ([], [], [v]) => (rckind(ESCAPE,[LABEL l],[VAR v]), [lab, (VAR v, OFFp0)])
+          | ([], [], []) => (RK_ESCAPE, [lab])
           | _ => bug "unexpected case in offset 3"
-      val (hdr, env) = recordEl(RK_ESCAPE, vl, x, env)
+      val (hdr, env) = recordEl(rk, vl, x, env)
    in (hdr, env)
   end
 
@@ -898,8 +939,8 @@ fun mkClosure(cname,contents,cr,rkind,fkind,env) =
 fun closureUbGen(cn, free, rk, fk, env) =
   let val nfree = map (fn (v, _, _) => v) free
       val ul = map VAR nfree
-      val cr = CR(0,{functions=[],closures=[],values=nfree,
-                     core=[],free=SL.enter(cn,nfree),kind=rk,stamp=cn})
+      val cr = CR(0,{functions=[],closures=[],values=[],raws=nfree,
+                     core=[],free=SL.enter(cn,nfree),kind=fk,stamp=cn})
    in (mkClosure(cn, ul, cr, rk, fk, env), cr)
   end
 
@@ -929,9 +970,9 @@ fun closureUnboxed(cn,int32free,otherfree,fk,env) =
               val nfs = [cn1, cn2]
               val ncs = [(cn1,cr1), (cn2,cr2)]
               val ul = map VAR nfs
-              val cr = CR(0, {functions=[],closures=ncs,values=[],
+              val cr = CR(0, {functions=[],closures=ncs,values=[],raws=[],
                               core=[],free=SL.enter(cn,nfs@nfree),
-                              kind=rk,stamp=cn})
+                              kind=fk,stamp=cn})
               val (nh, env, nfs) = mkClosure(cn, ul, cr, rk, fk, env)
            in (nh1 o nh2 o nh, env, nfs)
           end))
@@ -974,47 +1015,72 @@ fun partFrame free = (free, [])
 
 (* partition the free variables into closures and non-closures *)
 fun partKind(cfree,env) =
-  let fun g(v,(vls,cls,fv,cv)) =
+  let fun add(v,(vls,cls,fv,cv,rvls)) =
         let val obj = whatIs(env,v)
          in case obj
-             of Value t => (v::vls,cls,SL.enter(v,fv),
-                            if (smallObj t) then cv else SL.enter(v,cv))
+             of Value t =>
+                  let val fv = SL.enter(v,fv)
+                      val cv = if smallObj t then cv else SL.enter (v,cv)
+                      val (vls,rvls) =
+                        if isRawCty t
+                          then (vls, SL.enter (v,rvls))
+                          else (v::vls, rvls)
+                   in (vls,cls,fv,cv,rvls)
+                  end
               | Closure (cr as CR (_,{free,core,...})) =>
-                  (vls,(v,cr)::cls,SL.merge(free,fv),SL.merge(core,cv))
+                  (vls,(v,cr)::cls,SL.merge(free,fv),SL.merge(core,cv),rvls)
               | _ => bug "unexpected obj in kind in cps/closure.sml"
         end
-   in foldr g (nil,nil,nil,nil) cfree
+   in foldr add (nil,nil,nil,nil,nil) cfree
   end
 
+(* When mixed closures are enabled and the closure contains raw values, the
+ * closure decision sets rawInfo to SOME(c,raws) without emitting a header.
+ * Here, if a closure contains c, we expand it to raws. *)
+fun flattenRaw(cfree,rawInfo as NONE) = cfree
+  | flattenRaw(cfree,SOME(c,raws: (lvar*int*int) list)) =
+      let (*<DEBUG*)
+          val _ = if not (!CGoptions.mixedClosures) then bug "no mixed closures"
+                  else ()
+          (*>DEBUG*)
+          fun g(v,z) = if v=c then map #1 raws @ z else v :: z
+       in foldr g nil cfree
+      end
+
+fun partKindFlatten(free,env,rawInfo) = partKind(flattenRaw(free,rawInfo),env)
+
 (* closure strategy : flat *)
-fun flat(env,cfree,rk,fk) =
-  let val (topfv,clist) = case rk
-        of (RK_CONT | RK_FCONT) => partFrame(cfree)
+fun flat(env,cfree,fk,rawInfo) =
+  let val (topfv,clist) = case fk
+        of (CONT | KNOWN_CONT) => partFrame(cfree)
          | _ => (cfree,[])
 
       fun g((cn,free),(env,hdr,nf)) =
-        let val (vls,cls,fvs,cvs) = partKind(free,env)
-            val cr = CR(0,{functions=[],values=vls,closures=cls,
-                           kind=rk,stamp=cn,core=cvs,free=SL.enter(cn,fvs)})
+        let val (vls,cls,fvs,cvs,rvls) = partKindFlatten(free,env,rawInfo)
             val ul = (map VAR vls) @ (map (VAR o #1) cls)
-            val (nh,env,nf2) = mkClosure(cn,ul,cr,rk,fk,env)
+            val rl = map VAR rvls
+            val rk = rckind(fk,ul,rl)
+            val cr = CR(0,{functions=[],values=vls,closures=cls,raws=rvls,
+                           kind=fk,stamp=cn,core=cvs,free=SL.enter(cn,fvs)})
+            val (nh,env,nf2) = mkClosure(cn,ul@rl,cr,rk,fk,env)
          in (env,hdr o nh,nf2@nf)
         end
       val (env,hdr,frames) = foldr g (env,fn ce => ce,[]) clist
-      val (values,closures,fvars,cvars) = partKind(topfv,env)
+      val (values,closures,fvars,cvars,rvalues) =
+        partKindFlatten(topfv,env,rawInfo)
 
-   in (closures,values,hdr,env,fvars,cvars,frames)
+   in (closures,values,rvalues,hdr,env,fvars,cvars,frames)
   end
 
 (* closure strategy : linked *)
-fun link(env,cfree,rk,fk) =
+fun link(env,cfree,fk,rawInfo) =
   case getImmedClosure(env)
-   of NONE => flat(env,cfree,rk,fk)
+   of NONE => flat(env,cfree,fk,rawInfo)
     | SOME (z,CR(_,{free,...})) =>
        let val notIn = sublist (not o (SL.member free)) cfree
         in if (length(notIn) = length(cfree))
-           then flat(env,cfree,rk,fk)
-           else flat(env,SL.enter(z,cfree),rk,fk)
+           then flat(env,cfree,fk,rawInfo)
+           else flat(env,SL.enter(z,cfree),fk,rawInfo)
        end
 
 (* partition a set of free variables into layered groups based on their lud *)
@@ -1052,21 +1118,25 @@ fun partLayer(free,ccl) =
   end (* function partLayer *)
 
 (* closure strategy : layered *)
-fun layer(env,cfree,rk,fk,ccl) =
+fun layer(env,cfree,fk,ccl,rawInfo) =
   let val (topfv,clist) = partLayer(cfree,ccl)
 
       fun g((cn,vfree),(bh,env,nf)) =
-        let val (cls,vls,nh1,env,fvs,cvs,nf1) = flat(env,vfree,rk,fk)
-            val cr = CR(0,{functions=[],values=vls,closures=cls,
-                           kind=rk,stamp=cn,core=cvs,free=SL.enter(cn,fvs)})
+        let val (cls,vls,rls,nh1,env,fvs,cvs,nf1) =
+              flat(env,vfree,fk,rawInfo)
             val ul = (map VAR vls) @ (map (VAR o #1) cls)
-            val (nh2,env,nf2) = mkClosure(cn,ul,cr,rk,fk,env)
+            val rl = map VAR rls
+            val rk = rckind(fk,ul,rl)
+            val cr = CR(0,{functions=[],values=vls,closures=cls,raws=rls,
+                           kind=fk,stamp=cn,core=cvs,free=SL.enter(cn,fvs)})
+            val (nh2,env,nf2) = mkClosure(cn,ul@rl,cr,rk,fk,env)
          in (bh o nh1 o nh2, env, nf2@nf1@nf)
         end
       val (hdr,env,frames) = foldr g (fn ce => ce,env,[]) clist
-      val (cls,vls,nh,env,fvs,cvs,nfr) = flat(env,topfv,rk,fk)
+      val (cls,vls,rls,nh,env,fvs,cvs,nfr) =
+            flat(env,topfv,fk,rawInfo)
 
-   in (cls,vls,hdr o nh,env,fvs,cvs,nfr@frames)
+   in (cls,vls,rls,hdr o nh,env,fvs,cvs,nfr@frames)
   end (* function layer *)
 
 (* build a general closure, CGoptions.closureStrategy matters:
@@ -1074,40 +1144,43 @@ fun layer(env,cfree,rk,fk,ccl) =
  *	1 = flat without aliasing
  *	2 = flat with aliasing
  *	3 = linked without aliasing
- *	4 = flat with aliasing
+ *	4 = linked with aliasing
  *)
-fun closureBoxed(cn, fns, free, fk, ccl, env) =
-  let val rk = boxedKind(fk)
-      val (cls, vls, hdr, env, fvs, cvs, frames) =
+fun closureBoxed(cn, fns, free, fk, ccl, env, rawInfo) =
+  let val (cls, vls, rls, hdr, env, fvs, cvs, frames) =
         case !CGoptions.closureStrategy
-         of (4|3) => link(env, map #1 free, rk, fk)
-          | (2|1) => flat(env, map #1 free, rk, fk)
-          | _ => layer(env, free, rk, fk, ccl)
+         of (4|3) => link(env, map #1 free, fk, rawInfo)
+          | (2|1) => flat(env, map #1 free, fk, rawInfo)
+          | _ => layer(env, free, fk, ccl, rawInfo)
 
-      val (cls, vls, hdr, env, fvs, cvs, frames, labels) =
+      val (cls, vls, rls, hdr, env, fvs, cvs, frames, labels) =
         if mutRec fns then (* invariants length fns > 1 *)
           let val nlabs = [LABEL (#2 (hd fns))]  (** no sharing **)
-           in (case (cls, vls)
-                of (([],[_]) | ([_],[]) | ([],[])) =>
-                     (cls, vls, hdr, env, fvs, cvs, frames, nlabs)
+           in (case (cls, vls, rls)
+                of (([_],[],[]) | ([],[_],[]) | ([],[],[_]) | ([],[],[])) =>
+                     (cls, vls, rls, hdr, env, fvs, cvs, frames, nlabs)
                  | _ =>
                      let val nv = closureLvar()
                          val ul = (map VAR vls) @ (map (VAR o #1) cls)
+                         val rl = map VAR rls
+                         val rk = rckind(fk,ul,rl)
                          val nfvs = SL.enter(nv, fvs)
-                         val cr = CR(0,{functions=[],values=vls,closures=cls,
-                                        kind=rk,stamp=nv,core=cvs,free=nfvs})
-                         val (nh, nenv, nf) = mkClosure(nv,ul,cr,rk,fk,env)
-                      in ([(nv,cr)], [], hdr o nh, nenv, nfvs,
-                          cvs, nf@frames, nlabs)
+                         val cr = CR(0,{functions=[],values=vls,closures=cls, raws=rls,
+                                        kind=fk,stamp=nv,core=cvs,free=nfvs})
+                         val (nh, nenv, nf) =
+                           mkClosure(nv,ul@rl,cr,rk,fk,env)
+                      in ([(nv,cr)], [], [], hdr o nh, nenv, nfvs, cvs, nf@frames, nlabs)
                      end)
           end
-        else (cls, vls, hdr, env, fvs, cvs, frames, map (LABEL o #2) fns)
+        else (cls, vls, rls, hdr, env, fvs, cvs, frames, map (LABEL o #2) fns)
 
       val nfvs = foldr SL.enter (SL.enter(cn,fvs)) (map #1 fns)
-      val cr = CR(0,{functions=fns,values=vls,closures=cls,
-                     kind=rk,stamp=cn,core=cvs,free=nfvs})
       val ul = labels @ (map VAR vls) @ (map (VAR o #1) cls)
-      val (nh, nenv, nf) = mkClosure(cn,ul,cr,rk,fk,env)
+      val rl = (map VAR rls)
+      val rk = rckind(fk,ul,rl)
+      val cr = CR(0,{functions=fns,values=vls,closures=cls,raws=rls,
+                     kind=fk,stamp=cn,core=cvs,free=nfvs})
+      val (nh, nenv, nf) = mkClosure(cn,ul@rl,cr,rk,fk,env)
    in (hdr o nh, nenv, cr, nf@frames)
   end (* function closureBoxed *)
 
@@ -1224,10 +1297,10 @@ fun closeCPS(fk,f,vl,cl,ce) = let
 
 (* get the current register configuration *)
 val maxgpregs = MachSpec.numRegs
-val maxfpregs = MachSpec.numFloatRegs - 2  (* need 1 or 2 temps *)
+val maxfpregs = MachSpec.numFloatArgRegs
 val numCSgpregs = MachSpec.numCalleeSaves
 val numCSfpregs = MachSpec.numFloatCalleeSaves
-val unboxedfloat = MachSpec.unboxedFloats
+val unboxedfloat = MachSpec.unboxedFloats (* always true *)
 
 (* check the validity of the callee-save configurations *)
 val (numCSgpregs,numCSfpregs) =
@@ -1324,37 +1397,33 @@ val ((fk,f,vl,cl,ce),snum,nfreevars,ekfuns) =
  ***************************************************************************)
 fun makenv(initEnv, bindings, bsn, bcsg, bcsf, bret) = let
 
-(***>
-fun checkfree(v) =
-  let val free = ofreevars v
-      val {fv=nfree,lv=loopv,sz=_} = nfreevars v
-      val nfree = map #1 nfree
-      val _ = if (free <> nfree)
-              then (pr "^^^^ wrong free variable subset ^^^^ \n";
-                    pr "OFree in "; vp v; pr ":"; ilist free;
-                    pr "NFree in "; vp v; pr ":"; ilist nfree;
-                    pr "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n")
-              else ()
-      val _ = case loopv
-               of NONE => ()
-                | SOME sfree =>
-                    (if subset (sfree,nfree) then ()
-                     else (pr "****wrong free variable subset*** \n";
-                           pr "Free in "; vp v; pr ":"; ilist nfree;
-                           pr "SubFree in "; vp v; pr ":";ilist sfree;
-                           pr "*************************** \n"))
-   in ()
-  end
-val _ = app checkfree (map #2 bindings)
-<***)
+(* fun checkfree(v) = *)
+(*   let val free = ofreevars v *)
+(*       val {fv=nfree,lv=loopv,sz=_} = nfreevars v *)
+(*       val nfree = map #1 nfree *)
+(*       val _ = if (free <> nfree) *)
+(*               then (pr "^^^^ wrong free variable subset ^^^^ \n"; *)
+(*                     pr "OFree in "; vp v; pr ":"; ilist free; *)
+(*                     pr "NFree in "; vp v; pr ":"; ilist nfree; *)
+(*                     pr "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ \n") *)
+(*               else () *)
+(*       val _ = case loopv *)
+(*                of NONE => () *)
+(*                 | SOME sfree => *)
+(*                     (if subset (sfree,nfree) then () *)
+(*                      else (pr "****wrong free variable subset*** \n"; *)
+(*                            pr "Free in "; vp v; pr ":"; ilist nfree; *)
+(*                            pr "SubFree in "; vp v; pr ":";ilist sfree; *)
+(*                            pr "*************************** \n")) *)
+(*    in () *)
+(*   end *)
+(* val _ = app checkfree (map #2 bindings) *)
 
-(***>
 val _ = COMMENT(fn() => (pr "BEGINNING MAKENV.\nFunctions: ";
            ilist (map #2 bindings); pr "Initial environment:\n";
            printEnv initEnv; pr "\n"))
 val _ = COMMENT(fn() => (pr "BASE CALLEE SAVE REGISTERS: ";
            vallist bcsg; vallist bcsf; pr "\n"))
-<***)
 
 (* partition the function bindings into different fun_kinds *)
 val (escapeB,knownB,recB,calleeB,kcontB) = partBindings(bindings)
@@ -1387,10 +1456,8 @@ val (fixKind,nret) =
  * Initial processing of known functions                                    *
  ****************************************************************************)
 
-(***>
 val _ = COMMENT(fn() => (pr "Known functions:"; ilist (map #2 knownB);
                          pr "                "; iKlist (map #1 knownB)))
-<***)
 
 (*** Get the call graph of all known functions in this FIX. ***)
 val knownB =
@@ -1447,10 +1514,8 @@ val (knownB,recFlag) = foldr
         val (fpfree,gpfree) = partition isFlt3 free
         val (gpfree,fpfree) = freeAnalysis(gpfree,fpfree,initEnv)
 
-(***>
 val _ = COMMENT(fn() => (pr "*** Current Known Free Variables: ";
            iVlist gpfree; pr "\n"))
-<***)
 
         (* some free variables must stay in registers for KNOWN_TAIL *)
         val (rcsg,rcsf) = case defCont
@@ -1464,10 +1529,8 @@ val _ = COMMENT(fn() => (pr "*** Current Known Free Variables: ";
         fun deep1(_,_,n) = (n > sn)
         fun deep2(_,m,n) = (m > sn)
 
-(***>
 val _ = COMMENT(fn() => (pr "*** Current Stage number and fun kind: ";
-           ilist [sn]; ifkind kind; pr "\n"))
-<***)
+           pr (im sn); ifkind kind; pr "\n"))
 
         (* for recursive functions, always spill deeper level free variables *)
         val ((gpspill,gpfree),(fpspill,fpfree),nflag) = case lpv
@@ -1486,10 +1549,8 @@ val _ = COMMENT(fn() => (pr "*** Current Stage number and fun kind: ";
            | NONE => if ekfuns v then ((gpfree,[]),(fpfree,[]),flag)
                      else (partition deep2 gpfree,partition deep2 fpfree,flag)
 
-(***>
 val _ = COMMENT(fn() => (pr "*** Current Spilled Known Free Variables: ";
            iVlist gpspill; pr "\n"))
-<***)
 
         (* find out the register limit for this known functions *)
         val (gpnmax,fpnmax) = (maxgpregs,maxfpregs) (* reglimit v *)
@@ -1535,9 +1596,7 @@ val (knownB,gpcollected,fpcollected) =
  * Initial processing of escaping functions                                 *
  ****************************************************************************)
 
-(***>
 val _ = COMMENT(fn() => (pr "Escaping functions:"; ilist (map #2 escapeB)))
-<***)
 
 (* get the set of free variables for escaping functions *)
 val (escapeB,escapeFree) =
@@ -1571,10 +1630,8 @@ val fpFree = mergeV(fpfree,fpcollected)
  * Initial processing of callee-save continuation functions                *
  ***************************************************************************)
 
-(***>
 val _ = COMMENT(fn() => (pr "CS continuations:"; ilist (map #2 calleeB);
                          pr "                 "; iKlist (map #1 calleeB)))
-<***)
 
 (* get the set of free variables for continuation functions *)
 val (calleeB,calleeFree,gpn,fpn,pF) =
@@ -1749,11 +1806,6 @@ val allgpFree = mergeV(gpspill,gpFree)
 val unboxedFree = utgpFree
 
 (* filter out all unboxed-values *)
-(* INT32: here is the place to filter out all 32-bit integers,
-    put them into unboxedFree, then you have to find a way to put both
-    32-bit integers and unboxed float numbers in the same record.
-   Currently, I use RK_RAW64BLOCK to denote this kind of record_kind,
-   you might want to put all floats ahead of all 32-bit ints. *)
 (* val (allgpFree,unboxedFree) = partition isBoxed3 allgpFree *)
 
 val (allgpFree,fpcInfo) =
@@ -1767,30 +1819,43 @@ val (allgpFree,fpcInfo) =
           end)
     | (SOME(c,a),r) => (allgpFree,SOME(c,mergeV(a,r)))
 
-(* actually building the closure for unboxed values *)
-val (fphdr,env,nframes) =
-      case fpcInfo
-        of NONE => (fn ce => ce,initEnv,[])
-         | SOME(c,a) => let val (int32a,a) = partition isUntaggedInt a
-                         in closureUnboxed(c,int32a,a,fixKind,initEnv)
-                        end
-
 (* sharing with the enclosing closures if possible *)
 val (allgpFree,ccl) =  (* for recursive function, be more conservative *)
   if recFlag then (thinAll(allgpFree,cclist,bsn),cclist)
   else (thinGpFree(allgpFree,gpclist),[])
 
+(* Build a separate raw record for untagged integers and floating-point values,
+ * unless mixedClosures are enabled, in which case we do not allocate a header
+ * and set rawInfo to SOME(c,a).  flattenRaw will later expand it.  We don't
+ * expand it here because it interferes with sharing. *)
+val (fphdr,env,nframes,closureName,rawInfo) =
+  case fpcInfo
+    of NONE => (fn ce => ce,initEnv,[],NONE,NONE)
+     | SOME(c,[]) => bug "empty closure"
+     | SOME(c,a) =>
+         if !CGoptions.mixedClosures
+              andalso not (inCSregs(gpbase,c))
+              andalso member3 allgpFree c
+           then (fn ce => ce,initEnv,[],SOME c,SOME(c,a))
+           else
+             let val (untagged,a) = partition isUntaggedInt a
+                 val (hdr,env,frames) =
+                       closureUnboxed(c,untagged,a,fixKind,initEnv)
+              in (hdr,env,frames,NONE,NONE)
+             end
+
 (* actually building the closure for all GP (or boxed) values *)
 val (closureInfo,closureName,env,gphdr,nframes) =
- case (escapeB,allgpFree)
-  of ([],[]) => (NONE,NONE,env,fphdr,nframes)
-   | ([],[(v,_,_)]) => (NONE,SOME v,env,fphdr,nframes)
+ case (closureName,escapeB,allgpFree)
+  of (NONE,[],[]) => (NONE,NONE,env,fphdr,nframes)
+   | (NONE,[],[(v,_,_)]) => (NONE,SOME v,env,fphdr,nframes)
    | _ =>
-      (let val fns = map (fn {v,l,...} => (v,l)) escapeB
-           val cn = closureLvar()
-           val (hdr,env,cr,nf) = closureBoxed(cn,fns,allgpFree,fixKind,ccl,env)
-        in (SOME cr,SOME cn,env,fphdr o hdr,nf@nframes)
-       end)
+      let val fns = map (fn {v,l,...} => (v,l)) escapeB
+          val cn = case closureName of SOME c => c | NONE => closureLvar()
+          val (hdr,env,cr,nf) =
+                closureBoxed(cn,fns,allgpFree,fixKind,ccl,env,rawInfo)
+       in (SOME cr,SOME cn,env,fphdr o hdr,nf@nframes)
+      end
 
 (***************************************************************************
  * Final construction of the environment for each known function           *
@@ -1822,10 +1887,8 @@ val knownFrags : frags =
             val nargs = nargs @ ngpfree @ fpfree
             val ncl = ncl @ (map get_cty ngpfree) @ (map get_cty fpfree)
 
-(***>
             val _ = COMMENT(fn () => (pr "\nEnvironment in known ";
                             vp v; pr ":\n"; printEnv env))
-<***)
          in case nret
              of NONE => ((KNOWN,l,nargs,ncl,body,env,sn,bcsg,bcsf,bret)::z)
               | SOME _ => ((KNOWN,l,nargs,ncl,body,env,sn,ncsg,ncsf,nret)::z)
@@ -1851,10 +1914,8 @@ val escapeFrags : frags =
                   val nargs = mkLvar()::myCname::nargs
                   val ncl = U.BOGt::U.BOGt::ncl
                   val sn = snum v
-(***>
                   val _ = COMMENT(fn () => (pr "\nEnvironment in escaping ";
                               vp v; pr ":\n";printEnv env))
-<***)
                in inc CGoptions.escapeGen;  (* nret must not be NONE *)
                   case nret
                    of NONE => bug "no cont in escapefun in closure.sml"
@@ -1874,7 +1935,10 @@ val (nenv, calleeFrags : frags) =
     | _ =>
        (let val gpbase = case closureName
                           of NONE => gpbase
-                           | SOME _ => fillCSregs(gpbase,closureName)
+                           | SOME c =>
+                               if inCSregs(gpbase,c)
+                                 then gpbase
+                                 else fillCSregs(gpbase,closureName)
 
             val ncsg = map (fn (SOME v) => VAR v | NONE => tagInt 0) gpbase
             val ncsf = map (fn (SOME v) => VAR v | NONE => VOID) fpbase
@@ -1904,11 +1968,9 @@ val (nenv, calleeFrags : frags) =
                       | _ => bug "calleeFrags in closure.sml 748"
 
                   val env = faugValue(args,cl,env)
-(***>
                   val _ = COMMENT(fn () =>
                             (pr "\nEnvironment in callee-save continuation ";
                              vp v; pr ":\n"; printEnv env))
-<***)
                in inc CGoptions.calleeGen;
                   (nk,l,nargs,ncl,body,env,sn,csg,csf,bret)::z
               end
@@ -1917,10 +1979,8 @@ val (nenv, calleeFrags : frags) =
 
 val frags = escapeFrags@knownFrags@calleeFrags
 
-(***>
 val _ = COMMENT(fn () => (pr "\nEnvironment after FIX:\n";
                           printEnv nenv; pr "MAKENV DONE.\n\n"));
-<***)
 
 in  (* body of makenv *)
     (gphdr,frags,nenv,nret)
@@ -1980,7 +2040,7 @@ and close(ce,env,sn,csg,csf,ret) =
        let val (env,header) = fixAccess([v],env)
         in header(SWITCH(v,c,map (fn c => close(c,env,sn,csg,csf,ret)) l))
        end
-    | RECORD(k as RK_RAW64BLOCK,l,v,c) =>
+    | RECORD(k as RK_RAWBLOCK,l,v,c) =>
        let val (env,header) = fixAccess(map #1 l,env)
            val env = augValue(v,U.BOGt,env)
         in header(RECORD(k,l,v,close(c,env,sn,csg,csf,ret)))
@@ -2050,5 +2110,4 @@ in  (* body of closeCPS *)
 end
 end (* local of open *)
 end (* functor Closure *)
-
 

@@ -5,7 +5,8 @@
  *
  * CFG IR for SML/NJ code generation.
  *
- * Note: this file must match the generated file asdl/cfg.sml.
+ * This file is a modification of the `CodeGen/cfg/cfg.sml` file, where we have
+ * replaced datatype renamings with datatype declarations.
  *)
 
 structure CFG_Prim =
@@ -57,6 +58,7 @@ structure CFG_Prim =
       | FMADD
       | FNEG | FABS | FCOPYSIGN
       | FSQRT
+      | FCEIL | FFLOOR | FROUND | FTRUNC
 
     datatype pure
       = PURE_ARITH of {oper : pureop, sz : int}
@@ -86,12 +88,17 @@ structure CFG_Prim =
       | SET_VAR
 
   (* fcmpop conforms to the IEEE std 754 predicates. *)
-    datatype fcmpop = datatype CPS.P.fcmpop
+    datatype fcmpop
+      = F_EQ (* = *)  | F_ULG (* ?<> *) | F_UN (* ? *)   | F_LEG (* <=> *)
+      | F_GT (* > *)  | F_GE  (* >= *)  | F_UGT (* ?> *) | F_UGE (* ?>= *)
+      | F_LT (* < *)  | F_LE  (* <= *)  | F_ULT (* ?< *) | F_ULE (* ?<= *)
+      | F_LG (* <> *) | F_UE  (* ?= *)
 
   (* comparison operators
    * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
    *)
-    datatype cmpop = datatype CPS.P.cmpop
+    datatype cmpop
+      = GT | GTE | LT | LTE | EQL | NEQ
 
   (* These are two-way branches dependent on pure inputs *)
     datatype branch
@@ -144,7 +151,8 @@ structure CFG =
 	    reentrant : bool,		(* true for reentrant functions *)
 	    linkage : string,		(*  *)
 	    proto : CTypes.c_proto,	(* function prototype *)
-	    args : exp list,		(* arguments; first arg is function pointer *)
+            cfn : exp,                  (* the function pointer *)
+	    args : exp list,		(* arguments *)
 	    results : param list,	(* result bindings *)
 	    live : param list,		(* variables that are live across the call;
 					 * this list is [] for non-reentrant functions.

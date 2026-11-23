@@ -1,6 +1,6 @@
 (* target32-core.sml
  *
- * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2018 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the implementation of the Core structure for 32-bit targets.

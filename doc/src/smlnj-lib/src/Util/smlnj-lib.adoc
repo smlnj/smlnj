@@ -204,6 +204,11 @@ xref:str-Rand.adoc[`[.kw]#structure# Rand`]::
 
 // 50
 
+xref:str-Rand48.adoc[`[.kw]#structure# Rand48`]::
+  **SML** implementation of the **C Standard Library**
+  https://pubs.opengroup.org/onlinepubs/007908799/xsh/drand48.html[`rand48`]
+  functions.
+
 xref:str-Random.adoc[`[.kw]#structure# Random`]::
   Pseudo-random-number generation using the
   http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/emt.html[_Mersenne Twister_
@@ -235,19 +240,27 @@ xref:str-TimeLimit.adoc[`[.kw]#structure# TimeLimit`]::
   Provides a mechanism for limiting the execution
   time of a computation.
 
+xref:str-Timestamp.adoc[`[.kw]#structure# Timestamp`]::
+  Provides a mechanism for generating timestamps that respect the
+  https://reproducible-builds.org/specs/source-date-epoch[`SOURCE_DATE_EPOCH`
+  environment variable].
+
+// 60
+
+xref:str-Trilean.adoc[`[.kw]#structure# Trilean`]::
+  Provides an implementation of three-valued logic.
+
 xref:str-UnivariateStats.adoc[`[.kw]#structure# UnivariateStats`]::
   **To be written**
 
 xref:str-URef.adoc[`[.kw]#structure# URef`]::
   Provides mutable references with __Union-Find__ semantics.
 
-// 60
-
-== Usage
-
 xref:str-UTF8.adoc[`[.kw]#structure# UTF8`]::
   Provides support for working with https://en.wikipedia.org/wiki/UTF-8[*UTF-8*]
   encoded strings.
+
+== Usage
 
 By default, the *Util Library* is autoloaded by *CM*, which means that it is
 immediately available to interactive use in the *SML/NJ* REPL.
@@ -369,9 +382,12 @@ include::str-Queue.adoc[]
 
 include::str-Rand.adoc[]
 
-include::str-Random.adoc[]
+include::str-Rand48.adoc[]
 
-// 50
+// 50 -- note that `str-Native.adoc` is referenced twice by the HTML,
+// but only once by the PDF
+
+include::str-Random.adoc[]
 
 include::str-RealOrderStats.adoc[]
 
@@ -387,14 +403,17 @@ include::fun-SplaySetFn.adoc[]
 
 include::str-TimeLimit.adoc[]
 
+include::str-Timestamp.adoc[]
+
+include::str-Trilean.adoc[]
+
+// 60
+
 include::str-UnivariateStats.adoc[]
 
 include::str-URef.adoc[]
 
 include::str-UTF8.adoc[]
-
-// 60 -- note that `str-Native.adoc` is referenced twice by the HTML,
-// but only once by the PDF
 
 // Return to normal title levels.
 :leveloffset: 0

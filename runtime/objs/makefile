@@ -1,6 +1,7 @@
 # makefile
 #
-# COPYRIGHT (c) 2024 The SML/NJ Fellowship
+# COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
+# All rights reserved.
 #
 # this is the main makefile for the SML/NJ runtime system on Unix systems
 #
@@ -13,12 +14,19 @@ ARFLAGS =	rcv
 RANLIB =	ranlib
 
 #
+# these variables are set by the build.sh script, but we define them
+# here for when the makefile is used directly
+#
+BINDIR ?=	../../bin
+LIBDIR ?=	../../lib
+
+#
 # LLVM configuration
 #
 LLVM_DIR =	../llvm
-BIN_DIR =	../bin
-LLVM_CONFIG =	$(BIN_DIR)/llvm-config
+LLVM_CONFIG =	$(BINDIR)/llvm-config
 
+#
 # the LLVM target architectures
 #
 TARGETS_BUILT = $(shell $(LLVM_CONFIG) --targets-built)
@@ -28,7 +36,7 @@ ifeq ($(findstring X86,$(TARGETS_BUILT)),X86)
 endif
 
 LLVM_LD_FLAGS =		$(shell $(LLVM_CONFIG) --ldflags)
-LLVM_DEPS =		../lib/libCFGCodeGen.a \
+LLVM_DEPS =		$(LIBDIR)/libCFGCodeGen.a \
 			$(shell $(LLVM_CONFIG) --libfiles $(TARGETS_BUILT) passes runtimedyld)
 LLVM_SYSTEM_LIBS =	$(shell $(LLVM_CONFIG) --system-libs)
 LLVM_LIBS =		-lCFGCodeGen \

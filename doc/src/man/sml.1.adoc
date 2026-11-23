@@ -46,7 +46,7 @@ OPTIONS
   echo the heap suffix for the system to standard output and then exit
 
 *@SMLalloc*='SIZE'::
-  Specify the prefered size of the allocation area
+  Specify the preferred size of the allocation area
 
 *@SMLrun*='RUNTIME'::
   specifies runtime system
@@ -89,16 +89,16 @@ OPTIONS
 
 *-s*'level'::
   print a limited list of settings.
-  The number of levels of the control heirarchy is controled by 'level', with 0 printing
-  just the root of the heirarchy.
+  The number of levels of the control hierarchy is controlled by 'level', with 0 printing
+  just the root of the hierarchy.
 
 *-E*::
   list all the controls along with their corresponding environment variables
 
 *-e*'level'::
   print a limited list of environment variables;
-  The number of levels of the control heirarchy is controled by 'level', with 0 printing
-  just the root of the heirarchy.
+  The number of levels of the control hierarchy is controlled by 'level', with 0 printing
+  just the root of the hierarchy.
 
 *-m*::
   switch to CM.make

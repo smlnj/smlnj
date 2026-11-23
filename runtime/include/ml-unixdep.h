@@ -1,6 +1,6 @@
 /*! \file ml-unixdep.h
  *
- * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2019 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This file contains O.S. dependent paths, definitions and feature flags for
@@ -193,6 +193,27 @@ extern char	*sys_errlist[];
 #  if _POSIX_C_SOURCE >= 199309L
 #    define HAS_NANOSLEEP
 #  endif
+
+#include <features.h>
+
+#elif (defined(ARCH_ARM64) && defined(OPSYS_LINUX))
+#  define OS_NAME	"Linux"
+#  define HAS_POSIX_LIBRARIES
+#  define HAS_POSIX_SIGS
+#  define HAS_GETRUSAGE
+#  define HAS_SETITIMER
+#  define HAS_CLOCK_GETRES
+#  define HAS_ANON_MMAP
+#  define HAS_PARTIAL_MUNMAP
+#  define HAS_SELECT
+#  define HAS_UCONTEXT
+#  define HAS_STRERROR
+#  define HAS_MKSTEMP
+#  ifndef __USE_GNU
+#    define __USE_GNU
+#  endif
+#  define STAT_HAS_TIMESPEC
+#  define HAS_NANOSLEEP
 
 #include <features.h>
 

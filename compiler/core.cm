@@ -34,7 +34,7 @@ Group
 	(* stuff that lived (or should have) in Frontend (aka GenericVC) *)
 	structure Control
 	structure ArithOps
-	structure Primop
+	structure PrimOps
 	structure PrimopBind
 	structure PrimopBindings
 	structure PrimEnv
@@ -140,7 +140,7 @@ TopLevel/environ/environ.sml
 
 TopLevel/interact/envref.sml
 TopLevel/interact/evalloop.sig
-TopLevel/interact/evalloop.sml
+TopLevel/interact/eval-loop-fn.sml
 TopLevel/interact/interact.sig
 TopLevel/interact/interact.sml
 
@@ -152,7 +152,7 @@ TopLevel/main/control.sml
 TopLevel/main/cconfig.sig
 TopLevel/main/code-generator.sig
 TopLevel/main/compile.sig
-TopLevel/main/compile.sml
+TopLevel/main/compile-fn.sml
 
 TopLevel/print/ppdec.sml
 TopLevel/print/ppobj.sml
@@ -181,6 +181,8 @@ FLINT/flint/printflint.sml
 FLINT/flint/ppflint.sig
 FLINT/flint/ppflint.sml
 FLINT/flint/tvarcvt.sml
+FLINT/prim/prim.sig
+FLINT/prim/prim.sml
 FLINT/kernel/lty.sig
 FLINT/kernel/lty.sml
 FLINT/kernel/ltykernel.sig
@@ -241,7 +243,10 @@ CPS/clos/freeclose.sml
 CPS/clos/staticprof.sml
 CPS/clos/unrebind.sml
 CPS/convert/convert.sml
-CPS/convert/cpstrans.sml
+CPS/convert/cpstrans-fn.sml
+(*
+CPS/convert/cpstrans.sml (* original version *)
+*)
 CPS/convert/switch.sml
 CPS/cps/cps.sig
 CPS/cps/cps.sml
@@ -268,12 +273,13 @@ CPS/main/cps-comp.sml
 CPS/main/dump-cluster-graph.sml
 CPS/main/feedback.sml
 CPS/main/limit.sml
-CPS/main/literals.sml
-CPS/main/new-literals.sml
+CPS/main/literal-bytecode.sml
+CPS/main/literals-v3.sml
 CPS/main/normalize-cluster.sml
 CPS/main/spill-fn.sml
 
 CodeGen/cfg/cfg.sml
+CodeGen/cfg/normalize-cfg.sml
 CodeGen/cfg/ppcfg.sml
 CodeGen/cfg/cfg-util.sml
 CodeGen/cfg-pickle/cfg-pickle.sig

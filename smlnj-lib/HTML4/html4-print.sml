@@ -1,6 +1,6 @@
 (* html4-print.sml
  *
- * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2022 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * To print to an output stream (i.e., TextIO.outstream):
@@ -90,7 +90,9 @@ structure HTML4Print : sig
 	  end
 
     fun prScript (outS, H.SCRIPT(attrs, content)) =  (
-	  prTag (outS, "STYLE", attrs); prCDATA (outS, content); prEndTag (outS, "STYLE"))
+	  prTag (outS, "SCRIPT", attrs);
+          prCDATA (outS, content);
+          prEndTag (outS, "SCRIPT"))
 
     fun prParam (outS, H.PARAM attrs) = prEmptyTag (outS, "PARAM", attrs)
 

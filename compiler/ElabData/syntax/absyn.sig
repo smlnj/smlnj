@@ -1,6 +1,6 @@
 (* absyn.sig
  *
- * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2017 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -57,6 +57,7 @@ signature ABSYN =
       | WHILEexp of { test: exp, expr: exp }
       | LETexp of dec * exp
       | LETVexp of Variable.var * exp * exp
+          (* LETVexp: let-binding vector variable; only created by match compiler *)
       | SEQexp of exp list
       | CONSTRAINTexp of exp * Types.ty
       | MARKexp of exp * region

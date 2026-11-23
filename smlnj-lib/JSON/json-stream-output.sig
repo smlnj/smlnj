@@ -1,6 +1,6 @@
 (* json-stream-output.sig
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
@@ -55,5 +55,8 @@ signature JSON_STREAM_OUTPUT =
 
   (* embed the given value into the output *)
     val value : printer * JSON.value -> unit
+
+  (* return the size of the compact output (i.e., no whitespace) for the value *)
+    val sizeOfValue : JSON.value -> int
 
   end

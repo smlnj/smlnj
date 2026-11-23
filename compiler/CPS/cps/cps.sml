@@ -1,11 +1,35 @@
 (* cps.sml
  *
- * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * COPYRIGHT (c) 2026 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *)
 
 structure CPS : CPS =
   struct
+
+(* TODO: the `record_kind` type mixes the issue of what the purpose of a record is
+ * with the representation decision.  I propose defining three types:
+ *
+ *    datatype record_kind = RK_RECORD | RK_VECTOR | RK_FUN | RK_CONT | RK_KNOWN
+ *
+ *    type record_rep = {ptrLen : int, rawLen : int}
+ *
+ *    datatype pkind = VPT | RPT of record_rep
+ *
+ * Then the mapping from the current record_kind to the new rep would be something like
+ *
+ *    RK_VECTOR         ==>     (RK_VECTOR, {ptrLen = <n>, rawLen = 0})
+ *    RK_RECORD         ==>     (RK_RECORD, {ptrLen = <n>, rawLen = 0})
+ *    RK_ESCAPE         ==>     (RK_FUN, {ptrLen = <n>, rawLen = 0})
+ *    RK_CONT           ==>     (RK_CONT, {ptrLen = <n>, rawLen = 0})
+ *    RK_FCONT          ==>     (RK_CONT, {ptrLen = 0, rawLen = <n>})
+ *    RK_KNOWN          ==>     (RK_KNOWN, {ptrLen = <n>, rawLen = 0})
+ *    RK_MIXED          ==>     (<kind>, {ptrLen = <n>, rawLen = <m>})
+ *    RK_RAWBLOCK       ==>     (RK_RECORD, {ptrLen = 0, rawLen = <n>})
+ *)
+
+    (* mixed-record representation *)
+    type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
       = RK_VECTOR	(* vector *)
@@ -14,34 +38,39 @@ structure CPS : CPS =
       | RK_CONT		(* closure record for continuation *)
       | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
       | RK_KNOWN	(* closure record for known function *)
-      | RK_RAW64BLOCK	(* 64-bit aligned raw data record *)
-      | RK_RAWBLOCK	(* word-aligned raw data record *)
+      | RK_MIXED of record_rep	(* mixed record *)
+      | RK_RAWBLOCK	(* raw data record *)
 
-    datatype pkind = VPT | RPT of int | FPT of int
+    datatype pkind = VPT | RPT of record_rep
 
   (* kinds of integers: size in bits and tagged vs boxed *)
     type intty = {sz : int, tag : bool}
 
     datatype cty
       = NUMt of intty	        (* integers of the given type *)
+      | ENUMt			(* datatype-constructor tag *)
       | PTRt of pkind	        (* pointer *)
       | FUNt		        (* function? *)
       | FLTt of int 	        (* float of given size *)
       | CNTt of cty list	(* continuation *)
 
+    val ptrTy = PTRt VPT
+    fun rPtrTy n = PTRt(RPT{ptrLen = n, rawLen = 0})
+    fun fPtrTy n = PTRt(RPT{ptrLen = 0, rawLen = n})
+
     structure P =
       struct
       (* numkind includes kind and size *)
-	datatype numkind = INT of int | UINT of int | FLOAT of int
+	datatype numkind = datatype NumKind.t
 
       (* integer arithmetic operations that may overflow *)
-	datatype arithop = datatype ArithOps.arithop
+	datatype arithop = datatype ArithOps.t
 
       (* pure arithmetic operations that cannot overflow *)
-	datatype pureop = datatype ArithOps.pureop
+	datatype pureop = datatype PureOps.t
 
       (* generic comparison operations *)
-	datatype cmpop = datatype ArithOps.cmpop
+	datatype cmpop = datatype CompareOps.t
 
       (* fcmpop conforms to the IEEE std 754 predicates. *)
 	datatype fcmpop
@@ -55,6 +84,7 @@ structure CPS : CPS =
 	  = CMP of {oper: cmpop, kind: numkind}
 	  | FCMP of {oper: fcmpop, size: int}
 	  | FSGN of int
+          | IS_POW2 of int
 	  | BOXED | UNBOXED | PEQL | PNEQ
 	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
 	 * the same length as `s` and `s` is not the empty string.
@@ -117,6 +147,7 @@ structure CPS : CPS =
       = VAR of lvar
       | LABEL of lvar
       | NUM of intty IntConst.t
+      | ENUM of int
       | REAL of int RealConst.t
       | STRING of string
       | VOID
@@ -142,7 +173,7 @@ structure CPS : CPS =
     datatype cexp
       = RECORD of record_kind * (value * accesspath) list * lvar * cexp
       | SELECT of int * value * lvar * cty * cexp
-      | OFFSET of int * value * lvar * cexp
+      | OFFSET of int * value * lvar * cexp     (* DEPRECATED *)
       | APP of value * value list
       | FIX of function list * cexp
       | SWITCH of value * lvar * cexp list

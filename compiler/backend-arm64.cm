@@ -1,6 +1,6 @@
 (* backend-arm64.cm
  *
- * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2021 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * This is the Arm64-specific (aka AArch64) part (backend) of the compiler.

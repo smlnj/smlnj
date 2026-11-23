@@ -1,6 +1,6 @@
 (* html4-utils.sml
  *
- * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (http://www.smlnj.org)
+ * COPYRIGHT (c) 2014 The Fellowship of SML/NJ (https://smlnj.org)
  * All rights reserved.
  *
  * Defines a set of utility data types and functions for the HTML 4 parser.

@@ -1,10 +1,13 @@
-(*
- * The CM autoloading mechanism.
+(* autoload.sml
  *
- * (C) 1999 Lucent Technologies, Bell Laboratories
+ * COPYRIGHT (c) 2025 The Fellowship of SML/NJ (https://smlnj.org)
+ * All rights reserved.
+ *
+ * The CM autoloading mechanism.
  *
  * Author: Matthias Blume (blume@kurims.kyoto-u.ac.jp)
  *)
+
 local
     structure GP = GeneralParams
     structure DG = DependencyGraph
@@ -27,10 +30,13 @@ signature AUTOLOAD = sig
     val reset : unit -> unit
 end
 
-functor AutoLoadFn (structure L : LINK
-		    structure BFC : BFC
-		    structure C : COMPILE where type stats = BFC.stats
-		    sharing type C.bfc = L.bfc = BFC.bfc) :> AUTOLOAD = struct
+functor AutoLoadFn (
+
+    structure L : LINK
+    structure BFC : BFC
+    structure C : TRAVERSE
+
+  ) :> AUTOLOAD = struct
 
     structure SE = StaticEnv
 

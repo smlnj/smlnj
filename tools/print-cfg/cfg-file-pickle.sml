@@ -127,7 +127,7 @@ structure CTypesFilePickle : CTYPES_PICKLE
           end
   end
 
-structure CFG_PrimFilePickle : CFG__PRIM_PICKLE
+structure CFG_PrimFilePickle : CFG_PRIM_PICKLE
   where type instream = ASDLFilePickle.instream
   where type outstream = ASDLFilePickle.outstream = struct
     type instream = ASDLFilePickle.instream
@@ -284,6 +284,10 @@ structure CFG_PrimFilePickle : CFG__PRIM_PICKLE
             | 0w26 => CFG_Prim.FABS
             | 0w27 => CFG_Prim.FCOPYSIGN
             | 0w28 => CFG_Prim.FSQRT
+            | 0w29 => CFG_Prim.FCEIL
+            | 0w30 => CFG_Prim.FFLOOR
+            | 0w31 => CFG_Prim.FROUND
+            | 0w32 => CFG_Prim.FTRUNC
             | _ => raise ASDL.DecodeError)
     fun read_pure (inS : instream) = (case ASDLFilePickle.readTag8 inS
            of 0w1 => let
@@ -490,7 +494,11 @@ structure CFG_PrimFilePickle : CFG__PRIM_PICKLE
             | CFG_Prim.FNEG => ASDLFilePickle.writeTag8 (outS, 0w25)
             | CFG_Prim.FABS => ASDLFilePickle.writeTag8 (outS, 0w26)
             | CFG_Prim.FCOPYSIGN => ASDLFilePickle.writeTag8 (outS, 0w27)
-            | CFG_Prim.FSQRT => ASDLFilePickle.writeTag8 (outS, 0w28))
+            | CFG_Prim.FSQRT => ASDLFilePickle.writeTag8 (outS, 0w28)
+            | CFG_Prim.FCEIL => ASDLFilePickle.writeTag8 (outS, 0w29)
+            | CFG_Prim.FFLOOR => ASDLFilePickle.writeTag8 (outS, 0w30)
+            | CFG_Prim.FROUND => ASDLFilePickle.writeTag8 (outS, 0w31)
+            | CFG_Prim.FTRUNC => ASDLFilePickle.writeTag8 (outS, 0w32))
     fun write_pure (outS : outstream, obj) = (case obj
            of CFG_Prim.PURE_ARITH{oper, sz} => (
               ASDLFilePickle.writeTag8 (outS, 0w1);
@@ -756,6 +764,7 @@ structure CFGFilePickle : CFGPICKLE
               val reentrant = ASDLFilePickle.readBool inS
               val linkage = ASDLFilePickle.readString inS
               val proto = CTypesFilePickle.read_c_proto inS
+              val cfn = read_exp inS
               val args = readSeq read_exp inS
               val results = readSeq read_param inS
               val live = readSeq read_param inS
@@ -766,6 +775,7 @@ structure CFGFilePickle : CFGPICKLE
                     reentrant = reentrant,
                     linkage = linkage,
                     proto = proto,
+                    cfn = cfn,
                     args = args,
                     results = results,
                     live = live,
@@ -899,11 +909,12 @@ structure CFGFilePickle : CFGPICKLE
               writeSeq write_exp (outS, x0);
               writeSeq LambdaVarFilePickle.write_lvar (outS, x1);
               write_stm (outS, x2))
-            | CFG.RCC{reentrant, linkage, proto, args, results, live, k} => (
+            | CFG.RCC{reentrant, linkage, proto, cfn, args, results, live, k} => (
               ASDLFilePickle.writeTag8 (outS, 0w11);
               ASDLFilePickle.writeBool (outS, reentrant);
               ASDLFilePickle.writeString (outS, linkage);
               CTypesFilePickle.write_c_proto (outS, proto);
+              write_exp (outS, cfn);
               writeSeq write_exp (outS, args);
               writeSeq write_param (outS, results);
               writeSeq write_param (outS, live);

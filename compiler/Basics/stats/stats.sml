@@ -133,46 +133,52 @@ structure Stats :> STATS =
 
     local
       fun gettime () = let
-	  val { nongc, gc } =
-	      Timer.checkCPUTimes(Timer.totalCPUTimer())
-      in
-	  (* This is a hack.
-	   * (This module deserves a complete rewrite!!) *)
-	  { usr = #usr nongc, sys = Time.+ (#sys nongc, #sys gc),
-	    gc = #usr gc }
-      end
+	  val { nongc, gc } = Timer.checkCPUTimes(Timer.totalCPUTimer())
+          in {
+	  (* This is a hack. (This module deserves a complete rewrite!!) *)
+	    usr = #usr nongc, sys = Time.+ (#sys nongc, #sys gc),
+            gc = #usr gc
+          } end
       val last = ref (gettime())
     in
-    fun reset() = (
+    fun clear () = (
+        List.app
+          (fn PHASE{this,accum,...} => (this := zeros; accum := zeros))
+          (!allPhases);
+	List.app (fn STAT{tot,...} => app (fn C{c,...} => c:=0) tot) (!allStats))
+    fun reset () = (
 	  last := gettime();
-	  app (fn PHASE{this,accum,...} => (this := zeros; accum := zeros))
-            (!allPhases);
-	  app (fn STAT{tot,...} => app (fn C{c,...} => c:=0) tot) (!allStats))
+	  clear ())
 
     structure CU = SMLofNJ.Internals.CleanUp
     val _ = CU.addCleaner (
 	  "CompilerStats",
-	  [CU.AtExportML, CU.AtExportFn, CU.AtInit],
-	  fn CU.AtInit => reset() | _ => last := zeros)
+	  [CU.AtExportML, CU.AtInit],
+	  (* when exporting, clear the counters without reading the clock,
+	   * so that the exported image does not record how long the build
+	   * took (the counters are reset when the image is resumed)
+	   *)
+	  fn CU.AtInit => reset()
+           | _ => (last := zeros; clear()))
 
     fun since() = let
 (***
-          val x = if !approxTime
-	            then let
-		      val t1 = !lastcollect
-		      val u1 = !System.Runtime.minorcollections
-		      in lastcollect := u1; u1<>t1 end
-		    else true
+        val x = if !approxTime
+                  then let
+                    val t1 = !lastcollect
+                    val u1 = !System.Runtime.minorcollections
+                    in lastcollect := u1; u1<>t1 end
+                  else true
 ***)
-	  val x = true
-          in
-	    if x
-	      then let
-		val t = !last
-		val u = gettime()
-		in last := u; (u --- t) end
-             else zeros
-	  end
+        val x = true
+        in
+          if x
+            then let
+              val t = !last
+              val u = gettime()
+              in last := u; (u --- t) end
+           else zeros
+        end
     end (* local *)
 
     fun repeat 0 f x = () | repeat n f x= (f x; repeat (n-1) f x)

@@ -20,8 +20,8 @@ extern void ReportVM (ml_state_t *msp, int maxCollectedGen);
 	    stat_rec_t	    *__p = &(StatsBuf[NStatsRecs]);		\
 	    Unsigned32_t    __n = (Addr_t)(msp->ml_allocPtr) - 		\
 				    (Addr_t)(__heap->allocBase);	\
-	    CNTR_INCR(&(__heap->numAlloc), __n);			\
 	    __p->allocCnt = __heap->numAlloc;				\
+	    CNTR_INCR(&(__p->allocCnt), __n);				\
 	    __p->numGens = 0;						\
 	    gettimeofday(&(__p->startTime), NIL(struct timezone *));	\
 	}								\
