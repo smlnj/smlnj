@@ -10,11 +10,27 @@ structure CPS : CPS =
 (* TODO: the `record_kind` type mixes the issue of what the purpose of a record is
  * with the representation decision.  I propose defining three types:
  *
- *    datatype record_kind = RK_RECORD | RK_VECTOR | RK_FUN | RK_CONT | RK_KNOWN
+ *    datatype record_kind
+ *      = RK_RECORD       (* records *)
+ *      | RK_VECTOR       (* vector literal *)
+ *      | RK_FUN          (* user-function-closure record *)
+ *      | RK_CONT         (* continuation-closure record *)
+ *      | RK_KNOWN        (* known function/continuation closure record *)
  *
  *    type record_rep = {ptrLen : int, rawLen : int}
+ *    type intty = {sz : int, tag : bool}
  *
- *    datatype pkind = VPT | RPT of record_rep
+ *    datatype cty
+ *      = VALt                  (* an ML value (a super type of ENUMt,
+ *                               * NUMt{tag=true, ...}, PTRt, and FUNt).
+ *                               *)
+ *      | ENUMt                 (* datatype-constructor tag *)
+ *      | NUMt of intty	        (* integers of the given type *)
+ *      | FLTt of int 	        (* float of given size *)
+ *      | RPTRt of record_rep	(* pointers to records/mixed records/raw records *)
+ *      | PTRt                  (* pointers to heap data (a super type of RPTRt) *)
+ *      | FUNt		        (* user function *)
+ *      | CNTt of cty list	(* continuation *)
  *
  * Then the mapping from the current record_kind to the new rep would be something like
  *
@@ -26,9 +42,14 @@ structure CPS : CPS =
  *    RK_KNOWN          ==>     (RK_KNOWN, {ptrLen = <n>, rawLen = 0})
  *    RK_MIXED          ==>     (<kind>, {ptrLen = <n>, rawLen = <m>})
  *    RK_RAWBLOCK       ==>     (RK_RECORD, {ptrLen = 0, rawLen = <n>})
+ *
+ * Note that this change also requires a change to the `RECORD` form.  It either needs
+ * a type annotation or the `SELECT`/`RECORD` change described below.
  *)
 
-    (* mixed-record representation *)
+    (* record representation; regular records have `rawLen = 0` and raw records
+     * have `ptrLen = 0`.
+     *)
     type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
@@ -43,7 +64,7 @@ structure CPS : CPS =
 
     datatype pkind = VPT | RPT of record_rep
 
-  (* kinds of integers: size in bits and tagged vs boxed *)
+  (* type info for integers: size in bits and tagged vs boxed *)
     type intty = {sz : int, tag : bool}
 
     datatype cty
@@ -51,10 +72,10 @@ structure CPS : CPS =
       | ENUMt			(* datatype-constructor tag *)
       | PTRt of pkind	        (* pointer *)
       | FUNt		        (* function? *)
-      | FLTt of int 	        (* float of given size *)
+      | FLTt of int	        (* float of given size *)
       | CNTt of cty list	(* continuation *)
 
-    val ptrTy = PTRt VPT
+    val ptrTy = PTRt
     fun rPtrTy n = PTRt(RPT{ptrLen = n, rawLen = 0})
     fun fPtrTy n = PTRt(RPT{ptrLen = 0, rawLen = n})
 
@@ -130,6 +151,9 @@ structure CPS : CPS =
           | REAL_TO_BITS of int                 (* bitcast from real to word *)
 	  | SUBSCRIPTV
 	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
+(* TODO: the BOX/UNBOX primops are removed during the `CPSTransFn` pass; we
+ * should just not generate them in `ConvertFn`
+ *)
 	  | BOX | UNBOX
 	(* tagging/boxing of numbers; numkind should be either `INT` or `FLOAT` *)
 	  | WRAP of numkind | UNWRAP of numkind
@@ -139,6 +163,23 @@ structure CPS : CPS =
 	 *)
  	  | RAWRECORD of record_kind option
 
+(* TODO: if we make the change below to RECORD and SELECT, then we could
+ * make RECORD a primop and split out all of the allocating primops into
+ * their own datatype.
+        datatype alloc
+          (* user records + arguments, closure, and spill records *)
+          = RECORD of record_kind
+          (* zero-length array *)
+          | ARRAY0
+          (* ref cells *)
+          | REF
+          (* special objects: weak pointers and suspensions *)
+          | SPECIAL
+          (* heap-allocated native numbers *)
+          | WRAP of numkind
+          (* uninitialized words with an optional header *)
+          | ALLOC of int * record_kind option
+*)
       end (* P *)
 
     type lvar = LambdaVar.lvar
@@ -171,7 +212,12 @@ structure CPS : CPS =
 			  does not occur after the closure phase *)
 
     datatype cexp
-      = RECORD of record_kind * (value * accesspath) list * lvar * cexp
+      = RECORD of record_kind * (value * accesspath) list * lvar * cty * cexp
+(* TODO: move access paths into the `SELECT` expression and simplify the `RECORD`
+ * expression form.
+      = RECORD of record_kind * value list * lvar * cexp
+      | SELECT of accesspath * lvar * lvar * cty * cexp
+*)
       | SELECT of int * value * lvar * cty * cexp
       | OFFSET of int * value * lvar * cexp     (* DEPRECATED *)
       | APP of value * value list
