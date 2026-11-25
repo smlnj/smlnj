@@ -25,12 +25,12 @@ structure CPS : CPS =
  *                               * NUMt{tag=true, ...}, PTRt, and FUNt).
  *                               *)
  *      | ENUMt                 (* datatype-constructor tag *)
- *      | NUMt of intty	        (* integers of the given type *)
- *      | FLTt of int 	        (* float of given size *)
- *      | RPTRt of record_rep	(* pointers to records/mixed records/raw records *)
+ *      | NUMt of intty         (* integers of the given type *)
+ *      | FLTt of int           (* float of given size *)
+ *      | RPTRt of record_rep   (* pointers to records/mixed records/raw records *)
  *      | PTRt                  (* pointers to heap data (a super type of RPTRt) *)
- *      | FUNt		        (* user function *)
- *      | CNTt of cty list	(* continuation *)
+ *      | FUNt                  (* user function *)
+ *      | CNTt of cty list      (* continuation *)
  *
  * Then the mapping from the current record_kind to the new rep would be something like
  *
@@ -53,14 +53,14 @@ structure CPS : CPS =
     type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
-      = RK_VECTOR	(* vector *)
-      | RK_RECORD	(* SML record/tuple *)
-      | RK_ESCAPE	(* closure record for escaping function *)
-      | RK_CONT		(* closure record for continuation *)
-      | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
-      | RK_KNOWN	(* closure record for known function *)
-      | RK_MIXED of record_rep	(* mixed record *)
-      | RK_RAWBLOCK	(* raw data record *)
+      = RK_VECTOR       (* vector *)
+      | RK_RECORD       (* SML record/tuple *)
+      | RK_ESCAPE       (* closure record for escaping function *)
+      | RK_CONT         (* closure record for continuation *)
+      | RK_FCONT        (* closure record for unboxed 64-bit aligned data *)
+      | RK_KNOWN        (* closure record for known function *)
+      | RK_MIXED of record_rep  (* mixed record *)
+      | RK_RAWBLOCK     (* raw data record *)
 
     datatype pkind = VPT | RPT of record_rep
 
@@ -68,100 +68,100 @@ structure CPS : CPS =
     type intty = {sz : int, tag : bool}
 
     datatype cty
-      = NUMt of intty	        (* integers of the given type *)
-      | ENUMt			(* datatype-constructor tag *)
-      | PTRt of pkind	        (* pointer *)
-      | FUNt		        (* function? *)
-      | FLTt of int	        (* float of given size *)
-      | CNTt of cty list	(* continuation *)
+      = NUMt of intty           (* integers of the given type *)
+      | ENUMt                   (* datatype-constructor tag *)
+      | PTRt of pkind           (* pointer *)
+      | FUNt                    (* function? *)
+      | FLTt of int             (* float of given size *)
+      | CNTt of cty list        (* continuation *)
 
-    val ptrTy = PTRt
+    val ptrTy = PTRt VPT
     fun rPtrTy n = PTRt(RPT{ptrLen = n, rawLen = 0})
     fun fPtrTy n = PTRt(RPT{ptrLen = 0, rawLen = n})
 
     structure P =
       struct
       (* numkind includes kind and size *)
-	datatype numkind = datatype NumKind.t
+        datatype numkind = datatype NumKind.t
 
       (* integer arithmetic operations that may overflow *)
-	datatype arithop = datatype ArithOps.t
+        datatype arithop = datatype ArithOps.t
 
       (* pure arithmetic operations that cannot overflow *)
-	datatype pureop = datatype PureOps.t
+        datatype pureop = datatype PureOps.t
 
       (* generic comparison operations *)
-	datatype cmpop = datatype CompareOps.t
+        datatype cmpop = datatype CompareOps.t
 
       (* fcmpop conforms to the IEEE std 754 predicates. *)
-	datatype fcmpop
-	  = F_EQ (* = *)  | F_ULG (* ?<> *) | F_UN (* ? *)   | F_LEG (* <=> *)
-	  | F_GT (* > *)  | F_GE  (* >= *)  | F_UGT (* ?> *) | F_UGE (* ?>= *)
-	  | F_LT (* < *)  | F_LE  (* <= *)  | F_ULT (* ?< *) | F_ULE (* ?<= *)
-	  | F_LG (* <> *) | F_UE  (* ?= *)
+        datatype fcmpop
+          = F_EQ (* = *)  | F_ULG (* ?<> *) | F_UN (* ? *)   | F_LEG (* <=> *)
+          | F_GT (* > *)  | F_GE  (* >= *)  | F_UGT (* ?> *) | F_UGE (* ?>= *)
+          | F_LT (* < *)  | F_LE  (* <= *)  | F_ULT (* ?< *) | F_ULE (* ?<= *)
+          | F_LG (* <> *) | F_UE  (* ?= *)
 
       (* These are two-way branches dependent on pure inputs *)
-	datatype branch
-	  = CMP of {oper: cmpop, kind: numkind}
-	  | FCMP of {oper: fcmpop, size: int}
-	  | FSGN of int
+        datatype branch
+          = CMP of {oper: cmpop, kind: numkind}
+          | FCMP of {oper: fcmpop, size: int}
+          | FSGN of int
           | IS_POW2 of int
-	  | BOXED | UNBOXED | PEQL | PNEQ
-	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
-	 * the same length as `s` and `s` is not the empty string.
-	 *)
-	  | STREQL of string
+          | BOXED | UNBOXED | PEQL | PNEQ
+        (* `STREQL s` tests if a string is equal to `s`, where the tested string must have
+         * the same length as `s` and `s` is not the empty string.
+         *)
+          | STREQL of string
 
       (* These all update the store *)
-	datatype setter
-	  = NUMUPDATE of {kind: numkind}
-	  | UNBOXEDUPDATE | UPDATE
-	  | UNBOXEDASSIGN | ASSIGN
-	  | SETHDLR | SETVAR | SETSPECIAL
-	  | RAWSTORE of {kind: numkind}
-	  | RAWUPDATE of cty
+        datatype setter
+          = NUMUPDATE of {kind: numkind}
+          | UNBOXEDUPDATE | UPDATE
+          | UNBOXEDASSIGN | ASSIGN
+          | SETHDLR | SETVAR | SETSPECIAL
+          | RAWSTORE of {kind: numkind}
+          | RAWUPDATE of cty
 
       (* These fetch from the store, never have functions as arguments. *)
-	datatype looker
-	  = DEREF | SUBSCRIPT | NUMSUBSCRIPT of {kind: numkind}
-	  | GETSPECIAL | GETHDLR | GETVAR
-	  | RAWLOAD of {kind: numkind}
+        datatype looker
+          = DEREF | SUBSCRIPT | NUMSUBSCRIPT of {kind: numkind}
+          | GETSPECIAL | GETHDLR | GETVAR
+          | RAWLOAD of {kind: numkind}
 
       (* These might raise exceptions, never have functions as arguments.*)
-	datatype arith
-	  = IARITH of {oper: arithop, sz: int}
-	  | TEST of {from: int, to: int}
-	  | TESTU of {from: int, to: int}
-	  | TEST_INF of int
-	  | REAL_TO_INT of {floor: bool, from: int, to: int}
+        datatype arith
+          = IARITH of {oper: arithop, sz: int}
+          | TEST of {from: int, to: int}
+          | TESTU of {from: int, to: int}
+          | TEST_INF of int
+          | REAL_TO_INT of {floor: bool, from: int, to: int}
 
       (* These don't raise exceptions and don't access the store. *)
-	datatype pure
-	  = PURE_ARITH of {oper: pureop, kind: numkind}
-	  | PURE_NUMSUBSCRIPT of {kind: numkind}
-	  | LENGTH | OBJLENGTH | MAKEREF
-	  | COPY of {from: int, to: int}
-	  | EXTEND of {from: int, to: int}
-	  | TRUNC of {from: int, to: int}
-	  | COPY_INF of int
-	  | EXTEND_INF of int
-	  | TRUNC_INF of int
-	  | INT_TO_REAL of {from: int, to: int}
+        datatype pure
+          = PURE_ARITH of {oper: pureop, kind: numkind}
+          | PURE_NUMSUBSCRIPT of {kind: numkind}
+          | LENGTH | OBJLENGTH | MAKEREF
+          | COPY of {from: int, to: int}
+          | EXTEND of {from: int, to: int}
+          | TRUNC of {from: int, to: int}
+          | COPY_INF of int
+          | EXTEND_INF of int
+          | TRUNC_INF of int
+          | INT_TO_REAL of {from: int, to: int}
           | BITS_TO_REAL of int                 (* bitcast from word to real *)
           | REAL_TO_BITS of int                 (* bitcast from real to word *)
-	  | SUBSCRIPTV
-	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
+          | SUBSCRIPTV
+          | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
 (* TODO: the BOX/UNBOX primops are removed during the `CPSTransFn` pass; we
  * should just not generate them in `ConvertFn`
  *)
-	  | BOX | UNBOX
-	(* tagging/boxing of numbers; numkind should be either `INT` or `FLOAT` *)
-	  | WRAP of numkind | UNWRAP of numkind
+          | BOX | UNBOX
+        (* tagging/boxing of numbers; numkind should be either `INT` or `FLOAT` *)
+          | WRAP of numkind | UNWRAP of numkind
           | GETSEQDATA | RECSUBSCRIPT | RAW64SUBSCRIPT | NEWARRAY0
-	(* allocate uninitialized words from the heap; optionally
-	 * initialize the tag.
-	 *)
- 	  | RAWRECORD of record_kind option
+        (* allocate uninitialized words from the heap; optionally
+         * initialize the tag.
+         *)
+          | RAWRECORD of record_kind option
 
 (* TODO: if we make the change below to RECORD and SELECT, then we could
  * make RECORD a primop and split out all of the allocating primops into
@@ -205,19 +205,19 @@ structure CPS : CPS =
       | KNOWN_TAIL     (* tail-recursive kernal *)
       | KNOWN_CONT     (* known continuation functions *)
       | ESCAPE         (* before the closure phase, any user function;
-			* after the closure phase, escaping user function *)
+                        * after the closure phase, escaping user function *)
       | NO_INLINE_INTO (* before the closure phase,
-			* a user function inside of which no in-line expansions
-			* should be performed;
-			* does not occur after the closure phase
+                        * a user function inside of which no in-line expansions
+                        * should be performed;
+                        * does not occur after the closure phase
                         *)
 
     datatype cexp
       = RECORD of record_kind * (value * accesspath) list * lvar * cexp
 (* TODO: move access paths into the `SELECT` expression and simplify the `RECORD`
  * expression form.
-      = RECORD of record_kind * value list * lvar * cexp
-      | SELECT of accesspath * lvar * lvar * cty * cexp
+       = RECORD of record_kind * value list * lvar * cexp
+       | SELECT of accesspath * lvar * lvar * cty * cexp
 *)
       | SELECT of int * value * lvar * cty * cexp
 (* TODO: remove `OFFSET` *)

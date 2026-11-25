@@ -13,14 +13,14 @@ signature CPS =
     type record_rep = {ptrLen : int, rawLen : int}
 
     datatype record_kind
-      = RK_VECTOR	(* vector *)
-      | RK_RECORD	(* SML record/tuple *)
-      | RK_ESCAPE	(* closure record for escaping function *)
-      | RK_CONT		(* closure record for continuation *)
-      | RK_FCONT	(* closure record for unboxed 64-bit aligned data *)
-      | RK_KNOWN	(* closure record for known function *)
-      | RK_MIXED of record_rep	(* mixed record *)
-      | RK_RAWBLOCK	(* raw data record *)
+      = RK_VECTOR       (* vector *)
+      | RK_RECORD       (* SML record/tuple *)
+      | RK_ESCAPE       (* closure record for escaping function *)
+      | RK_CONT         (* closure record for continuation *)
+      | RK_FCONT        (* closure record for unboxed 64-bit aligned data *)
+      | RK_KNOWN        (* closure record for known function *)
+      | RK_MIXED of record_rep  (* mixed record *)
+      | RK_RAWBLOCK     (* raw data record *)
 
     datatype pkind = VPT | RPT of record_rep
 
@@ -28,12 +28,12 @@ signature CPS =
     type intty = {sz : int, tag : bool}
 
     datatype cty
-      = NUMt of intty	        (* integers of the given type *)
-      | ENUMt			(* datatype-constructor tag *)
-      | PTRt of pkind	        (* pointer *)
-      | FUNt		        (* function? *)
-      | FLTt of int	        (* float of given size *)
-      | CNTt of cty list	(* continuation *)
+      = NUMt of intty           (* integers of the given type *)
+      | ENUMt                   (* datatype-constructor tag *)
+      | PTRt of pkind           (* pointer *)
+      | FUNt                    (* function? *)
+      | FLTt of int             (* float of given size *)
+      | CNTt of cty list        (* continuation *)
 
     (* useful pointer types *)
     val ptrTy : cty             (* == PTRt VPT *)
@@ -50,99 +50,99 @@ signature CPS =
        * test for zero is done before the operation).
        * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
        *)
-	datatype arithop
-	  = IADD | ISUB | IMUL | IDIV | IMOD | IQUOT | IREM | INEG
+        datatype arithop
+          = IADD | ISUB | IMUL | IDIV | IMOD | IQUOT | IREM | INEG
 
       (* arithmetic operations that do not overflow; for the division operators,
        * we assume that the second argument is never zero (i.e., an explicit
        * test for zero is done before the operation).
        * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
        *)
-	datatype pureop
-	  = ADD | SUB | MUL | QUOT | REM | NEG
-	  | LSHIFT | RSHIFT | RSHIFTL
-	  | ORB | XORB | ANDB | NOTB
+        datatype pureop
+          = ADD | SUB | MUL | QUOT | REM | NEG
+          | LSHIFT | RSHIFT | RSHIFTL
+          | ORB | XORB | ANDB | NOTB
           | CNTPOP | CNTLZ | CNTTZ
           | ROTL | ROTR
-	  | FDIV | FABS | FSQRT
+          | FDIV | FABS | FSQRT
           | FCEIL | FFLOOR | FROUND | FTRUNC
 
       (* comparison operators
        * NOTE: this type is defined in the ArithOps structure (ElabData/prim/arithops.sml)
        *)
-	datatype cmpop
-	  = GT | GTE | LT | LTE | EQL | NEQ
+        datatype cmpop
+          = GT | GTE | LT | LTE | EQL | NEQ
 
       (* fcmpop conforms to the IEEE std 754 predicates. *)
-	datatype fcmpop
-	  = F_EQ (* = *)  | F_ULG (* ?<> *) | F_UN (* ? *)   | F_LEG (* <=> *)
-	  | F_GT (* > *)  | F_GE  (* >= *)  | F_UGT (* ?> *) | F_UGE (* ?>= *)
-	  | F_LT (* < *)  | F_LE  (* <= *)  | F_ULT (* ?< *) | F_ULE (* ?<= *)
-	  | F_LG (* <> *) | F_UE  (* ?= *)
+        datatype fcmpop
+          = F_EQ (* = *)  | F_ULG (* ?<> *) | F_UN (* ? *)   | F_LEG (* <=> *)
+          | F_GT (* > *)  | F_GE  (* >= *)  | F_UGT (* ?> *) | F_UGE (* ?>= *)
+          | F_LT (* < *)  | F_LE  (* <= *)  | F_ULT (* ?< *) | F_ULE (* ?<= *)
+          | F_LG (* <> *) | F_UE  (* ?= *)
 
       (* These are two-way branches dependent on pure inputs *)
-	datatype branch
-	  = CMP of {oper: cmpop, kind: numkind}
-	  | FCMP of {oper: fcmpop, size: int}
-	  | FSGN of int
+        datatype branch
+          = CMP of {oper: cmpop, kind: numkind}
+          | FCMP of {oper: fcmpop, size: int}
+          | FSGN of int
           | IS_POW2 of int
-	  | BOXED | UNBOXED | PEQL | PNEQ
-	(* `STREQL s` tests if a string is equal to `s`, where the tested string must have
-	 * the same length as `s` and `s` is not the empty string.
-	 *)
-	  | STREQL of string
+          | BOXED | UNBOXED | PEQL | PNEQ
+        (* `STREQL s` tests if a string is equal to `s`, where the tested string must have
+         * the same length as `s` and `s` is not the empty string.
+         *)
+          | STREQL of string
 
       (* These all update the store *)
-	datatype setter
-	  = NUMUPDATE of {kind: numkind}	(* packed array update *)
-	  | UNBOXEDUPDATE | UPDATE		(* polymorphic array update *)
-	  | UNBOXEDASSIGN | ASSIGN		(* reference assignment *)
-	  | SETHDLR | SETVAR | SETSPECIAL
-	  | RAWSTORE of {kind: numkind}		(* store into raw record *)
-	  | RAWUPDATE of cty			(* spill-record store *)
+        datatype setter
+          = NUMUPDATE of {kind: numkind}        (* packed array update *)
+          | UNBOXEDUPDATE | UPDATE              (* polymorphic array update *)
+          | UNBOXEDASSIGN | ASSIGN              (* reference assignment *)
+          | SETHDLR | SETVAR | SETSPECIAL
+          | RAWSTORE of {kind: numkind}         (* store into raw record *)
+          | RAWUPDATE of cty                    (* spill-record store *)
 
       (* These fetch from the store, never have functions as arguments. *)
-	datatype looker
-	  = DEREF | SUBSCRIPT | NUMSUBSCRIPT of {kind: numkind}
-	  | GETSPECIAL | GETHDLR | GETVAR
-	  | RAWLOAD of {kind: numkind}
+        datatype looker
+          = DEREF | SUBSCRIPT | NUMSUBSCRIPT of {kind: numkind}
+          | GETSPECIAL | GETHDLR | GETVAR
+          | RAWLOAD of {kind: numkind}
 
       (* These might raise exceptions, never have functions as arguments.*)
-	datatype arith
-	  = IARITH of {oper: arithop, sz: int}
-	  | TEST of {from: int, to: int}	(* int -> int conversion with Overflow *)
-	  | TESTU of {from: int, to: int}	(* word -> int conversion with Overflow *)
-	  | TEST_INF of int
-	  | REAL_TO_INT of {floor: bool, from: int, to: int}
+        datatype arith
+          = IARITH of {oper: arithop, sz: int}
+          | TEST of {from: int, to: int}        (* int -> int conversion with Overflow *)
+          | TESTU of {from: int, to: int}       (* word -> int conversion with Overflow *)
+          | TEST_INF of int
+          | REAL_TO_INT of {floor: bool, from: int, to: int}
 
       (* These don't raise exceptions and don't access the store. *)
 (* TODO: we should probably split off the allocators into their own datatype (or
  * at least those that allocate potentially mutable memory, since they are not
  * really "pure"
  *)
-	datatype pure
-	  = PURE_ARITH of {oper: pureop, kind: numkind}
-	  | PURE_NUMSUBSCRIPT of {kind: numkind}
-	  | LENGTH | OBJLENGTH | MAKEREF
-	  | COPY of {from: int, to: int}
-	  | EXTEND of {from: int, to: int}
-	  | TRUNC of {from: int, to: int}
-	  | COPY_INF of int                     (* zero extend: wordN -> IntInf.int *)
-	  | EXTEND_INF of int                   (* sign extend: intN -> IntInf.int *)
-	  | TRUNC_INF of int                    (* IntInf.int -> wordN *)
-	  | INT_TO_REAL of {from: int, to: int}
+        datatype pure
+          = PURE_ARITH of {oper: pureop, kind: numkind}
+          | PURE_NUMSUBSCRIPT of {kind: numkind}
+          | LENGTH | OBJLENGTH | MAKEREF
+          | COPY of {from: int, to: int}
+          | EXTEND of {from: int, to: int}
+          | TRUNC of {from: int, to: int}
+          | COPY_INF of int                     (* zero extend: wordN -> IntInf.int *)
+          | EXTEND_INF of int                   (* sign extend: intN -> IntInf.int *)
+          | TRUNC_INF of int                    (* IntInf.int -> wordN *)
+          | INT_TO_REAL of {from: int, to: int}
           | BITS_TO_REAL of int                 (* bitcast from word to real *)
           | REAL_TO_BITS of int                 (* bitcast from real to word *)
-	  | SUBSCRIPTV
-	  | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
-	  | BOX | UNBOX
-	(* tagging/boxing of numbers; numkind should be either `INT` or `FLOAT` *)
-	  | WRAP of numkind | UNWRAP of numkind
+          | SUBSCRIPTV
+          | GETTAG | MKSPECIAL | CAST | GETCON | GETEXN
+          | BOX | UNBOX
+        (* tagging/boxing of numbers; numkind should be either `INT` or `FLOAT` *)
+          | WRAP of numkind | UNWRAP of numkind
           | GETSEQDATA | RECSUBSCRIPT | RAW64SUBSCRIPT | NEWARRAY0
-	(* allocate uninitialized words from the heap; optionally
-	 * initialize the tag.
-	 *)
- 	  | RAWRECORD of record_kind option
+        (* allocate uninitialized words from the heap; optionally
+         * initialize the tag.
+         *)
+          | RAWRECORD of record_kind option
 
       end (* P *)
 
@@ -150,9 +150,9 @@ signature CPS =
 
     datatype value
       = VAR of lvar
-      | LABEL of lvar			(* function labels after closure conversion *)
+      | LABEL of lvar                   (* function labels after closure conversion *)
       | NUM of intty IntConst.t         (* `NUM{ival, ty = {sz, tag}}` *)
-      | ENUM of int			(* datatype-constructor tag *)
+      | ENUM of int                     (* datatype-constructor tag *)
       | REAL of int RealConst.t         (* `REAL{rval, ty = sz}` *)
       | STRING of string
       | VOID                            (* used in closure conversion *)
@@ -162,21 +162,21 @@ signature CPS =
       | SELp of int * accesspath
 
     datatype fun_kind
-      = CONT		(* continuation function *)
-      | KNOWN		(* known function *)
-      | KNOWN_REC	(* known mutually-recursive functions *)
-      | KNOWN_CHECK	(* known function with GC check on entry *)
-      | KNOWN_TAIL	(* known tail-recursive function *)
-      | KNOWN_CONT	(* known continuation function *)
-      | ESCAPE		(* before the closure phase, any user function;
-			 * after the closure phase, escaping user function
-			 *)
-      | NO_INLINE_INTO	(* a user function inside of which no in-line expansions
-			 * should be performed.  This is used to mark eta-split
-			 * wrapper functions so that cpscontract does not inline
-			 * the function body into the wrapper.  Removed during
-			 * closure conversion.
-			 *)
+      = CONT            (* continuation function *)
+      | KNOWN           (* known function *)
+      | KNOWN_REC       (* known mutually-recursive functions *)
+      | KNOWN_CHECK     (* known function with GC check on entry *)
+      | KNOWN_TAIL      (* known tail-recursive function *)
+      | KNOWN_CONT      (* known continuation function *)
+      | ESCAPE          (* before the closure phase, any user function;
+                         * after the closure phase, escaping user function
+                         *)
+      | NO_INLINE_INTO  (* a user function inside of which no in-line expansions
+                         * should be performed.  This is used to mark eta-split
+                         * wrapper functions so that cpscontract does not inline
+                         * the function body into the wrapper.  Removed during
+                         * closure conversion.
+                         *)
 
     datatype cexp
       = RECORD of record_kind * (value * accesspath) list * lvar * cexp
@@ -203,7 +203,7 @@ signature CPS =
        *      shared library name/name of the C function.
        *)
       | RCC of bool * string * CTypes.c_proto * value list *
-	       (lvar * cty) list * cexp
+               (lvar * cty) list * cexp
 
     withtype function = fun_kind * lvar * lvar list * cty list * cexp
 
